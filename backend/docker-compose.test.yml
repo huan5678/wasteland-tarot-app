@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  test-postgres:
+    image: postgres:15-alpine
+    container_name: tarot-test-db
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: tarot_test
+    ports:
+      - "5433:5432"  # 使用 5433 避免與本地 PostgreSQL 衝突
+    volumes:
+      - test-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d tarot_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  test-postgres-data:

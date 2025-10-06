@@ -1,0 +1,130 @@
+{
+  "timestamp": "2025-09-28T09:58:47.036394",
+  "summary": {
+    "total_tests": 13,
+    "passed_tests": 5,
+    "failed_tests": 8,
+    "api_health": "POOR",
+    "database_status": "UNHEALTHY",
+    "security_assessment": "Score: 65/100",
+    "performance_metrics": {
+      "avg_response_time": 0.0064659595489501955,
+      "max_response_time": 0.007933855056762695,
+      "min_response_time": 0.0033321380615234375,
+      "success_rate": 1.0
+    }
+  },
+  "test_results": [
+    {
+      "endpoint": "/",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0266568660736084,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0019500255584716797,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/docs",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.0014619827270507812,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/openapi.json",
+      "method": "GET",
+      "status_code": 200,
+      "response_time": 0.023919105529785156,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/register",
+      "method": "POST",
+      "status_code": 200,
+      "response_time": 0.4024679660797119,
+      "success": true,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/auth/login",
+      "method": "POST",
+      "status_code": 422,
+      "response_time": 0.002488851547241211,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/cards",
+      "method": "GET",
+      "status_code": 307,
+      "response_time": 0.001438140869140625,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/cards/1",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.005011081695556641,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/cards/999999",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.0026192665100097656,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/monitoring/metrics",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.0014328956604003906,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/monitoring/db-health",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.0011768341064453125,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/api/v1/nonexistent",
+      "method": "GET",
+      "status_code": 404,
+      "response_time": 0.0012118816375732422,
+      "success": false,
+      "error_message": null
+    },
+    {
+      "endpoint": "/",
+      "method": "DELETE",
+      "status_code": 405,
+      "response_time": 0.0011250972747802734,
+      "success": false,
+      "error_message": null
+    }
+  ],
+  "recommendations": [
+    "Fix: API should use HTTPS in production",
+    "Fix: Error messages may leak sensitive information",
+    "High error rate detected - investigate failing endpoints",
+    "Database connectivity issues detected - check database health",
+    "Authentication flow issues - verify auth configuration"
+  ]
+}

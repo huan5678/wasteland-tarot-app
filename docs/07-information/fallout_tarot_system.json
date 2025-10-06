@@ -1,0 +1,242 @@
+{
+  "system_overview": {
+    "title": "廢土塔羅 (Wasteland Tarot)",
+    "theme": "Fallout後末日幽默風格",
+    "total_cards": 78,
+    "art_style": {
+      "visual_style": "80年代像素藝術風格",
+      "color_palette": "沉穆土色調配以戰略性亮色",
+      "aesthetic": "後末日復古未來主義",
+      "humor_element": "黑色幽默與諷刺元素"
+    },
+    "structure": {
+      "major_arcana": {
+        "count": 22,
+        "range": "0-21",
+        "description": "代表廢土中的重大生存決策和轉折點",
+        "significance": "影響避難所居民命運的關鍵事件",
+        "theme": "後末日生存與重建"
+      },
+      "minor_arcana": {
+        "count": 56,
+        "structure": {
+          "suits": 4,
+          "number_cards": 40,
+          "court_cards": 16
+        },
+        "description": "代表廢土日常生存中的各種挑戰",
+        "theme": "日常廢土生活情境"
+      }
+    }
+  },
+  "fallout_themed_suits": {
+    "nuka_cola_bottles": {
+      "original_suit": "聖杯 (Cups)",
+      "fallout_name": "可樂瓶 (Nuka-Cola Bottles)",
+      "element": "水",
+      "keywords": "情感、關係、輻射治療、社群連結",
+      "represents": "廢土中的情感狀態和人際關係",
+      "energy": "治癒、希望、nostalgia",
+      "humor_elements": [
+        "可樂成癮症狀",
+        "輻射愛情",
+        "避難所居民的浪漫",
+        "機器人的情感困惑"
+      ]
+    },
+    "combat_weapons": {
+      "original_suit": "寶劍 (Swords)",
+      "fallout_name": "戰鬥武器 (Combat Weapons)",
+      "element": "風",
+      "keywords": "衝突、策略、決策、生存智慧",
+      "represents": "廢土中的衝突和理性思考",
+      "energy": "戰鬥、分析、適應",
+      "humor_elements": [
+        "武器故障的尷尬時刻",
+        "和平主義者的困境",
+        "機器人vs人類的哲學辯論",
+        "過時武器的創意用途"
+      ]
+    },
+    "bottle_caps": {
+      "original_suit": "錢幣 (Pentacles)",
+      "fallout_name": "瓶蓋 (Bottle Caps)",
+      "element": "土",
+      "keywords": "資源、交易、生存物資、實用主義",
+      "represents": "廢土中的物質財富和實際資源",
+      "energy": "實用、交易、積累",
+      "humor_elements": [
+        "瓶蓋收集癖",
+        "荒謬的經濟體系",
+        "垃圾變黃金",
+        "商人的奇怪邏輯"
+      ]
+    },
+    "radiation_rods": {
+      "original_suit": "權杖 (Wands)",
+      "fallout_name": "輻射棒 (Radiation Rods)",
+      "element": "火",
+      "keywords": "能量、創造力、變異、行動力",
+      "represents": "廢土中的創新和行動驅動力",
+      "energy": "變異、創新、破壞性創造",
+      "humor_elements": [
+        "輻射突變的意外好處",
+        "能量武器的過熱問題",
+        "科學實驗的災難性結果",
+        "超級變種人的日常困擾"
+      ]
+    }
+  },
+  "major_arcana_fallout": [
+    {
+      "number": 0,
+      "original_name": "愚者",
+      "fallout_name": "新手避難所居民 (The Vault Newbie)",
+      "description": "剛走出避難所的居民，對廢土充滿天真幻想",
+      "humor_twist": "戴著派對帽用Pip-Boy自拍，背景是輻射廢土",
+      "keywords": "天真、新開始、無知即福、適應能力"
+    },
+    {
+      "number": 1,
+      "original_name": "魔術師",
+      "fallout_name": "科技專家 (The Tech Specialist)",
+      "description": "掌握先進科技的廢土科學家",
+      "humor_twist": "用膠帶和廢料修理高科技設備",
+      "keywords": "技能、創新、廢料利用、科技掌控"
+    },
+    {
+      "number": 2,
+      "original_name": "女祭司",
+      "fallout_name": "神秘預言家 (The Wasteland Oracle)",
+      "description": "擁有預知能力的神秘廢土居民",
+      "humor_twist": "用破損的電視機占卜未來",
+      "keywords": "直覺、神秘知識、輻射感知、內在智慧"
+    },
+    {
+      "number": 3,
+      "original_name": "皇后",
+      "fallout_name": "農場主母 (The Farm Matriarch)",
+      "description": "在廢土中建立繁榮農場的女性領袖",
+      "humor_twist": "種植變異巨大蔬菜，豐收到誇張程度",
+      "keywords": "豐饒、養育、變異成長、社群建設"
+    },
+    {
+      "number": 4,
+      "original_name": "皇帝",
+      "fallout_name": "避難所監督 (The Overseer)",
+      "description": "掌控避難所秩序的威權領袖",
+      "humor_twist": "被一群反叛居民用廁紙卷襲擊",
+      "keywords": "權威、秩序、官僚制度、控制"
+    },
+    {
+      "number": 5,
+      "original_name": "教宗",
+      "fallout_name": "兄弟會長老 (The Brotherhood Elder)",
+      "description": "鋼鐵兄弟會的知識守護者",
+      "humor_twist": "對著一本說明書虔誠祈禱",
+      "keywords": "傳統、知識保存、教條、指導"
+    }
+  ],
+  "number_meanings_wasteland": {
+    "ace": {
+      "number": 1,
+      "meaning": "新發現、未探索資源、第一次接觸",
+      "wasteland_context": "發現新的避難所或資源點"
+    },
+    "two": {
+      "number": 2,
+      "meaning": "合作、交易夥伴、二選一",
+      "wasteland_context": "在廢土中選擇盟友或敵人"
+    },
+    "three": {
+      "number": 3,
+      "meaning": "小社群、合作成果、初期成功",
+      "wasteland_context": "建立小型聚落或團隊"
+    },
+    "four": {
+      "number": 4,
+      "meaning": "建立據點、安全區域、穩定基礎",
+      "wasteland_context": "建造堅固的避難所或防禦工事"
+    },
+    "five": {
+      "number": 5,
+      "meaning": "資源爭奪、衝突、變化威脅",
+      "wasteland_context": "為了生存資源的競爭和衝突"
+    },
+    "six": {
+      "number": 6,
+      "meaning": "資源分享、社群和諧、互助",
+      "wasteland_context": "廢土社群間的合作與支援"
+    },
+    "seven": {
+      "number": 7,
+      "meaning": "評估威脅、戰略思考、謹慎觀察",
+      "wasteland_context": "觀察敵對勢力或環境危險"
+    },
+    "eight": {
+      "number": 8,
+      "meaning": "技能精進、專精發展、熟練掌握",
+      "wasteland_context": "熟練掌握生存技能或武器使用"
+    },
+    "nine": {
+      "number": 9,
+      "meaning": "接近目標、經驗豐富、最後階段",
+      "wasteland_context": "接近完成重要的生存任務"
+    },
+    "ten": {
+      "number": 10,
+      "meaning": "任務完成、重擔結束、新循環開始",
+      "wasteland_context": "完成重大任務，準備面對新挑戰"
+    }
+  },
+  "court_cards_wasteland": {
+    "page": {
+      "name": "新兵 (Recruit)",
+      "energy": "初學者能量",
+      "maturity": "缺乏經驗",
+      "role": "學習者、信使、偵察兵",
+      "humor": "經常犯新手錯誤但充滿熱忱"
+    },
+    "knight": {
+      "name": "廢土騎士 (Wasteland Knight)",
+      "energy": "行動派",
+      "maturity": "有經驗但衝動",
+      "role": "行動者、探索者、戰士",
+      "humor": "經常因過度自信而陷入麻煩"
+    },
+    "queen": {
+      "name": "聚落領袖 (Settlement Leader)",
+      "energy": "關懷統領",
+      "maturity": "成熟穩重",
+      "role": "領導者、保護者、智者",
+      "humor": "用母性關懷管理一群成年廢土居民"
+    },
+    "king": {
+      "name": "廢土霸主 (Wasteland Overlord)",
+      "energy": "權威統治",
+      "maturity": "完全成熟",
+      "role": "統治者、決策者、保護者",
+      "humor": "威嚴的外表下隱藏著對小動物的溺愛"
+    }
+  },
+  "humor_elements": {
+    "visual_gags": [
+      "輻射標誌被當作裝飾品",
+      "變異動物作為寵物",
+      "高科技設備用原始方法修理",
+      "正式場合穿著破爛但乾淨的衣服"
+    ],
+    "situational_humor": [
+      "在廢土中保持樂觀",
+      "用戰前知識解決戰後問題",
+      "機器人的邏輯錯誤",
+      "對輻射污染的習以為常"
+    ],
+    "character_quirks": [
+      "收集戰前物品的癖好",
+      "對可樂的病態執著",
+      "用科技術語解釋簡單事物",
+      "對危險環境的不當輕鬆"
+    ]
+  }
+}

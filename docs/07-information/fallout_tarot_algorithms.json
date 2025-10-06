@@ -1,0 +1,195 @@
+{
+  "wasteland_divination_methods": {
+    "single_card_reading": {
+      "name": "單張廢土指引 (Single Wasteland Reading)",
+      "description": "用一張卡牌指引今日的廢土生存策略",
+      "use_cases": [
+        "今日廢土運勢",
+        "生存決策指引",
+        "資源搜尋建議",
+        "危險評估"
+      ],
+      "interpretation": "結合卡牌意義與當前廢土情勢分析",
+      "humor_elements": [
+        "輻射計數器式的運勢顯示",
+        "Pip-Boy風格的數據呈現",
+        "戰前vs戰後的對比解讀"
+      ]
+    },
+    "vault_tech_spread": {
+      "name": "避難所科技三牌陣 (Vault-Tec Spread)",
+      "positions": {
+        "past": "戰前狀況 (Pre-War)",
+        "present": "當前廢土 (Current Wasteland)",
+        "future": "重建希望 (Rebuilding Hope)"
+      },
+      "description": "分析從戰前到重建的完整時間線",
+      "interpretation_style": "用Vault-Tec風格的樂觀語調解讀嚴酷現實",
+      "humor_twist": "即使在絕望情況下也保持企業式的樂觀"
+    },
+    "wasteland_survival_spread": {
+      "name": "廢土生存五牌陣 (Wasteland Survival Spread)",
+      "positions": {
+        "resources": "資源狀況 (Resources)",
+        "threats": "威脅評估 (Threats)",
+        "allies": "盟友支援 (Allies)",
+        "strategy": "生存策略 (Strategy)",
+        "outcome": "最終結果 (Outcome)"
+      },
+      "complexity": "medium",
+      "best_for": "複雜的生存決策分析"
+    },
+    "brotherhood_council": {
+      "name": "兄弟會議會 (Brotherhood Council)",
+      "positions": {
+        "1": "長老智慧 (Elder Wisdom)",
+        "2": "騎士勇氣 (Knight Courage)",
+        "3": "書記知識 (Scribe Knowledge)",
+        "4": "新兵熱忱 (Initiate Enthusiasm)",
+        "5": "傳統教誨 (Traditional Teaching)",
+        "6": "現代挑戰 (Modern Challenge)",
+        "7": "最終決議 (Final Resolution)"
+      },
+      "layout": "圓形議會桌佈局",
+      "complexity": "high",
+      "description": "模擬兄弟會議會的全面決策過程"
+    }
+  },
+  "fallout_interpretation_techniques": {
+    "pip_boy_analysis": {
+      "name": "Pip-Boy數據分析法",
+      "description": "像Pip-Boy介面一樣系統化分析卡牌資訊",
+      "steps": [
+        "掃描卡牌基本數據",
+        "分析元素屬性",
+        "評估威脅等級",
+        "計算成功機率",
+        "生成行動建議"
+      ],
+      "display_style": "綠色單色螢幕風格數據呈現"
+    },
+    "vault_dweller_perspective": {
+      "name": "避難所居民視角法",
+      "description": "從剛走出避難所的天真視角解讀廢土現實",
+      "humor_elements": [
+        "用戰前常識理解戰後情況",
+        "對危險事物的不當樂觀",
+        "把輻射當作新鮮事物",
+        "對變異生物的科學好奇"
+      ]
+    },
+    "wasteland_trader_wisdom": {
+      "name": "廢土商人智慧法",
+      "description": "用精明商人的實用主義解讀卡牌",
+      "focus_areas": [
+        "資源價值評估",
+        "風險收益分析",
+        "交易機會識別",
+        "市場趨勢預測"
+      ],
+      "personality": "狡猾但可靠的商人語調"
+    },
+    "super_mutant_simplicity": {
+      "name": "超級變種人簡化法",
+      "description": "用直接粗暴但意外精準的方式解讀",
+      "characteristics": [
+        "語言簡單直接",
+        "邏輯出奇清晰",
+        "忽略複雜細節",
+        "專注核心問題"
+      ],
+      "humor": "看似愚笨實則智慧的解讀風格"
+    }
+  },
+  "web_app_wasteland_algorithm": {
+    "card_selection_system": {
+      "random_encounter": "模擬廢土隨機遭遇的抽卡機制",
+      "geiger_counter_shuffle": "用輻射計數器聲音效果的洗牌體驗",
+      "pip_boy_interface": "Pip-Boy風格的卡牌選擇界面",
+      "vault_door_reveal": "避難所門開啟式的卡牌揭示動畫"
+    },
+    "question_processing_wasteland": {
+      "question_categories": [
+        "生存決策 (Survival Decisions)",
+        "資源管理 (Resource Management)",
+        "人際關係 (Wasteland Relationships)",
+        "探索冒險 (Exploration Adventures)",
+        "重建規劃 (Rebuilding Plans)"
+      ],
+      "question_templates": [
+        "我應該探索這個廢墟嗎？",
+        "這個商人值得信任嗎？",
+        "我的聚落需要什麼資源？",
+        "如何處理這個派系衝突？"
+      ],
+      "humor_responses": [
+        "根據廢土生存手冊第127條...",
+        "Pip-Boy建議...",
+        "避難所科技分析顯示...",
+        "廢土智慧告訴我們..."
+      ]
+    },
+    "interpretation_engine_fallout": {
+      "basic_interpretation": "基於Fallout劇情和角色的解讀資料庫",
+      "contextual_analysis": "根據廢土環境調整解讀內容",
+      "humor_integration": "自動加入適當的幽默元素",
+      "character_voice": "可選擇不同角色的解讀風格",
+      "survival_advice": "提供實用的廢土生存建議"
+    },
+    "result_presentation_vault_style": {
+      "pip_boy_display": "Pip-Boy風格的結果展示界面",
+      "terminal_readout": "廢土電腦終端風格的文字顯示",
+      "holotape_archive": "以holotape形式保存占卜記錄",
+      "vault_boy_illustrations": "Vault Boy風格的插圖說明",
+      "radiation_warning": "用輻射警告符號標示重要信息"
+    }
+  },
+  "advanced_wasteland_features": {
+    "faction_alignment_system": {
+      "brotherhood_of_steel": "科技導向的理性分析",
+      "ncr_republic": "民主投票式的多角度解讀",
+      "caesar_legion": "專制但高效的決策建議",
+      "raiders": "混亂但創意的解決方案",
+      "vault_dweller": "天真但充滿希望的視角"
+    },
+    "karma_system": {
+      "good_karma": "正面積極的解讀傾向",
+      "neutral_karma": "平衡客觀的分析",
+      "evil_karma": "現實主義的嚴酷解讀",
+      "karma_tracking": "根據用戶選擇調整解讀風格"
+    },
+    "companion_insights": {
+      "dogmeat": "忠誠可靠的簡單建議",
+      "nick_valentine": "偵探式的邏輯推理",
+      "piper": "記者式的深度分析",
+      "codsworth": "英式管家的禮貌建議",
+      "strong": "超級變種人的直率觀點"
+    },
+    "special_events": {
+      "rad_storm_reading": "輻射風暴期間的特殊解讀",
+      "holiday_specials": "戰前節日主題的懷舊解讀",
+      "faction_war": "派系衝突期間的戰略分析",
+      "new_settlement": "建立新聚落時的規劃指導"
+    }
+  },
+  "humor_integration_system": {
+    "vault_boy_reactions": [
+      "豎起大拇指的樂觀反應",
+      "困惑表情的複雜情況",
+      "警告手勢的危險提醒",
+      "勝利姿態的成功預測"
+    ],
+    "wasteland_memes": [
+      "戰爭，戰爭從不改變",
+      "另一個需要你幫助的聚落",
+      "我曾經像你一樣是個冒險者",
+      "你感受到了溫暖的光芒"
+    ],
+    "situational_comedy": [
+      "在核彈坑中尋找愛情",
+      "用可樂瓶蓋購買豪宅",
+      "與機器人討論人生哲學",
+      "教育超級變種人讀書識字"
+    ]
+  }
+}

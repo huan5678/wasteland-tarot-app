@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "sounds": [
+    {
+      "id": "button-click",
+      "type": "sfx",
+      "url": "/sounds/sfx/button-click.mp3",
+      "priority": "critical",
+      "size": 15360,
+      "description": "按鈕點擊音效"
+    },
+    {
+      "id": "card-flip",
+      "type": "sfx",
+      "url": "/sounds/sfx/card-flip.mp3",
+      "priority": "critical",
+      "size": 22400,
+      "description": "卡牌翻轉音效"
+    },
+    {
+      "id": "vault-door",
+      "type": "sfx",
+      "url": "/sounds/sfx/vault-door.mp3",
+      "priority": "normal",
+      "size": 51200,
+      "description": "避難所大門開啟音效"
+    },
+    {
+      "id": "pip-boy-beep",
+      "type": "sfx",
+      "url": "/sounds/sfx/pip-boy-beep.mp3",
+      "priority": "critical",
+      "size": 10240,
+      "description": "Pip-Boy 嗶嗶聲"
+    },
+    {
+      "id": "terminal-type",
+      "type": "sfx",
+      "url": "/sounds/sfx/terminal-type.mp3",
+      "priority": "normal",
+      "size": 8192,
+      "description": "終端機打字音效"
+    }
+  ],
+  "music": [
+    {
+      "id": "wasteland-ambient",
+      "url": "/sounds/music/wasteland-ambient.mp3",
+      "scene": "/",
+      "size": 2048000,
+      "duration": 120,
+      "loop": true,
+      "description": "廢土環境氛圍音樂（首頁）"
+    },
+    {
+      "id": "divination-theme",
+      "url": "/sounds/music/divination-theme.mp3",
+      "scene": "/reading",
+      "size": 1536000,
+      "duration": 90,
+      "loop": true,
+      "description": "占卜主題音樂（塔羅牌解讀頁面）"
+    }
+  ]
+}

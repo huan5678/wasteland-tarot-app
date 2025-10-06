@@ -1,0 +1,196 @@
+{
+  "project_overview": {
+    "title": "廢土塔羅Web應用 (Wasteland Tarot Web App)",
+    "theme": "後末日復古未來主義風格",
+    "target_audience": "Fallout粉絲、塔羅愛好者、復古遊戲玩家",
+    "unique_selling_points": [
+      "獨特的Fallout主題塔羅牌系統",
+      "像素藝術風格的視覺設計",
+      "多種廢土角色解讀風格",
+      "幽默的後末日生存建議"
+    ]
+  },
+  "technical_architecture": {
+    "frontend_stack": {
+      "primary_choice": "Vue.js 3 + TypeScript",
+      "ui_framework": "自製復古科幻風格組件",
+      "styling": {
+        "css_framework": "Tailwind CSS (客製化配色)",
+        "color_scheme": {
+          "primary": "#00FF41 (Pip-Boy綠)",
+          "secondary": "#FFD700 (黃金瓶蓋)",
+          "background": "#1a1a1a (避難所深色)",
+          "accent": "#FF6B35 (輻射橘)",
+          "warning": "#FF0000 (危險紅)"
+        },
+        "fonts": [
+          "Share Tech Mono (終端機字體)",
+          "Orbitron (科幻標題)",
+          "Courier New (復古等寬)"
+        ]
+      },
+      "animations": {
+        "card_reveal": "避難所門緩慢開啟效果",
+        "loading": "Pip-Boy載入動畫",
+        "transitions": "終端機文字逐字顯示",
+        "hover_effects": "輻射光暈效果"
+      }
+    },
+    "backend_services": {
+      "recommended_stack": "Node.js + Express + MongoDB",
+      "alternative_stack": "Python + FastAPI + PostgreSQL",
+      "api_structure": {
+        "cards": {
+          "GET /api/wasteland/cards": "取得所有廢土塔羅牌",
+          "GET /api/wasteland/cards/:id": "取得特定卡牌詳細資訊",
+          "GET /api/wasteland/suits/:suit": "取得特定花色所有卡牌"
+        },
+        "divination": {
+          "POST /api/wasteland/shuffle": "廢土風格洗牌算法",
+          "POST /api/wasteland/draw": "抽取廢土卡牌",
+          "POST /api/wasteland/interpret": "生成廢土風格解讀"
+        },
+        "characters": {
+          "GET /api/wasteland/interpreters": "取得可用解讀角色",
+          "POST /api/wasteland/interpret/:character": "特定角色風格解讀"
+        }
+      }
+    }
+  },
+  "ui_ux_design": {
+    "pip_boy_interface": {
+      "layout": "模仿Pip-Boy腕部電腦的界面設計",
+      "components": [
+        "綠色單色顯示器風格",
+        "掃描線效果",
+        "按鈕音效回饋",
+        "復古科幻邊框"
+      ],
+      "navigation": "選單以Pip-Boy選項方式呈現"
+    },
+    "vault_terminal_aesthetic": {
+      "design_elements": [
+        "終端機風格的文字顯示",
+        "逐字出現的打字機效果",
+        "復古CRT螢幕扭曲",
+        "靜電雜訊背景"
+      ],
+      "interaction_feedback": [
+        "按鍵音效",
+        "輻射計數器聲音",
+        "警報提示音",
+        "成功確認音"
+      ]
+    },
+    "card_display_system": {
+      "card_art": "像素藝術風格的塔羅牌設計",
+      "reveal_animation": "如開啟避難所門的展示效果",
+      "hover_states": "輻射光暈和資訊浮現",
+      "responsive_design": "適應各種螢幕尺寸的顯示"
+    }
+  },
+  "core_algorithms_implementation": {
+    "wasteland_shuffle_algorithm": {
+      "method": "改良版Fisher-Yates + 輻射隨機性",
+      "description": "結合輻射等級影響的隨機數生成",
+      "special_features": [
+        "輻射等級影響隨機性",
+        "Pip-Boy風格進度顯示",
+        "蓋革計數器音效配合"
+      ]
+    },
+    "character_interpretation_engine": {
+      "base_template": "每個角色的基礎解讀框架",
+      "personality_modifiers": "根據角色特質調整解讀內容",
+      "humor_injection": "自動插入適當的幽默元素",
+      "fallout_references": "引用遊戲中的經典台詞和情境"
+    },
+    "karma_based_interpretation": {
+      "good_karma": "樂觀正面的解讀傾向",
+      "neutral_karma": "平衡實用的建議",
+      "evil_karma": "現實主義的嚴酷分析",
+      "dynamic_adjustment": "根據用戶選擇動態調整傾向"
+    }
+  },
+  "development_phases": {
+    "phase_1_vault_basics": {
+      "duration": "3-4週",
+      "features": [
+        "基礎Pip-Boy風格UI",
+        "核心卡牌顯示系統",
+        "簡單洗牌抽牌功能",
+        "基本解讀引擎"
+      ],
+      "deliverables": [
+        "可運作的原型",
+        "基礎視覺風格確立",
+        "核心功能驗證"
+      ]
+    },
+    "phase_2_wasteland_expansion": {
+      "duration": "4-5週",
+      "features": [
+        "多種牌陣系統",
+        "角色解讀風格",
+        "音效和動畫系統",
+        "用戶偏好設定"
+      ],
+      "deliverables": [
+        "完整占卜體驗",
+        "多元化解讀選項",
+        "沉浸式音視覺效果"
+      ]
+    },
+    "phase_3_new_vegas_polish": {
+      "duration": "3-4週",
+      "features": [
+        "進階AI解讀整合",
+        "社交分享功能",
+        "成就系統",
+        "行動裝置優化"
+      ],
+      "deliverables": [
+        "完全成熟的產品",
+        "高品質用戶體驗",
+        "可擴展的架構"
+      ]
+    }
+  },
+  "monetization_strategy": {
+    "freemium_model": {
+      "free_features": [
+        "基礎單張抽牌",
+        "簡單三張牌陣",
+        "一種解讀風格",
+        "基本歷史記錄"
+      ],
+      "premium_features": [
+        "所有牌陣解鎖",
+        "全部角色解讀風格",
+        "高級音視覺效果",
+        "無限歷史記錄",
+        "個人化AI建議"
+      ]
+    },
+    "dlc_expansions": [
+      "新維加斯擴展包 (New Vegas Expansion)",
+      "首都廢土包 (Capital Wasteland Pack)",
+      "波士頓聯邦包 (Commonwealth Pack)",
+      "阿帕拉契亞包 (Appalachia Pack)"
+    ]
+  },
+  "marketing_hooks": {
+    "viral_features": [
+      "可分享的廢土運勢",
+      "朋友派系相容性測試",
+      "每日廢土生存挑戰",
+      "社群排行榜"
+    ],
+    "community_building": [
+      "廢土占卜師論壇",
+      "用戶創作卡牌投稿",
+      "每月主題活動",
+      "粉絲藝術展示"
+    ]
+  }
+}

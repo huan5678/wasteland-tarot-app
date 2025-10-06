@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: wasteland_tarot
+      POSTGRES_USER: wasteland_user
+      POSTGRES_PASSWORD: wasteland_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wasteland_user -d wasteland_tarot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://wasteland_user:wasteland_password@postgres:5432/wasteland_tarot
+      REDIS_URL: redis://redis:6379
+      SECRET_KEY: development_secret_key_change_in_production
+      ENVIRONMENT: development
+      DEBUG: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend/app:/app/app:ro
+      - ./backend/alembic:/app/alembic:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_APP_ENV: development
+    depends_on:
+      - backend
+    volumes:
+      - ./app:/app/app:ro
+      - ./components:/app/components:ro
+      - ./lib:/app/lib:ro
+      - ./public:/app/public:ro
+    restart: unless-stopped
+
+  # Database migration
+  migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: alembic upgrade head
+    environment:
+      DATABASE_URL: postgresql+asyncpg://wasteland_user:wasteland_password@postgres:5432/wasteland_tarot
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend/alembic:/app/alembic:ro
+
+  # Seed data
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: python -c "
+      import asyncio;
+      from app.db.database import get_db;
+      from app.db.seed_data import seed_database;
+      async def main():
+          async for db in get_db():
+              await seed_database(db);
+              break;
+      asyncio.run(main())
+      "
+    environment:
+      DATABASE_URL: postgresql+asyncpg://wasteland_user:wasteland_password@postgres:5432/wasteland_tarot
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    volumes:
+      - ./backend/app:/app/app:ro
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  default:
+    name: wasteland_tarot_network

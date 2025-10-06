@@ -1,0 +1,452 @@
+/**
+ * TarotCard Component - Interactive Tarot Card with Flip Animation
+ * Supports different sizes, positions, and reveal states
+ */
+
+'use client'
+
+import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { Star, Spade, Zap } from 'lucide-react'
+import { useTouchInteractions, useDeviceCapabilities } from '@/hooks/useTouchInteractions'
+import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
+import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
+
+interface TarotCard {
+  id: number
+  name: string
+  suit: string
+  number?: number
+  meaning_upright: string
+  meaning_reversed: string
+  image_url: string
+  keywords: string[]
+}
+
+interface TarotCardProps {
+  card: TarotCard
+  isRevealed: boolean
+  position: 'upright' | 'reversed'
+  size?: 'small' | 'medium' | 'large'
+  loading?: boolean
+  showKeywords?: boolean
+  onClick?: (card: TarotCard) => void
+  flipStyle?: 'default' | 'kokonut'
+  isSelectable?: boolean
+  isSelected?: boolean
+  animationDelay?: number
+  showGlow?: boolean
+  enableHaptic?: boolean
+  cardIndex?: number
+  totalCards?: number
+  showProgress?: boolean
+  onLongPress?: (card: TarotCard) => void
+  onSwipe?: (direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => void
+}
+
+const sizeClasses = {
+  small: 'w-24 h-36',
+  medium: 'w-32 h-48',
+  large: 'w-48 h-72'
+}
+
+export function TarotCard({
+  card,
+  isRevealed,
+  position,
+  size = 'medium',
+  loading = false,
+  showKeywords = false,
+  onClick,
+  flipStyle = 'default',
+  isSelectable = false,
+  isSelected = false,
+  animationDelay = 0,
+  showGlow = false,
+  enableHaptic = true,
+  cardIndex = 0,
+  totalCards = 1,
+  showProgress = false,
+  onLongPress,
+  onSwipe
+}: TarotCardProps) {
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [imageError, setImageError] = useState(false)
+  const [previousRevealed, setPreviousRevealed] = useState(isRevealed)
+  const [isHovered, setIsHovered] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [cardState, setCardState] = useState<CardState>('idle')
+  const cardRef = useRef<HTMLDivElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const { isTouchDevice, prefersReducedMotion } = useDeviceCapabilities()
+  const { playSound } = useAudioEffect()
+
+  // Handle flip animation when isRevealed changes
+  useEffect(() => {
+    if (previousRevealed !== isRevealed) {
+      setCardState('revealing')
+      setIsFlipping(true)
+      setIsAnimating(true)
+
+      // 播放卡牌翻轉音效
+      playSound('card-flip')
+
+      const timer = setTimeout(() => {
+        setIsFlipping(false)
+        setIsAnimating(false)
+        setCardState(isRevealed ? 'revealed' : 'idle')
+      }, 600)
+
+      setPreviousRevealed(isRevealed)
+
+      return () => clearTimeout(timer)
+    }
+  }, [isRevealed, previousRevealed, playSound])
+
+  // Handle animation delay for sequential reveals
+  useEffect(() => {
+    if (animationDelay > 0) {
+      setCardState('animating')
+      setIsAnimating(true)
+      timeoutRef.current = setTimeout(() => {
+        setIsAnimating(false)
+        setCardState('idle')
+      }, animationDelay)
+    }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [animationDelay])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
+  // Touch interaction handlers
+  const { touchHandlers, mouseHandlers, triggerHaptic } = useTouchInteractions(
+    {
+      onTap: handleClick,
+      onLongPress: onLongPress ? () => onLongPress(card) : undefined,
+      onSwipe: onSwipe ? (direction, event) => {
+        event.preventDefault()
+        onSwipe(direction, card)
+      } : undefined,
+    },
+    {
+      enableHaptic,
+      longPressDelay: 600,
+      swipeThreshold: 50
+    }
+  )
+
+  function handleClick() {
+    if (onClick && (isRevealed || isSelectable)) {
+      triggerHaptic('light')
+      onClick(card)
+    }
+  }
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true)
+    setCardState(isSelected ? 'selected' : isSelectable ? 'selectable' : 'hovered')
+    if ((isRevealed || isSelectable) && !isTouchDevice) {
+      triggerHaptic('light')
+      // 播放懸停音效（低優先級）
+      playSound('ui-hover', { volume: 0.3 })
+    }
+  }, [isRevealed, isSelectable, isSelected, isTouchDevice, triggerHaptic, playSound])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false)
+    setCardState(isSelected ? 'selected' : isSelectable ? 'selectable' : 'idle')
+  }, [isSelected, isSelectable])
+
+  const handleImageError = useCallback(() => {
+    setImageError(true)
+  }, [])
+
+  // Enhanced loading skeleton with state indicators
+  if (loading) {
+    return (
+      <div
+        data-testid="card-skeleton"
+        className={`${sizeClasses[size]} bg-gray-300 rounded-lg flex items-center justify-center relative`}
+      >
+        <CardLoadingShimmer />
+        <div className="w-8 h-8 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+        <CardStateIndicators state="loading" size={size === 'large' ? 'large' : 'medium'} />
+        {showProgress && totalCards > 1 && (
+          <CardProgressIndicator
+            current={cardIndex + 1}
+            total={totalCards}
+            size={size === 'large' ? 'large' : 'medium'}
+          />
+        )}
+      </div>
+    )
+  }
+
+  if (flipStyle === 'kokonut') {
+    return (
+      <div
+        ref={cardRef}
+        onClick={isTouchDevice ? undefined : handleClick}
+        onMouseEnter={isTouchDevice ? undefined : handleMouseEnter}
+        onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
+        {...(isTouchDevice ? touchHandlers : mouseHandlers)}
+        className={`
+          ${sizeClasses[size]} relative cursor-pointer
+          ${isSelected ? 'animate-card-selection' : ''}
+          ${showGlow ? 'animate-card-glow' : ''}
+          ${isAnimating ? 'animate-card-draw' : ''}
+        `}
+        style={{
+          animationDelay: `${animationDelay}ms`,
+          touchAction: 'manipulation'
+        }}
+      >
+        {/* State indicators */}
+        <CardStateIndicators
+          state={cardState}
+          size={size === 'large' ? 'large' : 'medium'}
+          animate={!prefersReducedMotion}
+        />
+
+        {/* Progress indicator */}
+        {showProgress && totalCards > 1 && (
+          <CardProgressIndicator
+            current={cardIndex + 1}
+            total={totalCards}
+            size={size === 'large' ? 'large' : 'medium'}
+          />
+        )}
+
+        {/* Loading shimmer */}
+        {isAnimating && <CardLoadingShimmer />}
+        <div className={`
+          relative w-full h-full [perspective:1200px] group
+          ${isHovered ? 'animate-card-hover' : ''}
+          transition-all duration-300 ease-out
+        `}>
+          <div className={`
+            relative w-full h-full [transform-style:preserve-3d]
+            ${isFlipping ? 'animate-card-flip' : 'transition-all duration-700'}
+            ${isRevealed ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'}
+          `}>
+            {/* Back */}
+            <div className={`
+              absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-lg
+              border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+              flex items-center justify-center bg-gradient-to-br from-vault-dark to-black
+              ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
+              transition-all duration-300
+            `}>
+              <div className="text-center text-pip-boy-green">
+                <Spade className="w-6 h-6 mb-1 mx-auto" />
+                <div className="text-[10px] font-mono">WASTELAND</div>
+              </div>
+            </div>
+            {/* Front */}
+            <div className={`
+              absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-lg
+              border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+              bg-black flex flex-col overflow-hidden relative
+              ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
+              transition-all duration-300
+            `}>
+              {/* Enhanced indicators */}
+              {(onClick || isSelectable) && (
+                <div className={`
+                  absolute top-1 right-1 flex items-center gap-1
+                  ${isHovered || isSelected ? 'opacity-100' : 'opacity-0'}
+                  transition-all duration-200
+                `}>
+                  <div className="w-2 h-2 bg-pip-boy-green/70 rounded-full animate-pulse"></div>
+                  {isSelected && (
+                    <Zap className="w-3 h-3 text-pip-boy-green animate-pulse" />
+                  )}
+                </div>
+              )}
+
+              {/* Shimmer effect for special states */}
+              {showGlow && (
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer"></div>
+              )}
+              <div className="flex-1 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full">
+                {imageError ? (
+                  <div className="text-pip-boy-green/60 text-xs font-mono">無圖</div>
+                ) : (
+                  <img src={card.image_url} alt={card.name} onError={handleImageError} className="object-contain max-h-full" />
+                )}
+              </div>
+              <div className="p-2 border-t border-pip-boy-green/30 bg-vault-dark/60">
+                <div className="text-center text-pip-boy-green text-[11px] font-mono font-bold leading-tight">{card.name}</div>
+                <div className="text-center text-pip-boy-green/60 text-[10px] font-mono line-clamp-2 mt-0.5">{position === 'upright' ? card.meaning_upright : card.meaning_reversed}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      data-testid="tarot-card"
+      className={`
+        ${sizeClasses[size]} relative group cursor-pointer
+        ${position === 'reversed' ? 'reversed rotate-180' : ''}
+        ${isFlipping ? 'animate-card-flip' : ''}
+        ${isHovered ? 'animate-card-hover' : ''}
+        ${isSelected ? 'animate-card-selection' : ''}
+        ${showGlow ? 'animate-card-glow' : ''}
+        ${isAnimating ? 'animate-card-draw' : ''}
+        transition-all duration-300 ease-out
+      `}
+      onClick={isTouchDevice ? undefined : handleClick}
+      onMouseEnter={isTouchDevice ? undefined : handleMouseEnter}
+      onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
+      {...(isTouchDevice ? touchHandlers : mouseHandlers)}
+      style={{
+        transformStyle: 'preserve-3d',
+        perspective: '1000px',
+        animationDelay: `${animationDelay}ms`,
+        touchAction: 'manipulation'
+      }}
+    >
+      {/* State indicators */}
+      <CardStateIndicators
+        state={cardState}
+        size={size === 'large' ? 'large' : 'medium'}
+        animate={!prefersReducedMotion}
+      />
+
+      {/* Progress indicator */}
+      {showProgress && totalCards > 1 && (
+        <CardProgressIndicator
+          current={cardIndex + 1}
+          total={totalCards}
+          size={size === 'large' ? 'large' : 'medium'}
+        />
+      )}
+
+      {/* Loading shimmer */}
+      {isAnimating && <CardLoadingShimmer />}
+      {/* Card Back */}
+      {!isRevealed && (
+        <div
+          data-testid="card-back"
+          className={`
+            absolute inset-0 w-full h-full bg-gradient-to-br from-purple-900 to-indigo-900
+            rounded-lg border-2 ${isSelected ? 'border-gold-400 animate-pulse' : 'border-gold-400/70'}
+            flex items-center justify-center
+            ${isHovered ? 'shadow-lg shadow-gold-400/20' : ''}
+            transition-all duration-300
+          `}
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: isFlipping ? 'rotateY(-180deg)' : 'rotateY(0deg)',
+            transition: isFlipping ? 'none' : 'transform 0.6s ease-out'
+          }}
+        >
+          <div className="text-center text-gold-400">
+            <Star className="w-8 h-8 mb-2 mx-auto" />
+            <div className="text-xs font-serif">TAROT</div>
+          </div>
+        </div>
+      )}
+
+      {/* Card Front */}
+      {isRevealed && (
+        <div
+          className={`
+            absolute inset-0 w-full h-full bg-white rounded-lg
+            border-2 ${isSelected ? 'border-gray-400 animate-pulse' : 'border-gray-300'}
+            shadow-lg ${isHovered ? 'shadow-xl shadow-gray-400/30' : ''}
+            overflow-hidden relative transition-all duration-300
+          `}
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: isFlipping ? 'rotateY(0deg)' : 'rotateY(180deg)',
+            transition: isFlipping ? 'none' : 'transform 0.6s ease-out'
+          }}
+        >
+          {/* Enhanced indicators */}
+          {(onClick || isSelectable) && (
+            <div className={`
+              absolute top-1 right-1 flex items-center gap-1
+              ${isHovered || isSelected ? 'opacity-100' : 'opacity-0'}
+              transition-all duration-200
+            `}>
+              <div className="w-2 h-2 bg-blue-400/70 rounded-full animate-pulse"></div>
+              {isSelected && (
+                <Zap className="w-3 h-3 text-blue-400 animate-pulse" />
+              )}
+            </div>
+          )}
+
+          {/* Shimmer effect */}
+          {showGlow && (
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-blue-400/10 to-transparent animate-card-shimmer"></div>
+          )}
+          {/* Card Image */}
+          <div className="relative h-3/4">
+            {imageError ? (
+              <div
+                data-testid="card-placeholder"
+                className="w-full h-full bg-gray-200 flex items-center justify-center"
+              >
+                <div className="text-center text-gray-500">
+                  <Spade className="w-6 h-6 mb-2 mx-auto" />
+                  <div className="text-xs">圖片載入失敗</div>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={card.image_url}
+                alt={`${card.name} 塔羅牌`}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+              />
+            )}
+          </div>
+
+          {/* Card Info */}
+          <div className="h-1/4 p-2 bg-white">
+            <h3 className="font-bold text-sm text-center mb-1">{card.name}</h3>
+
+            {/* Card Meaning */}
+            <p className="text-xs text-gray-600 text-center line-clamp-2">
+              {position === 'upright' ? card.meaning_upright : card.meaning_reversed}
+            </p>
+
+            {/* Keywords */}
+            {showKeywords && card.keywords && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {card.keywords.map((keyword, index) => (
+                  <span
+                    key={index}
+                    className="text-xs bg-blue-100 text-blue-800 px-1 rounded"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Enhanced TarotCard component with improved interactions, animations, and accessibility
+// Uses Tailwind animations defined in globals.css for better performance

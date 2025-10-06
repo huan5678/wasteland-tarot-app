@@ -1,0 +1,258 @@
+{
+  "summary": {
+    "totalPages": 8,
+    "successfulPages": 8,
+    "failedPages": 0,
+    "averageChineseRatio": "48.3",
+    "totalIssues": 11,
+    "grade": "D",
+    "timestamp": "2025-09-27T08:22:19.643Z"
+  },
+  "pages": [
+    {
+      "name": "首頁",
+      "url": "http://localhost:3001/",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "62.8",
+        "totalTextLength": 723,
+        "chineseCharCount": 321,
+        "englishCharCount": 190
+      },
+      "timestamp": "2025-09-27T08:22:00.487Z"
+    },
+    {
+      "name": "登入頁面",
+      "url": "http://localhost:3001/auth/login",
+      "analysis": {
+        "pageTitle": "Vault Dweller 登入 - 廢土塔羅",
+        "englishMatches": [],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "47.1",
+        "totalTextLength": 479,
+        "chineseCharCount": 152,
+        "englishCharCount": 171
+      },
+      "timestamp": "2025-09-27T08:22:03.179Z"
+    },
+    {
+      "name": "註冊頁面",
+      "url": "http://localhost:3001/auth/register",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "40.2",
+        "totalTextLength": 696,
+        "chineseCharCount": 176,
+        "englishCharCount": 262
+      },
+      "timestamp": "2025-09-27T08:22:05.938Z"
+    },
+    {
+      "name": "卡牌頁面",
+      "url": "http://localhost:3001/cards",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "73.5",
+        "totalTextLength": 643,
+        "chineseCharCount": 302,
+        "englishCharCount": 109
+      },
+      "timestamp": "2025-09-27T08:22:08.759Z"
+    },
+    {
+      "name": "儀表板",
+      "url": "http://localhost:3001/dashboard",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "67.0",
+        "totalTextLength": 758,
+        "chineseCharCount": 339,
+        "englishCharCount": 167
+      },
+      "timestamp": "2025-09-27T08:22:11.460Z"
+    },
+    {
+      "name": "占卜記錄",
+      "url": "http://localhost:3001/readings",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [
+          {
+            "text": "LOGIN",
+            "pattern": 0,
+            "context": "view your readings\n\nLOGIN TO PIP-BOY\n廢土塔羅\n\nPi"
+          },
+          {
+            "text": "readings",
+            "pattern": 5,
+            "context": "ged in to view your readings\n\nLOGIN TO PIP-BOY\n廢"
+          }
+        ],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "38.1",
+        "totalTextLength": 414,
+        "chineseCharCount": 104,
+        "englishCharCount": 169
+      },
+      "timestamp": "2025-09-27T08:22:14.246Z"
+    },
+    {
+      "name": "新占卜",
+      "url": "http://localhost:3001/readings/new",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [
+          {
+            "text": "NEW",
+            "pattern": 5,
+            "context": "ip-Boy 占卜終端機\n\n登入\n註冊\nNEW TAROT READING\n\nWast"
+          },
+          {
+            "text": "TAROT",
+            "pattern": 5,
+            "context": "oy 占卜終端機\n\n登入\n註冊\nNEW TAROT READING\n\nWasteland "
+          },
+          {
+            "text": "READING",
+            "pattern": 5,
+            "context": "端機\n\n登入\n註冊\nNEW TAROT READING\n\nWasteland Divinati"
+          },
+          {
+            "text": "Reading",
+            "pattern": 5,
+            "context": "guidance on\n\nSelect Reading Type:\nSINGLE CARD\n\n"
+          },
+          {
+            "text": "reading",
+            "pattern": 5,
+            "context": "CARD\n\nComprehensive reading: Past, Present, and"
+          }
+        ],
+        "formIssues": [
+          {
+            "element": "label",
+            "attribute": "textContent",
+            "text": "SINGLE CARDQuick insight and direct guidance for immediate situations",
+            "className": "cursor-pointer border-2 p-4 transition-all border-pip-boy-green bg-pip-boy-green/10"
+          },
+          {
+            "element": "button",
+            "attribute": "textContent",
+            "text": "PROCEED TO CARD DRAWING",
+            "className": "w-full py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors"
+          }
+        ],
+        "metaIssues": [],
+        "chineseRatio": "19.3",
+        "totalTextLength": 743,
+        "chineseCharCount": 104,
+        "englishCharCount": 434
+      },
+      "timestamp": "2025-09-27T08:22:16.960Z"
+    },
+    {
+      "name": "個人檔案",
+      "url": "http://localhost:3001/profile",
+      "analysis": {
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "englishMatches": [
+          {
+            "text": "LOGIN",
+            "pattern": 0,
+            "context": " view your profile\n\nLOGIN TO PIP-BOY\n廢土塔羅\n\nPi"
+          },
+          {
+            "text": "profile",
+            "pattern": 3,
+            "context": "ged in to view your profile\n\nLOGIN TO PIP-BOY\n廢"
+          }
+        ],
+        "formIssues": [],
+        "metaIssues": [],
+        "chineseRatio": "38.2",
+        "totalTextLength": 413,
+        "chineseCharCount": 104,
+        "englishCharCount": 168
+      },
+      "timestamp": "2025-09-27T08:22:19.642Z"
+    }
+  ],
+  "commonIssues": {
+    "englishText": [
+      {
+        "text": "LOGIN",
+        "pattern": 0,
+        "context": "view your readings\n\nLOGIN TO PIP-BOY\n廢土塔羅\n\nPi"
+      },
+      {
+        "text": "readings",
+        "pattern": 5,
+        "context": "ged in to view your readings\n\nLOGIN TO PIP-BOY\n廢"
+      },
+      {
+        "text": "NEW",
+        "pattern": 5,
+        "context": "ip-Boy 占卜終端機\n\n登入\n註冊\nNEW TAROT READING\n\nWast"
+      },
+      {
+        "text": "TAROT",
+        "pattern": 5,
+        "context": "oy 占卜終端機\n\n登入\n註冊\nNEW TAROT READING\n\nWasteland "
+      },
+      {
+        "text": "READING",
+        "pattern": 5,
+        "context": "端機\n\n登入\n註冊\nNEW TAROT READING\n\nWasteland Divinati"
+      },
+      {
+        "text": "Reading",
+        "pattern": 5,
+        "context": "guidance on\n\nSelect Reading Type:\nSINGLE CARD\n\n"
+      },
+      {
+        "text": "reading",
+        "pattern": 5,
+        "context": "CARD\n\nComprehensive reading: Past, Present, and"
+      },
+      {
+        "text": "LOGIN",
+        "pattern": 0,
+        "context": " view your profile\n\nLOGIN TO PIP-BOY\n廢土塔羅\n\nPi"
+      },
+      {
+        "text": "profile",
+        "pattern": 3,
+        "context": "ged in to view your profile\n\nLOGIN TO PIP-BOY\n廢"
+      }
+    ],
+    "formElements": [
+      {
+        "element": "label",
+        "attribute": "textContent",
+        "text": "SINGLE CARDQuick insight and direct guidance for immediate situations",
+        "className": "cursor-pointer border-2 p-4 transition-all border-pip-boy-green bg-pip-boy-green/10"
+      },
+      {
+        "element": "button",
+        "attribute": "textContent",
+        "text": "PROCEED TO CARD DRAWING",
+        "className": "w-full py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors"
+      }
+    ],
+    "metaInfo": []
+  }
+}

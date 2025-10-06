@@ -1,0 +1,1408 @@
+{
+  "summary": {
+    "totalPages": 8,
+    "successfulPages": 8,
+    "failedPages": 0,
+    "overallPassRate": "100.0",
+    "grade": "A+",
+    "timestamp": "2025-09-27T08:18:30.150Z"
+  },
+  "pages": [
+    {
+      "name": "首頁",
+      "url": "http://localhost:3001/",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "次標題",
+            "selector": "h2",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 30,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgba(0, 255, 136, 0.1)",
+            "className": "border-2 border-pip-boy-green p-4 inline-block mb-8"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 9
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 207,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:08.113Z"
+    },
+    {
+      "name": "登入頁面",
+      "url": "http://localhost:3001/auth/login",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "輸入框",
+            "selector": "input",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "標籤",
+            "selector": "label",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  bg-bg-secondary border-border-primary text-text-primary glow-green\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "Vault Dweller 登入 - 廢土塔羅",
+        "totalElements": 10
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 191,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:11.542Z"
+    },
+    {
+      "name": "註冊頁面",
+      "url": "http://localhost:3001/auth/register",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "輸入框",
+            "selector": "input",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "標籤",
+            "selector": "label",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  bg-bg-secondary border-border-primary text-text-primary glow-green\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 10
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 172,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:14.578Z"
+    },
+    {
+      "name": "卡牌頁面",
+      "url": "http://localhost:3001/cards",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "輸入框",
+            "selector": "input",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "標籤",
+            "selector": "label",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 10
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 239,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:18.022Z"
+    },
+    {
+      "name": "儀表板",
+      "url": "http://localhost:3001/dashboard",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "次標題",
+            "selector": "h2",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 9
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 219,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:21.228Z"
+    },
+    {
+      "name": "占卜記錄",
+      "url": "http://localhost:3001/readings",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 8
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 147,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:24.167Z"
+    },
+    {
+      "name": "新占卜",
+      "url": "http://localhost:3001/readings/new",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "次標題",
+            "selector": "h2",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "輸入框",
+            "selector": "input",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "標籤",
+            "selector": "label",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 11
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 189,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:27.178Z"
+    },
+    {
+      "name": "個人檔案",
+      "url": "http://localhost:3001/profile",
+      "analysis": {
+        "textElements": [
+          {
+            "type": "主標題",
+            "selector": "h1",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 20,
+            "visible": true
+          },
+          {
+            "type": "小標題",
+            "selector": "h3",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 18,
+            "visible": true
+          },
+          {
+            "type": "段落文字",
+            "selector": "p",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "按鈕",
+            "selector": "button",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "連結",
+            "selector": "a",
+            "contrast": "12.98",
+            "required": 3,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 16,
+            "visible": true
+          },
+          {
+            "type": "次要文字",
+            "selector": ".text-text-secondary",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 14,
+            "visible": true
+          },
+          {
+            "type": "淡化文字",
+            "selector": ".text-text-muted",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgba(0, 0, 0, 0)",
+            "fontSize": 12,
+            "visible": true
+          },
+          {
+            "type": "Pip-Boy綠色文字",
+            "selector": ".text-pip-boy-green",
+            "contrast": "12.98",
+            "required": 4.5,
+            "passes": true,
+            "level": "AAA",
+            "textColor": "rgb(0, 255, 136)",
+            "backgroundColor": "rgb(12, 12, 12)",
+            "fontSize": 16,
+            "visible": true
+          }
+        ],
+        "borderElements": [
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "0px 0px 2px",
+            "borderStyle": "solid",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "borderColor": "rgb(0, 255, 136)",
+            "borderWidth": "2px",
+            "borderStyle": "solid",
+            "className": "w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green"
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "1px",
+            "borderStyle": "solid",
+            "className": "\n                  flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer\n                  border border-border-muted hover:border-border-primary\n                  hover:bg-bg-secondary transition-all duration-200\n                  text-text-secondary hover:text-text-primary\n                "
+          },
+          {
+            "borderColor": "oklch(0.928 0.006 264.531)",
+            "borderWidth": "0px",
+            "borderStyle": "solid",
+            "className": "h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"
+          }
+        ],
+        "backgroundElements": [
+          {
+            "backgroundColor": "rgb(12, 12, 12)",
+            "className": "text-pip-boy-green font-mono antialiased"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-b-2 border-pip-boy-green"
+          },
+          {
+            "backgroundColor": "rgb(26, 26, 26)",
+            "className": "border-t-2 border-pip-boy-green"
+          }
+        ],
+        "pageTitle": "廢土塔羅 - Pip-Boy 占卜終端機",
+        "totalElements": 8
+      },
+      "errors": {
+        "errors": [],
+        "visibleElementCount": 147,
+        "hasContent": true
+      },
+      "timestamp": "2025-09-27T08:18:30.149Z"
+    }
+  ]
+}

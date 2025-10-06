@@ -1,0 +1,670 @@
+@import "tailwindcss";
+
+/* === FALLOUT COLOR SYSTEM === */
+/* 修正版本：使用標準 CSS 變數語法而非 @theme */
+
+:root {
+  /* Primary Pip-Boy Colors */
+  --color-pip-boy-green: #00ff88;        /* Main Pip-Boy green */
+  --color-pip-boy-green-bright: #00ff41; /* Bright variant for highlights */
+  --color-pip-boy-green-dark: #00cc66;   /* Darker variant for text */
+  --color-pip-boy-green-medium: #008855; /* Medium variant for backgrounds */
+  --color-pip-boy-green-deep: #004433;   /* Deep variant for subtle elements */
+  --color-pip-boy-green-faded: #003322;  /* Faded variant for disabled states */
+
+  /* Terminal Green Variants */
+  --color-terminal-green: #00cc66;       /* Terminal green */
+  --color-terminal-green-bright: #00ff88;/* Bright terminal green */
+  --color-terminal-green-dim: #009944;   /* Dim terminal green */
+
+  /* Vault Blue Family */
+  --color-vault-blue: #003d66;           /* Primary vault blue */
+  --color-vault-blue-light: #0055aa;     /* Light vault blue */
+  --color-vault-blue-dark: #002244;      /* Dark vault blue */
+  --color-vault-blue-deep: #001122;      /* Deep vault blue */
+
+  /* Wasteland Neutrals */
+  --color-wasteland-dark: #1a1a1a;       /* Primary dark background */
+  --color-wasteland-darker: #0c0c0c;     /* Deepest background */
+  --color-wasteland-medium: #2d2d2d;     /* Medium background */
+  --color-wasteland-light: #3d3d3d;      /* Light background */
+  --color-wasteland-lighter: #4d4d4d;    /* Lighter variant */
+
+  /* Metal Gray Family */
+  --color-metal-gray: #2d2d2d;           /* Primary metal gray */
+  --color-metal-gray-light: #3d3d3d;     /* Light metal gray */
+  --color-metal-gray-dark: #1d1d1d;      /* Dark metal gray */
+  --color-metal-gray-rust: #2a2520;      /* Rusty metal gray */
+
+  /* Concrete Family */
+  --color-concrete: #3d3d3d;             /* Primary concrete */
+  --color-concrete-light: #4d4d4d;       /* Light concrete */
+  --color-concrete-dark: #2d2d2d;        /* Dark concrete */
+
+  /* Radiation Colors */
+  --color-radiation-orange: #ff8800;     /* Primary radiation orange */
+  --color-radiation-orange-bright: #ffaa33; /* Bright radiation orange */
+  --color-radiation-orange-dark: #cc6600; /* Dark radiation orange */
+  --color-radiation-orange-deep: #994400; /* Deep radiation orange */
+
+  /* Warning Colors */
+  --color-warning-yellow: #ffdd00;       /* Primary warning yellow */
+  --color-warning-yellow-bright: #ffff33; /* Bright warning yellow */
+  --color-warning-yellow-dark: #ccaa00;  /* Dark warning yellow */
+
+  /* Rust Family */
+  --color-rust-brown: #8B4513;           /* Primary rust brown */
+  --color-rust-light: #A0522D;           /* Light rust brown */
+  --color-rust-dark: #654321;            /* Dark rust brown */
+  --color-rust-red: #aa3311;             /* Rusty red */
+
+  /* Status Colors - Fallout Themed */
+  --color-success: #00ff88;              /* Success - Pip-Boy green */
+  --color-success-bg: #004433;           /* Success background */
+  --color-success-border: #00cc66;       /* Success border */
+
+  --color-warning: #ffdd00;              /* Warning - Fallout yellow */
+  --color-warning-bg: #443300;           /* Warning background */
+  --color-warning-border: #ccaa00;       /* Warning border */
+
+  --color-error: #ff4444;                /* Error - Red alert */
+  --color-error-bg: #441111;             /* Error background */
+  --color-error-border: #cc3333;         /* Error border */
+
+  --color-info: #0088ff;                 /* Info - Vault blue variant */
+  --color-info-bg: #003366;              /* Info background */
+  --color-info-border: #0066cc;          /* Info border */
+
+  /* Text Color System - WCAG AA Compliant */
+  --color-text-primary: #00ff88;         /* Primary text - Pip-Boy green (7.4:1) */
+  --color-text-secondary: #00ff99;       /* Secondary text - Enhanced green (6.8:1) */
+  --color-text-muted: #66cc99;           /* Muted text - Enhanced for contrast (4.6:1) */
+  --color-text-disabled: #4d9966;        /* Disabled text - Improved contrast (3.1:1) */
+  --color-text-inverse: #1a1a1a;         /* Inverse text (dark on light) */
+  --color-text-high-contrast: #ffffff;   /* High contrast text for critical elements */
+  --color-text-error: #ff6666;           /* Error text with sufficient contrast */
+  --color-text-warning: #ffcc33;         /* Warning text with sufficient contrast */
+
+  /* Link Colors */
+  --color-link: #00ff88;                 /* Primary link color */
+  --color-link-hover: #00ff41;           /* Link hover color */
+  --color-link-visited: #00cc66;         /* Visited link color */
+  --color-link-active: #ffdd00;          /* Active link color */
+
+  /* Border Colors - Enhanced for Accessibility */
+  --color-border-primary: #00ff88;       /* Primary border - High contrast */
+  --color-border-secondary: #66cc99;     /* Secondary border - Improved contrast */
+  --color-border-muted: #4d9966;         /* Muted border - Enhanced visibility */
+  --color-border-focus: #00ffff;         /* Focus border - Maximum contrast */
+  --color-border-focus-ring: rgba(0, 255, 255, 0.3); /* Focus ring for accessibility */
+  --color-border-error: #ff6666;         /* Error border */
+  --color-border-warning: #ffcc33;       /* Warning border */
+
+  /* Background Colors */
+  --color-bg-primary: #1a1a1a;           /* Primary background */
+  --color-bg-secondary: #2d2d2d;         /* Secondary background */
+  --color-bg-tertiary: #3d3d3d;          /* Tertiary background */
+  --color-bg-overlay: rgba(26, 26, 26, 0.9); /* Overlay background */
+
+  /* Button Color System - WCAG AA Enhanced */
+  --color-btn-primary-bg: #00ff88;       /* Primary button background */
+  --color-btn-primary-fg: #000000;       /* Primary button foreground - Maximum contrast */
+  --color-btn-primary-hover: #00cc66;    /* Primary button hover */
+  --color-btn-primary-active: #009944;   /* Primary button active */
+  --color-btn-primary-focus: #00ffff;    /* Primary button focus state */
+
+  --color-btn-secondary-bg: #333333;     /* Secondary button background - Enhanced */
+  --color-btn-secondary-fg: #00ff88;     /* Secondary button foreground */
+  --color-btn-secondary-hover: #404040;  /* Secondary button hover - Better contrast */
+  --color-btn-secondary-border: #00ff88; /* Secondary button border - Enhanced */
+  --color-btn-secondary-focus: #66cc99;  /* Secondary button focus state */
+
+  --color-btn-danger-bg: #ff4444;        /* Danger button background */
+  --color-btn-danger-fg: #ffffff;        /* Danger button foreground */
+  --color-btn-danger-hover: #cc3333;     /* Danger button hover */
+
+  --color-btn-warning-bg: #ffdd00;       /* Warning button background */
+  --color-btn-warning-fg: #1a1a1a;       /* Warning button foreground */
+  --color-btn-warning-hover: #ccaa00;    /* Warning button hover */
+
+  /* Form Element Colors - Accessibility Enhanced */
+  --color-input-bg: #333333;             /* Input background - Better contrast */
+  --color-input-fg: #00ff88;             /* Input foreground */
+  --color-input-border: #4d9966;         /* Input border - Enhanced visibility */
+  --color-input-border-focus: #00ffff;   /* Input focus border - High contrast */
+  --color-input-border-error: #ff6666;   /* Input error border */
+  --color-input-placeholder: #66cc99;    /* Input placeholder - Improved contrast */
+  --color-input-focus-ring: rgba(0, 255, 255, 0.3); /* Focus ring for inputs */
+
+  /* Special Effect Colors */
+  --color-glow-green: rgba(0, 255, 136, 0.5);    /* Green glow effect */
+  --color-glow-orange: rgba(255, 136, 0, 0.5);   /* Orange glow effect */
+  --color-glow-yellow: rgba(255, 221, 0, 0.5);   /* Yellow glow effect */
+  --color-glow-blue: rgba(0, 61, 102, 0.5);      /* Blue glow effect */
+
+  /* Background Opacity Variants - WCAG Compliant */
+  --color-pip-boy-green-5: rgba(0, 255, 136, 0.05);   /* 5% opacity */
+  --color-pip-boy-green-10: rgba(0, 255, 136, 0.10);  /* 10% opacity */
+  --color-pip-boy-green-15: rgba(0, 255, 136, 0.15);  /* 15% opacity */
+  --color-pip-boy-green-20: rgba(0, 255, 136, 0.20);  /* 20% opacity */
+  --color-pip-boy-green-25: rgba(0, 255, 136, 0.25);  /* 25% opacity */
+  --color-pip-boy-green-30: rgba(0, 255, 136, 0.30);  /* 30% opacity */
+
+  /* High Contrast Background Variants */
+  --color-bg-overlay-strong: rgba(26, 26, 26, 0.95);  /* Strong overlay for text readability */
+  --color-bg-interactive: #2a2a2a;                    /* Interactive elements background */
+  --color-bg-interactive-hover: #333333;              /* Interactive hover state */
+
+  /* Scanline Colors */
+  --color-scanline: rgba(0, 255, 136, 0.1);      /* Scanline color */
+  --color-scanline-bright: rgba(0, 255, 136, 0.3); /* Bright scanline */
+
+  /* Interference Colors */
+  --color-interference: rgba(255, 136, 0, 0.1);  /* Interference color */
+  --color-static: rgba(255, 255, 255, 0.05);     /* Static noise color */
+
+  /* Tarot-specific Colors */
+  --color-tarot-gold: #fbbf24;           /* Tarot gold */
+  --color-tarot-gold-dark: #f59e0b;      /* Dark tarot gold */
+  --color-tarot-mystical: #663399;       /* Mystical purple */
+
+  /* Legacy shadcn/ui Compatibility - WCAG Enhanced */
+  --color-background: #1a1a1a;
+  --color-foreground: #00ff88;
+  --color-card: #333333;
+  --color-card-foreground: #00ff88;
+  --color-popover: #333333;
+  --color-popover-foreground: #00ff88;
+  --color-primary: #00ff88;
+  --color-primary-foreground: #000000;
+  --color-secondary: #404040;
+  --color-secondary-foreground: #00ff88;
+  --color-muted: #404040;
+  --color-muted-foreground: #66cc99;
+  --color-accent: #4d9966;
+  --color-accent-foreground: #000000;
+  --color-destructive: #ff4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #4d9966;
+  --color-input: #333333;
+  --color-ring: #00ffff;
+
+  /* Chart Colors for Analytics */
+  --chart-1: 142 76% 36%;  /* Green variant 1 */
+  --chart-2: 160 60% 45%;  /* Green variant 2 */
+  --chart-3: 39 80% 50%;   /* Orange variant */
+  --chart-4: 200 70% 40%;  /* Blue variant */
+  --chart-5: 43 74% 49%;   /* Yellow variant */
+}
+
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-gray-800;
+  }
+  body {
+    background-color: var(--color-wasteland-dark);
+    color: var(--color-pip-boy-green);
+  }
+}
+
+/* Wasteland Background Styles */
+@layer components {
+  .wasteland-background {
+    @apply fixed inset-0 -z-10 overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      var(--color-wasteland-darker) 0%,
+      var(--color-wasteland-dark) 25%,
+      var(--color-wasteland-medium) 50%,
+      var(--color-wasteland-dark) 75%,
+      var(--color-wasteland-darker) 100%
+    );
+  }
+
+  /* 輻射粒子動畫 */
+  .radiation-particles {
+    @apply absolute inset-0 opacity-30;
+  }
+
+  .particle {
+    @apply absolute w-1 h-1 rounded-full;
+    background: var(--color-pip-boy-green);
+    box-shadow: 0 0 6px var(--color-glow-green);
+    animation: float var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    left: var(--x-start, 50%);
+    top: var(--y-start, 50%);
+  }
+
+  .particle:nth-child(3n) {
+    background: var(--color-radiation-orange);
+    box-shadow: 0 0 4px var(--color-glow-orange);
+  }
+
+  .particle:nth-child(5n) {
+    background: var(--color-warning-yellow);
+    box-shadow: 0 0 3px var(--color-glow-yellow);
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.3;
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.7;
+    }
+    50% {
+      transform: translateY(-10px) translateX(-5px);
+      opacity: 1;
+    }
+    75% {
+      transform: translateY(-30px) translateX(15px);
+      opacity: 0.5;
+    }
+  }
+
+  /* 廢土網格紋理 */
+  .wasteland-grid {
+    @apply absolute inset-0 opacity-10;
+    background-image:
+      linear-gradient(var(--color-terminal-green) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-terminal-green) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-flicker 8s ease-in-out infinite;
+  }
+
+  @keyframes grid-flicker {
+    0%, 100% { opacity: 0.05; }
+    50% { opacity: 0.15; }
+  }
+
+  /* Pip-Boy 掃描線效果 */
+  .scan-lines {
+    @apply absolute inset-0 opacity-30;
+    background: linear-gradient(
+      transparent 50%,
+      var(--color-scanline) 50%
+    );
+    background-size: 100% 4px;
+    animation: scan 2s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  /* === FALLOUT THEMED COMPONENT CLASSES === */
+
+  /* Button Variants */
+  .btn-pip-boy {
+    background-color: var(--color-pip-boy-green);
+    color: var(--color-wasteland-dark);
+    border-color: var(--color-pip-boy-green-dark);
+    transition: all 0.2s;
+    box-shadow: 0 0 10px var(--color-glow-green);
+  }
+
+  .btn-pip-boy:hover {
+    background-color: var(--color-pip-boy-green-dark);
+    box-shadow: 0 0 15px var(--color-glow-green);
+  }
+
+  /* Text Variants */
+  .text-pip-boy {
+    color: var(--color-text-primary);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+  }
+
+  .text-pip-boy-green {
+    color: var(--color-pip-boy-green);
+  }
+
+  .text-glow-green {
+    text-shadow: 0 0 8px var(--color-glow-green);
+  }
+
+  /* Interface Elements */
+  .interface-border {
+    border: 2px solid var(--color-pip-boy-green);
+    box-shadow:
+      inset 0 0 10px var(--color-glow-green),
+      0 0 10px var(--color-glow-green);
+  }
+
+  .interface-header {
+    background-color: var(--color-pip-boy-green);
+    color: var(--color-wasteland-dark);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-weight: bold;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .glow-green {
+    box-shadow: 0 0 10px var(--color-glow-green);
+  }
+
+  /* Background variants */
+  .bg-primary {
+    background-color: var(--color-bg-primary);
+  }
+
+  .bg-secondary {
+    background-color: var(--color-bg-secondary);
+  }
+
+  /* Pip-Boy Green Background Variants */
+  .bg-pip-boy-green\/5 {
+    background-color: var(--color-pip-boy-green-5);
+  }
+
+  .bg-pip-boy-green\/10 {
+    background-color: var(--color-pip-boy-green-10);
+  }
+
+  .bg-pip-boy-green\/20 {
+    background-color: var(--color-pip-boy-green-20);
+  }
+
+  .bg-pip-boy-green\/30 {
+    background-color: var(--color-pip-boy-green-30);
+  }
+
+  /* Enhanced Background Variants */
+  .bg-pip-boy-green\/15 {
+    background-color: var(--color-pip-boy-green-15);
+  }
+
+  .bg-pip-boy-green\/25 {
+    background-color: var(--color-pip-boy-green-25);
+  }
+
+  .bg-interactive {
+    background-color: var(--color-bg-interactive);
+  }
+
+  .bg-interactive-hover {
+    background-color: var(--color-bg-interactive-hover);
+  }
+
+  /* Border variants */
+  .border-primary {
+    border-color: var(--color-border-primary);
+  }
+
+  .border-pip-boy-green {
+    border-color: var(--color-pip-boy-green);
+  }
+
+  /* === ACCESSIBILITY ENHANCEMENTS === */
+
+  /* High Contrast Focus States */
+  .focus-enhanced:focus,
+  .focus-enhanced:focus-within {
+    outline: 3px solid var(--color-border-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 1px var(--color-border-focus-ring);
+  }
+
+  /* Button Focus Enhancement */
+  .btn-pip-boy:focus {
+    outline: 3px solid var(--color-btn-primary-focus);
+    outline-offset: 2px;
+    box-shadow:
+      0 0 10px var(--color-glow-green),
+      0 0 0 1px var(--color-border-focus-ring);
+  }
+
+  /* Input Focus Enhancement */
+  .input-enhanced:focus {
+    border-color: var(--color-input-border-focus);
+    outline: 2px solid var(--color-input-border-focus);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 3px var(--color-input-focus-ring);
+  }
+
+  /* High Contrast Text Utilities */
+  .text-high-contrast {
+    color: var(--color-text-high-contrast);
+  }
+
+  .text-enhanced-secondary {
+    color: var(--color-text-secondary);
+  }
+
+  .text-enhanced-muted {
+    color: var(--color-text-muted);
+  }
+
+  .text-error {
+    color: var(--color-text-error);
+  }
+
+  .text-warning {
+    color: var(--color-text-warning);
+  }
+
+  /* Interactive Element Enhancements */
+  .interactive-element {
+    background-color: var(--color-bg-interactive);
+    border: 1px solid var(--color-border-secondary);
+    transition: all 0.2s ease;
+  }
+
+  .interactive-element:hover {
+    background-color: var(--color-bg-interactive-hover);
+    border-color: var(--color-border-primary);
+  }
+
+  .interactive-element:focus {
+    outline: 3px solid var(--color-border-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 1px var(--color-border-focus-ring);
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    .particle,
+    .scan-lines,
+    .wasteland-grid {
+      animation: none;
+    }
+
+    .btn-pip-boy,
+    .interactive-element {
+      transition: none;
+    }
+  }
+
+  /* High Contrast Mode Support */
+  @media (prefers-contrast: high) {
+    :root {
+      --color-text-primary: #ffffff;
+      --color-text-secondary: #ffffff;
+      --color-text-muted: #cccccc;
+      --color-border-focus: #ffffff;
+      --color-btn-primary-fg: #000000;
+      --color-bg-primary: #000000;
+    }
+  }
+
+  /* Color Blind Friendly Alternatives */
+  .colorblind-safe {
+    /* Use patterns and shapes alongside color */
+    --error-pattern: repeating-linear-gradient(
+      45deg,
+      var(--color-error),
+      var(--color-error) 2px,
+      transparent 2px,
+      transparent 8px
+    );
+
+    --warning-pattern: repeating-linear-gradient(
+      90deg,
+      var(--color-warning),
+      var(--color-warning) 3px,
+      transparent 3px,
+      transparent 6px
+    );
+  }
+}
+
+/* === DOTO FONT NUMERIC STYLES === */
+/* Note: --font-doto CSS variable is automatically injected by Next.js Font Optimization */
+
+/* 數字專用樣式類別 */
+.numeric {
+  font-family: var(--font-doto), monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+/* 統計數據大號顯示 - 響應式 */
+.stat-number {
+  font-family: var(--font-doto), monospace;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .stat-number {
+    font-size: 1.875rem;
+    line-height: 2.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .stat-number {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+
+/* 小型計數器 - 響應式 */
+.counter {
+  font-family: var(--font-doto), monospace;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 768px) {
+  .counter {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+  }
+}
+
+/* CSS 降級處理 - 不支援 CSS 變數的瀏覽器 */
+@supports not (font-family: var(--font-doto)) {
+  .font-doto,
+  .numeric,
+  .stat-number,
+  .counter {
+    font-family: 'Courier New', monospace;
+  }
+}
+
+/* === TYPOGRAPHY UTILITY CLASSES === */
+
+/* Heading hierarchy with responsive scaling */
+.heading-1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.2;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: -0.025em;
+}
+
+.heading-2 {
+  font-size: clamp(1.75rem, 4vw, 3rem);
+  line-height: 1.2;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: -0.025em;
+}
+
+.heading-3 {
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  line-height: 1.3;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.heading-4 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  line-height: 1.3;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.heading-5 {
+  font-size: clamp(1.125rem, 2.5vw, 1.75rem);
+  line-height: 1.4;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.heading-6 {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  line-height: 1.4;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+/* Body text variants */
+.body-lg {
+  font-size: 1.25rem;
+  line-height: 1.75;
+  font-family: monospace;
+}
+
+.body-base {
+  font-size: 1rem;
+  line-height: 1.5;
+  font-family: monospace;
+}
+
+.body-sm {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-family: monospace;
+}
+
+.body-xs {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-family: monospace;
+}
+
+/* Responsive typography adjustments for mobile */
+@media (max-width: 640px) {
+  .heading-1,
+  .heading-2,
+  .heading-3 {
+    letter-spacing: 0;
+  }
+}
+
+/* High contrast mode support for typography */
+@media (prefers-contrast: high) {
+  .heading-1,
+  .heading-2,
+  .heading-3,
+  .heading-4,
+  .heading-5,
+  .heading-6,
+  .body-lg,
+  .body-base,
+  .body-sm,
+  .body-xs {
+    color: var(--color-text-high-contrast);
+  }
+}

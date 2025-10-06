@@ -1,0 +1,597 @@
+@import "tailwindcss";
+
+@theme {
+  /* === FALLOUT COLOR SYSTEM === */
+
+  /* Primary Pip-Boy Colors */
+  --color-pip-boy-green: #00ff88;        /* Main Pip-Boy green */
+  --color-pip-boy-green-bright: #00ff41; /* Bright variant for highlights */
+  --color-pip-boy-green-dark: #00cc66;   /* Darker variant for text */
+  --color-pip-boy-green-medium: #008855; /* Medium variant for backgrounds */
+  --color-pip-boy-green-deep: #004433;   /* Deep variant for subtle elements */
+  --color-pip-boy-green-faded: #003322;  /* Faded variant for disabled states */
+
+  /* Terminal Green Variants */
+  --color-terminal-green: #00cc66;       /* Terminal green */
+  --color-terminal-green-bright: #00ff88;/* Bright terminal green */
+  --color-terminal-green-dim: #009944;   /* Dim terminal green */
+
+  /* Vault Blue Family */
+  --color-vault-blue: #003d66;           /* Primary vault blue */
+  --color-vault-blue-light: #0055aa;     /* Light vault blue */
+  --color-vault-blue-dark: #002244;      /* Dark vault blue */
+  --color-vault-blue-deep: #001122;      /* Deep vault blue */
+
+  /* Wasteland Neutrals */
+  --color-wasteland-dark: #1a1a1a;       /* Primary dark background */
+  --color-wasteland-darker: #0c0c0c;     /* Deepest background */
+  --color-wasteland-medium: #2d2d2d;     /* Medium background */
+  --color-wasteland-light: #3d3d3d;      /* Light background */
+  --color-wasteland-lighter: #4d4d4d;    /* Lighter variant */
+
+  /* Metal Gray Family */
+  --color-metal-gray: #2d2d2d;           /* Primary metal gray */
+  --color-metal-gray-light: #3d3d3d;     /* Light metal gray */
+  --color-metal-gray-dark: #1d1d1d;      /* Dark metal gray */
+  --color-metal-gray-rust: #2a2520;      /* Rusty metal gray */
+
+  /* Concrete Family */
+  --color-concrete: #3d3d3d;             /* Primary concrete */
+  --color-concrete-light: #4d4d4d;       /* Light concrete */
+  --color-concrete-dark: #2d2d2d;        /* Dark concrete */
+
+  /* Radiation Colors */
+  --color-radiation-orange: #ff8800;     /* Primary radiation orange */
+  --color-radiation-orange-bright: #ffaa33; /* Bright radiation orange */
+  --color-radiation-orange-dark: #cc6600; /* Dark radiation orange */
+  --color-radiation-orange-deep: #994400; /* Deep radiation orange */
+
+  /* Warning Colors */
+  --color-warning-yellow: #ffdd00;       /* Primary warning yellow */
+  --color-warning-yellow-bright: #ffff33; /* Bright warning yellow */
+  --color-warning-yellow-dark: #ccaa00;  /* Dark warning yellow */
+
+  /* Rust Family */
+  --color-rust-brown: #8B4513;           /* Primary rust brown */
+  --color-rust-light: #A0522D;           /* Light rust brown */
+  --color-rust-dark: #654321;            /* Dark rust brown */
+  --color-rust-red: #aa3311;             /* Rusty red */
+
+  /* Status Colors - Fallout Themed */
+  --color-success: #00ff88;              /* Success - Pip-Boy green */
+  --color-success-bg: #004433;           /* Success background */
+  --color-success-border: #00cc66;       /* Success border */
+
+  --color-warning: #ffdd00;              /* Warning - Fallout yellow */
+  --color-warning-bg: #443300;           /* Warning background */
+  --color-warning-border: #ccaa00;       /* Warning border */
+
+  --color-error: #ff4444;                /* Error - Red alert */
+  --color-error-bg: #441111;             /* Error background */
+  --color-error-border: #cc3333;         /* Error border */
+
+  --color-info: #0088ff;                 /* Info - Vault blue variant */
+  --color-info-bg: #003366;              /* Info background */
+  --color-info-border: #0066cc;          /* Info border */
+
+  /* Text Color System */
+  --color-text-primary: #00ff88;         /* Primary text - Pip-Boy green */
+  --color-text-secondary: #00cc66;       /* Secondary text - Darker green */
+  --color-text-muted: #008855;           /* Muted text */
+  --color-text-disabled: #004433;        /* Disabled text */
+  --color-text-inverse: #1a1a1a;         /* Inverse text (dark on light) */
+
+  /* Link Colors */
+  --color-link: #00ff88;                 /* Primary link color */
+  --color-link-hover: #00ff41;           /* Link hover color */
+  --color-link-visited: #00cc66;         /* Visited link color */
+  --color-link-active: #ffdd00;          /* Active link color */
+
+  /* Border Colors */
+  --color-border-primary: #00cc66;       /* Primary border */
+  --color-border-secondary: #008855;     /* Secondary border */
+  --color-border-muted: #004433;         /* Muted border */
+  --color-border-focus: #00ff88;         /* Focus border */
+
+  /* Background Colors */
+  --color-bg-primary: #1a1a1a;           /* Primary background */
+  --color-bg-secondary: #2d2d2d;         /* Secondary background */
+  --color-bg-tertiary: #3d3d3d;          /* Tertiary background */
+  --color-bg-overlay: rgba(26, 26, 26, 0.9); /* Overlay background */
+
+  /* Button Color System */
+  --color-btn-primary-bg: #00ff88;       /* Primary button background */
+  --color-btn-primary-fg: #1a1a1a;       /* Primary button foreground */
+  --color-btn-primary-hover: #00cc66;    /* Primary button hover */
+  --color-btn-primary-active: #009944;   /* Primary button active */
+
+  --color-btn-secondary-bg: #2d2d2d;     /* Secondary button background */
+  --color-btn-secondary-fg: #00ff88;     /* Secondary button foreground */
+  --color-btn-secondary-hover: #3d3d3d;  /* Secondary button hover */
+  --color-btn-secondary-border: #00cc66; /* Secondary button border */
+
+  --color-btn-danger-bg: #ff4444;        /* Danger button background */
+  --color-btn-danger-fg: #ffffff;        /* Danger button foreground */
+  --color-btn-danger-hover: #cc3333;     /* Danger button hover */
+
+  --color-btn-warning-bg: #ffdd00;       /* Warning button background */
+  --color-btn-warning-fg: #1a1a1a;       /* Warning button foreground */
+  --color-btn-warning-hover: #ccaa00;    /* Warning button hover */
+
+  /* Form Element Colors */
+  --color-input-bg: #2d2d2d;             /* Input background */
+  --color-input-fg: #00ff88;             /* Input foreground */
+  --color-input-border: #004433;         /* Input border */
+  --color-input-border-focus: #00cc66;   /* Input focus border */
+  --color-input-placeholder: #008855;    /* Input placeholder */
+
+  /* Special Effect Colors */
+  --color-glow-green: rgba(0, 255, 136, 0.5);    /* Green glow effect */
+  --color-glow-orange: rgba(255, 136, 0, 0.5);   /* Orange glow effect */
+  --color-glow-yellow: rgba(255, 221, 0, 0.5);   /* Yellow glow effect */
+  --color-glow-blue: rgba(0, 61, 102, 0.5);      /* Blue glow effect */
+
+  /* Scanline Colors */
+  --color-scanline: rgba(0, 255, 136, 0.1);      /* Scanline color */
+  --color-scanline-bright: rgba(0, 255, 136, 0.3); /* Bright scanline */
+
+  /* Interference Colors */
+  --color-interference: rgba(255, 136, 0, 0.1);  /* Interference color */
+  --color-static: rgba(255, 255, 255, 0.05);     /* Static noise color */
+
+  /* Tarot-specific Colors */
+  --color-tarot-gold: #fbbf24;           /* Tarot gold */
+  --color-tarot-gold-dark: #f59e0b;      /* Dark tarot gold */
+  --color-tarot-mystical: #663399;       /* Mystical purple */
+
+  /* Legacy shadcn/ui Compatibility */
+  --color-background: #1a1a1a;
+  --color-foreground: #00ff88;
+  --color-card: #2d2d2d;
+  --color-card-foreground: #00ff88;
+  --color-popover: #2d2d2d;
+  --color-popover-foreground: #00ff88;
+  --color-primary: #00ff88;
+  --color-primary-foreground: #1a1a1a;
+  --color-secondary: #3d3d3d;
+  --color-secondary-foreground: #00ff88;
+  --color-muted: #3d3d3d;
+  --color-muted-foreground: #00cc66;
+  --color-accent: #004433;
+  --color-accent-foreground: #00ff88;
+  --color-destructive: #ff4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #004433;
+  --color-input: #2d2d2d;
+  --color-ring: #00cc66;
+}
+
+
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-gray-800;
+  }
+  body {
+    @apply bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-50;
+  }
+}
+
+/* Wasteland Background Styles */
+@layer components {
+  .wasteland-background {
+    @apply fixed inset-0 -z-10 overflow-hidden;
+    background: linear-gradient(
+      135deg,
+      var(--color-wasteland-darker) 0%,
+      var(--color-wasteland-dark) 25%,
+      var(--color-wasteland-medium) 50%,
+      var(--color-wasteland-dark) 75%,
+      var(--color-wasteland-darker) 100%
+    );
+  }
+
+  /* 輻射粒子動畫 */
+  .radiation-particles {
+    @apply absolute inset-0 opacity-30;
+  }
+
+  .particle {
+    @apply absolute w-1 h-1 rounded-full;
+    background: var(--color-pip-boy-green);
+    box-shadow: 0 0 6px var(--color-glow-green);
+    animation: float var(--duration, 4s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    left: var(--x-start, 50%);
+    top: var(--y-start, 50%);
+  }
+
+  .particle:nth-child(3n) {
+    background: var(--color-radiation-orange);
+    box-shadow: 0 0 4px var(--color-glow-orange);
+  }
+
+  .particle:nth-child(5n) {
+    background: var(--color-warning-yellow);
+    box-shadow: 0 0 3px var(--color-glow-yellow);
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) translateX(0px);
+      opacity: 0.3;
+    }
+    25% {
+      transform: translateY(-20px) translateX(10px);
+      opacity: 0.7;
+    }
+    50% {
+      transform: translateY(-10px) translateX(-5px);
+      opacity: 1;
+    }
+    75% {
+      transform: translateY(-30px) translateX(15px);
+      opacity: 0.5;
+    }
+  }
+
+  /* 廢土網格紋理 */
+  .wasteland-grid {
+    @apply absolute inset-0 opacity-10;
+    background-image:
+      linear-gradient(var(--color-terminal-green) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-terminal-green) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: grid-flicker 8s ease-in-out infinite;
+  }
+
+  @keyframes grid-flicker {
+    0%, 100% { opacity: 0.05; }
+    50% { opacity: 0.15; }
+  }
+
+  /* Pip-Boy 掃描線效果 */
+  .scan-lines {
+    @apply absolute inset-0 opacity-30;
+    background: linear-gradient(
+      transparent 50%,
+      var(--color-scanline) 50%
+    );
+    background-size: 100% 4px;
+    animation: scan 2s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  /* 電子螢幕漸層 */
+  .screen-gradient {
+    @apply absolute inset-0;
+    background: radial-gradient(
+      circle at center,
+      transparent 0%,
+      var(--color-scanline) 50%,
+      var(--color-bg-overlay) 100%
+    );
+  }
+
+  /* 輻射干擾效果 */
+  .radiation-interference {
+    @apply absolute inset-0 opacity-20;
+    background:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        var(--color-interference) 2px,
+        var(--color-interference) 4px
+      );
+    animation: interference 0.1s linear infinite;
+  }
+
+  @keyframes interference {
+    0% { transform: translateX(0px); }
+    100% { transform: translateX(4px); }
+  }
+
+  /* 動畫強度變體 */
+  .animation-low .particle {
+    animation-duration: 8s;
+  }
+
+  .animation-low .scan-lines {
+    animation-duration: 4s;
+  }
+
+  .animation-high .particle {
+    animation-duration: 2s;
+  }
+
+  .animation-high .scan-lines {
+    animation-duration: 1s;
+  }
+
+  .animation-high .radiation-interference {
+    animation-duration: 0.05s;
+  }
+
+  /* 頁面變體樣式 */
+  .wasteland-bg-homepage {
+    background: linear-gradient(
+      135deg,
+      var(--color-wasteland-darker) 0%,
+      var(--color-pip-boy-green-deep) 20%,
+      var(--color-wasteland-dark) 60%,
+      var(--color-wasteland-darker) 100%
+    );
+  }
+
+  .wasteland-bg-login {
+    background: linear-gradient(
+      180deg,
+      var(--color-wasteland-darker) 0%,
+      var(--color-radiation-orange) 1%,
+      var(--color-wasteland-dark) 2%,
+      var(--color-wasteland-medium) 50%,
+      var(--color-wasteland-dark) 98%,
+      var(--color-radiation-orange) 99%,
+      var(--color-wasteland-darker) 100%
+    );
+  }
+
+  .wasteland-bg-dashboard {
+    background: linear-gradient(
+      45deg,
+      var(--color-wasteland-darker) 0%,
+      var(--color-wasteland-medium) 30%,
+      var(--color-pip-boy-green-deep) 50%,
+      var(--color-wasteland-medium) 70%,
+      var(--color-wasteland-darker) 100%
+    );
+  }
+
+  /* 響應式調整 */
+  @media (max-width: 768px) {
+    .particle {
+      animation-duration: calc(var(--duration, 4s) * 1.5);
+    }
+
+    .wasteland-grid {
+      background-size: 30px 30px;
+    }
+
+    .radiation-interference {
+      opacity: 0.1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .particle,
+    .scan-lines,
+    .radiation-interference,
+    .wasteland-grid {
+      animation: none;
+    }
+  }
+
+  /* === FALLOUT THEMED COMPONENT CLASSES === */
+
+  /* Button Variants */
+  .btn-pip-boy {
+    @apply bg-pip-boy-green text-wasteland-dark border-pip-boy-green-dark;
+    @apply hover:bg-pip-boy-green-dark hover:shadow-lg;
+    @apply focus:ring-2 focus:ring-pip-boy-green focus:ring-opacity-50;
+    @apply transition-all duration-200;
+    box-shadow: 0 0 10px var(--color-glow-green);
+  }
+
+  .btn-pip-boy:hover {
+    box-shadow: 0 0 15px var(--color-glow-green);
+  }
+
+  .btn-wasteland-secondary {
+    @apply bg-wasteland-medium text-pip-boy-green border-2 border-border-primary;
+    @apply hover:bg-wasteland-light hover:border-pip-boy-green;
+    @apply focus:ring-2 focus:ring-border-focus focus:ring-opacity-50;
+    @apply transition-all duration-200;
+  }
+
+  .btn-radiation-danger {
+    @apply bg-error text-white border-error-border;
+    @apply hover:bg-error-border hover:shadow-lg;
+    @apply focus:ring-2 focus:ring-error focus:ring-opacity-50;
+    @apply transition-all duration-200;
+    box-shadow: 0 0 8px rgba(255, 68, 68, 0.3);
+  }
+
+  .btn-radiation-danger:hover {
+    box-shadow: 0 0 12px rgba(255, 68, 68, 0.5);
+  }
+
+  .btn-vault-warning {
+    @apply bg-warning text-wasteland-dark border-warning-border;
+    @apply hover:bg-warning-border hover:shadow-lg;
+    @apply focus:ring-2 focus:ring-warning focus:ring-opacity-50;
+    @apply transition-all duration-200;
+    box-shadow: 0 0 8px var(--color-glow-yellow);
+  }
+
+  .btn-vault-warning:hover {
+    box-shadow: 0 0 12px var(--color-glow-yellow);
+  }
+
+  .btn-success-green {
+    @apply bg-success text-wasteland-dark border-success-border;
+    @apply hover:bg-success-border hover:shadow-lg;
+    @apply focus:ring-2 focus:ring-success focus:ring-opacity-50;
+    @apply transition-all duration-200;
+    box-shadow: 0 0 8px var(--color-glow-green);
+  }
+
+  .btn-success-green:hover {
+    box-shadow: 0 0 12px var(--color-glow-green);
+  }
+
+  /* Input and Form Elements */
+  .input-terminal {
+    @apply bg-input-bg text-input-fg border border-input-border;
+    @apply focus:border-input-border-focus focus:ring-2 focus:ring-border-focus;
+    @apply placeholder-input-placeholder transition-all duration-200;
+    @apply font-mono;
+  }
+
+  .input-terminal:focus {
+    box-shadow: 0 0 8px var(--color-glow-green);
+  }
+
+  .label-pip-boy {
+    @apply text-text-secondary font-mono text-sm font-medium;
+  }
+
+  .form-error {
+    @apply text-error text-sm font-mono;
+  }
+
+  .form-success {
+    @apply text-success text-sm font-mono;
+  }
+
+  /* Text Variants */
+  .text-pip-boy {
+    @apply text-text-primary font-mono;
+  }
+
+  .text-terminal {
+    @apply text-text-secondary font-mono;
+  }
+
+  .text-muted-wasteland {
+    @apply text-text-muted font-mono;
+  }
+
+  .text-disabled-vault {
+    @apply text-text-disabled font-mono;
+  }
+
+  /* Link Variants */
+  .link-pip-boy {
+    @apply text-link hover:text-link-hover visited:text-link-visited;
+    @apply transition-colors duration-200 font-mono;
+  }
+
+  .link-pip-boy:hover {
+    text-shadow: 0 0 5px var(--color-glow-green);
+  }
+
+  /* Card and Container Variants */
+  .card-wasteland {
+    @apply bg-bg-secondary border border-border-primary rounded-lg;
+    @apply shadow-lg backdrop-blur-sm;
+  }
+
+  .card-pip-boy {
+    @apply bg-bg-secondary border-2 border-pip-boy-green rounded-lg;
+    @apply shadow-lg backdrop-blur-sm;
+    box-shadow: 0 0 15px var(--color-glow-green);
+  }
+
+  .container-vault {
+    @apply bg-bg-primary border border-border-secondary rounded;
+    @apply p-4 backdrop-blur-sm;
+  }
+
+  /* Special Effects */
+  .glow-green {
+    box-shadow: 0 0 10px var(--color-glow-green);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 10px var(--color-glow-orange);
+  }
+
+  .glow-yellow {
+    box-shadow: 0 0 10px var(--color-glow-yellow);
+  }
+
+  .glow-blue {
+    box-shadow: 0 0 10px var(--color-glow-blue);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+  }
+
+  /* Terminal Text Effects */
+  .text-glow-green {
+    text-shadow: 0 0 8px var(--color-glow-green);
+  }
+
+  .text-glow-orange {
+    text-shadow: 0 0 8px var(--color-glow-orange);
+  }
+
+  .text-flicker {
+    animation: text-flicker 2s ease-in-out infinite;
+  }
+
+  @keyframes text-flicker {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Pip-Boy Interface Elements */
+  .interface-border {
+    @apply border-2 border-pip-boy-green;
+    box-shadow:
+      inset 0 0 10px var(--color-glow-green),
+      0 0 10px var(--color-glow-green);
+  }
+
+  .interface-header {
+    @apply bg-pip-boy-green text-wasteland-dark font-mono font-bold;
+    @apply px-3 py-1 text-xs uppercase tracking-wider;
+  }
+
+  .status-bar {
+    @apply bg-bg-secondary border-t border-border-primary;
+    @apply px-4 py-2 flex items-center justify-between;
+    @apply text-text-secondary font-mono text-xs;
+  }
+
+  /* Radiation Warning Elements */
+  .radiation-warning {
+    @apply bg-warning-bg border border-warning-border;
+    @apply text-warning p-3 rounded font-mono;
+    animation: radiation-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes radiation-pulse {
+    0%, 100% {
+      box-shadow: 0 0 5px var(--color-glow-yellow);
+    }
+    50% {
+      box-shadow: 0 0 15px var(--color-glow-yellow);
+    }
+  }
+
+  /* Loading and Progress Elements */
+  .loading-terminal {
+    @apply text-pip-boy-green font-mono;
+    animation: terminal-cursor 1s ease-in-out infinite;
+  }
+
+  @keyframes terminal-cursor {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .progress-bar-pip-boy {
+    @apply bg-bg-secondary border border-border-primary rounded-full overflow-hidden;
+  }
+
+  .progress-fill-pip-boy {
+    @apply bg-pip-boy-green transition-all duration-300;
+    box-shadow: 0 0 10px var(--color-glow-green);
+  }
+}
