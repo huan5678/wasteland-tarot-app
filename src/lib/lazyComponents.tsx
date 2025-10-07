@@ -114,13 +114,14 @@ export const LazyCardDetailModal = dynamic(
   }
 )
 
-export const LazyMobileCardModal = dynamic(
-  () => import('@/components/layout/MobileCardModal'),
-  {
-    loading: () => <ModalLoading />,
-    ssr: false,
-  }
-)
+// Temporarily disabled due to encoding issues
+// export const LazyMobileCardModal = dynamic(
+//   () => import('@/components/layout/MobileCardModal'),
+//   {
+//     loading: () => <ModalLoading />,
+//     ssr: false,
+//   }
+// )
 
 /**
  * 分析相關組件（懶載入）

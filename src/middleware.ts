@@ -1,11 +1,18 @@
 /**
  * Next.js Middleware - 路由保護和會話管理
  * 保護需要認證的路由，驗證會話有效性
+ *
+ * 重構變更：
+ * - 移除 Supabase middleware 依賴
+ * - 改為透過後端 API 驗證 JWT token（/api/v1/auth/verify）
+ * - Token 儲存在 httpOnly cookies 中
  */
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { updateSession } from '@/utils/supabase/middleware'
+
+// 後端 API 基礎 URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 // 定義受保護的路由模式
 const protectedRoutes = [
@@ -20,27 +27,69 @@ const protectedRoutes = [
 const publicRoutes = [
   '/auth/login',
   '/auth/register',
-  '/auth/callback',
 ]
+
+/**
+ * 透過後端 API 驗證 JWT token
+ * 從 request cookies 中讀取 access_token 並發送至後端驗證
+ */
+async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: boolean; user?: any }> {
+  try {
+    const cookieHeader = request.headers.get('cookie') || ''
+
+    // 呼叫後端驗證端點
+    const verifyResponse = await fetch(`${API_BASE_URL}/api/v1/auth/verify`, {
+      method: 'POST',
+      headers: {
+        'Cookie': cookieHeader,
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+
+    if (!verifyResponse.ok) {
+      return { isValid: false }
+    }
+
+    const data = await verifyResponse.json()
+    return {
+      isValid: true,
+      user: data.user,
+    }
+  } catch (error) {
+    console.error('Token verification failed:', error)
+    return { isValid: false }
+  }
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
-
-  // 更新 Supabase 會話
-  const { supabaseResponse, user } = await updateSession(request)
 
   // 檢查是否為受保護路由
   const isProtectedRoute = protectedRoutes.some(route =>
     pathname.startsWith(route)
   )
 
-  // 檢查是否為公開路由
+  // 檢查是否為公開路由（不含 callback）
   const isPublicRoute = publicRoutes.some(route =>
     pathname.startsWith(route)
   )
 
+  // OAuth callback 路由需要特殊處理，不驗證 token
+  if (pathname.startsWith('/auth/callback')) {
+    return NextResponse.next()
+  }
+
+  // 驗證 token（透過後端 API）
+  const { isValid, user } = await verifyTokenWithBackend(request)
+
   // 受保護路由：需要登入
-  if (isProtectedRoute && !user) {
+  if (isProtectedRoute && !isValid) {
+    // 清除無效的 cookies
+    const response = NextResponse.redirect(new URL('/auth/login', request.url))
+    response.cookies.delete('access_token')
+    response.cookies.delete('refresh_token')
+
     // 儲存原始 URL 以便登入後返回
     const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)
     const loginUrl = new URL('/auth/login', request.url)
@@ -50,34 +99,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // 公開路由：已登入使用者重導向至 dashboard
-  if (isPublicRoute && user && !pathname.startsWith('/auth/callback')) {
+  if (isPublicRoute && isValid) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // 檢查會話是否即將過期（< 5 分鐘）
-  if (user && supabaseResponse) {
-    const sessionCookie = request.cookies.get('sb-access-token')
-    if (sessionCookie) {
-      try {
-        // 解析 JWT 檢查過期時間
-        const payload = JSON.parse(
-          Buffer.from(sessionCookie.value.split('.')[1], 'base64').toString()
-        )
-        const expiresAt = payload.exp * 1000 // 轉換為毫秒
-        const now = Date.now()
-        const fiveMinutes = 5 * 60 * 1000
-
-        // 如果即將過期，在回應 header 中標記
-        if (expiresAt - now < fiveMinutes) {
-          supabaseResponse.headers.set('X-Session-Expiring', 'true')
-        }
-      } catch (error) {
-        console.error('Failed to parse session token:', error)
-      }
-    }
-  }
-
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 // 配置 middleware 運行的路徑

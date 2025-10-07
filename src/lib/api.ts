@@ -90,15 +90,48 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
       // Use timedFetch instead of fetch for automatic performance tracking
       const response = await timedFetch(url, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  })
+        ...options,
+        headers: {
+          ...defaultHeaders,
+          ...options.headers,
+        },
+        // 重構變更：加入 credentials: 'include' 以自動發送 httpOnly cookies
+        credentials: 'include',
+      })
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+
+        // 401 Unauthorized - 嘗試刷新 token（僅一次）
+        if (response.status === 401 && endpoint !== '/api/v1/auth/refresh' && endpoint !== '/api/v1/auth/login') {
+          try {
+            // 呼叫 refresh endpoint
+            const refreshResponse = await timedFetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+              method: 'POST',
+              credentials: 'include',
+            })
+
+            if (refreshResponse.ok) {
+              // Token 刷新成功，重試原始請求
+              const retryResponse = await timedFetch(url, {
+                ...options,
+                headers: {
+                  ...defaultHeaders,
+                  ...options.headers,
+                },
+                credentials: 'include',
+              })
+
+              if (retryResponse.ok) {
+                return retryResponse.json()
+              }
+            }
+          } catch (refreshError) {
+            // 刷新失敗，繼續拋出原始 401 錯誤
+            console.error('Token refresh failed:', refreshError)
+          }
+        }
+
         // 5xx retryable
         if (response.status >= 500 && attempt < maxRetries) {
           attempt++
@@ -191,6 +224,7 @@ export const readingsAPI = {
 // Auth API
 export const authAPI = {
   // 註冊（使用 email + password + name）
+  // 重構變更：使用正確的後端 API 路徑，tokens 將儲存在 httpOnly cookies
   register: (userData: {
     email: string
     password: string
@@ -200,44 +234,42 @@ export const authAPI = {
     faction_alignment?: string
     vault_number?: number
     wasteland_location?: string
-  }): Promise<{ message: string; access_token: string; refresh_token: string; token_type: string; user: User }> =>
-    apiRequest('/auth/register', {
+  }): Promise<{ message: string; user: User }> =>
+    apiRequest('/api/v1/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
 
   // 登入（使用 email + password）
+  // 重構變更：使用正確的後端 API 路徑，tokens 將儲存在 httpOnly cookies
   login: (credentials: {
     email: string
     password: string
-  }): Promise<{ message: string; access_token: string; refresh_token: string; token_type: string; user: User }> =>
-    apiRequest('/auth/login', {
+  }): Promise<{ message: string; user: User }> =>
+    apiRequest('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
     }),
 
   // 獲取當前用戶信息
-  getCurrentUser: (token: string): Promise<User> =>
-    apiRequest('/auth/me', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+  // 重構變更：移除 token 參數，改為依賴 httpOnly cookies
+  getCurrentUser: (): Promise<User> =>
+    apiRequest('/api/v1/auth/me', {
+      method: 'GET',
     }),
 
   // 刷新 token
-  refreshToken: (refreshToken: string): Promise<{ access_token: string; refresh_token: string; token_type: string }> =>
-    apiRequest('/auth/token/refresh', {
+  // 重構變更：移除 refreshToken 參數，改為從 httpOnly cookies 讀取
+  refreshToken: (): Promise<{ access_token: string; refresh_token: string; token_type: string }> =>
+    apiRequest('/api/v1/auth/refresh', {
       method: 'POST',
-      body: JSON.stringify({ refresh_token: refreshToken }),
     }),
 
   // 登出
-  logout: (token: string): Promise<{ message: string; is_oauth_user: boolean; oauth_provider: string | null }> =>
-    apiRequest('/auth/logout', {
+  // 重構變更：移除 token 參數，改為依賴 httpOnly cookies
+  logout: (): Promise<{ message: string; is_oauth_user: boolean; oauth_provider: string | null }> =>
+    apiRequest('/api/v1/auth/logout', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
     }),
 }
 

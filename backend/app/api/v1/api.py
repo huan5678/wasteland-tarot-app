@@ -6,6 +6,7 @@ Aggregates all endpoint routers with proper organization
 from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
+    auth,
     cards,
     readings,
     readings_stream,
@@ -23,6 +24,12 @@ from app.api import oauth
 api_router = APIRouter()
 
 # Include all endpoint routers with their respective tags
+# Authentication endpoints (new - for JWT verify, refresh, logout, me)
+api_router.include_router(
+    auth.router,
+    tags=["🔐 認證"]
+)
+
 api_router.include_router(
     cards.router,
     prefix="/cards",

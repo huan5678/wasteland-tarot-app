@@ -41,17 +41,15 @@ function CallbackContent() {
       .then(result => {
         if (result.success && result.user) {
           // 更新 auth store
-          setOAuthUser(
-            {
-              id: result.user.id,
-              email: result.user.email,
-              name: result.user.name,
-              isOAuthUser: true,
-              oauthProvider: result.user.oauth_provider,
-              profilePicture: result.user.profile_picture_url,
-            },
-            '' // token 已在後端設定到 cookies
-          )
+          // 重構變更：不再傳遞 token，後端已設定 httpOnly cookies
+          setOAuthUser({
+            id: result.user.id,
+            email: result.user.email,
+            name: result.user.name,
+            isOAuthUser: true,
+            oauthProvider: result.user.oauth_provider,
+            profilePicture: result.user.profile_picture_url,
+          })
 
           setStatus('success')
 

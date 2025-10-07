@@ -92,12 +92,14 @@ export function useOAuth() {
       }
 
       // 呼叫後端 OAuth 回調端點
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/oauth/callback`, {
+      // 重構變更：使用正確的後端 API 路徑
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+      const response = await fetch(`${API_BASE_URL}/auth/oauth/callback`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // 包含 cookies
+        credentials: 'include', // 包含 cookies 以接收 httpOnly cookies
         body: JSON.stringify({
           code,
           provider: 'google',
