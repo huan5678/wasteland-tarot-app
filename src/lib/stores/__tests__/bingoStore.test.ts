@@ -51,7 +51,7 @@ const createMockBingoStore = (): BingoStore => {
     error: null as string | null
   }
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
   return {
     get dailyNumber() { return state.dailyNumber },

@@ -42,68 +42,8 @@ class OAuthCallbackResponse(BaseModel):
     token_type: str = "bearer"
 
 
-class LoginRequest(BaseModel):
-    """傳統登入請求"""
-    email: EmailStr
-    password: str
-
-
-class LoginResponse(BaseModel):
-    """傳統登入回應"""
-    access_token: str
-    refresh_token: str
-    user: Dict[str, Any]
-    token_type: str = "bearer"
-
-
-@router.post("/login", response_model=LoginResponse)
-async def traditional_login(
-    request: LoginRequest,
-    response: Response,
-    db: AsyncSession = Depends(get_db)
-):
-    """
-    傳統 Email/Password 登入端點
-
-    此為測試用端點，實際生產環境應使用 Supabase Auth 或完整的認證服務。
-
-    Args:
-        request: 包含 email 和 password 的登入請求
-        response: FastAPI Response 物件用於設定 cookies
-        db: 資料庫 session
-
-    Returns:
-        LoginResponse: 包含 access_token, refresh_token 和使用者資料
-
-    Raises:
-        HTTPException: 當登入失敗時
-    """
-    try:
-        # TODO: 實作完整的密碼驗證邏輯
-        # 目前為測試用簡化版本
-
-        logger.info(f"Login attempt for email: {request.email}")
-
-        # 在實際環境中，這裡應該：
-        # 1. 從資料庫查詢使用者
-        # 2. 驗證密碼 hash
-        # 3. 檢查帳號狀態
-        # 4. 更新最後登入時間
-
-        # 暫時返回測試用資料
-        raise HTTPException(
-            status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="Traditional login is not yet implemented. Please use OAuth login."
-        )
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Login error: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Login failed due to internal error"
-        )
+# 註釋：傳統登入端點已移至 /api/v1/endpoints/auth.py
+# 此檔案僅保留 OAuth 相關端點
 
 
 @router.post("/oauth/callback", response_model=OAuthCallbackResponse)

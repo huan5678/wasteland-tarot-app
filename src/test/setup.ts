@@ -128,7 +128,7 @@ global.sessionStorage = sessionStorageMock as any
 
 // 設定環境變數
 process.env.NODE_ENV = 'test'
-process.env.NEXT_PUBLIC_API_URL = 'http://localhost:8000'
+process.env.NEXT_PUBLIC_API_BASE_URL = 'http://localhost:8000'
 
 // Mock Web Audio API for Pip-Boy sound effects
 Object.defineProperty(window, 'AudioContext', {

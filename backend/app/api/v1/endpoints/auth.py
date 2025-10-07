@@ -1,13 +1,13 @@
 """
 認證 API 端點
 
-提供 JWT token 驗證、刷新、登出等認證相關功能
+提供 JWT token 驗證、刷新、登出、註冊、登入等認證相關功能
 """
 
 from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, field_validator
 
 from app.db.database import get_db
 from app.core.security import (
@@ -17,7 +17,14 @@ from app.core.security import (
     get_access_token_cookie_settings,
     get_refresh_token_cookie_settings
 )
-from app.core.exceptions import InvalidTokenError
+from app.core.exceptions import (
+    InvalidTokenError,
+    UserAlreadyExistsError,
+    InvalidCredentialsError,
+    AccountLockedError,
+    AccountInactiveError,
+    OAuthUserCannotLoginError
+)
 from app.services.user_service import UserService
 import logging
 
@@ -48,6 +55,50 @@ class MeResponse(BaseModel):
     """當前使用者資訊回應"""
     user: Dict[str, Any]
     statistics: Optional[Dict[str, Any]] = None
+
+
+class RegisterRequest(BaseModel):
+    """註冊請求"""
+    email: EmailStr
+    password: str
+    confirm_password: str
+    name: str
+    display_name: Optional[str] = None
+    faction_alignment: Optional[str] = None
+    vault_number: Optional[int] = None
+    wasteland_location: Optional[str] = None
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError('密碼長度必須至少 8 個字元')
+        return v
+
+    @field_validator('name')
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        if not v or len(v) < 1 or len(v) > 50:
+            raise ValueError('名稱長度必須在 1-50 字元之間')
+        return v
+
+
+class RegisterResponse(BaseModel):
+    """註冊回應"""
+    message: str
+    user: Dict[str, Any]
+
+
+class LoginRequest(BaseModel):
+    """登入請求"""
+    email: EmailStr
+    password: str
+
+
+class LoginResponse(BaseModel):
+    """登入回應"""
+    message: str
+    user: Dict[str, Any]
 
 
 @router.post("/verify", response_model=VerifyResponse)
@@ -384,3 +435,204 @@ async def get_current_user(
         },
         statistics=statistics
     )
+
+
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+async def register_user(
+    request: RegisterRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    使用者註冊（Email + Password + Name）
+
+    建立新使用者帳號並自動登入（設定 httpOnly cookies）。
+
+    Args:
+        request: 註冊請求資料
+        response: FastAPI Response 物件用於設定 cookies
+        db: 資料庫 session
+
+    Returns:
+        RegisterResponse: 包含成功訊息和使用者資料
+
+    Raises:
+        HTTPException: 400 - 驗證錯誤
+        HTTPException: 409 - Email 已存在
+        HTTPException: 500 - 內部錯誤
+    """
+    try:
+        # 驗證密碼確認
+        if request.password != request.confirm_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="密碼與確認密碼不符"
+            )
+
+        # 建立使用者
+        user_service = UserService(db)
+        user = await user_service.create_user(
+            email=request.email,
+            password=request.password,
+            name=request.name,
+            display_name=request.display_name,
+            faction_alignment=request.faction_alignment,
+            vault_number=request.vault_number,
+            wasteland_location=request.wasteland_location
+        )
+
+        # 生成 JWT tokens
+        access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+        # 設定 httpOnly cookies
+        access_cookie_settings = get_access_token_cookie_settings()
+        refresh_cookie_settings = get_refresh_token_cookie_settings()
+
+        response.set_cookie(
+            **access_cookie_settings,
+            value=access_token
+        )
+        response.set_cookie(
+            **refresh_cookie_settings,
+            value=refresh_token
+        )
+
+        logger.info(f"User registered successfully: {user.email}")
+
+        return RegisterResponse(
+            message="註冊成功",
+            user={
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "display_name": user.display_name,
+                "faction_alignment": user.faction_alignment,
+                "karma_score": user.karma_score,
+                "vault_number": user.vault_number,
+                "wasteland_location": user.wasteland_location,
+                "is_oauth_user": False,
+                "is_verified": user.is_verified,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None
+            }
+        )
+
+    except UserAlreadyExistsError as e:
+        logger.warning(f"Registration failed - email exists: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ValueError as e:
+        logger.warning(f"Registration failed - validation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Registration failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="註冊失敗，請稍後再試"
+        )
+
+
+@router.post("/login", response_model=LoginResponse)
+async def login_user(
+    request: LoginRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    使用者登入（Email + Password）
+
+    驗證使用者憑證並設定 httpOnly cookies。
+
+    Args:
+        request: 登入請求資料
+        response: FastAPI Response 物件用於設定 cookies
+        db: 資料庫 session
+
+    Returns:
+        LoginResponse: 包含成功訊息和使用者資料
+
+    Raises:
+        HTTPException: 401 - 憑證無效或帳號問題
+        HTTPException: 403 - OAuth 使用者無法使用傳統登入
+        HTTPException: 500 - 內部錯誤
+    """
+    try:
+        # 驗證使用者憑證
+        user_service = UserService(db)
+        user = await user_service.authenticate_user(request.email, request.password)
+
+        # 生成 JWT tokens
+        access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
+        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
+        # 設定 httpOnly cookies
+        access_cookie_settings = get_access_token_cookie_settings()
+        refresh_cookie_settings = get_refresh_token_cookie_settings()
+
+        response.set_cookie(
+            **access_cookie_settings,
+            value=access_token
+        )
+        response.set_cookie(
+            **refresh_cookie_settings,
+            value=refresh_token
+        )
+
+        logger.info(f"User logged in successfully: {user.email}")
+
+        return LoginResponse(
+            message="登入成功",
+            user={
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "display_name": user.display_name,
+                "faction_alignment": user.faction_alignment,
+                "karma_score": user.karma_score,
+                "karma_alignment": user.karma_alignment,
+                "vault_number": user.vault_number,
+                "wasteland_location": user.wasteland_location,
+                "profile_picture_url": user.profile_picture_url,
+                "is_oauth_user": bool(user.oauth_provider),
+                "is_verified": user.is_verified,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None
+            }
+        )
+
+    except InvalidCredentialsError as e:
+        logger.warning(f"Login failed - invalid credentials: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except OAuthUserCannotLoginError as e:
+        logger.warning(f"Login failed - OAuth user: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except AccountLockedError as e:
+        logger.warning(f"Login failed - account locked: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except AccountInactiveError as e:
+        logger.warning(f"Login failed - account inactive: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Login failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="登入失敗，請稍後再試"
+        )

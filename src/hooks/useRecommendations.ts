@@ -42,7 +42,7 @@ export function useSpreadRecommendation(question: string) {
       setLoading(true)
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/spread-for-question`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/spread-for-question`,
           {
             method: 'POST',
             headers: {
@@ -86,7 +86,7 @@ export function useStudyCards(limit: number = 5) {
     setLoading(true)
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/cards-for-study?limit=${limit}`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/cards-for-study?limit=${limit}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -130,7 +130,7 @@ export function useInterpretationStyle(cardIds: string[]) {
       setLoading(true)
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/interpretation-style`,
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/interpretation-style`,
           {
             method: 'POST',
             headers: {
@@ -172,7 +172,7 @@ export function useContextualRecommendations(context?: { question?: string; card
     setLoading(true)
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/generate`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/generate`,
         {
           method: 'POST',
           headers: {

@@ -63,7 +63,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -94,7 +94,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/`,
         {
           method: 'PUT',
           headers: {
@@ -135,7 +135,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/visual`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/visual`,
         {
           method: 'PUT',
           headers: {
@@ -169,7 +169,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/accessibility`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/accessibility`,
         {
           method: 'PUT',
           headers: {
@@ -198,7 +198,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/reset`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/reset`,
         {
           method: 'POST',
           headers: {
@@ -225,7 +225,7 @@ export function usePreferences() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/preferences/apply-recommended`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/preferences/apply-recommended`,
         {
           method: 'POST',
           headers: {

@@ -19,7 +19,7 @@ import {
   mockBingoCard
 } from '../fixtures/bingoData'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 // Mutable state for testing dynamic scenarios
 let currentBingoStatus = { ...mockBingoStatus }

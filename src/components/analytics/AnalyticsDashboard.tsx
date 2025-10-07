@@ -58,7 +58,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       }
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/user`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/user`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -87,7 +87,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/readings/analytics/frequency?period=30d`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/readings/analytics/frequency?period=30d`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -112,7 +112,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/readings/analytics/cards?limit=10`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/readings/analytics/cards?limit=10`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -137,7 +137,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/readings/analytics/spreads`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/readings/analytics/spreads`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -162,7 +162,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/readings/analytics/patterns`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/readings/analytics/patterns`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -194,7 +194,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/${id}/accept`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/${id}/accept`,
         {
           method: 'POST',
           headers: {
@@ -216,7 +216,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/${id}/reject`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/${id}/reject`,
         {
           method: 'POST',
           headers: {
@@ -239,7 +239,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       if (!token) return;
 
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/v1/analytics/recommendations/generate`,
+        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/generate`,
         {
           method: 'POST',
           headers: {

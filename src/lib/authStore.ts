@@ -177,7 +177,8 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       oauthProvider: user.oauthProvider || null,
       profilePicture: user.profilePicture || null,
       error: null,
-      isLoading: false
+      isLoading: false,
+      isInitialized: true
     })
 
     // 追蹤 OAuth 登入事件

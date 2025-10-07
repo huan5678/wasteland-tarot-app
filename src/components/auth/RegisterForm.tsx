@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle } from 'lucide-react'
 import { useToast } from '@/components/common/Toast'
 import { useOAuth } from '@/hooks/useOAuth'
+import { authAPI } from '@/lib/api'
 
 interface FormData {
   email: string
@@ -99,40 +100,33 @@ export function RegisterForm() {
     setSubmitError(null)
 
     try {
-      // 呼叫後端註冊 API
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirmPassword,
-          name: formData.name,
-        }),
+      // 使用 API 服務層呼叫註冊端點
+      // authAPI.register 會自動處理 httpOnly cookies
+      const data = await authAPI.register({
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirmPassword,
+        name: formData.name,
       })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-
-        // 處理 email 已存在錯誤
-        if (response.status === 409) {
-          setErrors({ email: 'Email 已被註冊' })
-          throw new Error('Email 已被註冊，請使用其他 Email 或嘗試登入')
-        }
-
-        throw new Error(errorData.detail || '註冊失敗')
-      }
-
-      const data = await response.json()
-
-      // 註冊成功後自動登入
+      // 註冊成功後自動登入（後端會設定 httpOnly cookies）
       showSuccess('註冊成功', `歡迎加入，${formData.name}!`)
       router.push('/dashboard')
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '註冊失敗'
+    } catch (err: any) {
+      // 處理各種錯誤情況
+      let errorMessage = '註冊失敗'
+
+      if (err.status === 409) {
+        // Email 已存在
+        setErrors({ email: 'Email 已被註冊' })
+        errorMessage = 'Email 已被註冊，請使用其他 Email 或嘗試登入'
+      } else if (err.status === 422) {
+        // 驗證錯誤
+        errorMessage = err.message || '輸入資料格式錯誤'
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+
       setSubmitError(errorMessage)
       showError('註冊失敗', errorMessage)
     } finally {

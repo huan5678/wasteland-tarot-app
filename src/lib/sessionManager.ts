@@ -1,6 +1,19 @@
 /**
  * Session Manager - Supabase 會話管理工具
  * 處理 token 刷新和會話驗證
+ *
+ * @deprecated 此檔案直接使用 Supabase 客戶端進行 session 管理，違反前後端分離原則
+ *
+ * 問題：
+ * - 前端直接呼叫 Supabase Auth API 進行 session 刷新和驗證
+ * - 應該改為透過後端 API (/api/v1/auth/refresh, /api/v1/auth/verify) 進行
+ *
+ * TODO: 重構為使用後端 API
+ * - refreshSession() → 呼叫 /api/v1/auth/refresh
+ * - validateSession() → 呼叫 /api/v1/auth/verify
+ * - setupAuthListener() → 移除 Supabase 監聽，改用 API 輪詢或 WebSocket
+ *
+ * 目前保留此檔案以維持向後相容性，但新功能不應使用此檔案
  */
 
 import { createClient } from '@/utils/supabase/client'
@@ -36,18 +49,15 @@ export async function refreshSession(): Promise<boolean> {
     const authState = useAuthStore.getState()
 
     if (authState.isOAuthUser && user) {
-      // 只更新 token，保留使用者資料
-      authState.setOAuthUser(
-        {
-          ...authState.user!,
-          id: user.id,
-          email: user.email!,
-          name: authState.user?.name || user.user_metadata?.name || user.email!.split('@')[0],
-          oauthProvider: authState.oauthProvider,
-          profilePicture: authState.profilePicture,
-        },
-        session.access_token
-      )
+      // 只更新使用者資料，token 由後端 httpOnly cookie 管理
+      authState.setOAuthUser({
+        ...authState.user!,
+        id: user.id,
+        email: user.email!,
+        name: authState.user?.name || user.user_metadata?.name || user.email!.split('@')[0],
+        oauthProvider: authState.oauthProvider,
+        profilePicture: authState.profilePicture,
+      })
     }
 
     return true
@@ -165,16 +175,13 @@ export function setupAuthListener(): () => void {
             // OAuth 登入事件
             const user = session.user
             if (user.app_metadata?.provider === 'google') {
-              authStore.setOAuthUser(
-                {
-                  id: user.id,
-                  email: user.email!,
-                  name: user.user_metadata?.name || user.email!.split('@')[0],
-                  oauthProvider: 'google',
-                  profilePicture: user.user_metadata?.avatar_url || null,
-                },
-                session.access_token
-              )
+              authStore.setOAuthUser({
+                id: user.id,
+                email: user.email!,
+                name: user.user_metadata?.name || user.email!.split('@')[0],
+                oauthProvider: 'google',
+                profilePicture: user.user_metadata?.avatar_url || null,
+              })
             }
           }
           break
@@ -195,14 +202,11 @@ export function setupAuthListener(): () => void {
           // 使用者資料更新
           if (session?.user && authStore.isOAuthUser) {
             const user = session.user
-            authStore.setOAuthUser(
-              {
-                ...authStore.user!,
-                name: user.user_metadata?.name || authStore.user?.name!,
-                profilePicture: user.user_metadata?.avatar_url || authStore.profilePicture,
-              },
-              session.access_token
-            )
+            authStore.setOAuthUser({
+              ...authStore.user!,
+              name: user.user_metadata?.name || authStore.user?.name!,
+              profilePicture: user.user_metadata?.avatar_url || authStore.profilePicture,
+            })
           }
           break
       }

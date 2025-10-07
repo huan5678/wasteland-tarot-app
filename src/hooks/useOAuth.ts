@@ -70,7 +70,12 @@ export function useOAuth() {
 
   /**
    * 處理 OAuth 回調
-   * 從 URL 提取授權碼並與後端交換會話
+   * 直接將授權碼傳遞給後端，由後端負責交換 session
+   *
+   * 重構變更：
+   * - 移除前端 Supabase session 交換（避免重複交換）
+   * - 直接將授權碼傳給後端
+   * - 後端負責交換 session、建立使用者、設定 cookies
    */
   const handleOAuthCallback = useCallback(async (
     code: string
@@ -78,21 +83,13 @@ export function useOAuth() {
     setState({ loading: true, error: null })
 
     try {
-      // 使用授權碼與 Supabase 交換會話
-      const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
-
-      if (sessionError || !sessionData.session) {
-        throw new Error(sessionError?.message || '無法建立會話')
-      }
-
-      // 提取使用者資料
-      const { user } = sessionData
-      if (!user.email) {
-        throw new Error('Google 帳號未提供 Email')
-      }
-
-      // 呼叫後端 OAuth 回調端點
-      // 重構變更：使用正確的後端 API 路徑
+      // 直接呼叫後端 OAuth 回調端點，傳遞授權碼
+      // 後端會負責：
+      // 1. 使用 Supabase SDK 交換授權碼取得 session
+      // 2. 從 session 提取使用者資料
+      // 3. 建立或更新資料庫使用者記錄
+      // 4. 生成 JWT tokens 並設定 httpOnly cookies
+      // 5. 返回使用者資料
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
       const response = await fetch(`${API_BASE_URL}/auth/oauth/callback`, {
         method: 'POST',
@@ -102,7 +99,6 @@ export function useOAuth() {
         credentials: 'include', // 包含 cookies 以接收 httpOnly cookies
         body: JSON.stringify({
           code,
-          provider: 'google',
         }),
       })
 
@@ -144,7 +140,7 @@ export function useOAuth() {
         error: errorMessage,
       }
     }
-  }, [supabase])
+  }, [])
 
   /**
    * 清除錯誤訊息

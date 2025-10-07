@@ -64,7 +64,6 @@
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
-    "shadcn",
     "chrome-devtools"
   ]
 }

@@ -48,6 +48,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **fallout-utilitarian-design**: Design system combining Fallout aesthetic with Utilitarian design principles for website visual identity
 - **critical-bugs-fix**: Fix critical P0 bugs identified in testing: missing registration API, audio file 404s, API path errors, and routing issues
 - **swagger-ui-zh-tw-localization**: Localize all Swagger UI descriptions, parameter names, and documentation to Traditional Chinese (zh-TW)
+- **frontend-backend-architecture-refactor**: Refactor frontend-backend architecture to eliminate direct Supabase access from frontend, ensuring all data flows through backend API layer
 
 ## Development Guidelines
 - 以英文思考，但以繁體中文生成回應（Think in English, generate in Traditional Chinese）
