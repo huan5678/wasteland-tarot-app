@@ -37,6 +37,11 @@ async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: 
   try {
     const cookieHeader = request.headers.get('cookie') || ''
 
+    // 如果沒有 cookie，直接返回未驗證（避免不必要的 API 呼叫）
+    if (!cookieHeader || !cookieHeader.includes('access_token')) {
+      return { isValid: false }
+    }
+
     // 呼叫後端驗證端點
     const verifyResponse = await fetch(`${API_BASE_URL}/api/v1/auth/verify`, {
       method: 'POST',
@@ -45,6 +50,8 @@ async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: 
         'Content-Type': 'application/json',
       },
       credentials: 'include',
+      // 設定較短的 timeout，避免阻塞請求
+      signal: AbortSignal.timeout(3000),
     })
 
     if (!verifyResponse.ok) {
@@ -57,7 +64,12 @@ async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: 
       user: data.user,
     }
   } catch (error) {
-    console.error('Token verification failed:', error)
+    // Token 驗證失敗不應該阻止頁面載入
+    // 只有在訪問受保護路由時才會重定向到登入頁
+    // 靜默失敗，讓使用者以未登入狀態繼續
+    if (error instanceof Error && error.name !== 'AbortError') {
+      console.error('Token verification failed:', error.message)
+    }
     return { isValid: false }
   }
 }
