@@ -13,6 +13,10 @@ export { MusicManager } from './MusicManager';
 export { VolumeController } from './VolumeController';
 export { EffectsProcessor } from './EffectsProcessor';
 
+// Generators
+export * from './SoundGenerator';
+export * from './MusicGenerator';
+
 // Error Handling
 export { AudioErrorHandler, AudioInitializationError, SoundLoadError, PlaybackError } from './AudioErrorHandler';
 

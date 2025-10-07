@@ -13,6 +13,9 @@ let cachedManifest: AudioManifest | null = null;
 /**
  * 獲取音訊清單
  * 需求 5.1: 載入音訊清單配置
+ *
+ * 注意：由於使用 Web Audio API 生成音效，manifest.json 為可選配置
+ * 如果載入失敗，將使用 constants.ts 中的 SOUND_CONFIGS 作為後備
  */
 export async function fetchAudioManifest(): Promise<AudioManifest> {
   // 返回快取的清單
@@ -39,9 +42,55 @@ export async function fetchAudioManifest(): Promise<AudioManifest> {
 
     return manifest;
   } catch (error) {
-    logger.error('[AudioManifest] Failed to load manifest', error);
-    throw error;
+    logger.warn('[AudioManifest] Failed to load manifest, using fallback config', error);
+    // 使用後備配置
+    return getFallbackManifest();
   }
+}
+
+/**
+ * 取得後備清單（從 constants.ts）
+ * 當 manifest.json 載入失敗時使用
+ */
+function getFallbackManifest(): AudioManifest {
+  const { SOUND_CONFIGS } = require('./constants');
+
+  const manifest: AudioManifest = {
+    version: '1.0.0-fallback',
+    sounds: Object.values(SOUND_CONFIGS).map((config: any) => ({
+      id: config.id,
+      url: '', // 不需要 URL，使用生成器
+      type: config.type,
+      priority: config.priority,
+      size: 0, // 生成的音效沒有檔案大小
+    })),
+    music: [
+      {
+        id: 'wasteland-ambient',
+        url: '', // 不需要 URL，使用生成器
+        scene: 'home',
+        size: 0,
+      },
+      {
+        id: 'divination-theme',
+        url: '',
+        scene: 'reading',
+        size: 0,
+      },
+      {
+        id: 'vault-theme',
+        url: '',
+        scene: 'dashboard',
+        size: 0,
+      },
+    ],
+    lastUpdated: new Date().toISOString(),
+  };
+
+  cachedManifest = manifest;
+  logger.info('[AudioManifest] Using fallback manifest');
+
+  return manifest;
 }
 
 /**

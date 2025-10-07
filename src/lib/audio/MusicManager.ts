@@ -89,7 +89,8 @@ export class MusicManager {
   }
 
   /**
-   * 載入音樂緩衝區
+   * 載入音樂緩衝區（使用 Web Audio API 生成）
+   * 需求 3.1: 使用 Web Audio API 即時生成背景音樂，替代載入外部 mp3
    */
   private async loadMusicBuffer(trackId: string): Promise<AudioBuffer> {
     const context = this.audioEngine.getContext();
@@ -103,15 +104,11 @@ export class MusicManager {
       return cached.buffer;
     }
 
-    // 載入新音樂
-    const url = `/sounds/music/${trackId}.mp3`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load music: ${response.status}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const audioBuffer = await context.decodeAudioData(arrayBuffer);
+    // 使用 MusicGenerator 即時生成音樂（替代 fetch mp3）
+    const { generateMusicById } = await import('./MusicGenerator');
+    const audioBuffer = await generateMusicById(trackId, context, {
+      volume: this.targetVolume,
+    });
 
     // 快取音樂
     (this.audioEngine as any).audioBuffers.set(trackId, {
@@ -121,6 +118,7 @@ export class MusicManager {
       size: audioBuffer.length * audioBuffer.numberOfChannels * 4,
     });
 
+    logger.info(`[MusicManager] Generated and cached music ${trackId}`);
     return audioBuffer;
   }
 

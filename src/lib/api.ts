@@ -145,15 +145,22 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     } catch (err: any) {
       lastError = err
       if (attempt >= maxRetries || (err instanceof APIError && err.status < 500)) {
-        // push to error store
-        try {
-          useErrorStore.getState().pushError({
-            source: 'api',
-            message: err.message || 'API Error',
-            detail: { endpoint, options },
-            statusCode: err.status,
-          })
-        } catch {}
+        // push to error store，但排除預期的未登入情況
+        // 如果是 /api/v1/auth/me 端點的 401 錯誤，這是正常的未登入狀態，不需要顯示錯誤
+        const isAuthCheckEndpoint = endpoint === '/api/v1/auth/me'
+        const isUnauthorized = err instanceof APIError && err.status === 401
+        const shouldNotDisplayError = isAuthCheckEndpoint && isUnauthorized
+
+        if (!shouldNotDisplayError) {
+          try {
+            useErrorStore.getState().pushError({
+              source: 'api',
+              message: err.message || 'API Error',
+              detail: { endpoint, options },
+              statusCode: err.status,
+            })
+          } catch {}
+        }
         throw err
       }
       attempt++

@@ -62,7 +62,8 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       })
     } catch (error: any) {
       // 401 表示未登入或 token 過期，這是正常情況
-      if (error?.response?.status === 401) {
+      // 修正：檢查 error.status（APIError）而不是 error?.response?.status
+      if (error?.status === 401) {
         set({
           user: null,
           isOAuthUser: false,
