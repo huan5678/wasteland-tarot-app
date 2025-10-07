@@ -1,0 +1,23 @@
+{
+  "feature_name": "cards-page-refactor",
+  "created_at": "2025-10-08T00:00:00Z",
+  "updated_at": "2025-10-08T02:30:00Z",
+  "language": "zh-TW",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": false,
+  "notes": "v1.2: 完成實作任務清單生成,共 19 個任務分為 6 個階段,總預估時間 42 小時"
+}

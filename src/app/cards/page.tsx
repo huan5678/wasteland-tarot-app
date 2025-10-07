@@ -1,148 +1,100 @@
-'use client'
+/**
+ * Cards Page - Suit Selection
+ * 花色選擇頁面
+ *
+ * 特色:
+ * - Server Component (SSR, 減少客戶端 JavaScript)
+ * - 顯示所有 5 個花色選項
+ * - Pip-Boy 風格設計
+ * - 完整的 SEO 元資料
+ * - 響應式網格佈局
+ */
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { cardsAPI } from '@/lib/api/services'
-import { ApiError, NetworkError } from '@/lib/api/client'
-import type { TarotCard } from '@/types/api'
+import type { Metadata } from 'next'
+import { SuitCard, SuitCardGrid } from '@/components/cards/SuitCard'
+import { SuitType, getAllSuits } from '@/types/suits'
 
+/**
+ * 頁面元資料 (SEO)
+ */
+export const metadata: Metadata = {
+  title: '塔羅牌圖書館 | Wasteland Tarot',
+  description:
+    '探索 78 張 Wasteland Tarot 卡牌,包含大阿爾克那與四個小阿爾克那花色。透過廢土塔羅獲得啟示與指引。',
+  keywords: [
+    '塔羅牌',
+    'Wasteland Tarot',
+    '廢土塔羅',
+    'Fallout 塔羅',
+    '大阿爾克那',
+    '小阿爾克那',
+    'Nuka-Cola',
+    '戰鬥武器',
+    '瓶蓋',
+    '輻射棒',
+  ],
+  openGraph: {
+    title: '塔羅牌圖書館 | Wasteland Tarot',
+    description: '探索 78 張 Wasteland Tarot 卡牌,獲得廢土的智慧與啟示',
+    type: 'website',
+    locale: 'zh_TW',
+  },
+}
+
+/**
+ * Suit Selection Page (Server Component)
+ */
 export default function CardsPage() {
-  const [cards, setCards] = useState<TarotCard[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
-
-  const fetchCards = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      const cardsData = await cardsAPI.getAll()
-      setCards(cardsData)
-      setRetryCount(0) // 重置重試計數
-    } catch (err) {
-      let errorMessage = '無法載入卡牌數據'
-
-      if (err instanceof NetworkError) {
-        errorMessage = '網路連線中斷，請檢查網路連線'
-      } else if (err instanceof ApiError) {
-        if (err.status === 503) {
-          errorMessage = '服務暫時無法使用，請稍後再試'
-        } else if (err.status === 404) {
-          errorMessage = '找不到卡牌資料'
-        } else if (err.status >= 500) {
-          errorMessage = '伺服器錯誤，請稍後再試'
-        } else {
-          errorMessage = err.message
-        }
-      } else if (err instanceof Error) {
-        errorMessage = err.message
-      }
-
-      setError(errorMessage)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchCards()
-  }, [fetchCards])
-
-  const handleRetry = useCallback(() => {
-    setRetryCount(prev => prev + 1)
-    fetchCards()
-  }, [fetchCards])
+  // 取得所有花色元資料
+  const suits = getAllSuits()
 
   return (
-    <div className="min-h-screen bg-vault-dark p-4">
+    <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
-          <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
-            塔羅牌圖書館
-          </h1>
-          <p className="text-pip-boy-green/70 font-mono text-sm">
-            全面的廢土占卜資料庫 - 共有 {cards.length} 張牌可用
-          </p>
-        </div>
-
-        {loading && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-pip-boy-green font-mono">載入卡牌資料庫中...</p>
-          </div>
-        )}
-
-        {error && (
-          <div className="border-2 border-red-500 bg-red-500/10 p-6">
-            <div className="text-center py-4">
-              <div className="mb-4">
-                <svg
-                  className="w-16 h-16 mx-auto text-red-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <p className="text-red-400 font-mono text-lg mb-4">
-                {error}
+        {/* 頁面標題 */}
+        <header className="mb-8 md:mb-12">
+          <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-6 md:p-8">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-pip-boy-green font-mono uppercase tracking-wider mb-3">
+              塔羅牌圖書館
+            </h1>
+            <p className="text-base md:text-lg text-pip-boy-green/70 font-mono">
+              選擇花色開始探索廢土占卜
+            </p>
+            <div className="mt-4 pt-4 border-t border-pip-boy-green/30">
+              <p className="text-sm md:text-base text-pip-boy-green/60 font-mono">
+                78 張卡牌 | 5 個花色 | 完整的廢土塔羅體系
               </p>
-              {retryCount > 0 && (
-                <p className="text-red-300/70 font-mono text-sm mb-4">
-                  重試次數：{retryCount}
-                </p>
-              )}
-              <div className="flex gap-4 justify-center">
-                <button
-                  onClick={handleRetry}
-                  className="px-6 py-2 border-2 border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green font-mono hover:bg-pip-boy-green/20 transition-colors"
-                  disabled={loading}
-                >
-                  {loading ? '重試中...' : '重試'}
-                </button>
-                <button
-                  onClick={() => window.location.href = '/'}
-                  className="px-6 py-2 border-2 border-pip-boy-green/50 bg-transparent text-pip-boy-green/70 font-mono hover:border-pip-boy-green hover:text-pip-boy-green transition-colors"
-                >
-                  返回首頁
-                </button>
-              </div>
             </div>
           </div>
-        )}
+        </header>
 
-        {!loading && !error && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-            {cards.map((card) => (
-              <div
-                key={card.id}
-                className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-4 cursor-pointer hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200"
-              >
-                <div className="text-center">
-                  <div className="h-32 bg-pip-boy-green/20 border border-pip-boy-green/50 mb-2 flex items-center justify-center">
-                    <span className="text-pip-boy-green font-mono text-xs">牌面</span>
-                  </div>
-                  <p className="text-pip-boy-green font-mono text-sm font-bold">{card.name}</p>
-                  <p className="text-pip-boy-green/70 font-mono text-xs">{card.suit}</p>
-                </div>
-              </div>
+        {/* 花色選項網格 */}
+        <main>
+          <SuitCardGrid>
+            {suits.map((suitMetadata) => (
+              <SuitCard key={suitMetadata.suit} suit={suitMetadata.suit} />
             ))}
-          </div>
-        )}
+          </SuitCardGrid>
+        </main>
 
-        {!loading && !error && cards.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-pip-boy-green/70 font-mono text-lg mb-2">
-              找不到牌片
-            </p>
+        {/* 頁面說明 */}
+        <footer className="mt-12 md:mt-16">
+          <div className="border-2 border-pip-boy-green/30 bg-black/40 p-6">
+            <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+              關於 Wasteland Tarot
+            </h2>
+            <div className="space-y-3 text-sm md:text-base text-pip-boy-green/70 font-mono">
+              <p>
+                Wasteland Tarot 是融合 Fallout 世界觀的塔羅牌系統,
+                結合傳統塔羅智慧與廢土生存哲學。
+              </p>
+              <p>
+                每張卡牌都蘊含著在後啟示錄世界中生存、成長與找尋意義的深刻洞見。
+              </p>
+              <p>選擇一個花色,開始你的廢土占卜之旅。</p>
+            </div>
           </div>
-        )}
+        </footer>
       </div>
     </div>
   )
