@@ -10,7 +10,6 @@ import {
   UserCircle,
   Lock,
   FileText,
-  Star,
   DoorOpen,
   Dices
 } from 'lucide-react'
@@ -107,9 +106,14 @@ export function Header() {
             onClick={() => handleNavigation('/')}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            <div className="w-12 h-12 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green">
-              <Star className="w-6 h-6 text-pip-boy-green" />
-            </div>
+            <img
+              src="/logo.svg"
+              alt="廢土塔羅 Logo"
+              className="w-12 h-12"
+              style={{
+                filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
+              }}
+            />
             <div>
               <h1 className="text-xl font-bold text-pip-boy text-glow-green">廢土塔羅</h1>
               <p className="text-xs text-muted-wasteland">Pip-Boy 占卜終端機</p>

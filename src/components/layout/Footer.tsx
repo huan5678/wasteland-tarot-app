@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Star, ExternalLink, Twitter, MessageSquare } from 'lucide-react'
+import { ExternalLink, Twitter, MessageSquare } from 'lucide-react'
 
 export function Footer() {
   const [currentYear, setCurrentYear] = useState<number | null>(null)
@@ -32,9 +32,14 @@ export function Footer() {
           {/* Brand Column */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 border-2 border-pip-boy-green rounded-full flex items-center justify-center bg-pip-boy-green-deep glow-green">
-                <Star className="w-5 h-5 text-pip-boy-green" />
-              </div>
+              <img
+                src="/logo.svg"
+                alt="廢土塔羅 Logo"
+                className="w-10 h-10"
+                style={{
+                  filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
+                }}
+              />
               <div>
                 <h3 className="text-lg font-bold text-pip-boy text-glow-green">廢土塔羅</h3>
                 <p className="text-xs text-muted-wasteland">Pip-Boy 占卜</p>
@@ -54,7 +59,7 @@ export function Footer() {
                 <button
                   key={link.href}
                   onClick={() => window.location.href = link.href}
-                  className="block text-sm text-text-secondary hover:text-text-primary transition-colors font-mono cursor-pointer text-left link-pip-boy"
+                  className="block text-sm text-text-secondary hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono cursor-pointer text-left"
                 >
                   {link.label}
                 </button>
@@ -72,7 +77,7 @@ export function Footer() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary transition-colors font-mono link-pip-boy"
+                  className="flex items-center gap-2 text-sm text-text-secondary hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono"
                 >
                   <link.icon className="w-4 h-4" />
                   <span>{link.label}</span>

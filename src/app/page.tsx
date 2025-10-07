@@ -191,7 +191,17 @@ export default function HomePage() {
               <button
                 onClick={() => window.location.href = '/cards'}
                 className="px-6 py-3 border-2 border-pip-boy-green text-text-secondary hover:text-pip-boy-green
-                         hover:border-pip-boy-green font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
+                         hover:border-pip-boy-green font-mono transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
+                style={{
+                  backgroundColor: 'var(--color-pip-boy-green-10)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-20)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-10)'
+                }}
               >
                 瀏覽卡牌圖書館
               </button>

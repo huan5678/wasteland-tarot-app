@@ -11,41 +11,41 @@ import { z } from 'zod'
 
 // 嵌套物件：Metadata
 export const CardMetadataSchema = z.object({
-  radiation_level: z.number().min(0).max(1),
-  threat_level: z.number().int().min(1).max(10),
-  vault_number: z.number().int().optional(),
+  radiation_level: z.number().min(0).max(1).default(0),
+  threat_level: z.number().int().min(1).max(10).default(1),
+  vault_number: z.number().int().optional().nullable(),
 })
 
 export type CardMetadata = z.infer<typeof CardMetadataSchema>
 
 // 嵌套物件：Character Voices
 export const CharacterVoicesSchema = z.object({
-  pip_boy_analysis: z.string().optional(),
-  vault_dweller_perspective: z.string().optional(),
-  wasteland_trader_wisdom: z.string().optional(),
-  super_mutant_simplicity: z.string().optional(),
-  codsworth_analysis: z.string().optional(),
+  pip_boy_analysis: z.string().optional().nullable(),
+  vault_dweller_perspective: z.string().optional().nullable(),
+  wasteland_trader_wisdom: z.string().optional().nullable(),
+  super_mutant_simplicity: z.string().optional().nullable(),
+  codsworth_analysis: z.string().optional().nullable(),
 })
 
 export type CharacterVoices = z.infer<typeof CharacterVoicesSchema>
 
 // 嵌套物件：Faction Meanings
 export const FactionMeaningsSchema = z.object({
-  brotherhood_significance: z.string().optional(),
-  ncr_significance: z.string().optional(),
-  legion_significance: z.string().optional(),
-  raiders_significance: z.string().optional(),
-  vault_dweller_significance: z.string().optional(),
+  brotherhood_significance: z.string().optional().nullable(),
+  ncr_significance: z.string().optional().nullable(),
+  legion_significance: z.string().optional().nullable(),
+  raiders_significance: z.string().optional().nullable(),
+  vault_dweller_significance: z.string().optional().nullable(),
 })
 
 export type FactionMeanings = z.infer<typeof FactionMeaningsSchema>
 
 // 嵌套物件：Card Visuals
 export const CardVisualsSchema = z.object({
-  image_url: z.string().optional(),
-  image_alt_text: z.string().optional(),
-  background_image_url: z.string().optional(),
-  audio_cue_url: z.string().optional(),
+  image_url: z.string().optional().nullable(),
+  image_alt_text: z.string().optional().nullable(),
+  background_image_url: z.string().optional().nullable(),
+  audio_cue_url: z.string().optional().nullable(),
   geiger_sound_intensity: z.number().min(0).max(1).default(0.1),
 })
 
@@ -55,7 +55,7 @@ export type CardVisuals = z.infer<typeof CardVisualsSchema>
 export const CardStatsSchema = z.object({
   draw_frequency: z.number().int().default(0),
   total_appearances: z.number().int().default(0),
-  last_drawn_at: z.string().optional(),
+  last_drawn_at: z.string().optional().nullable(),
 })
 
 export type CardStats = z.infer<typeof CardStatsSchema>
@@ -66,7 +66,7 @@ export const TarotCardSchema = z.object({
   id: z.string(),
   name: z.string(),
   suit: z.string(),
-  number: z.number().optional(),
+  number: z.number().optional().nullable(),
   upright_meaning: z.string(),
   reversed_meaning: z.string(),
 
@@ -78,28 +78,28 @@ export const TarotCardSchema = z.object({
   stats: CardStatsSchema,
 
   // Karma 解讀
-  good_karma_interpretation: z.string().optional(),
-  neutral_karma_interpretation: z.string().optional(),
-  evil_karma_interpretation: z.string().optional(),
+  good_karma_interpretation: z.string().optional().nullable(),
+  neutral_karma_interpretation: z.string().optional().nullable(),
+  evil_karma_interpretation: z.string().optional().nullable(),
 
   // Fallout 元素
-  wasteland_humor: z.string().optional(),
-  nuka_cola_reference: z.string().optional(),
-  fallout_easter_egg: z.string().optional(),
+  wasteland_humor: z.string().optional().nullable(),
+  nuka_cola_reference: z.string().optional().nullable(),
+  fallout_easter_egg: z.string().optional().nullable(),
 
   // 遊戲機制
   affects_luck_stat: z.boolean().default(false),
   affects_charisma_stat: z.boolean().default(false),
   affects_intelligence_stat: z.boolean().default(false),
-  special_ability: z.string().optional(),
+  special_ability: z.string().optional().nullable(),
 
   // 計算屬性
   is_major_arcana: z.boolean(),
   is_court_card: z.boolean(),
-  rank: z.string().optional(),
+  rank: z.string().optional().nullable(),
 
   // 向後相容（已棄用，但保留以避免破壞現有程式碼）
-  image_url: z.string().optional(),
+  image_url: z.string().optional().nullable(),
   keywords: z.array(z.string()).optional(),
 })
 

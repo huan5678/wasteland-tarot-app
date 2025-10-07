@@ -20,6 +20,16 @@ export const metadata: Metadata = {
   creator: "Vault-Tec Corporation",
   publisher: "Vault-Tec Corporation",
   robots: "index, follow",
+  icons: {
+    icon: [
+      { url: '/logo.svg', type: 'image/svg+xml' },
+      { url: '/logo.svg', sizes: 'any', type: 'image/svg+xml' }
+    ],
+    apple: '/logo.svg',
+  },
+  openGraph: {
+    images: ['/logo.svg'],
+  }
 };
 
 export const viewport = {
