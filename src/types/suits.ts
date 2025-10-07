@@ -9,7 +9,7 @@
  */
 export enum SuitType {
   MAJOR_ARCANA = 'major_arcana',
-  NUKA_COLA = 'nuka_cola',
+  NUKA_COLA_BOTTLES = 'nuka_cola_bottles',
   COMBAT_WEAPONS = 'combat_weapons',
   BOTTLE_CAPS = 'bottle_caps',
   RADIATION_RODS = 'radiation_rods',
@@ -40,8 +40,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     card_count: 22,
     icon: '🌟',
   },
-  [SuitType.NUKA_COLA]: {
-    suit: SuitType.NUKA_COLA,
+  [SuitType.NUKA_COLA_BOTTLES]: {
+    suit: SuitType.NUKA_COLA_BOTTLES,
     name_zh_tw: 'Nuka-Cola 瓶',
     name_en: 'Nuka-Cola Bottles (Cups)',
     description: '代表情感、關係與內在體驗',

@@ -124,6 +124,12 @@ export function CardThumbnail({ card, className, priority = false }: CardThumbna
             onLoad={handleImageLoad}
           />
 
+          {/* 黑色半透明覆蓋層 (hover 時淡化) */}
+          <div
+            className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-300 pointer-events-none"
+            aria-hidden="true"
+          />
+
           {/* 圖片發光效果(懸停時) */}
           <div
             className="absolute inset-0 bg-pip-boy-green/0 group-hover:bg-pip-boy-green/10 transition-colors duration-300 pointer-events-none"

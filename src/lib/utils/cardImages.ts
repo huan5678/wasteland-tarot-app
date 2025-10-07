@@ -12,7 +12,7 @@ import { getSuitDisplayName } from '@/types/suits'
  */
 const SUIT_FOLDER_MAP: Record<string, string> = {
   major_arcana: 'major-arcana',
-  nuka_cola: 'nuka-cola-bottles',
+  nuka_cola_bottles: 'nuka-cola-bottles',
   combat_weapons: 'combat-weapons',
   bottle_caps: 'bottle-caps',
   radiation_rods: 'radiation-rods',

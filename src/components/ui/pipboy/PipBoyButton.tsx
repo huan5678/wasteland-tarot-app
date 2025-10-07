@@ -65,8 +65,8 @@ export function PipBoyButton({
           'active:bg-pip-boy-green/60',
         ],
         variant === 'secondary' && [
-          'bg-transparent text-pip-boy-green',
-          'hover:bg-pip-boy-green/20 hover:shadow-[0_0_10px_rgba(51,255,51,0.3)]',
+          'bg-transparent text-pip-boy-green-bright',
+          'hover:bg-pip-boy-green/20 hover:shadow-[0_0_10px_rgba(51,255,51,0.3)] hover:text-pip-boy-green',
           'active:bg-pip-boy-green/10',
         ],
 

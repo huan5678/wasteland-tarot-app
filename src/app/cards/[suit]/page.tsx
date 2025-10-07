@@ -68,7 +68,13 @@ export default function CardListPage() {
     const loadCards = async () => {
       try {
         const cardsData = await fetchCardsBySuit(suit, page)
-        setCards(cardsData)
+        // 按照 number 從小到大排序（null/undefined 排在最後）
+        const sortedCards = [...cardsData].sort((a, b) => {
+          const numA = a.number ?? Infinity
+          const numB = b.number ?? Infinity
+          return numA - numB
+        })
+        setCards(sortedCards)
       } catch (err) {
         console.error('[CardListPage] Error loading cards:', err)
       }

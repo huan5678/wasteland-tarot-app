@@ -86,11 +86,17 @@ export const cardsAPI = {
   },
 
   /**
-   * 根據花色獲取卡牌
+   * 根據花色獲取卡牌 (支援分頁)
    */
-  async getBySuit(suit: string): Promise<TarotCard[]> {
-    const data = await apiClient.get(`/api/v1/cards/?suit=${suit}`)
-    return validateResponse<TarotCard[]>(data, TarotCardArraySchema)
+  async getBySuit(suit: string, page: number = 1, pageSize: number = 12): Promise<{
+    cards: TarotCard[]
+    total_count: number
+    page: number
+    page_size: number
+    has_more: boolean
+  }> {
+    const data = await apiClient.get(`/api/v1/cards/?suit=${suit}&page=${page}&page_size=${pageSize}`)
+    return validateResponse(data, PaginatedCardsResponseSchema)
   },
 }
 

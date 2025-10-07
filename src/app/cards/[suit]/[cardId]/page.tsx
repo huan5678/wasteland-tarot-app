@@ -330,13 +330,6 @@ export default function CardDetailPage() {
             )}
           </div>
         </div>
-
-        {/* 頁面底部返回按鈕 */}
-        <div className="mt-12 flex justify-center">
-          <Link href={`/cards/${suit}`}>
-            <PipBoyButton variant="primary">← 返回卡牌列表</PipBoyButton>
-          </Link>
-        </div>
       </div>
     </div>
   )
