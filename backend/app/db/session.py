@@ -28,12 +28,17 @@ if settings.environment == "testing":
     )
 else:
     # Use PostgreSQL for development and production
-    # Using Supabase Session Pooler (port 5432) which supports prepared statements
+    # Using Supabase Connection Pooler (pgBouncer)
+    # Disable statement cache for pgBouncer compatibility
     engine = create_async_engine(
         settings.database_url,
         echo=settings.debug,
         pool_size=settings.database_pool_size,
         max_overflow=settings.database_max_overflow,
+        connect_args={
+            "statement_cache_size": 0,  # Required for pgBouncer compatibility
+            "prepared_statement_cache_size": 0
+        }
     )
 
 # Create session factory
