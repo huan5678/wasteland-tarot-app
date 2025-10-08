@@ -129,7 +129,7 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-vault-dark flex items-center justify-center p-4">
+      <div className="min-h-screen bg-wasteland-dark flex items-center justify-center p-4">
         <div className="text-center">
           <Lock className="w-16 h-16 mb-4 mx-auto text-pip-boy-green" />
           <h1 className="text-2xl font-bold text-pip-boy-green font-mono mb-4">
@@ -140,7 +140,7 @@ export default function ProfilePage() {
           </p>
           <Link
             href="/auth/login"
-            className="px-6 py-3 bg-pip-boy-green text-vault-dark font-mono font-bold hover:bg-pip-boy-green/80 transition-colors"
+            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold hover:bg-pip-boy-green/80 transition-colors"
           >
 登入 Pip-Boy
           </Link>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
   if (isLoading || !profile) {
     return (
-      <div className="min-h-screen bg-vault-dark flex items-center justify-center">
+      <div className="min-h-screen bg-wasteland-dark flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-pip-boy-green font-mono">載入居民檔案中...</p>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-vault-dark p-4">
+    <div className="min-h-screen bg-wasteland-dark p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
@@ -344,7 +344,7 @@ export default function ProfilePage() {
                     <button
                       onClick={handleSave}
                       disabled={isSaving}
-                      className="flex-1 py-2 bg-pip-boy-green text-vault-dark font-mono font-bold hover:bg-pip-boy-green/80 disabled:opacity-50 transition-colors"
+                      className="flex-1 py-2 bg-pip-boy-green text-wasteland-dark font-mono font-bold hover:bg-pip-boy-green/80 disabled:opacity-50 transition-colors"
                     >
                       {isSaving ? '儲存中...' : <><Save className="w-4 h-4 mr-2" />儲存變更</>}
                     </button>

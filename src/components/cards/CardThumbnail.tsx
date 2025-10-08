@@ -151,13 +151,6 @@ export function CardThumbnail({ card, className, priority = false }: CardThumbna
               <span className="font-semibold">#{String(card.number).padStart(2, '0')}</span>
             )}
           </div>
-
-          {/* 卡牌類型標籤 */}
-          {card.is_major_arcana && (
-            <div className="inline-block px-2 py-0.5 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded">
-              <span className="text-xs font-mono text-pip-boy-green uppercase">大阿爾克那</span>
-            </div>
-          )}
         </div>
 
         {/* 懸停邊框效果 */}

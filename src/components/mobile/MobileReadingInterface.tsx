@@ -221,7 +221,7 @@ export function MobileReadingInterface({
       onClick={handleScreenTap}
     >
       {/* Background with dynamic gradient based on card suit */}
-      <div className="absolute inset-0 bg-gradient-to-br from-vault-darker via-vault-dark to-black" />
+      <div className="absolute inset-0 bg-gradient-to-br from-wasteland-darker via-wasteland-dark to-black" />
 
       {/* Top Controls Bar */}
       <animated.div
@@ -265,7 +265,7 @@ export function MobileReadingInterface({
                 className={`
                   px-4 py-2 text-sm font-mono rounded-full transition-all duration-200
                   ${viewMode === mode
-                    ? 'bg-pip-boy-green text-vault-dark'
+                    ? 'bg-pip-boy-green text-wasteland-dark'
                     : 'text-pip-boy-green hover:bg-pip-boy-green/20'
                   }
                 `}
@@ -368,7 +368,7 @@ export function MobileReadingInterface({
                     {!isSpeaking ? (
                       <button
                         onClick={() => speakText(reading.interpretation)}
-                        className="flex items-center gap-2 px-4 py-2 bg-pip-boy-green text-vault-dark rounded-lg font-mono"
+                        className="flex items-center gap-2 px-4 py-2 bg-pip-boy-green text-wasteland-dark rounded-lg font-mono"
                       >
                         <Volume2 className="w-4 h-4" />
                         朗讀解讀
@@ -508,7 +508,7 @@ export function MobileReadingInterface({
 
             {/* Notes section */}
             {showNotes && (
-              <div className="bg-vault-dark/60 rounded-lg p-4 border border-pip-boy-green/20">
+              <div className="bg-wasteland-dark/60 rounded-lg p-4 border border-pip-boy-green/20">
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -526,7 +526,7 @@ export function MobileReadingInterface({
                         flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono transition-colors
                         ${isRecording
                           ? 'bg-red-600 text-white'
-                          : 'bg-pip-boy-green text-vault-dark hover:bg-pip-boy-green/90'
+                          : 'bg-pip-boy-green text-wasteland-dark hover:bg-pip-boy-green/90'
                         }
                       `}
                     >

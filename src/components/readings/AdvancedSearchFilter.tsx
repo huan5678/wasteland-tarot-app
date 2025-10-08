@@ -125,7 +125,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
             <Filter className="w-4 h-4" />
             篩選
             {activeFilterCount > 0 && (
-              <span className="px-1.5 py-0.5 bg-pip-boy-green text-vault-dark text-xs rounded">
+              <span className="px-1.5 py-0.5 bg-pip-boy-green text-wasteland-dark text-xs rounded">
                 {activeFilterCount}
               </span>
             )}
@@ -207,7 +207,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
               </button>
 
               {showDatePicker && (
-                <div className="absolute z-10 mt-1 p-3 bg-vault-dark border-2 border-pip-boy-green space-y-2">
+                <div className="absolute z-10 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-pip-boy-green font-mono text-xs mb-1">開始日期</label>

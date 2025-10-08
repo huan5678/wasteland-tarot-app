@@ -68,8 +68,7 @@ export function Header() {
         { href: '/profile', label: '個人檔案', icon: UserCircle, badge: false },
       ]
     : [
-        { href: '/auth/login', label: '登入', icon: Lock, badge: false },
-        { href: '/auth/register', label: '註冊', icon: FileText, badge: false },
+        { href: '/auth', label: '啟動終端機', icon: DoorOpen, badge: false },
       ]
 
   const isActive = (href: string) => pathname === href
@@ -78,20 +77,21 @@ export function Header() {
     <header className="border-b-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-wasteland-dark)'}}>
       {/* Top Terminal Bar */}
       <div className="interface-header">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span>VAULT-TEC PIP-BOY 3000 MARK IV</span>
-            <span>|</span>
-            <span>狀態：線上</span>
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-2">
+          <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
+            <span className="hidden sm:inline">VAULT-TEC PIP-BOY 3000 MARK IV</span>
+            <span className="sm:hidden">PIP-BOY 3000</span>
+            <span className="hidden sm:inline">|</span>
+            <span className="hidden md:inline">狀態：線上</span>
           </div>
-          <div className="flex items-center gap-4">
-            <span>{isClient ? currentTime : '2287.10.23 14:00:00'}</span>
+          <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
+            <span className="hidden md:inline">{isClient ? currentTime : '2287.10.23 14:00:00'}</span>
             {user && (
               <>
-                <span>|</span>
-                <span>Vault Dweller：{user.username}</span>
-                <span>|</span>
-                <span>Vault：{user.vaultNumber || '111'}</span>
+                <span className="hidden sm:inline">|</span>
+                <span className="truncate max-w-[100px] sm:max-w-none">Vault Dweller：{user.username}</span>
+                <span className="hidden lg:inline">|</span>
+                <span className="hidden lg:inline">Vault：{user.vaultNumber || '111'}</span>
               </>
             )}
           </div>
@@ -115,29 +115,29 @@ export function Header() {
               }}
             />
             <div>
-              <h1 className="text-xl font-bold text-pip-boy text-glow-green">廢土塔羅</h1>
-              <p className="text-xs text-muted-wasteland">Pip-Boy 占卜終端機</p>
+              <h1 className="text-xl font-bold text-pip-boy-green text-glow-green">廢土塔羅</h1>
+              <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜終端機</p>
             </div>
           </button>
 
           {/* Navigation */}
-          <nav className="flex items-center gap-6">
+          <nav className="flex items-center gap-2 md:gap-6">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavigation(link.href)}
                 className={`
-                  relative flex items-center gap-2 px-3 py-2 text-sm font-mono cursor-pointer
-                  border border-border-muted hover:border-border-primary
-                  hover:bg-bg-secondary transition-all duration-200
+                  relative flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2 text-xs md:text-sm font-mono cursor-pointer
+                  border border-pip-boy-green/30 hover:border-pip-boy-green
+                  hover:bg-pip-boy-green/10 transition-all duration-200
                   ${isActive(link.href)
-                    ? 'bg-bg-secondary border-border-primary text-text-primary glow-green'
-                    : 'text-text-secondary hover:text-text-primary'
+                    ? 'bg-pip-boy-green/10 border-pip-boy-green text-pip-boy-green'
+                    : 'text-pip-boy-green/70 hover:text-pip-boy-green'
                   }
                 `}
               >
-                <link.icon className="w-4 h-4" />
-                <span>{link.label}</span>
+                <link.icon className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">{link.label}</span>
                 {/* 未領取提示紅點 */}
                 {link.badge && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
@@ -149,13 +149,13 @@ export function Header() {
             {user && (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-mono
-                         border border-error-border hover:border-error
-                         hover:bg-error-bg text-error hover:text-error
-                         transition-all duration-200 hover:glow-red"
+                className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-2 text-xs md:text-sm font-mono
+                         border border-red-500/30 hover:border-red-500
+                         hover:bg-red-500/10 text-red-400 hover:text-red-500
+                         transition-all duration-200"
               >
-                <DoorOpen className="w-4 h-4" />
-                <span>登出</span>
+                <DoorOpen className="w-3 h-3 md:w-4 md:h-4" />
+                <span className="hidden sm:inline">登出</span>
               </button>
             )}
           </nav>

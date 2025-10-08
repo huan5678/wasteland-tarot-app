@@ -144,7 +144,7 @@ export default function PasskeysPage() {
   }
 
   return (
-    <div className="min-h-screen bg-vault-dark py-8 px-4">
+    <div className="min-h-screen bg-wasteland-dark py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* 頁面標題 */}
         <div className="mb-8">
@@ -179,7 +179,7 @@ export default function PasskeysPage() {
           <button
             onClick={handleAddPasskey}
             disabled={!isSupported || isLoading}
-            className="px-6 py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             {isLoading ? '處理中...' : '新增 Passkey'}
@@ -187,7 +187,7 @@ export default function PasskeysPage() {
         </div>
 
         {/* Passkeys 列表 */}
-        <div className="bg-vault-dark border-2 border-pip-boy-green p-6">
+        <div className="bg-wasteland-dark border-2 border-pip-boy-green p-6">
           <h2 className="text-xl font-mono text-pip-boy-green mb-4">你的 Passkeys</h2>
 
           {loadingCredentials ? (
@@ -229,7 +229,7 @@ export default function PasskeysPage() {
                             <button
                               onClick={() => saveDeviceName(credential.id)}
                               disabled={isLoading}
-                              className="px-3 py-1 bg-pip-boy-green text-vault-dark font-mono text-xs hover:bg-pip-boy-green/80 disabled:opacity-50"
+                              className="px-3 py-1 bg-pip-boy-green text-wasteland-dark font-mono text-xs hover:bg-pip-boy-green/80 disabled:opacity-50"
                             >
                               儲存
                             </button>

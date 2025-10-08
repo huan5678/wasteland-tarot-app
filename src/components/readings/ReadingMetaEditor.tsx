@@ -68,7 +68,7 @@ export function ReadingMetaEditor({ readingId, onClose }: Props) {
       {error && <div className="text-red-400 text-xs font-mono">{error}</div>}
       <div className="flex gap-2 justify-end">
         <button onClick={onClose} className="px-3 py-1 border border-pip-boy-green/40 text-xs font-mono text-pip-boy-green hover:bg-pip-boy-green/10">取消</button>
-        <button disabled={saving} onClick={handleSave} className="px-3 py-1 bg-pip-boy-green text-vault-dark text-xs font-mono font-bold disabled:opacity-50">{saving ? '儲存中...' : '儲存'}</button>
+        <button disabled={saving} onClick={handleSave} className="px-3 py-1 bg-pip-boy-green text-wasteland-dark text-xs font-mono font-bold disabled:opacity-50">{saving ? '儲存中...' : '儲存'}</button>
       </div>
     </div>
   )

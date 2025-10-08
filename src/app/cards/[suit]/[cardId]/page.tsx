@@ -91,7 +91,7 @@ export default function CardDetailPage() {
   // 載入狀態
   if (isLoading && !isMounted) {
     return (
-      <div className="min-h-screen bg-vault-dark flex items-center justify-center">
+      <div className="min-h-screen bg-wasteland-dark flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     )
@@ -100,7 +100,7 @@ export default function CardDetailPage() {
   // 錯誤狀態
   if (error && !card) {
     return (
-      <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
+      <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <Breadcrumb items={breadcrumbItems} />
           <div className="mt-8">
@@ -118,7 +118,7 @@ export default function CardDetailPage() {
   // 卡牌不存在
   if (!isLoading && !card) {
     return (
-      <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
+      <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <Breadcrumb items={breadcrumbItems} />
           <div className="mt-8">
@@ -143,7 +143,7 @@ export default function CardDetailPage() {
   const imageAlt = getCardImageAlt(card)
 
   return (
-    <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 麵包屑導航 */}
         <div className="mb-6">

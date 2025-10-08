@@ -289,7 +289,7 @@ export function TarotCard({
                   <img src={card.image_url} alt={card.name} onError={handleImageError} className="object-contain max-h-full" />
                 )}
               </div>
-              <div className="p-2 border-t border-pip-boy-green/30 bg-vault-dark/60">
+              <div className="p-2 border-t border-pip-boy-green/30 bg-wasteland-dark/60">
                 <div className="text-center text-pip-boy-green text-[11px] font-mono font-bold leading-tight">{card.name}</div>
                 <div className="text-center text-pip-boy-green/60 text-[10px] font-mono line-clamp-2 mt-0.5">{position === 'upright' ? card.meaning_upright : card.meaning_reversed}</div>
               </div>

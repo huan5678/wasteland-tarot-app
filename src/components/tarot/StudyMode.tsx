@@ -500,7 +500,7 @@ export function StudyMode({
             initial={{ rotateY: 180, opacity: 0 }}
             animate={{ rotateY: 0, opacity: 1 }}
             transition={{ duration: 0.6 }}
-            className="bg-vault-dark border-2 border-pip-boy-green/60 rounded-lg aspect-[3/2] flex flex-col justify-center items-center p-8 cursor-pointer"
+            className="bg-wasteland-dark border-2 border-pip-boy-green/60 rounded-lg aspect-[3/2] flex flex-col justify-center items-center p-8 cursor-pointer"
             onClick={flipCard}
           >
             <AnimatePresence mode="wait">
@@ -683,7 +683,7 @@ export function StudyMode({
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
               placeholder="Type your answer here..."
-              className="w-full h-32 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-4 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
+              className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-4 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
               disabled={showAnswer}
             />
           )}

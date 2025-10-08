@@ -147,7 +147,7 @@ export class MobileAccessibilityManager {
         --color-background: #000000;
         --color-foreground: #ffffff;
         --color-pip-boy-green: #00ff00;
-        --color-vault-dark: #ffffff;
+        --color-wasteland-dark: #ffffff;
         --color-wasteland-darker: #000000;
         filter: contrast(150%);
       }
@@ -207,7 +207,7 @@ export class MobileAccessibilityManager {
         top: -40px;
         left: 6px;
         background: var(--color-pip-boy-green);
-        color: var(--color-vault-dark);
+        color: var(--color-wasteland-dark);
         padding: 8px;
         text-decoration: none;
         z-index: 9999;

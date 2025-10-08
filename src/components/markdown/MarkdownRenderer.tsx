@@ -152,12 +152,9 @@ const markdownComponents: Components = {
 
   // Horizontal Rule
   hr: () => (
-    <hr
-      className="my-8 border-0 text-center text-green-700"
-      aria-hidden="true"
-    >
+    <div className="my-8 text-center text-green-700" aria-hidden="true">
       ═══════════════════════════════════
-    </hr>
+    </div>
   ),
 
   // Inline Code

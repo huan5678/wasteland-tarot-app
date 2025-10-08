@@ -50,7 +50,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-      <div className="bg-vault-dark border-2 border-pip-boy-green max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-wasteland-dark border-2 border-pip-boy-green max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="border-b border-pip-boy-green/30 p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
@@ -104,7 +104,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                   <Icon className="w-4 h-4" />
                   {tab.label}
                   {tab.badge && tab.badge > 0 && (
-                    <span className="px-1.5 py-0.5 bg-pip-boy-green text-vault-dark text-xs rounded">
+                    <span className="px-1.5 py-0.5 bg-pip-boy-green text-wasteland-dark text-xs rounded">
                       {tab.badge}
                     </span>
                   )}

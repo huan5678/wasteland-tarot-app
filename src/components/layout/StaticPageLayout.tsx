@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import DitherBackground from '@/components/effects/DitherBackground';
 
 /**
  * Static Page Variant Types
@@ -110,13 +109,6 @@ export default function StaticPageLayout({
 
   return (
     <div className="relative min-h-screen bg-black text-green-500">
-      {/* Dithered Background Effect */}
-      <DitherBackground
-        intensity="medium"
-        opacity={0.3}
-        className="fixed inset-0 pointer-events-none"
-      />
-
       {/* Main Content Container */}
       <div className="relative z-10 container mx-auto max-w-4xl px-4 py-12">
         {/* Breadcrumb Navigation */}

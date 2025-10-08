@@ -40,7 +40,7 @@ describe('LoginForm', () => {
 
       const form = screen.getByRole('form')
       expect(form).toHavePipBoyStyle()
-      expect(form).toHaveClass('bg-vault-dark', 'border-pip-boy-green')
+      expect(form).toHaveClass('bg-wasteland-dark', 'border-pip-boy-green')
     })
 
     it('should display Vault-Tec branding', () => {

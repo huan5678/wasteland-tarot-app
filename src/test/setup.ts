@@ -201,7 +201,7 @@ expect.extend({
   toHavePipBoyStyle(received) {
     const pipBoyClasses = [
       'text-pip-boy-green',
-      'bg-vault-dark',
+      'bg-wasteland-dark',
       'font-mono',
       'border-pip-boy-green'
     ]

@@ -576,7 +576,7 @@ export function CardDetailModal({
       <div className="space-y-4">
         <div className="relative" ref={imageContainerRef}>
           <div className={cn(
-            "w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-vault-dark relative",
+            "w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative",
             card.position === 'reversed' && "transform rotate-180"
           )}>
             {imageError ? (
@@ -1204,7 +1204,7 @@ export function CardDetailModal({
             defaultValue={cardIsBookmarked ? '' : ''}
             onChange={(e) => handleNotesUpdate(e.target.value)}
             placeholder="記下你對這張卡片的想法和感悟..."
-            className="w-full h-32 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
+            className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
           />
         </div>
       )}
@@ -1265,7 +1265,7 @@ export function CardDetailModal({
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="bg-vault-dark border-2 border-pip-boy-green max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col"
+          className="bg-wasteland-dark border-2 border-pip-boy-green max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Enhanced Header */}
@@ -1320,7 +1320,7 @@ export function CardDetailModal({
           </div>
 
           {/* Tab Navigation */}
-          <div className="border-b border-pip-boy-green/30 bg-vault-dark/50">
+          <div className="border-b border-pip-boy-green/30 bg-wasteland-dark/50">
             <div className="flex overflow-x-auto scrollbar-thin scrollbar-thumb-pip-boy-green/30">
               {TAB_CONFIG.map((tab, index) => {
                 const isActive = activeTab === tab.id
@@ -1390,7 +1390,7 @@ export function CardDetailModal({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.href = '/auth/register'}
-                    className="px-6 py-3 bg-pip-boy-green text-vault-dark font-mono font-bold rounded border-2 border-pip-boy-green hover:bg-transparent hover:text-pip-boy-green transition-all duration-300 shadow-lg shadow-pip-boy-green/20"
+                    className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold rounded border-2 border-pip-boy-green hover:bg-transparent hover:text-pip-boy-green transition-all duration-300 shadow-lg shadow-pip-boy-green/20"
                   >
                     立即註冊
                   </motion.button>
@@ -1398,7 +1398,7 @@ export function CardDetailModal({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.href = '/auth/login'}
-                    className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold rounded hover:bg-pip-boy-green hover:text-vault-dark transition-all duration-300"
+                    className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold rounded hover:bg-pip-boy-green hover:text-wasteland-dark transition-all duration-300"
                   >
                     已有帳號？登入
                   </motion.button>

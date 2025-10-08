@@ -10,7 +10,7 @@ import { ToastProvider } from "@/components/common/Toast";
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import { MetricsInitializer } from '@/components/system/MetricsInitializer';
 import { AudioInitializer } from '@/components/system/AudioInitializer';
-import { doto } from '@/lib/fonts';
+// import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
 export const metadata: Metadata = {
   title: "廢土塔羅 - Pip-Boy 占卜終端機",
@@ -22,10 +22,10 @@ export const metadata: Metadata = {
   robots: "index, follow",
   icons: {
     icon: [
-      { url: '/logo.svg', type: 'image/svg+xml' },
-      { url: '/logo.svg', sizes: 'any', type: 'image/svg+xml' }
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' }
     ],
-    apple: '/logo.svg',
+    apple: '/favicon.svg',
   },
   openGraph: {
     images: ['/logo.svg'],
@@ -44,8 +44,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-TW" className={`dark ${doto.variable}`}>
-      <body className="text-pip-boy-green font-mono antialiased" style={{backgroundColor: 'var(--color-wasteland-darker)'}}>
+    <html lang="zh-TW" className="dark">
+      <body className="text-pip-boy-green antialiased" style={{backgroundColor: 'var(--color-wasteland-darker)'}}>
         <DynamicBackground />
         <ErrorBoundary>
           <ZustandAuthInitializer>

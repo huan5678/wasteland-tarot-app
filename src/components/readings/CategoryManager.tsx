@@ -163,7 +163,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               </div>
 
               {showEmojiPicker && (
-                <div className="absolute z-20 mt-1 p-3 bg-vault-dark border-2 border-pip-boy-green grid grid-cols-10 gap-1 max-w-xs">
+                <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-10 gap-1 max-w-xs">
                   {EMOJI_PRESETS.map(emoji => (
                     <button
                       key={emoji}
@@ -200,7 +200,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
             </div>
 
             {showColorPicker && (
-              <div className="absolute z-20 mt-1 p-3 bg-vault-dark border-2 border-pip-boy-green grid grid-cols-5 gap-2 max-w-xs">
+              <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-5 gap-2 max-w-xs">
                 {COLOR_PRESETS.map(color => (
                   <button
                     key={color.value}

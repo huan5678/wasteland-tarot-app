@@ -491,7 +491,7 @@ export function CardRelationships({
                       className={cn(
                         "px-2 py-1 rounded text-xs font-mono",
                         cardName === card.name
-                          ? "bg-pip-boy-green text-vault-dark"
+                          ? "bg-pip-boy-green text-wasteland-dark"
                           : "bg-pip-boy-green/20 text-pip-boy-green"
                       )}
                     >
@@ -531,7 +531,7 @@ export function CardRelationships({
               className={cn(
                 "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded font-mono text-sm transition-all duration-200",
                 isActive
-                  ? "bg-pip-boy-green text-vault-dark shadow-lg"
+                  ? "bg-pip-boy-green text-wasteland-dark shadow-lg"
                   : "text-pip-boy-green/70 hover:text-pip-boy-green hover:bg-pip-boy-green/10"
               )}
               whileHover={{ scale: 1.02 }}

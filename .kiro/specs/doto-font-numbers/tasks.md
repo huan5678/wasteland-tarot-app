@@ -1,225 +1,237 @@
 # 實作計畫
 
-## 基礎設定與配置
+## 核心字體配置
 
-- [x] 1. 建立 Doto 字體配置模組
-  - 在 `src/lib/fonts.ts` 建立新檔案
-  - 從 `next/font/google` 匯入 Doto 字體
-  - 配置字體選項：subsets=['latin'], variable='--font-doto', display='swap'
-  - 設定備用字體陣列：['monospace', 'Courier New', 'Monaco']
-  - 啟用 preload 和 adjustFontFallback 選項以優化效能
-  - _Requirements: 1.1, 1.2, 1.3, 1.4_
+- [x] 1. 更新字體配置模組
+  - 修改 `src/lib/fonts.ts` 更新 Doto 字體配置以支援完整 Latin 字符集
+  - 更新 `fallback` 陣列加入 `'Noto Sans TC'` 作為中文字體回退
+  - 新增 `adjustFontFallback: true` 配置以減少 CLS
+  - 更新文件註解說明 Doto 作為主要英文字體的用途（不僅是數字）
+  - 確認 `subsets: ['latin']` 和 `weight` 陣列完整性
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - **完成**: 已更新 `src/lib/fonts.ts`，加入完整文件註解和 adjustFontFallback 配置
 
-- [x] 1.1 撰寫字體配置模組單元測試
-  - 在 `src/lib/__tests__/fonts.test.ts` 建立測試檔案
-  - 測試 doto 實例是否正確匯出
-  - 驗證 variable 屬性為 '--font-doto'
-  - 驗證 style.fontFamily 包含 'monospace' 備用字體
-  - _Requirements: 1.3, 9.1_
+- [x] 2. 配置全域字體堆疊
+  - 修改 `src/app/globals.css` 在 `@theme` 區塊定義 `--font-doto` 字體堆疊
+  - 設定字體堆疊為 `'Doto', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`
+  - 在 `@layer base` 區塊的 `body` 選擇器設定 `font-family: var(--font-doto)`
+  - 確保所有文字元素（h1-h6, p, span, div, a, button, input, textarea, select, label）繼承 body 的字體
+  - _Requirements: 2.1, 2.2, 2.5_
+  - **完成**: 已在 `@theme` 定義 `--font-doto`，並在 `@layer base` 設定全域字體
 
-- [x] 2. 更新 Root Layout 整合字體
-  - 開啟 `src/app/layout.tsx`
-  - 匯入 doto 字體實例：`import { doto } from '@/lib/fonts'`
-  - 將 `${doto.variable}` 加入 `<html>` 或 `<body>` 元素的 className
-  - 移除被註解的舊字體配置程式碼（第 14-20 行）
-  - 驗證字體變數已正確注入到 DOM
-  - _Requirements: 1.1, 1.2, 1.4_
+- [x] 3. 注入字體變數到根佈局
+  - 修改 `src/app/layout.tsx` 確認 `${doto.variable}` 已注入到 `<html>` 標籤的 className
+  - 更新 `<body>` className 從 `font-mono` 改為使用全域字體（透過 CSS 設定）
+  - 驗證 `lang="zh-TW"` 屬性存在於 `<html>` 標籤
+  - 確保 antialiased 類別保持套用以提升字體渲染品質
+  - _Requirements: 2.1, 2.5_
+  - **完成**: 已移除 `font-mono` 類別，改用 globals.css 全域字體設定
 
-- [x] 3. 擴展 Tailwind CSS 配置
-  - 開啟 `tailwind.config.ts`
-  - 在 `theme.extend.fontFamily` 區塊中新增 `doto` 鍵
-  - 配置值為：`["var(--font-doto)", "monospace"]`
-  - 確保與現有 `mono` 字體配置格式一致（第 186-188 行）
-  - _Requirements: 2.1, 2.2, 2.4, 10.1_
+## 樣式系統擴展
 
-- [x] 4. 定義全域數字樣式類別
-  - 開啟 `src/app/globals.css`
-  - 在檔案末端新增 CSS 變數：`:root { --font-doto: 'Doto', monospace; }`
-  - 定義 `.numeric` 類別：font-family, font-variant-numeric: tabular-nums, letter-spacing: 0.05em
-  - 定義 `.stat-number` 類別：使用 @apply 結合 font-doto, text-3xl, font-bold, tabular-nums
-  - 定義 `.counter` 類別：使用 @apply 結合 font-doto, text-sm, tabular-nums
-  - 新增 CSS 降級支援：`@supports not (font-family: var(--font-doto)) { ... }`
-  - _Requirements: 2.1, 2.2, 2.3, 8.4_
+- [x] 4. 建立可重複使用的字體工具類別
+  - 在 `src/app/globals.css` 新增字體覆寫類別
+  - 建立 `.font-doto` 類別明確套用 Doto 字體
+  - 建立 `.font-sans` 類別用於需要無襯線字體的場景
+  - 建立 `.font-mono` 類別用於需要等寬字體的代碼或特殊內容
+  - 更新文件註解說明各類別的使用場景
+  - _Requirements: 2.2, 10.5_
+  - **完成**: 已建立 `.font-doto`, `.font-sans`, `.font-mono` 覆寫類別
 
-- [ ] 4.1 驗證基礎設定完整性
-  - 執行 `bun dev` 啟動開發伺服器
-  - 開啟瀏覽器 DevTools，檢查 `<html>` 元素是否包含 `--font-doto` 變數
-  - 在 Elements 面板驗證 CSS 變數已正確定義
-  - 檢查 Network 面板確認 Doto 字體檔案已載入
-  - 驗證無 console 錯誤或警告
-  - _Requirements: 1.1, 1.2, 1.4, 9.2_
+- [x] 5. 更新現有 typography 類別
+  - 檢查 `src/app/globals.css` 中現有的 `.numeric`、`.stat-number`、`.counter` 類別
+  - 確保這些類別與新的全域字體設定相容
+  - 如果這些類別不再需要（因為全域已套用 Doto），考慮保留但標記為 deprecated 以維持向後相容
+  - 更新文件說明這些類別的新用途或遷移路徑
+  - _Requirements: 10.1, 10.5_
+  - **完成**: 已更新所有 typography 類別（.heading-*, .body-*, .text-pip-boy, .interface-header）使用 Doto 字體
 
-## 核心統計組件更新
+## 測試基礎建設
 
-- [x] 5. 更新 StatisticsCard 組件
-  - 開啟 `src/components/analytics/StatisticsCard.tsx`
-  - 在 StatisticsCardProps interface 新增可選屬性：`useNumericFont?: boolean`
-  - 在組件內部建立條件樣式：`const numericClass = useNumericFont ? 'font-doto' : ''`
-  - 將數值顯示的 `<p>` 標籤 className 更新為包含 `font-doto` 和 `tabular-nums`
-  - 將百分比趨勢數值 className 更新為包含 `font-doto` 和 `tabular-nums`
-  - _Requirements: 3.3, 3.4_
+- [ ] 6. 建立字體單元測試
+  - 建立 `src/lib/__tests__/fonts.test.ts` 測試檔案
+  - 測試 doto 字體物件存在且包含正確的配置
+  - 測試 `variable` 屬性為 `--font-doto`
+  - 測試 `display` 屬性為 `swap`
+  - 測試 `subsets` 包含 `latin`
+  - 測試 `fallback` 陣列包含預期的字體
+  - _Requirements: All requirements need foundational testing_
 
-- [x] 5.1 撰寫 StatisticsCard 組件測試
-  - 建立 `src/components/analytics/__tests__/StatisticsCard.test.tsx`
-  - 測試預設情況下數值元素包含 `font-doto` class
-  - 測試當 useNumericFont=false 時不套用 `font-doto` class
-  - 測試百分比趨勢數值正確顯示 Doto 字體
-  - 使用 Testing Library 的 toHaveClass matcher 驗證
-  - _Requirements: 3.3, 3.4_
+- [ ] 7. 建立整合測試
+  - 建立 `tests/integration/font-integration.test.tsx` 測試檔案
+  - 測試根佈局正確注入 Doto CSS 變數
+  - 測試 body 元素的計算樣式包含 Doto 字體
+  - 測試中英文混合內容渲染時的字體應用（Mock DOM 測試）
+  - 測試字體降級機制（模擬 Doto 不可用的情境）
+  - _Requirements: 1.3, 1.5, 8.4_
 
-- [x] 6. 更新 AnalyticsDashboard 組件
-  - StatisticsCard 已預設使用 Doto 字體（useNumericFont=true）
-  - 所有統計卡片自動套用 font-doto 和 tabular-nums
-  - _Requirements: 3.1, 3.4_
+## E2E 字體驗證
 
-- [x] 7. 更新 ReadingStatsDashboard 組件
-  - 更新四個主要統計指標為 font-doto tabular-nums
-  - 更新智能洞察面板數字、牌陣分佈計數、月度計數
-  - 更新熱門標籤、常見卡牌、其他統計的數字顯示
-  - _Requirements: 3.2, 3.4_
+- [ ] 8. 建立英文內容顯示 E2E 測試
+  - 建立 `tests/e2e/font-english-display.spec.ts` Playwright 測試檔案
+  - 測試首頁英文內容使用 Doto 字體（檢查 computed style）
+  - 測試儀表板中數字、標籤、按鈕的字體為 Doto
+  - 測試卡牌頁面英文花色名稱使用 Doto
+  - 測試表單輸入、占位符、標籤使用 Doto
+  - _Requirements: 3.1, 3.2, 3.3, 6.1, 6.2, 7.1, 7.2_
 
-- [x] 7.1 執行核心組件視覺驗證
-  - 開發伺服器成功啟動
-  - 所有核心統計組件已套用 Doto 字體
+- [ ] 9. 建立中文字體回退 E2E 測試
+  - 建立 `tests/e2e/font-chinese-fallback.spec.ts` Playwright 測試檔案
+  - 測試中文內容使用 Noto Sans TC 或系統中文字體（不使用 Doto）
+  - 測試中英文混合段落中，中文和英文使用不同字體
+  - 驗證字體回退機制：英文 → Doto，中文 → Noto Sans TC
+  - _Requirements: 1.5, 2.5_
+
+- [ ] 10. 建立響應式字體 E2E 測試
+  - 建立 `tests/e2e/font-responsive.spec.ts` Playwright 測試檔案
+  - 測試桌面裝置（>= 1024px）Doto 字體清晰可讀
+  - 測試平板裝置（768-1023px）Doto 字體大小適當
+  - 測試手機裝置（< 768px）Doto 字體在小螢幕上清晰可讀
+  - 測試不同視窗尺寸下字體大小響應式調整
+  - _Requirements: 8.1, 8.2, 8.3, 8.5_
+
+## 效能測試與優化
+
+- [ ] 11. 建立字體載入效能測試
+  - 建立 `tests/performance/font-loading.spec.ts` Playwright 效能測試
+  - 測試首次頁面載入時 Doto 字體載入時間 < 2 秒
+  - 測試字體載入來源為同域（非 Google CDN）
+  - 測試後續頁面載入字體從瀏覽器快取載入
+  - 測試 Network 標籤中 Doto 字體請求數量（應為 1 次或 0 次快取命中）
+  - _Requirements: 9.1, 9.2, 9.4_
+
+- [ ] 12. 建立 CLS 效能測試
+  - 在 `tests/performance/font-loading.spec.ts` 新增 CLS 測量測試
+  - 測試首頁 Cumulative Layout Shift < 0.1
+  - 測試儀表板頁面 CLS < 0.1
+  - 測試字體載入期間無明顯文字閃爍（FOIT）或佈局偏移
+  - 驗證 `font-display: swap` 和 `adjustFontFallback` 配置生效
+  - _Requirements: 9.3_
+
+- [ ] 13. 建立字體檔案大小驗證測試
+  - 在 `tests/performance/font-loading.spec.ts` 新增字體檔案大小測試
+  - 擷取 Doto woff2 字體檔案的 response body
+  - 驗證字體檔案大小 < 100KB
+  - 確認僅載入 Latin 字符集（subsets 生效）
+  - _Requirements: 9.5_
+
+## 視覺回歸測試
+
+- [ ] 14. 建立視覺回歸測試基準
+  - 建立 `tests/visual/font-visual-regression.spec.ts` Playwright 視覺測試檔案
+  - 等待字體完全載入（`await page.evaluate(() => document.fonts.ready)`）
+  - 建立首頁的基準截圖（`homepage-with-doto-font.png`）
+  - 建立儀表板的基準截圖（`dashboard-with-mixed-text.png`）
+  - 建立卡牌頁面的基準截圖（`cards-page-with-english-suits.png`）
+  - _Requirements: All requirements need visual validation_
+
+- [ ] 15. 建立組件級視覺測試
+  - 在 `tests/visual/font-visual-regression.spec.ts` 新增組件級截圖測試
+  - 測試 StatisticsCard 組件的字體顯示
+  - 測試 ReadingHistory 組件的混合文字顯示
+  - 測試 CardFrequency 組件的英文標籤顯示
+  - 測試表單組件（Input, Button, Select, Label）的字體顯示
+  - _Requirements: 3.1, 3.3, 4.1, 6.2, 7.1, 7.2_
+
+## 功能驗證與修正
+
+- [ ] 16. 驗證統計儀表板字體顯示
+  - 手動測試或建立自動化測試驗證 Analytics Dashboard 所有英文內容使用 Doto
+  - 檢查統計數值（數字）使用 Doto 字體
+  - 檢查英文標籤（如 "Total Readings"）使用 Doto 字體
+  - 檢查百分比趨勢和描述（如 "+15%", "increase"）使用 Doto 字體
+  - 如有問題，檢查組件是否有覆寫字體的樣式並移除
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-## 閱讀歷史與卡牌組件更新
+- [ ] 17. 驗證閱讀記錄字體顯示
+  - 測試閱讀歷史列表中英文標籤和數字使用 Doto
+  - 測試日期和時間數字（如 "2025-01-15", "14:30"）使用 Doto
+  - 測試閱讀 ID 或編號使用 Doto
+  - 測試評分、標籤等英文資訊使用 Doto
+  - 如有問題，檢查 ReadingHistory 組件及其子組件的樣式設定
+  - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-- [x] 8. 更新閱讀歷史組件數字顯示
-  - 更新篩選結果計數顯示為 font-doto tabular-nums
-  - _Requirements: 4.1, 4.2, 4.3_
-
-- [x] 9. 更新卡牌頻率與編號顯示
-  - CardFrequency Tooltip 加入 Doto 字體
-  - _Requirements: 6.1, 6.2, 6.3, 6.4_
-
-- [x] 10. 更新 Karma 系統數值顯示
-  - Profile 頁面服務天數和總占卜次數使用 font-doto
+- [ ] 18. 驗證 Karma 系統字體顯示
+  - 測試 Karma 數值和標籤（如 "Good", "Evil"）使用 Doto
+  - 測試 Faction Affinity 派系名稱（如 "Brotherhood of Steel"）使用 Doto
+  - 測試分數（0-100）使用 Doto
+  - 測試使用者成就、里程碑的英文描述使用 Doto
+  - 測試連續登入天數（如 "Day Streak", "Level"）標籤使用 Doto
   - _Requirements: 5.1, 5.2, 5.3, 5.4_
 
-## 表單輸入與互動元素更新
+- [ ] 19. 驗證卡牌相關字體顯示
+  - 測試卡牌編號和英文名稱使用 Doto
+  - 測試 CardFrequency 組件的英文標籤（如 "Frequency", "Times"）使用 Doto
+  - 測試 78 張卡牌的花色名稱（如 "Nuka-Cola Bottles", "Combat Weapons"）使用 Doto
+  - 測試卡牌詳情中的英文描述或數值使用 Doto
+  - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [x] 11. 更新數字輸入欄位樣式
-  - 搜尋專案中所有 `type="number"` 的 input 元素
-  - 在這些輸入欄位的 className 加入 `font-doto tabular-nums`
-  - 確保輸入欄位的數字顯示清晰且對齊一致
-  - 測試輸入體驗，確認字體不影響可用性
-  - _Requirements: 7.1, 7.4_
+- [ ] 20. 驗證表單與輸入字體顯示
+  - 測試輸入欄位中的英文內容使用 Doto（輸入時和顯示時）
+  - 測試表單標籤、占位符、驗證訊息的英文部分使用 Doto
+  - 測試字數計數器（如 "42/100 characters"）使用 Doto
+  - 測試 select 和 dropdown 的英文選項使用 Doto
+  - 測試按鈕文字（如 "Submit", "Cancel", "Save"）使用 Doto
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-- [x] 12. 實作並更新字數計數器組件
-  - 搜尋專案中字數限制或計數器顯示（如 "42/100 字"）
-  - 使用 `<span className="font-doto text-sm tabular-nums">` 包裹計數數字
-  - 如有驗證訊息包含數字（如 "最小 5 個字元"），也套用 Doto 字體
-  - 確保計數器在不同表單中一致性地使用 Doto 字體
-  - _Requirements: 7.2, 7.3_
+## 文件與維護
 
-- [x] 13. 更新 Select 和 Dropdown 數字選項
-  - 搜尋專案中包含數字選項的 select 或 dropdown 組件
-  - 在 option 元素或 dropdown 項目加入 `font-doto` className
-  - 測試下拉選單的數字顯示是否正確
-  - 確保選中狀態的數字也使用 Doto 字體
-  - _Requirements: 7.4_
-  - 註：專案中未發現包含純數字選項的 select/dropdown，現有選項為文字型（如「全部」、「單張」等）
+- [ ] 21. 建立使用指南文件
+  - 建立 `.kiro/specs/doto-font-numbers/USAGE.md` 使用指南
+  - 記錄如何使用全域 Doto 字體（預設行為）
+  - 記錄如何使用字體覆寫類別（`.font-sans`, `.font-mono`）
+  - 記錄中英文混合顯示的原理和注意事項
+  - 提供常見問題與解決方案（FAQ）
+  - _Requirements: 10.2_
 
-## 響應式與效能優化
+- [ ] 22. 建立開發者指南
+  - 建立 `.kiro/specs/doto-font-numbers/DEV_GUIDE.md` 開發者文件
+  - 記錄字體配置的技術細節（Next.js Font Optimization, Tailwind v4 @theme）
+  - 記錄如何調整或更換主要英文字體
+  - 記錄如何新增其他字體變體或主題
+  - 記錄效能最佳化建議和監控方法
+  - _Requirements: 10.1, 10.3_
 
-- [x] 14. 實作響應式字體大小配置
-  - 開啟 `src/app/globals.css`
-  - 為 `.stat-number` 類別新增 responsive variants（使用 @apply 和 Tailwind breakpoints）
-  - 定義手機版（text-2xl）、平板版（text-3xl）、桌面版（text-4xl）的大小
-  - 為 `.counter` 類別也建立響應式變體
-  - 測試不同螢幕尺寸下的字體大小和可讀性
-  - _Requirements: 2.4, 8.1, 8.2, 8.3_
+- [ ] 23. 更新 spec.json 狀態
+  - 修改 `.kiro/specs/doto-font-numbers/spec.json`
+  - 設定 `phase` 為 `"implementation-completed"`
+  - 設定 `approvals.tasks.approved` 為 `true`
+  - 設定 `approvals.implementation.completed` 為 `true`
+  - 更新 `updated_at` 時間戳
+  - 記錄實作完成的檔案清單和測試覆蓋率
+  - _Requirements: All requirements need completion tracking_
 
-- [x] 15. 驗證字體載入效能
-  - 執行 `bun build` 建立生產版本
-  - 使用 Chrome DevTools Network 面板測量字體檔案載入時間
-  - 驗證字體檔案大小 < 50KB (woff2)
-  - 檢查 Cache-Control headers 是否正確設定（max-age=31536000）
-  - 確認字體檔案來源為同域（非 Google Fonts CDN）
-  - _Requirements: 9.1, 9.2, 9.4_
-  - 註：生產 build 因專案既有 babel 配置問題失敗，在開發環境驗證 Doto 字體正常載入。Next.js Font Optimization 確保字體自動下載並托管於同域。
+## 整合與部署準備
 
-- [x] 16. 執行 Lighthouse 效能測試
-  - 在生產模式下啟動應用程式
-  - 對主要頁面（首頁、dashboard）執行 Lighthouse 測試
-  - 驗證 CLS (Cumulative Layout Shift) < 0.1
-  - 驗證 FCP (First Contentful Paint) < 1.5 秒
-  - 記錄效能分數並與基準比較
-  - 如有效能問題，調整字體載入策略
-  - _Requirements: 9.1, 9.3_
-  - 註：因專案 babel 配置問題無法建立生產版本，跳過此任務
-
-## 測試與品質保證
-
-- [x] 17. 撰寫整合測試驗證字體套用
-  - 在 `src/components/analytics/__tests__/` 建立整合測試檔案
-  - 測試多個組件同時渲染時 Doto 字體正確套用
-  - 驗證 CSS 變數在不同組件間一致可用
-  - 測試字體降級機制（模擬 CSS 變數不支援情境）
-  - _Requirements: 1.3, 2.2, 8.4_
-  - 註：測試框架已建立，需後續設定測試環境
-
-- [x] 18. 撰寫 E2E 測試主要使用者流程
-  - 在 `tests/e2e/` 建立 `numeric-font-display.spec.ts`
-  - 測試場景 1：桌面版 dashboard 載入後數字使用 Doto 字體
-  - 測試場景 2：行動版檢視時數字保持可讀性（字體大小 >= 14px）
-  - 測試場景 3：表單輸入數字時使用 Doto 字體顯示
-  - 使用 Playwright 的 evaluate 函數檢查 computed font-family
-  - _Requirements: 3.1, 7.1, 8.1, 8.2_
-  - 註：需設定 E2E 測試環境，目前在開發環境手動驗證
-
-- [x] 19. 撰寫效能測試驗證載入時間
-  - 在 `tests/performance/` 建立 `font-loading.spec.ts`
-  - 測試首次載入頁面時字體載入時間 < 2 秒
-  - 測試快取後載入時間 < 100ms
-  - 測試 CLS 分數 < 0.1（使用 PerformanceObserver）
-  - 驗證無明顯佈局偏移發生
-  - _Requirements: 9.1, 9.3_
-  - 註：需生產環境，目前跳過
-
-- [x] 20. 執行跨瀏覽器相容性測試
-  - 在 Chrome、Firefox、Safari 測試 Doto 字體顯示
-  - 驗證字體在不同瀏覽器中的渲染一致性
-  - 測試備用字體在舊版瀏覽器中的降級效果
-  - 檢查行動瀏覽器（iOS Safari、Chrome Mobile）的顯示
-  - _Requirements: 8.4_
-  - 註：需多瀏覽器測試環境，已在 Chrome 開發環境驗證，CSS fallback 已設定
-
-## 最終驗證與完成
-
-- [x] 21. 執行視覺回歸測試
-  - 對主要頁面進行截圖（dashboard, readings, cards, profile）
-  - 使用截圖對比工具檢查數字區域的視覺變化
-  - 驗證數字對齊和間距沒有非預期的改變
-  - 確認 Doto 字體與 Fallout 主題視覺風格協調
-  - 記錄任何視覺不一致問題並修正
-  - _Requirements: 2.3, 8.1, 8.2, 8.3_
-  - 註：手動在開發環境驗證，Doto 字體與 Pip-Boy 主題協調
-
-- [x] 22. 執行完整功能驗收測試
-  - 在桌面、平板、手機三種尺寸測試所有數字顯示
-  - 驗證統計儀表板所有數值使用 Doto 字體
-  - 驗證閱讀歷史和卡牌組件的數字顯示
-  - 驗證表單輸入和計數器的數字字體
-  - 確認所有 EARS 需求的驗收標準已滿足
+- [ ] 24. 執行完整測試套件
+  - 執行所有單元測試：`bun test`
+  - 執行所有 E2E 測試：`bun test:playwright`
+  - 執行效能測試套件
+  - 執行視覺回歸測試套件
+  - 確保所有測試通過（0 failures）
   - _Requirements: All requirements need E2E validation_
-  - 註：已在開發環境驗證所有組件，數字顯示正常
 
-- [x] 23. 程式碼品質檢查與優化
-  - 執行 `bun lint` 確認無 ESLint 錯誤
-  - 檢查是否有未使用的 CSS 類別
-  - 驗證 TypeScript 型別定義完整且正確
-  - 確認沒有 console.log 或 debug 程式碼殘留
-  - 執行所有單元測試和整合測試確保通過
-  - _Requirements: 10.4_
-  - 註：新增程式碼無 console.log 或 debug 殘留，TypeScript 檢查通過
+- [ ] 25. 驗證多瀏覽器相容性
+  - 在 Chrome/Edge（Chromium）驗證字體顯示
+  - 在 Firefox 驗證字體顯示
+  - 在 Safari（如可用）驗證字體顯示
+  - 確認所有瀏覽器的字體回退機制正常運作
+  - 記錄任何瀏覽器特定問題和解決方案
+  - _Requirements: 8.4_
 
-- [x] 24. 建立使用文件與維護指南
-  - 更新專案 README 說明如何使用 Doto 字體
-  - 記錄 `.font-doto`、`.numeric`、`.stat-number`、`.counter` 類別的使用方式
-  - 建立組件樣式指南：何時使用 Doto 字體 vs. 其他字體
-  - 記錄常見問題（如字體未顯示的除錯步驟）
-  - 記錄如何擴展支援其他數字字體的方法
-  - _Requirements: 10.2, 10.3_
-  - 已建立：`.kiro/specs/doto-font-numbers/USAGE.md`
+- [ ] 26. 效能基準驗證
+  - 執行 Lighthouse 效能測試
+  - 確認 First Contentful Paint (FCP) < 1.5 秒
+  - 確認 Largest Contentful Paint (LCP) < 2.5 秒
+  - 確認 Cumulative Layout Shift (CLS) < 0.1
+  - 確認 Time to Interactive (TTI) < 3.5 秒
+  - 記錄基準數據並與目標對比
+  - _Requirements: 9.1, 9.3_
+
+- [ ] 27. 建立回滾計畫
+  - 記錄實作前的字體配置狀態
+  - 建立回滾檢查清單（檔案列表和變更摘要）
+  - 測試回滾程序（使用 git revert 或備份還原）
+  - 確保回滾後應用程式功能正常
+  - 記錄回滾步驟到 DEV_GUIDE.md
+  - _Requirements: 10.1, 10.5_

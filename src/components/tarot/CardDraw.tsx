@@ -307,7 +307,7 @@ export function CardDraw({
             <button
               onClick={()=> setRevealCount(c=> Math.min(c+1, drawnCards.length))}
               className={`
-                px-4 py-2 text-sm font-mono bg-pip-boy-green text-vault-dark font-bold
+                px-4 py-2 text-sm font-mono bg-pip-boy-green text-wasteland-dark font-bold
                 hover:bg-pip-boy-green/90 transition-all duration-200 rounded
                 focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
                 shadow-lg hover:shadow-xl transform hover:scale-105

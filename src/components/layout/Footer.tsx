@@ -41,11 +41,11 @@ export function Footer() {
                 }}
               />
               <div>
-                <h3 className="text-lg font-bold text-pip-boy text-glow-green">廢土塔羅</h3>
-                <p className="text-xs text-muted-wasteland">Pip-Boy 占卜</p>
+                <h3 className="text-lg font-bold text-pip-boy-green text-glow-green">廢土塔羅</h3>
+                <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜</p>
               </div>
             </div>
-            <p className="text-sm text-terminal font-mono leading-relaxed">
+            <p className="text-sm text-pip-boy-green/70 font-mono leading-relaxed">
               透過古老的塔羅智慧，發現你在末世後廢土中的命運，
               由 Vault-Tec 驅動。
             </p>
@@ -53,13 +53,13 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-sm font-bold text-text-primary mb-4 font-mono">快速存取</h4>
+            <h4 className="text-sm font-bold text-pip-boy-green mb-4 font-mono">快速存取</h4>
             <nav className="space-y-2">
               {footerLinks.map((link) => (
                 <button
                   key={link.href}
                   onClick={() => window.location.href = link.href}
-                  className="block text-sm text-text-secondary hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono cursor-pointer text-left"
+                  className="block text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono cursor-pointer text-left"
                 >
                   {link.label}
                 </button>
@@ -69,7 +69,7 @@ export function Footer() {
 
           {/* Social & Support */}
           <div>
-            <h4 className="text-sm font-bold text-text-primary mb-4 font-mono">社群</h4>
+            <h4 className="text-sm font-bold text-pip-boy-green mb-4 font-mono">社群</h4>
             <div className="space-y-2">
               {socialLinks.map((link) => (
                 <a
@@ -77,7 +77,7 @@ export function Footer() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-text-secondary hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono"
+                  className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 font-mono"
                 >
                   <link.icon className="w-4 h-4" />
                   <span>{link.label}</span>
@@ -86,9 +86,9 @@ export function Footer() {
             </div>
 
             {/* Emergency Info */}
-            <div className="mt-6 p-3 border border-border-muted bg-bg-secondary">
-              <p className="text-xs text-text-muted font-mono">
-                <strong>技術支援：</strong><br />
+            <div className="mt-6 p-3 border border-pip-boy-green/30 bg-pip-boy-green/5">
+              <p className="text-xs text-pip-boy-green/60 font-mono">
+                <strong className="text-pip-boy-green/80">技術支援：</strong><br />
                 Vault-Tec 熱線：1-800-VAULT-TEC<br />
                 緊急終端機：B-117-A
               </p>
@@ -97,18 +97,18 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-30 my-6"></div>
+        <div className="h-px bg-gradient-to-r from-transparent via-pip-boy-green to-transparent opacity-30 my-6"></div>
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-text-disabled font-mono text-center md:text-left">
+          <div className="text-xs text-pip-boy-green/50 font-mono text-center md:text-left">
             © {currentYear || '----'} Vault-Tec Corporation。保留所有權利。<br />
             "在地下建造更美好的明天。"
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-text-disabled font-mono">
+          <div className="flex items-center gap-4 text-xs text-pip-boy-green/50 font-mono">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-success rounded-full animate-pulse glow-green"></div>
+              <div className="w-2 h-2 bg-pip-boy-green rounded-full animate-pulse"></div>
               <span>系統線上</span>
             </div>
             <span>|</span>
@@ -120,7 +120,7 @@ export function Footer() {
       </div>
 
       {/* Terminal Border */}
-      <div className="h-2 bg-gradient-to-r from-border-muted via-border-primary to-border-muted"></div>
+      <div className="h-2 bg-gradient-to-r from-pip-boy-green/20 via-pip-boy-green to-pip-boy-green/20"></div>
     </footer>
   )
 }

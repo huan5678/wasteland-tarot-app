@@ -27,7 +27,11 @@ interface FormErrors {
   name?: string
 }
 
-export function RegisterForm() {
+interface RegisterFormProps {
+  hideHeader?: boolean
+}
+
+export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
   const router = useRouter()
   const { showSuccess, showError } = useToast()
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
@@ -149,22 +153,24 @@ export function RegisterForm() {
   const isFormDisabled = isSubmitting || oauthLoading
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8">
-      <div className="max-w-md w-full">
+    <div className={hideHeader ? '' : 'min-h-screen flex items-center justify-center px-4 py-8'}>
+      <div className={hideHeader ? 'w-full' : 'max-w-md w-full'}>
         {/* Vault-Tec Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-mono text-pip-boy-green mb-2">
-            VAULT-TEC
-          </h1>
-          <p className="text-pip-boy-green text-lg font-mono">
-            新 Vault Dweller 註冊終端機
-          </p>
-          <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
-        </div>
+        {!hideHeader && (
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-mono text-pip-boy-green mb-2">
+              VAULT-TEC
+            </h1>
+            <p className="text-pip-boy-green text-lg font-mono">
+              新 Vault Dweller 註冊終端機
+            </p>
+            <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
+          </div>
+        )}
 
         {/* Register Form */}
         <form
-          className="bg-vault-dark border-2 border-pip-boy-green rounded-none p-6 shadow-lg shadow-pip-boy-green/20"
+          className="bg-wasteland-dark border-2 border-pip-boy-green rounded-none p-6 shadow-lg shadow-pip-boy-green/20"
           onSubmit={handleSubmit}
         >
           {/* Error Display */}
@@ -276,7 +282,7 @@ export function RegisterForm() {
           <button
             type="submit"
             disabled={isFormDisabled}
-            className="w-full py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             {isSubmitting ? '註冊中...' : '加入 Vault-Tec'}
           </button>
@@ -312,22 +318,26 @@ export function RegisterForm() {
           )}
 
           {/* Links */}
-          <div className="mt-6 text-center">
-            <Link
-              href="/auth/login"
-              className="text-pip-boy-green font-mono text-sm hover:text-pip-boy-green/80 transition-colors"
-            >
-              已經有帳號？返回登入
-            </Link>
-          </div>
+          {!hideHeader && (
+            <div className="mt-6 text-center">
+              <Link
+                href="/auth?tab=login"
+                className="text-pip-boy-green font-mono text-sm hover:text-pip-boy-green/80 transition-colors"
+              >
+                已經有帳號？返回登入
+              </Link>
+            </div>
+          )}
         </form>
 
         {/* Terminal Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-pip-boy-green/50 font-mono text-xs">
-            Vault-Tec：在地下建造更美好的明天
-          </p>
-        </div>
+        {!hideHeader && (
+          <div className="mt-8 text-center">
+            <p className="text-pip-boy-green/50 font-mono text-xs">
+              Vault-Tec：在地下建造更美好的明天
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )

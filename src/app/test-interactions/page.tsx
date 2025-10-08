@@ -72,7 +72,7 @@ export default function TestInteractionsPage() {
         </div>
 
         {/* Interaction Log */}
-        <div className="bg-vault-dark/50 border border-pip-boy-green/30 p-4 rounded-lg">
+        <div className="bg-wasteland-dark/50 border border-pip-boy-green/30 p-4 rounded-lg">
           <h2 className="text-lg font-mono font-bold text-pip-boy-green mb-3">
             互動記錄
           </h2>
@@ -148,7 +148,7 @@ export default function TestInteractionsPage() {
             <select
               value={selectedSpread}
               onChange={(e) => setSelectedSpread(e.target.value)}
-              className="bg-vault-dark border border-pip-boy-green/40 text-pip-boy-green p-2 rounded font-mono"
+              className="bg-wasteland-dark border border-pip-boy-green/40 text-pip-boy-green p-2 rounded font-mono"
             >
               <option value="single_wasteland">單卡 - 廢土</option>
               <option value="vault_tec_spread">三卡 - Vault-Tec</option>

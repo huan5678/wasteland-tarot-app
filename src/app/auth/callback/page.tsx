@@ -71,7 +71,7 @@ function CallbackContent() {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        <div className="bg-vault-dark border-2 border-pip-boy-green rounded-none p-8 shadow-lg shadow-pip-boy-green/20">
+        <div className="bg-wasteland-dark border-2 border-pip-boy-green rounded-none p-8 shadow-lg shadow-pip-boy-green/20">
           {status === 'loading' && (
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -87,7 +87,7 @@ function CallbackContent() {
           {status === 'success' && (
             <div className="text-center">
               <div className="w-16 h-16 bg-pip-boy-green rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-vault-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-8 h-8 text-wasteland-dark" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -115,7 +115,7 @@ function CallbackContent() {
               </p>
               <Link
                 href="/auth/login"
-                className="inline-block px-6 py-2 bg-pip-boy-green text-vault-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 transition-colors"
+                className="inline-block px-6 py-2 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 transition-colors"
               >
                 返回登入
               </Link>

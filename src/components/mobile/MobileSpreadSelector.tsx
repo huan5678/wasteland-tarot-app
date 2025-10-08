@@ -243,7 +243,7 @@ export function MobileSpreadSelector({
                 e.stopPropagation()
                 handleStartReading(spread)
               }}
-              className="flex items-center gap-2 px-3 py-2 bg-pip-boy-green text-vault-dark
+              className="flex items-center gap-2 px-3 py-2 bg-pip-boy-green text-wasteland-dark
                        rounded-lg text-sm font-mono font-bold hover:bg-pip-boy-green/90
                        transition-colors active:scale-95"
             >
@@ -305,7 +305,7 @@ export function MobileSpreadSelector({
               flex items-center gap-2 px-4 py-2 rounded-full font-mono text-sm
               whitespace-nowrap transition-all duration-200 min-w-fit
               ${selectedCategory === category.id
-                ? 'bg-pip-boy-green text-vault-dark'
+                ? 'bg-pip-boy-green text-wasteland-dark'
                 : 'bg-pip-boy-green/20 text-pip-boy-green hover:bg-pip-boy-green/30'
               }
             `}
@@ -340,7 +340,7 @@ export function MobileSpreadSelector({
               onClick={() => setViewMode('grid')}
               className={`p-2 transition-colors ${
                 viewMode === 'grid'
-                  ? 'bg-pip-boy-green text-vault-dark'
+                  ? 'bg-pip-boy-green text-wasteland-dark'
                   : 'text-pip-boy-green hover:bg-pip-boy-green/20'
               }`}
             >
@@ -355,7 +355,7 @@ export function MobileSpreadSelector({
               onClick={() => setViewMode('list')}
               className={`p-2 transition-colors ${
                 viewMode === 'list'
-                  ? 'bg-pip-boy-green text-vault-dark'
+                  ? 'bg-pip-boy-green text-wasteland-dark'
                   : 'text-pip-boy-green hover:bg-pip-boy-green/20'
               }`}
             >
@@ -456,7 +456,7 @@ export function MobileSpreadSelector({
             </button>
             <button
               onClick={() => setShowFilters(false)}
-              className="flex-1 py-3 bg-pip-boy-green text-vault-dark
+              className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
                        rounded-lg font-mono font-bold hover:bg-pip-boy-green/90 transition-colors"
             >
               套用篩選
@@ -536,7 +536,7 @@ export function MobileSpreadSelector({
               </button>
               <button
                 onClick={() => handleStartReading(selectedSpreadDetails)}
-                className="flex-1 py-3 bg-pip-boy-green text-vault-dark
+                className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
                          rounded-lg font-mono font-bold hover:bg-pip-boy-green/90
                          transition-colors flex items-center justify-center gap-2"
               >

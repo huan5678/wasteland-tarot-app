@@ -187,7 +187,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
   }
 
   return (
-    <div className="min-h-screen bg-vault-dark p-4">
+    <div className="min-h-screen bg-wasteland-dark p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
@@ -203,7 +203,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-4">
             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-mono ${
-              step === 'setup' ? 'bg-pip-boy-green text-vault-dark border-pip-boy-green' :
+              step === 'setup' ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green' :
               ['drawing', 'results'].includes(step) ? 'bg-pip-boy-green/20 text-pip-boy-green border-pip-boy-green' :
               'border-pip-boy-green/50 text-pip-boy-green/50'
             }`}>
@@ -211,7 +211,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
             </div>
             <div className={`w-16 h-px ${step === 'drawing' || step === 'results' ? 'bg-pip-boy-green' : 'bg-pip-boy-green/50'}`}></div>
             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-mono ${
-              step === 'drawing' ? 'bg-pip-boy-green text-vault-dark border-pip-boy-green' :
+              step === 'drawing' ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green' :
               step === 'results' ? 'bg-pip-boy-green/20 text-pip-boy-green border-pip-boy-green' :
               'border-pip-boy-green/50 text-pip-boy-green/50'
             }`}>
@@ -219,7 +219,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
             </div>
             <div className={`w-16 h-px ${step === 'results' ? 'bg-pip-boy-green' : 'bg-pip-boy-green/50'}`}></div>
             <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-mono ${
-              step === 'results' ? 'bg-pip-boy-green text-vault-dark border-pip-boy-green' :
+              step === 'results' ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green' :
               'border-pip-boy-green/50 text-pip-boy-green/50'
             }`}>
               3
@@ -262,7 +262,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
               <button
                 type="submit"
-                className="w-full py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors"
+                className="w-full py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors"
               >
                 <Target className="w-4 h-4 mr-2" />進行卡牌抽取
               </button>
@@ -356,7 +356,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                 <button
                   onClick={handleSaveReading}
                   disabled={isSaving}
-                  className="flex-1 py-3 bg-pip-boy-green text-vault-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Save className="w-4 h-4 mr-2" />{isSaving ? '保存中...' : '儲存至 Vault'}
                 </button>

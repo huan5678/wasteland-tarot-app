@@ -223,7 +223,7 @@ export function MobileTarotCard({
     return (
       <div
         data-testid="mobile-card-skeleton"
-        className={`${mobileSizeClasses[size]} bg-gradient-to-br from-vault-dark to-black rounded-lg
+        className={`${mobileSizeClasses[size]} bg-gradient-to-br from-wasteland-dark to-black rounded-lg
           flex items-center justify-center relative border-2 border-pip-boy-green/30 ${className}`}
       >
         <CardLoadingShimmer />
@@ -321,7 +321,7 @@ export function MobileTarotCard({
           <div className={`
             absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-lg
             border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-            flex items-center justify-center bg-gradient-to-br from-vault-dark to-black
+            flex items-center justify-center bg-gradient-to-br from-wasteland-dark to-black
             transition-all duration-300
           `}>
             <div className="text-center text-pip-boy-green">
@@ -386,7 +386,7 @@ export function MobileTarotCard({
 
             {/* Card Info */}
             <div className={`
-              ${size === 'small' ? 'p-1' : 'p-2'} border-t border-pip-boy-green/30 bg-vault-dark/60
+              ${size === 'small' ? 'p-1' : 'p-2'} border-t border-pip-boy-green/30 bg-wasteland-dark/60
               ${size === 'fullscreen' ? 'max-h-32 overflow-y-auto' : ''}
             `}>
               <div className={`

@@ -43,7 +43,7 @@ describe('WastelandCard', () => {
 
       const cardElement = screen.getByTestId('wasteland-card')
       expect(cardElement).toHavePipBoyStyle()
-      expect(cardElement).toHaveClass('bg-vault-dark', 'border-pip-boy-green')
+      expect(cardElement).toHaveClass('bg-wasteland-dark', 'border-pip-boy-green')
     })
 
     it('should display card name and number', () => {

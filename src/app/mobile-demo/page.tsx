@@ -228,7 +228,7 @@ export default function MobileDemoPage() {
 
               <button
                 onClick={() => setShowFullscreenReading(true)}
-                className="w-full mt-6 py-3 bg-pip-boy-green text-vault-dark rounded-lg
+                className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
                          font-mono font-bold hover:bg-pip-boy-green/90 transition-colors
                          flex items-center justify-center gap-2"
               >
@@ -271,7 +271,7 @@ export default function MobileDemoPage() {
 
               <button
                 onClick={() => setShowFullscreenReading(true)}
-                className="w-full mt-6 py-3 bg-pip-boy-green text-vault-dark rounded-lg
+                className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
                          font-mono font-bold hover:bg-pip-boy-green/90 transition-colors"
               >
                 開始演示閱讀
@@ -430,7 +430,7 @@ export default function MobileDemoPage() {
   }
 
   return (
-    <SafeAreaView className="min-h-screen bg-gradient-to-br from-vault-darker via-vault-dark to-black">
+    <SafeAreaView className="min-h-screen bg-gradient-to-br from-wasteland-darker via-wasteland-dark to-black">
       <PullToRefresh onRefresh={refreshData} className="min-h-screen">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-black/90 backdrop-blur-sm border-b border-pip-boy-green/30 p-4">

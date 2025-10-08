@@ -42,13 +42,13 @@ export default function HomePage() {
               </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight">
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green">
               玄學的盡頭是科學™
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-text-secondary">
+            <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80">
               由 Nuka-Cola 量子科學部贊助播出
             </p>
-            <p className="text-sm font-mono text-text-muted max-w-2xl mx-auto leading-relaxed">
+            <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed">
               「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：
               命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」
             </p>
@@ -75,7 +75,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-pip-boy-green font-mono mb-2">
                   {user ? '進入控制台' : '進入 Vault'}
                 </h3>
-                <p className="text-text-muted text-sm font-mono">
+                <p className="text-pip-boy-green/60 text-sm font-mono">
                   {user ? '查看你的占卜記錄並管理個人檔案' : '登入以存取你的個人 Pip-Boy 終端機'}
                 </p>
               </div>
@@ -100,7 +100,7 @@ export default function HomePage() {
                 <h3 className="text-xl font-bold text-pip-boy-green font-mono mb-2">
                   {user ? '新占卜' : '快速占卜'}
                 </h3>
-                <p className="text-text-muted text-sm font-mono">
+                <p className="text-pip-boy-green/60 text-sm font-mono">
                   {user ? '開始一場全新的塔羅占卜' : '嘗試樣本占卜 - 無需 Vault 註冊'}
                 </p>
               </div>
@@ -121,7 +121,7 @@ export default function HomePage() {
             <h2 className="text-3xl font-bold text-pip-boy-green font-mono mb-4">
               終端機功能
             </h2>
-            <p className="text-text-muted font-mono">
+            <p className="text-pip-boy-green/70 font-mono">
               由戰前量子計算技術驅動
             </p>
           </div>
@@ -132,7 +132,7 @@ export default function HomePage() {
               <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">
                 量子占卜
               </h3>
-              <p className="text-text-muted text-sm font-mono">
+              <p className="text-pip-boy-green/60 text-sm font-mono">
                 先進演算法透過 Vault-Tec 的量子矩陣處理塔羅牌含義
               </p>
             </div>
@@ -142,7 +142,7 @@ export default function HomePage() {
               <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">
                 占卜分析
               </h3>
-              <p className="text-text-muted text-sm font-mono">
+              <p className="text-pip-boy-green/60 text-sm font-mono">
                 透過 Pip-Boy 整合追蹤你的業力進展和占卜歷史
               </p>
             </div>
@@ -152,7 +152,7 @@ export default function HomePage() {
               <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">
                 廢土主題
               </h3>
-              <p className="text-text-muted text-sm font-mono">
+              <p className="text-pip-boy-green/60 text-sm font-mono">
                 專為核災後生存和廢土生活調整的解讀
               </p>
             </div>
@@ -167,7 +167,7 @@ export default function HomePage() {
             <h2 className="text-2xl font-bold text-pip-boy-green font-mono mb-4">
               準備好探索你的廢土命運了嗎？
             </h2>
-            <p className="text-text-muted font-mono mb-6">
+            <p className="text-pip-boy-green/70 font-mono mb-6">
               加入數千名信賴塔羅智慧做出生存決策的 Vault Dweller
             </p>
 
@@ -190,7 +190,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={() => window.location.href = '/cards'}
-                className="px-6 py-3 border-2 border-pip-boy-green text-text-secondary hover:text-pip-boy-green
+                className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green/80 hover:text-pip-boy-green
                          hover:border-pip-boy-green font-mono transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
                 style={{
                   backgroundColor: 'var(--color-pip-boy-green-10)',

@@ -52,6 +52,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **cards-page-refactor**: Frontend cards page refactoring with suit selection, paginated card browsing, and detailed card information pages
 - **homepage-quick-reading-demo**: Homepage quick reading demo with 5 fixed Major Arcana cards in carousel layout, including mocked interpretation results and voice reading functionality
 - **static-info-pages**: Static information pages (About Us, Privacy Policy, Terms of Service, Contact Support) with Fallout-themed content and Taiwan privacy law compliance
+- **custom-scrollbar-styling**: Custom scrollbar styling with colors that match the website's design theme for improved visual consistency
 
 ## Development Guidelines
 - 以英文思考，但以繁體中文生成回應（Think in English, generate in Traditional Chinese）

@@ -363,7 +363,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
         </div>
 
         {/* Share Options */}
-        <div className="bg-vault-dark/30 p-4 rounded border border-pip-boy-green/20">
+        <div className="bg-wasteland-dark/30 p-4 rounded border border-pip-boy-green/20">
           <h4 className="text-pip-boy-green font-mono font-bold mb-3 text-sm">Share Options</h4>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
@@ -394,7 +394,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
               <select
                 value={shareOptions.selectedVoice || ''}
                 onChange={(e) => setShareOptions(prev => ({ ...prev, selectedVoice: e.target.value }))}
-                className="w-full bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
+                className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
               >
                 {Object.keys(card.character_voice_interpretations).map(voice => (
                   <option key={voice} value={voice}>
@@ -411,7 +411,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
               value={shareOptions.customMessage}
               onChange={(e) => setShareOptions(prev => ({ ...prev, customMessage: e.target.value }))}
               placeholder="Add your personal message..."
-              className="w-full h-20 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded resize-none"
+              className="w-full h-20 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded resize-none"
             />
           </div>
         </div>
@@ -435,7 +435,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                       type="text"
                       value={shareData.url || window.location.href}
                       readOnly
-                      className="flex-1 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
+                      className="flex-1 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
                     />
                     <motion.button
                       onClick={() => copyToClipboard(shareData.url || window.location.href, 'url')}
@@ -474,7 +474,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   <textarea
                     value={shareData.text}
                     readOnly
-                    className="w-full h-48 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none"
+                    className="w-full h-48 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none"
                   />
                 </div>
                 <motion.button

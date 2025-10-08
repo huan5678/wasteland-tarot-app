@@ -609,13 +609,17 @@ async def get_card_interpretation(
 )
 async def get_cards_by_suit(
     suit: WastelandSuit = Path(..., description="Suit to retrieve"),
+    page: int = Query(default=1, ge=1, description="頁碼（從 1 開始）"),
+    page_size: int = Query(default=8, ge=1, le=50, description="每頁卡牌數量（預設 8 張）"),
     sort_by: str = Query(default="number", description="Sort by: number, name, radiation_level"),
     sort_order: str = Query(default="asc", regex="^(asc|desc)$"),
     db: AsyncSession = Depends(get_db)
 ) -> CardListResponse:
-    """Get all cards from a specific suit."""
+    """Get all cards from a specific suit with pagination (8 cards per page by default)."""
     try:
+        # Base query
         query = select(WastelandCardModel).where(WastelandCardModel.suit == suit.value)
+        count_query = select(func.count(WastelandCardModel.id)).where(WastelandCardModel.suit == suit.value)
 
         # Apply sorting
         sort_column = getattr(WastelandCardModel, sort_by, WastelandCardModel.number)
@@ -624,17 +628,28 @@ async def get_cards_by_suit(
         else:
             query = query.order_by(sort_column.asc())
 
+        # Get total count
+        total_count_result = await db.execute(count_query)
+        total_count = total_count_result.scalar()
+
+        # Apply pagination
+        offset = (page - 1) * page_size
+        query = query.offset(offset).limit(page_size)
+
+        # Execute query
         result = await db.execute(query)
         cards_data = result.scalars().all()
 
         cards = [WastelandCard(**card.to_dict()) for card in cards_data]
 
+        has_more = (offset + len(cards)) < total_count
+
         return CardListResponse(
             cards=cards,
-            total_count=len(cards),
-            page=1,
-            page_size=len(cards),
-            has_more=False
+            total_count=total_count,
+            page=page,
+            page_size=page_size,
+            has_more=has_more
         )
 
     except Exception as e:

@@ -59,7 +59,8 @@
       "Bash(bun test:*)",
       "Bash(npx tsc:*)",
       "Bash(bun run:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "mcp__chrome-devtools__hover"
     ]
   },
   "enableAllProjectMcpServers": true,

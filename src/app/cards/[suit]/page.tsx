@@ -98,7 +98,7 @@ export default function CardListPage() {
   // 處理無效花色
   if (!isValidSuitType) {
     return (
-      <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
+      <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <Breadcrumb items={[{ label: '塔羅牌圖書館', href: '/cards' }, { label: '錯誤' }]} />
 
@@ -116,7 +116,7 @@ export default function CardListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-vault-dark p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 麵包屑導航 */}
         <div className="mb-6">
@@ -140,7 +140,7 @@ export default function CardListPage() {
               </p>
               {pagination && (
                 <p className="text-sm md:text-base text-pip-boy-green/60 font-mono">
-                  第 {pagination.page} / {pagination.totalPages} 頁
+                  第 {page} / {pagination.totalPages} 頁
                 </p>
               )}
             </div>
@@ -189,7 +189,7 @@ export default function CardListPage() {
             {pagination && pagination.totalPages > 1 && (
               <div className="mt-12">
                 <PaginationControls
-                  currentPage={pagination.page}
+                  currentPage={page}
                   totalPages={pagination.totalPages}
                   baseUrl={`/cards/${suit}`}
                 />

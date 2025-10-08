@@ -237,7 +237,7 @@ export function MobileNavigation({
           onClick={() => setShowQuickActions(!showQuickActions)}
           className={`
             absolute -top-6 right-4 w-12 h-12 rounded-full
-            bg-pip-boy-green text-vault-dark shadow-lg
+            bg-pip-boy-green text-wasteland-dark shadow-lg
             flex items-center justify-center
             transition-all duration-300 hover:scale-110 active:scale-95
             ${showQuickActions ? 'rotate-45' : ''}

@@ -38,7 +38,7 @@ export const CardSkeleton = () => (
  */
 export const ModalLoading = () => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="border-2 border-pip-boy-green bg-vault-dark p-8">
+    <div className="border-2 border-pip-boy-green bg-wasteland-dark p-8">
       <LoadingSpinner />
       <p className="text-pip-boy-green font-mono text-center mt-4">載入中...</p>
     </div>
@@ -151,21 +151,7 @@ export const LazyReadingTrends = dynamic(
 /**
  * 3D/動畫組件（懶載入 - 這些組件較大）
  */
-export const LazyPixelBlast = dynamic(
-  () => import('@/components/PixelBlast'),
-  {
-    loading: () => <LoadingSpinner />,
-    ssr: false, // 必須客戶端渲染
-  }
-)
-
-export const LazyDitherBackground = dynamic(
-  () => import('@/components/layout/DitherBackground'),
-  {
-    loading: () => null, // 背景可以無載入指示器
-    ssr: false,
-  }
-)
+// Removed: LazyPixelBlast and LazyDitherBackground components have been deleted
 
 // ============================================================================
 // Higher Order Component for Lazy Loading

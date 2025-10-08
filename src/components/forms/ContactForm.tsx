@@ -187,10 +187,10 @@ export default function ContactForm() {
           </Label>
           <select
             id="contact-category"
-            className={`input-terminal flex w-full rounded-md px-3 py-2 text-base shadow-sm md:text-sm transition-all duration-200 outline-none focus:outline-2 focus:outline-offset-1 focus:shadow-[0_0_0_3px_var(--color-input-focus-ring)] ${
+            className={`input-terminal flex w-full rounded-md border px-3 py-2 text-base shadow-sm md:text-sm transition-all duration-200 outline-none focus:outline-2 focus:outline-offset-1 focus:shadow-[0_0_0_3px_var(--color-input-focus-ring)] bg-[var(--color-input-bg)] text-[var(--color-input-fg)] ${
               errors.category
-                ? 'border-error focus:border-error'
-                : 'border-input-border focus:border-input-border-focus'
+                ? 'border-[var(--color-error)] focus:border-[var(--color-error)]'
+                : 'border-[var(--color-input-border)] focus:border-[var(--color-input-border-focus)]'
             } disabled:cursor-not-allowed disabled:opacity-50`}
             disabled={isSubmitting}
             aria-invalid={errors.category ? 'true' : undefined}
