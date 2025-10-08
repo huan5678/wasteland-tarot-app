@@ -3,6 +3,7 @@
 import React from 'react'
 import { useAuthStore } from '@/lib/authStore'
 import { Target, Spade, Zap, BarChart3, Theater } from 'lucide-react'
+import { DynamicHeroTitle, DynamicHeroTitleErrorBoundary } from '@/components/hero'
 
 export default function HomePage() {
   const user = useAuthStore(s => s.user)
@@ -42,16 +43,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green">
-              玄學的盡頭是科學™
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80">
-              由 Nuka-Cola 量子科學部贊助播出
-            </p>
-            <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed">
-              「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：
-              命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」
-            </p>
+            {/* 動態標題元件 */}
+            <DynamicHeroTitleErrorBoundary>
+              <DynamicHeroTitle />
+            </DynamicHeroTitleErrorBoundary>
           </div>
 
           {/* Primary Actions */}

@@ -1,0 +1,88 @@
+{
+  "name": "廢土塔羅 - Pip-Boy 占卜終端機",
+  "short_name": "廢土塔羅",
+  "description": "由 Vault-Tec 驅動的後末世塔羅占卜。透過神秘的卡牌占卜探索你在廢土中的命運。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e0a",
+  "theme_color": "#00ff88",
+  "orientation": "portrait-primary",
+  "categories": ["entertainment", "games", "lifestyle"],
+  "lang": "zh-TW",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/assets/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "廢土塔羅首頁（桌面版）"
+    },
+    {
+      "src": "/assets/screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "廢土塔羅首頁（手機版）"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "開始占卜",
+      "short_name": "占卜",
+      "description": "直接開始塔羅占卜",
+      "url": "/reading",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "瀏覽塔羅牌",
+      "short_name": "塔羅牌",
+      "description": "瀏覽所有塔羅牌",
+      "url": "/cards",
+      "icons": [
+        {
+          "src": "/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "iarc_rating_id": "",
+  "features": [
+    "塔羅牌占卜",
+    "語音解讀",
+    "Pip-Boy 風格介面",
+    "廢土主題音效",
+    "占卜歷史記錄"
+  ],
+  "display_override": ["standalone", "minimal-ui", "browser"]
+}

@@ -1,0 +1,46 @@
+{
+  "version": "1.0.0",
+  "defaultConfig": {
+    "typingSpeed": 80,
+    "deletingSpeed": 30,
+    "waitBeforeDelete": 3000,
+    "autoPlayInterval": 8000
+  },
+  "titles": [
+    {
+      "id": "title-1",
+      "title": "玄學的盡頭是科學™",
+      "subtitle": "由 Nuka-Cola 量子科學部贊助播出",
+      "description": "「經過 200 年的實驗室驗證與田野測試,我們證實了一件事：命運不是迷信,而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」",
+      "enabled": true
+    },
+    {
+      "id": "title-2",
+      "title": "科學的起點是玄學",
+      "subtitle": "Vault-Tec 實驗倫理委員會認證",
+      "description": "「我們的祖先用占卜預測未來,我們用機器學習。本質上都是在尋找模式,只是工具不同罷了。誰說 AI 不是現代版的水晶球呢？」",
+      "enabled": true
+    },
+    {
+      "id": "title-3",
+      "title": "量子力學證明了塔羅牌的可行性",
+      "subtitle": "Brotherhood of Steel 技術評估報告",
+      "description": "「薛丁格的貓既生又死,你的未來也是。觀察者效應告訴我們：你看牌的瞬間,命運就坍縮了。這不是玄學,這是量子物理。」",
+      "enabled": true
+    },
+    {
+      "id": "title-4",
+      "title": "統計學才是最大的占卜術",
+      "subtitle": "NCR 數據分析局背書",
+      "description": "「Monte Carlo 模擬、貝氏推論、迴歸分析——聽起來很科學對吧？但本質上都在『預測未來』。科學家只是不願意承認自己在算命而已。」",
+      "enabled": true
+    },
+    {
+      "id": "title-5",
+      "title": "機率論：現代版的命運解讀",
+      "subtitle": "Institute 合成人倫理研究所出品",
+      "description": "「擲骰子和抽塔羅牌有什麼區別？都是隨機事件。但加上『信念』這個變數後,機率就不再純粹是數學了。歡迎來到廢土量子神學。」",
+      "enabled": true
+    }
+  ]
+}

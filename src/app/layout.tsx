@@ -20,6 +20,7 @@ export const metadata: Metadata = {
   creator: "Vault-Tec Corporation",
   publisher: "Vault-Tec Corporation",
   robots: "index, follow",
+  manifest: '/manifest.json',
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
