@@ -12,7 +12,8 @@ module.exports = {
         'http://localhost:3000/auth/login',
         'http://localhost:3000/auth/register',
         'http://localhost:3000/dashboard',
-        'http://localhost:3000/reading/new'
+        'http://localhost:3000/reading/new',
+        'http://localhost:3000/readings/quick'
       ],
 
       // Lighthouse settings optimized for Pip-Boy interface
@@ -80,14 +81,14 @@ module.exports = {
         'categories:best-practices': ['error', { minScore: 0.8 }],
         'categories:seo': ['error', { minScore: 0.8 }],
 
-        // Core Web Vitals for Vault dwellers
-        'first-contentful-paint': ['warn', { maxNumericValue: 2000 }],
-        'largest-contentful-paint': ['error', { maxNumericValue: 3000 }],
-        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }],
+        // Core Web Vitals for Vault dwellers (任務 17.1 標準)
+        'first-contentful-paint': ['error', { maxNumericValue: 1500 }], // FCP < 1.5s
+        'largest-contentful-paint': ['error', { maxNumericValue: 2500 }], // LCP < 2.5s
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1 }], // CLS < 0.1
         'first-input-delay': ['error', { maxNumericValue: 100 }],
         'total-blocking-time': ['warn', { maxNumericValue: 300 }],
         'speed-index': ['warn', { maxNumericValue: 4000 }],
-        'interactive': ['error', { maxNumericValue: 5000 }],
+        'interactive': ['error', { maxNumericValue: 3500 }], // TTI < 3.5s
 
         // Accessibility requirements for Vault interface
         'color-contrast': 'error',

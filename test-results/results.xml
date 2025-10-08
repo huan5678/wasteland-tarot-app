@@ -1,0 +1,180 @@
+<testsuites id="" name="" tests="11" failures="11" skipped="0" errors="0" time="3.360198">
+<testsuite name="quick-reading.spec.ts" timestamp="2025-10-08T07:37:48.106Z" hostname="chromium" tests="11" failures="11" skipped="0" time="0.172" errors="0">
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示載入指示器並完成載入" classname="quick-reading.spec.ts" time="0.014">
+<failure message="quick-reading.spec.ts:15:7 應該顯示載入指示器並完成載入" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:15:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示載入指示器並完成載入 ─────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示 Carousel 與 5 張卡背" classname="quick-reading.spec.ts" time="0.02">
+<failure message="quick-reading.spec.ts:27:7 應該顯示 Carousel 與 5 張卡背" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:27:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示 Carousel 與 5 張卡背 ──────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能使用箭頭按鈕導航卡牌" classname="quick-reading.spec.ts" time="0.026">
+<failure message="quick-reading.spec.ts:42:7 應該能使用箭頭按鈕導航卡牌" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:42:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能使用箭頭按鈕導航卡牌 ──────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能使用鍵盤方向鍵導航" classname="quick-reading.spec.ts" time="0.013">
+<failure message="quick-reading.spec.ts:69:7 應該能使用鍵盤方向鍵導航" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:69:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能使用鍵盤方向鍵導航 ───────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能點擊卡背翻牌" classname="quick-reading.spec.ts" time="0.023">
+<failure message="quick-reading.spec.ts:92:7 應該能點擊卡背翻牌" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:92:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能點擊卡背翻牌 ──────────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該儲存至 localStorage" classname="quick-reading.spec.ts" time="0.015">
+<failure message="quick-reading.spec.ts:108:7 翻牌後應該儲存至 localStorage" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:108:7 › 快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該儲存至 localStorage ─────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該顯示 CTA 區塊" classname="quick-reading.spec.ts" time="0.013">
+<failure message="quick-reading.spec.ts:136:7 翻牌後應該顯示 CTA 區塊" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:136:7 › 快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該顯示 CTA 區塊 ────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 訪客不應該看到重新抽卡按鈕" classname="quick-reading.spec.ts" time="0.015">
+<failure message="quick-reading.spec.ts:162:7 訪客不應該看到重新抽卡按鈕" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:162:7 › 快速占卜 - 訪客首次抽卡完整流程 › 訪客不應該看到重新抽卡按鈕 ─────────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 頁面重新整理後應該恢復翻牌狀態" classname="quick-reading.spec.ts" time="0.011">
+<failure message="quick-reading.spec.ts:179:7 頁面重新整理後應該恢復翻牌狀態" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:179:7 › 快速占卜 - 訪客首次抽卡完整流程 › 頁面重新整理後應該恢復翻牌狀態 ───────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示正確的 Header 資訊" classname="quick-reading.spec.ts" time="0.013">
+<failure message="quick-reading.spec.ts:204:7 應該顯示正確的 Header 資訊" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:204:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示正確的 Header 資訊 ─────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+<testcase name="快速占卜 - 訪客首次抽卡完整流程 › CTA 按鈕點擊應該導航至正確頁面" classname="quick-reading.spec.ts" time="0.009">
+<failure message="quick-reading.spec.ts:215:7 CTA 按鈕點擊應該導航至正確頁面" type="FAILURE">
+<![CDATA[  [chromium] › quick-reading.spec.ts:215:7 › 快速占卜 - 訪客首次抽卡完整流程 › CTA 按鈕點擊應該導航至正確頁面 ─────────────────
+
+    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    ╔═════════════════════════════════════════════════════════════════════════╗
+    ║ Looks like Playwright Test or Playwright was just installed or updated. ║
+    ║ Please run the following command to download new browsers:              ║
+    ║                                                                         ║
+    ║     npx playwright install                                              ║
+    ║                                                                         ║
+    ║ <3 Playwright Team                                                      ║
+    ╚═════════════════════════════════════════════════════════════════════════╝
+]]>
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

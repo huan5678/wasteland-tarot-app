@@ -1,0 +1,26 @@
+{
+  "feature_name": "static-info-pages",
+  "created_at": "2025-10-08T15:20:00+08:00",
+  "updated_at": "2025-10-08T17:45:00+08:00",
+  "language": "zh-TW",
+  "phase": "tasks-updated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "updated": "2025-10-08T17:45:00+08:00",
+      "change_notes": "Changed content storage from TypeScript modules to Markdown + frontmatter for better i18n extensibility and non-technical editing"
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false,
+      "updated": "2025-10-08T17:45:00+08:00",
+      "change_notes": "Updated implementation tasks to reflect Markdown-based content approach with gray-matter parsing"
+    }
+  },
+  "ready_for_implementation": false
+}

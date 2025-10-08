@@ -55,6 +55,7 @@ class MeResponse(BaseModel):
     """當前使用者資訊回應"""
     user: Dict[str, Any]
     statistics: Optional[Dict[str, Any]] = None
+    token_expires_at: Optional[int] = None  # JWT exp timestamp
 
 
 class RegisterRequest(BaseModel):
@@ -87,6 +88,7 @@ class RegisterResponse(BaseModel):
     """註冊回應"""
     message: str
     user: Dict[str, Any]
+    token_expires_at: Optional[int] = None  # JWT exp timestamp
 
 
 class LoginRequest(BaseModel):
@@ -99,6 +101,7 @@ class LoginResponse(BaseModel):
     """登入回應"""
     message: str
     user: Dict[str, Any]
+    token_expires_at: Optional[int] = None  # JWT exp timestamp
 
 
 @router.post("/verify", response_model=VerifyResponse)
@@ -414,7 +417,7 @@ async def get_current_user(
     except Exception as e:
         logger.warning(f"Failed to fetch user statistics: {str(e)}")
 
-    # 返回完整使用者資訊
+    # 返回完整使用者資訊(包含 token 過期時間)
     return MeResponse(
         user={
             "id": str(user.id),
@@ -433,7 +436,8 @@ async def get_current_user(
             "is_active": user.is_active,
             "created_at": user.created_at.isoformat() if user.created_at else None
         },
-        statistics=statistics
+        statistics=statistics,
+        token_expires_at=payload.get("exp")  # 返回 JWT exp timestamp
     )
 
 
@@ -500,6 +504,10 @@ async def register_user(
 
         logger.info(f"User registered successfully: {user.email}")
 
+        # 解碼 access token 取得過期時間
+        token_payload = verify_token(access_token)
+        token_expires_at = token_payload.get("exp") if token_payload else None
+
         return RegisterResponse(
             message="註冊成功",
             user={
@@ -515,7 +523,8 @@ async def register_user(
                 "is_verified": user.is_verified,
                 "is_active": user.is_active,
                 "created_at": user.created_at.isoformat() if user.created_at else None
-            }
+            },
+            token_expires_at=token_expires_at
         )
 
     except UserAlreadyExistsError as e:
@@ -586,6 +595,10 @@ async def login_user(
 
         logger.info(f"User logged in successfully: {user.email}")
 
+        # 解碼 access token 取得過期時間
+        token_payload = verify_token(access_token)
+        token_expires_at = token_payload.get("exp") if token_payload else None
+
         return LoginResponse(
             message="登入成功",
             user={
@@ -603,7 +616,8 @@ async def login_user(
                 "is_verified": user.is_verified,
                 "is_active": user.is_active,
                 "created_at": user.created_at.isoformat() if user.created_at else None
-            }
+            },
+            token_expires_at=token_expires_at
         )
 
     except InvalidCredentialsError as e:

@@ -29,6 +29,11 @@ const publicRoutes = [
   '/auth/register',
 ]
 
+// 定義訪客可訪問的路由（即使匹配受保護路由也允許）
+const guestAllowedRoutes = [
+  '/readings/quick',
+]
+
 /**
  * 透過後端 API 驗證 JWT token
  * 從 request cookies 中讀取 access_token 並發送至後端驗證
@@ -76,6 +81,16 @@ async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: 
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+
+  // 檢查是否為訪客允許的路由
+  const isGuestAllowed = guestAllowedRoutes.some(route =>
+    pathname.startsWith(route)
+  )
+
+  // 訪客允許的路由直接通過，不需驗證
+  if (isGuestAllowed) {
+    return NextResponse.next()
+  }
 
   // 檢查是否為受保護路由
   const isProtectedRoute = protectedRoutes.some(route =>

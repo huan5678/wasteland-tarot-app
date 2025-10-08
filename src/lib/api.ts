@@ -249,10 +249,11 @@ export const authAPI = {
 
   // 登入（使用 email + password）
   // 重構變更：使用正確的後端 API 路徑，tokens 將儲存在 httpOnly cookies
+  // 返回值包含 token_expires_at (JWT exp timestamp)
   login: (credentials: {
     email: string
     password: string
-  }): Promise<{ message: string; user: User }> =>
+  }): Promise<{ message: string; user: User; token_expires_at?: number }> =>
     apiRequest('/api/v1/auth/login', {
       method: 'POST',
       body: JSON.stringify(credentials),
@@ -260,7 +261,8 @@ export const authAPI = {
 
   // 獲取當前用戶信息
   // 重構變更：移除 token 參數，改為依賴 httpOnly cookies
-  getCurrentUser: (): Promise<User> =>
+  // 返回值包含 token_expires_at (JWT exp timestamp)
+  getCurrentUser: (): Promise<{ user: User; token_expires_at?: number }> =>
     apiRequest('/api/v1/auth/me', {
       method: 'GET',
     }),

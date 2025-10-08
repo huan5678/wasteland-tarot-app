@@ -6,7 +6,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Star, Spade, Zap } from 'lucide-react'
+import { Star, Zap } from 'lucide-react'
 import { useTouchInteractions, useDeviceCapabilities } from '@/hooks/useTouchInteractions'
 import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
@@ -41,6 +41,7 @@ interface TarotCardProps {
   showProgress?: boolean
   onLongPress?: (card: TarotCard) => void
   onSwipe?: (direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => void
+  cardBackUrl?: string
 }
 
 const sizeClasses = {
@@ -67,7 +68,8 @@ export function TarotCard({
   totalCards = 1,
   showProgress = false,
   onLongPress,
-  onSwipe
+  onSwipe,
+  cardBackUrl = '/assets/cards/card-backs/01.png'
 }: TarotCardProps) {
   const [isFlipping, setIsFlipping] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -244,14 +246,15 @@ export function TarotCard({
             <div className={`
               absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-lg
               border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-              flex items-center justify-center bg-gradient-to-br from-vault-dark to-black
+              flex items-center justify-center bg-black overflow-hidden
               ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
               transition-all duration-300
             `}>
-              <div className="text-center text-pip-boy-green">
-                <Spade className="w-6 h-6 mb-1 mx-auto" />
-                <div className="text-[10px] font-mono">WASTELAND</div>
-              </div>
+              <img
+                src={cardBackUrl}
+                alt="Wasteland Tarot Card Back"
+                className="w-full h-full object-cover"
+              />
             </div>
             {/* Front */}
             <div className={`

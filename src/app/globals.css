@@ -1,7 +1,73 @@
 @import "tailwindcss";
 
+/* === TAILWIND CSS V4 THEME CONFIGURATION === */
+/**
+ * Theme variables defined here automatically generate utility classes.
+ * For example: --color-pip-boy-green creates bg-pip-boy-green, text-pip-boy-green, etc.
+ */
+@theme {
+  /* Pip-Boy Green Colors */
+  --color-pip-boy-green: #00ff88;
+  --color-pip-boy-green-bright: #00ff41;
+  --color-pip-boy-green-dark: #00cc66;
+  --color-pip-boy-green-medium: #008855;
+  --color-pip-boy-green-deep: #004433;
+  --color-pip-boy-green-faded: #003322;
+
+  /* Terminal Green Colors */
+  --color-terminal-green: #00cc66;
+  --color-terminal-green-bright: #00ff88;
+  --color-terminal-green-dim: #009944;
+
+  /* Vault Blue Colors */
+  --color-vault-blue: #003d66;
+  --color-vault-blue-light: #0055aa;
+  --color-vault-blue-dark: #002244;
+  --color-vault-blue-deep: #001122;
+
+  /* Wasteland Neutral Colors */
+  --color-wasteland-dark: #1a1a1a;
+  --color-wasteland-darker: #0c0c0c;
+  --color-wasteland-medium: #2d2d2d;
+  --color-wasteland-light: #3d3d3d;
+  --color-wasteland-lighter: #4d4d4d;
+
+  /* Metal Gray Colors */
+  --color-metal-gray: #2d2d2d;
+  --color-metal-gray-light: #3d3d3d;
+  --color-metal-gray-dark: #1d1d1d;
+  --color-metal-gray-rust: #2a2520;
+
+  /* Concrete Colors */
+  --color-concrete: #3d3d3d;
+  --color-concrete-light: #4d4d4d;
+  --color-concrete-dark: #2d2d2d;
+
+  /* Radiation Colors */
+  --color-radiation-orange: #ff8800;
+  --color-radiation-orange-bright: #ffaa33;
+  --color-radiation-orange-dark: #cc6600;
+  --color-radiation-orange-deep: #994400;
+
+  /* Warning Colors */
+  --color-warning-yellow: #ffdd00;
+  --color-warning-yellow-bright: #ffff33;
+  --color-warning-yellow-dark: #ccaa00;
+
+  /* Rust Colors */
+  --color-rust-brown: #8B4513;
+  --color-rust-light: #A0522D;
+  --color-rust-dark: #654321;
+  --color-rust-red: #aa3311;
+
+  /* Tarot Colors */
+  --color-tarot-gold: #fbbf24;
+  --color-tarot-gold-dark: #f59e0b;
+  --color-tarot-mystical: #663399;
+}
+
 /* === FALLOUT COLOR SYSTEM === */
-/* 修正版本：使用標準 CSS 變數語法而非 @theme */
+/* Extended CSS variables for additional colors */
 
 :root {
   /* Primary Pip-Boy Colors */

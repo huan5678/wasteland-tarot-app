@@ -108,14 +108,24 @@ interface CardDetailModalProps {
   // Optional data for enhanced relationships
   allCards?: DetailedTarotCard[]
   cardSynergies?: CardSynergy[]
+  // Guest mode props
+  isGuestMode?: boolean
+  showBookmark?: boolean
+  showShare?: boolean
+  showStudyMode?: boolean
+  showPersonalNotes?: boolean
 }
 
 // Tab configuration for the modal interface
-const TAB_CONFIG: TabConfig[] = [
+// Base tabs that are always shown
+const BASE_TABS: TabConfig[] = [
   { id: 'overview', label: '總覽', icon: Eye, color: 'text-pip-boy-green' },
   { id: 'meanings', label: '含義', icon: BookOpen, color: 'text-blue-400' },
-  { id: 'characters', label: '角色', icon: Users, color: 'text-purple-400' },
-  { id: 'lore', label: '背景', icon: Gamepad2, color: 'text-orange-400' },
+  { id: 'characters', label: '角色', icon: Users, color: 'text-purple-400' }
+]
+
+// Tabs that require login
+const AUTHENTICATED_TABS: TabConfig[] = [
   { id: 'insights', label: '洞察', icon: Lightbulb, color: 'text-yellow-400' },
   { id: 'interactions', label: '互動', icon: Settings, color: 'text-cyan-400' }
 ]
@@ -259,18 +269,17 @@ const CharacterVoiceSelector = ({
               <div className="flex items-center justify-between mb-1">
                 <span className="font-bold">{voiceNames[voice] || voice}</span>
                 {audioEnabled && isSelected && (
-                  <motion.button
+                  <motion.div
                     onClick={(e) => {
                       e.stopPropagation()
                       if (voices[voice] && typeof window !== 'undefined' && (window as any).handleCardSpeech) {
                         (window as any).handleCardSpeech(voices[voice].slice(0, 50) + '...', voice.toLowerCase())
                       }
                     }}
-                    disabled={isPlaying}
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     className={cn(
-                      "p-1 rounded transition-all duration-200",
+                      "p-1 rounded transition-all duration-200 cursor-pointer",
                       isPlaying ? "animate-pulse bg-orange-500/20" : "hover:bg-black/20"
                     )}
                     title="播放聲音範例"
@@ -280,7 +289,7 @@ const CharacterVoiceSelector = ({
                     ) : (
                       <Volume2 className="w-3 h-3" />
                     )}
-                  </motion.button>
+                  </motion.div>
                 )}
               </div>
               {isSelected && (
@@ -311,7 +320,12 @@ export function CardDetailModal({
   enableAudio = true,
   showQuickActions = true,
   allCards = [],
-  cardSynergies = []
+  cardSynergies = [],
+  isGuestMode = false,
+  showBookmark = true,
+  showShare = true,
+  showStudyMode = true,
+  showPersonalNotes = true
 }: CardDetailModalProps) {
   // Enhanced state management
   const [selectedVoice, setSelectedVoice] = useState('PIP_BOY')
@@ -366,6 +380,14 @@ export function CardDetailModal({
     card?.position === 'reversed' ? reversedMeaning : uprightMeaning,
     [card?.position, uprightMeaning, reversedMeaning]
   )
+
+  // Dynamically compute visible tabs based on guest mode
+  const TAB_CONFIG = useMemo(() => {
+    if (isGuestMode) {
+      return BASE_TABS // Only show base tabs for guests
+    }
+    return [...BASE_TABS, ...AUTHENTICATED_TABS] // Show all tabs for authenticated users
+  }, [isGuestMode])
 
   // Enhanced keyboard navigation and interactions
   useEffect(() => {
@@ -554,7 +576,7 @@ export function CardDetailModal({
       <div className="space-y-4">
         <div className="relative" ref={imageContainerRef}>
           <div className={cn(
-            "w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-vault-dark relative cursor-zoom-in",
+            "w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-vault-dark relative",
             card.position === 'reversed' && "transform rotate-180"
           )}>
             {imageError ? (
@@ -576,28 +598,28 @@ export function CardDetailModal({
               />
             )}
 
-            {/* Image Controls */}
-            <div className="absolute top-2 right-2 flex flex-col gap-1">
+            {/* Image Controls - Hidden on small screens */}
+            <div className="hidden md:flex absolute top-2 right-2 flex-col gap-1.5">
               <button
                 onClick={() => handleImageZoom(0.25)}
-                className="p-1 bg-black/60 text-pip-boy-green rounded hover:bg-black/80"
+                className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="放大"
               >
-                <ZoomIn className="w-4 h-4" />
+                <ZoomIn className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleImageZoom(-0.25)}
-                className="p-1 bg-black/60 text-pip-boy-green rounded hover:bg-black/80"
+                className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="縮小"
               >
-                <ZoomOut className="w-4 h-4" />
+                <ZoomOut className="w-5 h-5" />
               </button>
               <button
                 onClick={handleImageReset}
-                className="p-1 bg-black/60 text-pip-boy-green rounded hover:bg-black/80"
+                className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="重置大小"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -719,6 +741,84 @@ export function CardDetailModal({
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Lore Section - Integrated from Lore Tab */}
+        {card.fallout_reference && (
+          <div className="mt-6 pt-6 border-t border-pip-boy-green/20">
+            <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+              <Radiation className="w-5 h-5" />
+              廢土背景
+            </h4>
+            <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
+              <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+                {card.fallout_reference}
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Extended Fallout Details */}
+        {(card.vault_reference || card.threat_level !== undefined) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            {card.vault_reference && (
+              <div>
+                <h5 className="text-blue-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  避難所關聯
+                </h5>
+                <div className="bg-blue-500/5 border border-blue-400/20 p-3 rounded">
+                  <p className="text-blue-300/80 font-mono text-sm">Vault {card.vault_reference}</p>
+                </div>
+              </div>
+            )}
+
+            {card.threat_level !== undefined && (
+              <div>
+                <h5 className="text-red-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  威脅等級
+                </h5>
+                <div className="bg-red-500/5 border border-red-400/20 p-3 rounded">
+                  <p className="text-red-300/80 font-mono text-sm">{card.threat_level}/10</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Special Features */}
+        {(card.wasteland_humor || card.nuka_cola_reference || card.special_ability) && (
+          <div className="space-y-4 mt-4">
+            {card.wasteland_humor && (
+              <div>
+                <h5 className="text-yellow-400 font-mono font-bold text-sm mb-2">廢土幽默</h5>
+                <div className="bg-yellow-500/5 border border-yellow-400/20 p-3 rounded">
+                  <p className="text-yellow-300/80 font-mono text-sm italic">
+                    "{card.wasteland_humor}"
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {card.nuka_cola_reference && (
+              <div>
+                <h5 className="text-cyan-400 font-mono font-bold text-sm mb-2">核子可樂關聯</h5>
+                <div className="bg-cyan-500/5 border border-cyan-400/20 p-3 rounded">
+                  <p className="text-cyan-300/80 font-mono text-sm">{card.nuka_cola_reference}</p>
+                </div>
+              </div>
+            )}
+
+            {card.special_ability && (
+              <div>
+                <h5 className="text-purple-400 font-mono font-bold text-sm mb-2">特殊能力</h5>
+                <div className="bg-purple-500/5 border border-purple-400/20 p-3 rounded">
+                  <p className="text-purple-300/80 font-mono text-sm">{card.special_ability}</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -919,115 +1019,7 @@ export function CardDetailModal({
     </motion.div>
   )
 
-  const renderLoreTab = () => (
-    <motion.div
-      key="lore"
-      variants={tabContentVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="space-y-6"
-    >
-      {/* Fallout Reference */}
-      {card.fallout_reference && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
-            <Radiation className="w-5 h-5" />
-            廢土背景
-          </h4>
-          <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
-            <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
-              {card.fallout_reference}
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Extended Fallout Details */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {card.vault_reference && (
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <h5 className="text-blue-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              避難所關聯
-            </h5>
-            <div className="bg-blue-500/5 border border-blue-400/20 p-3 rounded">
-              <p className="text-blue-300/80 font-mono text-sm">Vault {card.vault_reference}</p>
-            </div>
-          </motion.div>
-        )}
-
-        {card.threat_level !== undefined && (
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h5 className="text-red-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" />
-              威脅等級
-            </h5>
-            <div className="bg-red-500/5 border border-red-400/20 p-3 rounded">
-              <p className="text-red-300/80 font-mono text-sm">{card.threat_level}/10</p>
-            </div>
-          </motion.div>
-        )}
-      </div>
-
-      {/* Special Features */}
-      {(card.wasteland_humor || card.nuka_cola_reference || card.special_ability) && (
-        <div className="space-y-4">
-          {card.wasteland_humor && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <h5 className="text-yellow-400 font-mono font-bold text-sm mb-2">廢土幽默</h5>
-              <div className="bg-yellow-500/5 border border-yellow-400/20 p-3 rounded">
-                <p className="text-yellow-300/80 font-mono text-sm italic">
-                  "{card.wasteland_humor}"
-                </p>
-              </div>
-            </motion.div>
-          )}
-
-          {card.nuka_cola_reference && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <h5 className="text-cyan-400 font-mono font-bold text-sm mb-2">核子可樂關聯</h5>
-              <div className="bg-cyan-500/5 border border-cyan-400/20 p-3 rounded">
-                <p className="text-cyan-300/80 font-mono text-sm">{card.nuka_cola_reference}</p>
-              </div>
-            </motion.div>
-          )}
-
-          {card.special_ability && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-            >
-              <h5 className="text-purple-400 font-mono font-bold text-sm mb-2">特殊能力</h5>
-              <div className="bg-purple-500/5 border border-purple-400/20 p-3 rounded">
-                <p className="text-purple-300/80 font-mono text-sm">{card.special_ability}</p>
-              </div>
-            </motion.div>
-          )}
-        </div>
-      )}
-    </motion.div>
-  )
+  // renderLoreTab removed - lore content integrated into renderOverviewTab
 
   const renderInsightsTab = () => (
     <motion.div
@@ -1149,20 +1141,22 @@ export function CardDetailModal({
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
           <h4 className="text-pip-boy-green font-mono font-bold mb-4">快速操作</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <motion.button
-              onClick={handleBookmarkToggle}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "p-3 rounded border font-mono text-sm transition-colors flex flex-col items-center gap-2",
-                cardIsBookmarked
-                  ? "bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green"
-                  : "border-pip-boy-green/40 text-pip-boy-green/70 hover:bg-pip-boy-green/10"
-              )}
-            >
-              {cardIsBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
-              <span>{cardIsBookmarked ? '已收藏' : '收藏'}</span>
-            </motion.button>
+            {showBookmark && (
+              <motion.button
+                onClick={handleBookmarkToggle}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "p-3 rounded border font-mono text-sm transition-colors flex flex-col items-center gap-2",
+                  cardIsBookmarked
+                    ? "bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green"
+                    : "border-pip-boy-green/40 text-pip-boy-green/70 hover:bg-pip-boy-green/10"
+                )}
+              >
+                {cardIsBookmarked ? <BookmarkCheck className="w-5 h-5" /> : <Bookmark className="w-5 h-5" />}
+                <span>{cardIsBookmarked ? '已收藏' : '收藏'}</span>
+              </motion.button>
+            )}
 
             <motion.button
               onClick={handleAddToReading}
@@ -1174,15 +1168,17 @@ export function CardDetailModal({
               <span>加入占卜</span>
             </motion.button>
 
-            <motion.button
-              onClick={handleShareCard}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="p-3 rounded border border-purple-400/40 text-purple-400 font-mono text-sm hover:bg-purple-500/10 transition-colors flex flex-col items-center gap-2"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>分享</span>
-            </motion.button>
+            {showShare && (
+              <motion.button
+                onClick={handleShareCard}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-3 rounded border border-purple-400/40 text-purple-400 font-mono text-sm hover:bg-purple-500/10 transition-colors flex flex-col items-center gap-2"
+              >
+                <Share2 className="w-5 h-5" />
+                <span>分享</span>
+              </motion.button>
+            )}
 
             <motion.button
               onClick={() => navigator.clipboard.writeText(`${card.name}: ${currentMeaning}`)}
@@ -1198,32 +1194,36 @@ export function CardDetailModal({
       )}
 
       {/* Personal Notes */}
-      <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-        <h4 className="text-pip-boy-green font-mono font-bold mb-4 flex items-center gap-2">
-          <MessageCircle className="w-5 h-5" />
-          個人筆記
-        </h4>
-        <textarea
-          defaultValue={cardIsBookmarked ? '' : ''}
-          onChange={(e) => handleNotesUpdate(e.target.value)}
-          placeholder="記下你對這張卡片的想法和感悟..."
-          className="w-full h-32 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
-        />
-      </div>
+      {showPersonalNotes && (
+        <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
+          <h4 className="text-pip-boy-green font-mono font-bold mb-4 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5" />
+            個人筆記
+          </h4>
+          <textarea
+            defaultValue={cardIsBookmarked ? '' : ''}
+            onChange={(e) => handleNotesUpdate(e.target.value)}
+            placeholder="記下你對這張卡片的想法和感悟..."
+            className="w-full h-32 bg-vault-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
+          />
+        </div>
+      )}
 
       {/* Interactive Study Mode */}
-      <StudyMode
-        card={card}
-        relatedCards={allCards.filter(c => c.id !== card.id).slice(0, 5)}
-        mode="single"
-        onComplete={(results: StudyResults) => {
-          console.log('Study session completed:', results)
-          // Update study progress
-          if (cardStudyProgress) {
-            // This would update the user's study progress in the backend
-          }
-        }}
-      />
+      {showStudyMode && (
+        <StudyMode
+          card={card}
+          relatedCards={allCards.filter(c => c.id !== card.id).slice(0, 5)}
+          mode="single"
+          onComplete={(results: StudyResults) => {
+            console.log('Study session completed:', results)
+            // Update study progress
+            if (cardStudyProgress) {
+              // This would update the user's study progress in the backend
+            }
+          }}
+        />
+      )}
 
       {/* Card Sharing */}
       <AnimatePresence>
@@ -1353,11 +1353,59 @@ export function CardDetailModal({
               {activeTab === 'overview' && renderOverviewTab()}
               {activeTab === 'meanings' && renderMeaningsTab()}
               {activeTab === 'characters' && renderCharactersTab()}
-              {activeTab === 'lore' && renderLoreTab()}
               {activeTab === 'insights' && renderInsightsTab()}
               {activeTab === 'interactions' && renderInteractionsTab()}
             </AnimatePresence>
           </div>
+
+          {/* Guest Mode CTA */}
+          {isGuestMode && (
+            <div className="border-t border-pip-boy-green/30 p-6 bg-gradient-to-r from-pip-boy-green/10 to-pip-boy-green/5">
+              <div className="max-w-3xl mx-auto text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-pip-boy-green">
+                  <Radiation className="w-5 h-5 animate-pulse" />
+                  <h3 className="text-lg font-mono font-bold">想要更深入的解讀？</h3>
+                  <Radiation className="w-5 h-5 animate-pulse" />
+                </div>
+                <p className="text-pip-boy-green/80 font-mono text-sm leading-relaxed">
+                  註冊 Vault 帳號後，你可以：<br />
+                  <span className="inline-flex items-center gap-2 mt-2">
+                    <Bookmark className="w-4 h-4" /> 收藏卡牌
+                  </span>
+                  {' | '}
+                  <span className="inline-flex items-center gap-2">
+                    <Brain className="w-4 h-4" /> AI 深度解讀
+                  </span>
+                  {' | '}
+                  <span className="inline-flex items-center gap-2">
+                    <History className="w-4 h-4" /> 保存占卜歷史
+                  </span>
+                  {' | '}
+                  <span className="inline-flex items-center gap-2">
+                    <Target className="w-4 h-4" /> 追蹤學習進度
+                  </span>
+                </p>
+                <div className="flex items-center justify-center gap-4 pt-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => window.location.href = '/auth/register'}
+                    className="px-6 py-3 bg-pip-boy-green text-vault-dark font-mono font-bold rounded border-2 border-pip-boy-green hover:bg-transparent hover:text-pip-boy-green transition-all duration-300 shadow-lg shadow-pip-boy-green/20"
+                  >
+                    立即註冊
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => window.location.href = '/auth/login'}
+                    className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold rounded hover:bg-pip-boy-green hover:text-vault-dark transition-all duration-300"
+                  >
+                    已有帳號？登入
+                  </motion.button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Enhanced Footer */}
           <div className="border-t border-pip-boy-green/30 p-4 bg-pip-boy-green/5">
@@ -1365,13 +1413,13 @@ export function CardDetailModal({
               <div className="flex items-center gap-4">
                 <span>VAULT-TEC 塔羅系統 v3.0.0</span>
                 <span>輻射等級: {radiationInfo.label}</span>
+                {isGuestMode && <span className="text-orange-400">訪客模式</span>}
               </div>
               <div className="flex items-center gap-4">
                 {card.created_at && (
                   <span>創建: {new Date(card.created_at).toLocaleDateString()}</span>
                 )}
-                <span>查看次數: {cardStudyProgress?.timesViewed || 0}</span>
-                {cardIsBookmarked && <span>★ 已收藏</span>}
+                {!isGuestMode && cardIsBookmarked && <span>★ 已收藏</span>}
               </div>
             </div>
           </div>

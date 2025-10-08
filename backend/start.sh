@@ -61,7 +61,7 @@ fi
 
 # Check if database is accessible (optional)
 print_info "檢查資料庫連線..."
-if python -c "from app.config import get_settings; settings = get_settings(); print(f'Database: {settings.DATABASE_URL[:30]}...')" 2>/dev/null; then
+if python -c "from app.config import get_settings; settings = get_settings(); print(f'Database: {settings.database_url[:30]}...')" 2>/dev/null; then
     print_info "資料庫配置正常"
 else
     print_warning "無法驗證資料庫配置"
