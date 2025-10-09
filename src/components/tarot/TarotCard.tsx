@@ -10,6 +10,8 @@ import { Star, Zap } from 'lucide-react'
 import { useTouchInteractions, useDeviceCapabilities } from '@/hooks/useTouchInteractions'
 import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
+import { use3DTilt } from '@/hooks/tilt/use3DTilt'
+import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
 
 interface TarotCard {
   id: number
@@ -42,6 +44,26 @@ interface TarotCardProps {
   onLongPress?: (card: TarotCard) => void
   onSwipe?: (direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => void
   cardBackUrl?: string
+  /**
+   * 啟用 3D 傾斜效果（預設：true）
+   */
+  enable3DTilt?: boolean
+  /**
+   * 3D 傾斜最大角度（預設：15）
+   */
+  tiltMaxAngle?: number
+  /**
+   * 3D 傾斜過渡動畫時間，單位 ms（預設：400）
+   */
+  tiltTransitionDuration?: number
+  /**
+   * 啟用陀螺儀傾斜（行動裝置）（預設：true）
+   */
+  enableGyroscope?: boolean
+  /**
+   * 啟用光澤效果（預設：true）
+   */
+  enableGloss?: boolean
 }
 
 const sizeClasses = {
@@ -69,7 +91,12 @@ export function TarotCard({
   showProgress = false,
   onLongPress,
   onSwipe,
-  cardBackUrl = '/assets/cards/card-backs/01.png'
+  cardBackUrl = '/assets/cards/card-backs/01.png',
+  enable3DTilt = true,
+  tiltMaxAngle = 15,
+  tiltTransitionDuration = 400,
+  enableGyroscope = true,
+  enableGloss = true
 }: TarotCardProps) {
   const [isFlipping, setIsFlipping] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -81,6 +108,23 @@ export function TarotCard({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const { isTouchDevice, prefersReducedMotion } = useDeviceCapabilities()
   const { playSound } = useAudioEffect()
+
+  // 3D 傾斜效果（當卡片翻轉時停用以避免衝突）
+  const {
+    tiltRef,
+    tiltHandlers,
+    tiltStyle,
+    tiltState
+  } = use3DTilt({
+    enable3DTilt,
+    tiltMaxAngle,
+    tiltTransitionDuration,
+    enableGyroscope,
+    enableGloss,
+    size,
+    isFlipping,
+    loading
+  })
 
   // Handle flip animation when isRevealed changes
   useEffect(() => {
@@ -198,10 +242,25 @@ export function TarotCard({
   if (flipStyle === 'kokonut') {
     return (
       <div
-        ref={cardRef}
+        ref={(el) => {
+          // Merge refs: cardRef and tiltRef
+          if (el) {
+            cardRef.current = el
+            if (tiltRef) {
+              ;(tiltRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+            }
+          }
+        }}
         onClick={isTouchDevice ? undefined : handleClick}
-        onMouseEnter={isTouchDevice ? undefined : handleMouseEnter}
-        onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
+        onMouseEnter={isTouchDevice ? undefined : (e) => {
+          handleMouseEnter()
+          tiltHandlers.onMouseEnter?.(e)
+        }}
+        onMouseMove={isTouchDevice ? undefined : tiltHandlers.onMouseMove}
+        onMouseLeave={isTouchDevice ? undefined : (e) => {
+          handleMouseLeave()
+          tiltHandlers.onMouseLeave?.(e)
+        }}
         {...(isTouchDevice ? touchHandlers : mouseHandlers)}
         className={`
           ${sizeClasses[size]} relative cursor-pointer
@@ -210,10 +269,19 @@ export function TarotCard({
           ${isAnimating ? 'animate-card-draw' : ''}
         `}
         style={{
+          ...tiltStyle,
           animationDelay: `${animationDelay}ms`,
           touchAction: 'manipulation'
         }}
       >
+        {/* 3D Tilt Visual Effects */}
+        {tiltState.isTilted && (
+          <TiltVisualEffects
+            tiltState={tiltState}
+            enableGloss={enableGloss}
+          />
+        )}
+
         {/* State indicators */}
         <CardStateIndicators
           state={cardState}
@@ -302,7 +370,15 @@ export function TarotCard({
 
   return (
     <div
-      ref={cardRef}
+      ref={(el) => {
+        // Merge refs: cardRef and tiltRef
+        if (el) {
+          cardRef.current = el
+          if (tiltRef) {
+            ;(tiltRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+          }
+        }
+      }}
       data-testid="tarot-card"
       className={`
         ${sizeClasses[size]} relative group cursor-pointer
@@ -315,16 +391,32 @@ export function TarotCard({
         transition-all duration-300 ease-out
       `}
       onClick={isTouchDevice ? undefined : handleClick}
-      onMouseEnter={isTouchDevice ? undefined : handleMouseEnter}
-      onMouseLeave={isTouchDevice ? undefined : handleMouseLeave}
+      onMouseEnter={isTouchDevice ? undefined : (e) => {
+        handleMouseEnter()
+        tiltHandlers.onMouseEnter?.(e)
+      }}
+      onMouseMove={isTouchDevice ? undefined : tiltHandlers.onMouseMove}
+      onMouseLeave={isTouchDevice ? undefined : (e) => {
+        handleMouseLeave()
+        tiltHandlers.onMouseLeave?.(e)
+      }}
       {...(isTouchDevice ? touchHandlers : mouseHandlers)}
       style={{
+        ...tiltStyle,
         transformStyle: 'preserve-3d',
         perspective: '1000px',
         animationDelay: `${animationDelay}ms`,
         touchAction: 'manipulation'
       }}
     >
+      {/* 3D Tilt Visual Effects */}
+      {tiltState.isTilted && (
+        <TiltVisualEffects
+          tiltState={tiltState}
+          enableGloss={enableGloss}
+        />
+      )}
+
       {/* State indicators */}
       <CardStateIndicators
         state={cardState}

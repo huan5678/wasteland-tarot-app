@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:https": "node server.mjs",
+    "cert:generate": "bash scripts/generate-cert.sh",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

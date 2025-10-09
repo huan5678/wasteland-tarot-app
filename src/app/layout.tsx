@@ -10,6 +10,7 @@ import { ToastProvider } from "@/components/common/Toast";
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import { MetricsInitializer } from '@/components/system/MetricsInitializer';
 import { AudioInitializer } from '@/components/system/AudioInitializer';
+import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
 export const metadata: Metadata = {
@@ -53,15 +54,19 @@ export default function RootLayout({
             <AnalyticsProvider>
               <MetricsInitializer />
               <AudioInitializer />
-              <ToastProvider>
-                <div className="min-h-screen flex flex-col relative z-10">
-                  <ClientLayout>
-                    <Header />
-                    <main className="flex-1">{children}</main>
-                    <Footer />
-                  </ClientLayout>
-                </div>
-              </ToastProvider>
+              {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
+              {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
+              <TiltConfigProvider>
+                <ToastProvider>
+                  <div className="min-h-screen flex flex-col relative z-10">
+                    <ClientLayout>
+                      <Header />
+                      <main className="flex-1">{children}</main>
+                      <Footer />
+                    </ClientLayout>
+                  </div>
+                </ToastProvider>
+              </TiltConfigProvider>
             </AnalyticsProvider>
           </ZustandAuthInitializer>
         </ErrorBoundary>

@@ -6,6 +6,10 @@ import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import { Star, Spade, Zap, ZoomIn, ZoomOut, RotateCw } from 'lucide-react'
 import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
 import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
+import { use3DTilt } from '@/hooks/tilt/use3DTilt'
+import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
+import { useGyroscopePermission } from '@/hooks/tilt/useGyroscopePermission'
+import { PipBoyButton } from '@/components/ui/pipboy'
 
 interface TarotCard {
   id: number
@@ -41,6 +45,26 @@ interface MobileTarotCardProps {
   enableZoom?: boolean
   enableRotation?: boolean
   className?: string
+  /**
+   * 啟用 3D 傾斜效果（預設：true）
+   */
+  enable3DTilt?: boolean
+  /**
+   * 3D 傾斜最大角度（預設：15）
+   */
+  tiltMaxAngle?: number
+  /**
+   * 3D 傾斜過渡動畫時間，單位 ms（預設：400）
+   */
+  tiltTransitionDuration?: number
+  /**
+   * 啟用陀螺儀傾斜（行動裝置）（預設：true）
+   */
+  enableGyroscope?: boolean
+  /**
+   * 啟用光澤效果（預設：true）
+   */
+  enableGloss?: boolean
 }
 
 const mobileSizeClasses = {
@@ -72,7 +96,12 @@ export function MobileTarotCard({
   showProgress = false,
   enableZoom = true,
   enableRotation = false,
-  className = ''
+  className = '',
+  enable3DTilt = true,
+  tiltMaxAngle = 15,
+  tiltTransitionDuration = 400,
+  enableGyroscope = true,
+  enableGloss = true
 }: MobileTarotCardProps) {
   const [isFlipping, setIsFlipping] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -87,6 +116,24 @@ export function MobileTarotCard({
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const { isTouchDevice, prefersReducedMotion, screenSize, isIOS } = useAdvancedDeviceCapabilities()
+
+  // 3D 傾斜效果（行動裝置優先使用陀螺儀）
+  const {
+    tiltRef,
+    tiltHandlers,
+    tiltStyle,
+    tiltState,
+    gyroscopePermission
+  } = use3DTilt({
+    enable3DTilt,
+    tiltMaxAngle,
+    tiltTransitionDuration,
+    enableGyroscope,
+    enableGloss,
+    size: size === 'fullscreen' ? 'large' : size,
+    isFlipping,
+    loading
+  })
 
   // Advanced gesture handlers
   const gestureHandlers = {
@@ -242,7 +289,15 @@ export function MobileTarotCard({
 
   const cardContent = (
     <animated.div
-      ref={cardRef}
+      ref={(el) => {
+        // Merge refs: cardRef and tiltRef
+        if (el) {
+          cardRef.current = el
+          if (tiltRef) {
+            ;(tiltRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+          }
+        }
+      }}
       data-testid="mobile-tarot-card"
       className={`
         ${mobileSizeClasses[size]} relative group
@@ -257,6 +312,7 @@ export function MobileTarotCard({
       {...(isTouchDevice ? { ...bind(), ...touchHandlers } : bind())}
       style={{
         ...animations,
+        ...tiltStyle,
         transformStyle: 'preserve-3d',
         perspective: '1000px',
         animationDelay: `${animationDelay}ms`,
@@ -267,6 +323,37 @@ export function MobileTarotCard({
                    ${rotation ? `rotate(${rotation}deg)` : ''}`
       }}
     >
+      {/* 陀螺儀權限提示（僅 iOS 顯示） */}
+      {enableGyroscope && gyroscopePermission.status === 'prompt' && isIOS && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+          <div className="max-w-sm space-y-4 text-center">
+            <div className="text-pip-boy-green font-mono text-sm">
+              啟用陀螺儀以體驗 3D 傾斜效果
+            </div>
+            <PipBoyButton
+              onClick={gyroscopePermission.requestPermission}
+              variant="primary"
+              size="md"
+            >
+              啟用陀螺儀
+            </PipBoyButton>
+            {gyroscopePermission.error && (
+              <div className="text-xs text-red-500 font-mono">
+                {gyroscopePermission.error}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 3D Tilt Visual Effects */}
+      {tiltState.isTilted && (
+        <TiltVisualEffects
+          tiltState={tiltState}
+          enableGloss={enableGloss}
+        />
+      )}
+
       {/* State indicators */}
       <CardStateIndicators
         state={cardState}

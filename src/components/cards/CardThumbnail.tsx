@@ -20,6 +20,8 @@ import { PipBoyCard } from '@/components/ui/pipboy'
 import type { TarotCard } from '@/types/api'
 import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/utils/cardImages'
 import { getSuitDisplayName } from '@/types/suits'
+import { use3DTilt } from '@/hooks/tilt/use3DTilt'
+import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
 
 export interface CardThumbnailProps {
   /**
@@ -36,6 +38,31 @@ export interface CardThumbnailProps {
    * 是否優先載入(用於首屏卡牌)
    */
   priority?: boolean
+
+  /**
+   * 啟用 3D 傾斜效果（預設：true）
+   */
+  enable3DTilt?: boolean
+
+  /**
+   * 3D 傾斜最大角度（預設：15）
+   */
+  tiltMaxAngle?: number
+
+  /**
+   * 3D 傾斜過渡動畫時間，單位 ms（預設：400）
+   */
+  tiltTransitionDuration?: number
+
+  /**
+   * 啟用陀螺儀傾斜（行動裝置）（預設：true）
+   */
+  enableGyroscope?: boolean
+
+  /**
+   * 啟用光澤效果（預設：true）
+   */
+  enableGloss?: boolean
 }
 
 /**
@@ -46,9 +73,34 @@ export interface CardThumbnailProps {
  * <CardThumbnail card={card} />
  * ```
  */
-export function CardThumbnail({ card, className, priority = false }: CardThumbnailProps) {
+export function CardThumbnail({
+  card,
+  className,
+  priority = false,
+  enable3DTilt = true,
+  tiltMaxAngle = 15,
+  tiltTransitionDuration = 400,
+  enableGyroscope = true,
+  enableGloss = true
+}: CardThumbnailProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+
+  // 3D 傾斜效果（縮圖使用 small 尺寸，自動減少角度至 60%）
+  const {
+    tiltRef,
+    tiltHandlers,
+    tiltStyle,
+    tiltState
+  } = use3DTilt({
+    enable3DTilt,
+    tiltMaxAngle,
+    tiltTransitionDuration,
+    enableGyroscope,
+    enableGloss,
+    size: 'small', // 縮圖使用 small 尺寸
+    loading: !imageLoaded
+  })
 
   // 取得圖片路徑
   const imageUrl = imageError ? getFallbackImageUrl() : getCardImageUrl(card)
@@ -78,6 +130,7 @@ export function CardThumbnail({ card, className, priority = false }: CardThumbna
 
   return (
     <Link
+      ref={tiltRef}
       href={`/cards/${card.suit}/${card.id}`}
       className={cn(
         'block group focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm',
@@ -85,12 +138,23 @@ export function CardThumbnail({ card, className, priority = false }: CardThumbna
       )}
       aria-label={`查看卡牌詳細資訊: ${card.name} - ${suitName}`}
       onKeyDown={handleKeyDown}
+      onMouseEnter={tiltHandlers.onMouseEnter}
+      onMouseMove={tiltHandlers.onMouseMove}
+      onMouseLeave={tiltHandlers.onMouseLeave}
+      style={tiltStyle}
     >
       <PipBoyCard
         interactive
         padding="none"
-        className="h-full overflow-hidden transition-all duration-300"
+        className="h-full overflow-hidden transition-all duration-300 relative"
       >
+        {/* 3D Tilt Visual Effects */}
+        {tiltState.isTilted && (
+          <TiltVisualEffects
+            tiltState={tiltState}
+            enableGloss={enableGloss}
+          />
+        )}
         {/* 卡牌圖片容器 */}
         <div className="relative aspect-[2/3] bg-black overflow-hidden">
           {/* 載入中骨架屏 */}

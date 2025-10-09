@@ -60,7 +60,8 @@
       "Bash(npx tsc:*)",
       "Bash(bun run:*)",
       "Bash(ls:*)",
-      "mcp__chrome-devtools__hover"
+      "mcp__chrome-devtools__hover",
+      "Bash(npm test:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
