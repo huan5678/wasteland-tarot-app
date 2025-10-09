@@ -12,7 +12,10 @@ import type { HeroTitle, HeroTitlesCollection } from '@/types/hero';
 import { FALLBACK_TITLE } from '@/types/hero';
 import { loadHeroTitles, filterEnabledTitles, getRandomTitles } from '@/lib/heroTitlesLoader';
 import { usePageVisibility } from '@/hooks/usePageVisibility';
+import { useGlitch } from '@/hooks/useGlitch';
 import { CarouselIndicator } from './CarouselIndicator';
+import { cn } from '@/lib/utils';
+import styles from './DynamicHeroTitle.module.css';
 
 /**
  * 元件 Props
@@ -62,11 +65,23 @@ export function DynamicHeroTitle({
   const [displaySubtitle, setDisplaySubtitle] = useState('');
   const [displayDescription, setDisplayDescription] = useState('');
 
+  // 刪除階段追蹤：記錄當前正在刪除哪個部分
+  const [deletingSection, setDeletingSection] = useState<'description' | 'subtitle' | 'title' | null>(null);
+
   // 偵測無障礙偏好
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
+  // 行動裝置偵測
+  const [isMobile, setIsMobile] = useState(false);
+
   // 分頁可見性
   const isVisible = usePageVisibility();
+
+  // Glitch 效果（僅套用於主標題）
+  const { isGlitching } = useGlitch({
+    enabled: !testMode,
+    isMobile,
+  });
 
   // Refs
   const animationFrameRef = useRef<number | null>(null);
@@ -120,6 +135,27 @@ export function DynamicHeroTitle({
   }, []);
 
   /**
+   * 偵測行動裝置
+   */
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // 初始偵測
+    checkMobile();
+
+    // 監聽視窗大小變化
+    window.addEventListener('resize', checkMobile);
+
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+
+  /**
    * 分頁可見性控制
    */
   useEffect(() => {
@@ -165,6 +201,7 @@ export function DynamicHeroTitle({
     setDisplayTitle('');
     setDisplaySubtitle('');
     setDisplayDescription('');
+    setDeletingSection(null);
 
     // 如果偏好減少動畫或測試模式，直接顯示
     if (prefersReducedMotion || testMode) {
@@ -255,15 +292,18 @@ export function DynamicHeroTitle({
 
           // 從下往上刪除：description → subtitle → title
           if (deletedChars <= descLen) {
+            setDeletingSection('description');
             setDisplayDescription(
               currentTitle.description.slice(0, descLen - deletedChars)
             );
           } else if (deletedChars <= descLen + subLen) {
+            setDeletingSection('subtitle');
             setDisplayDescription('');
             setDisplaySubtitle(
               currentTitle.subtitle.slice(0, subLen - (deletedChars - descLen))
             );
           } else {
+            setDeletingSection('title');
             setDisplayDescription('');
             setDisplaySubtitle('');
             setDisplayTitle(
@@ -349,51 +389,42 @@ export function DynamicHeroTitle({
   }
 
   return (
-    <div className="text-center mb-12">
+    <div className={cn('text-center mb-12', testMode && 'test-mode')}>
       {/* 主標題 */}
-      <h1
-        className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center"
+      <div
+        className={cn(
+          'text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center',
+          isGlitching && styles['hero-title-glitching']
+        )}
         aria-live="polite"
       >
-        <span>
+        <h1 className="inline">
           {displayTitle}
-          {/* 終端機游標 - 只在打字主標題時顯示 */}
-          {!testMode && phase === 'typing-title' && (
-            <span
-              className="inline-block w-2 h-8 md:h-12 ml-1 bg-pip-boy-green animate-pulse"
-              aria-hidden="true"
-            />
+          {!testMode && (phase === 'typing-title' || deletingSection === 'title') && (
+            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
           )}
-        </span>
-      </h1>
+        </h1>
+      </div>
 
       {/* 副標題 */}
-      <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
-        <span>
+      <div className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
+        <p className="inline">
           {displaySubtitle}
-          {/* 游標 - 只在打字副標題時顯示 */}
-          {!testMode && phase === 'typing-subtitle' && (
-            <span
-              className="inline-block w-1.5 h-6 ml-1 bg-pip-boy-green/80 animate-pulse"
-              aria-hidden="true"
-            />
+          {!testMode && (phase === 'typing-subtitle' || deletingSection === 'subtitle') && (
+            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
           )}
-        </span>
-      </p>
+        </p>
+      </div>
 
       {/* 描述段落 */}
-      <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
-        <span>
+      <div className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
+        <p className="inline">
           {displayDescription}
-          {/* 游標 - 只在打字描述時顯示 */}
-          {!testMode && phase === 'typing-description' && (
-            <span
-              className="inline-block w-1 h-4 ml-1 bg-pip-boy-green/60 animate-pulse"
-              aria-hidden="true"
-            />
+          {!testMode && (phase === 'typing-description' || phase === 'waiting' || deletingSection === 'description') && (
+            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
           )}
-        </span>
-      </p>
+        </p>
+      </div>
 
       {/* 輪播指示器 */}
       {titles.length > 1 && (

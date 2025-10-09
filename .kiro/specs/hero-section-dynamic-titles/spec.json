@@ -1,21 +1,30 @@
 {
   "feature_name": "hero-section-dynamic-titles",
   "created_at": "2025-10-09T12:00:00Z",
-  "updated_at": "2025-10-09T14:00:00Z",
+  "updated_at": "2025-10-09T08:42:16Z",
   "language": "zh-TW",
-  "phase": "tasks-generated",
+  "phase": "tasks-regenerated",
   "approvals": {
     "requirements": {
       "generated": true,
-      "approved": true
+      "approved": true,
+      "updated_at": "2025-10-09T08:28:58Z",
+      "change_reason": "新增 Requirement 6: 進階視覺特效（Retro 閃爍游標 + Colour Shift Glitch 僅主標題）"
     },
     "design": {
       "generated": true,
-      "approved": true
+      "approved": false,
+      "needs_review": true,
+      "updated_at": "2025-10-09T09:15:32Z",
+      "reason": "Design extended with Advanced Visual Effects (Retro Cursor + Glitch Effect)",
+      "change_summary": "Added complete technical design for Requirement 6 visual effects: CSS-based persistent blinking cursor (530ms cycle) and RGB colour-shift glitch effect (8-15s random trigger, h1 only). Includes useGlitch hook, CSS Module implementation, testing strategy, and migration plan from current implementation."
     },
     "tasks": {
       "generated": true,
-      "approved": false
+      "approved": false,
+      "needs_review": true,
+      "updated_at": "2025-10-09T08:42:16Z",
+      "change_summary": "Tasks regenerated to include visual effects implementation (tasks 21-29): CSS Module creation, useGlitch hook, component integration, unit tests, E2E tests, performance validation, documentation, cross-browser testing, and acceptance testing. Total 37 tasks (20 completed, 17 pending)."
     }
   },
   "ready_for_implementation": false

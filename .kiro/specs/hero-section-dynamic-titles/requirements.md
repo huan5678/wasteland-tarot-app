@@ -146,7 +146,61 @@
 
 11. IF 打字動畫執行時間過長（>5 秒） THEN 系統 SHALL 提供「跳過動畫」按鈕（可選）讓使用者快速查看完整內容
 
-### Requirement 6: 效能與資源管理
+### Requirement 6: 進階視覺特效（Retro 游標與 Glitch 效果）
+
+**User Story 1:** 作為網站訪客，我希望在打字動畫過程中能看到持續閃爍的 retro 風格游標，讓我感受到真實的終端機輸入體驗，即使文字已經完全顯示也能維持這種復古氛圍。
+
+**User Story 2:** 作為 Fallout 粉絲，我希望標題文字能偶爾出現 CRT 螢幕故障的色彩分離效果（glitch），讓我感受到廢土中老舊終端機的真實感與不穩定性。
+
+#### Acceptance Criteria - Retro 閃爍游標
+
+1. WHEN 打字動畫開始執行 THEN 系統 SHALL 在游標位置顯示方塊狀的終端機游標（block cursor）
+
+2. WHERE 游標視覺樣式 THE 系統 SHALL 使用 Pip-Boy 綠色（`pip-boy-green`）並採用固定寬度方塊（約 0.6em 寬）
+
+3. WHILE 打字動畫執行中或文字顯示完成後 THE 游標 SHALL 持續以固定頻率閃爍（不會消失）
+
+4. IF 游標閃爍動畫 THEN 系統 SHALL 使用 CSS keyframes 以 530ms 為一個完整週期（on → off → on）
+
+5. WHEN 游標閃爍動畫 THEN 系統 SHALL 使用 `step-end` 或 `steps(2)` timing function 實現瞬間切換（無漸變）
+
+6. WHERE 游標位置 THE 系統 SHALL 使用 `::after` pseudo-element 附加在標題文字容器末端
+
+7. IF 單組文案的打字動畫完成 AND 準備切換至下一組文案 THEN 游標 SHALL 在淡出動畫中一併消失
+
+8. WHEN 新文案開始打字 THEN 游標 SHALL 立即出現並開始閃爍
+
+9. IF 使用者偏好設定要求減少動畫（prefers-reduced-motion） THEN 游標 SHALL 保持靜態顯示（不閃爍）但仍然可見
+
+#### Acceptance Criteria - Colour Shift Glitch 效果（僅主標題）
+
+1. WHEN 主標題（h1 大標）文字顯示完成後 THEN 系統 SHALL 間歇性觸發 RGB 色彩分離 glitch 效果
+
+2. WHERE glitch 效果作用範圍 THE 系統 SHALL 僅對主標題（title）套用此效果，副標題與描述段落不受影響
+
+3. WHERE glitch 效果觸發頻率 THE 系統 SHALL 每 8-15 秒隨機觸發一次，持續時間 150-300ms
+
+4. IF glitch 效果執行 THEN 系統 SHALL 使用 `text-shadow` 產生紅色（`#ff0000`）和青色（`#00ffff`）的色彩殘影
+
+5. WHEN 色彩殘影顯示 THEN 系統 SHALL 對紅色殘影向右偏移 2-4px，青色殘影向左偏移 2-4px
+
+6. WHERE glitch 動畫關鍵影格 THE 系統 SHALL 隨機變化 text-shadow 的偏移距離（2-6px 範圍）模擬不穩定性
+
+7. IF glitch 效果增強模式 THEN 系統 SHALL 可選搭配輕微的 `transform: skewX()` 傾斜（-1deg 到 1deg）
+
+8. WHEN glitch 效果執行 THEN 主標題文字顏色 SHALL 保持 Pip-Boy 綠色不變，僅殘影使用紅/青色
+
+9. IF 使用者偏好設定要求減少動畫（prefers-reduced-motion） THEN 系統 SHALL 完全停用 glitch 效果
+
+10. WHERE 在行動裝置上 THE glitch 效果 SHALL 降低觸發頻率（每 15-25 秒一次）以節省效能
+
+11. WHEN 頁面切換至背景分頁 THEN 系統 SHALL 暫停 glitch 效果的觸發計時器
+
+12. IF glitch 效果與打字動畫同時執行 THEN glitch SHALL 僅作用於已顯示的文字部分
+
+13. WHERE 在輪播切換動畫進行中 THE 系統 SHALL 暫時停用 glitch 效果避免視覺衝突
+
+### Requirement 7: 效能與資源管理
 
 **User Story:** 作為效能工程師，我希望動態標題系統在執行動畫與輪播時不會影響整體頁面效能或造成不必要的資源消耗。
 
@@ -182,6 +236,18 @@
 - **Location**: `src/data/heroTitles.json`
 - **Encoding**: UTF-8 with BOM for Traditional Chinese support
 
+### Visual Effects Technologies
+- **Cursor Animation**: CSS `@keyframes` with `step-end` timing function
+  - Blinking cycle: 530ms (on → off → on)
+  - Implementation: `::after` pseudo-element with `opacity` toggle
+- **Glitch Effect**: CSS `text-shadow` for RGB color separation
+  - Red shadow: `#ff0000` with +2-4px horizontal offset
+  - Cyan shadow: `#00ffff` with -2-4px horizontal offset
+  - Optional enhancement: `transform: skewX()` for distortion
+  - Trigger: JavaScript interval with 8-15s random delay
+- **Animation Timing**: CSS `animation-timing-function: steps(2)` for instant transitions
+- **Accessibility**: Respect `prefers-reduced-motion` media query
+
 ### Performance Targets
 - **Initial Load Impact**: <100ms additional load time
 - **Animation Frame Rate**: ≥60 FPS
@@ -198,6 +264,10 @@
 4. ✅ 通過 WCAG 2.1 AA 無障礙標準檢測
 5. ✅ 響應式設計在桌面、平板、手機上均正常顯示
 6. ✅ 元件載入時間不影響 Core Web Vitals（LCP <2.5s, CLS <0.1）
+7. ✅ Retro 閃爍游標在所有瀏覽器上流暢運作（530ms 週期，無卡頓）
+8. ✅ Colour Shift Glitch 效果在桌面與行動裝置上正確觸發且不影響效能
+9. ✅ 視覺特效尊重 `prefers-reduced-motion` 無障礙設定
+10. ✅ 游標與 glitch 動畫在頁面背景時正確暫停以節省資源
 
 ## Out of Scope
 

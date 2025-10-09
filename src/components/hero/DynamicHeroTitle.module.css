@@ -1,0 +1,150 @@
+/**
+ * DynamicHeroTitle 視覺特效樣式
+ *
+ * 包含：
+ * 1. Retro 閃爍游標動畫（530ms 週期）
+ * 2. Colour Shift Glitch 效果（RGB 色彩分離）
+ * 3. 無障礙支援（prefers-reduced-motion）
+ * 4. 測試模式支援
+ */
+
+/* ============================================
+   Retro 終端機游標閃爍動畫
+   ============================================ */
+
+/**
+ * 游標閃爍動畫
+ * - 週期：530ms
+ * - 效果：瞬間切換（無漸變）
+ * - 使用 steps(2) 確保只有「顯示」和「隱藏」兩個狀態
+ */
+@keyframes cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+/**
+ * 通用游標樣式類別（使用 ::after 偽元素）
+ * - 已棄用：當內容有換行時會導致游標位置錯誤
+ * - 保留以供向後兼容
+ */
+.typing-cursor::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 0.1em;
+  background-color: currentColor; /* 繼承文字顏色 */
+  vertical-align: text-bottom;
+  animation: cursor-blink 530ms steps(2, jump-none) infinite;
+}
+
+/**
+ * Inline 游標元素
+ * - 作為獨立的 <span> 元素插入文字內容中
+ * - 正確處理換行情況，游標會緊跟在文字後面
+ * - 繼承 currentColor 以匹配文字顏色
+ */
+.typing-cursor-inline {
+  display: inline-block;
+  width: 0.5em;
+  height: 1em;
+  margin-left: 0.1em;
+  background-color: currentColor; /* 繼承文字顏色 */
+  vertical-align: text-bottom;
+  animation: cursor-blink 530ms steps(2, jump-none) infinite;
+}
+
+/* ============================================
+   Colour Shift Glitch 效果
+   ============================================ */
+
+/**
+ * RGB 色彩分離 Glitch 動畫
+ * - 持續時間：250ms
+ * - 效果：紅/青色殘影 + 輕微傾斜
+ * - 模擬 CRT 螢幕故障效果
+ */
+@keyframes colour-shift-glitch {
+  0% {
+    text-shadow:
+      3px 0 0 rgba(255, 0, 0, 0.7),
+      -3px 0 0 rgba(0, 255, 255, 0.7);
+  }
+  20% {
+    text-shadow:
+      4px 0 0 rgba(255, 0, 0, 0.8),
+      -4px 0 0 rgba(0, 255, 255, 0.8);
+  }
+  40% {
+    text-shadow:
+      2px 0 0 rgba(255, 0, 0, 0.6),
+      -2px 0 0 rgba(0, 255, 255, 0.6);
+  }
+  60% {
+    text-shadow:
+      5px 0 0 rgba(255, 0, 0, 0.9),
+      -5px 0 0 rgba(0, 255, 255, 0.9);
+    transform: skewX(-0.5deg);
+  }
+  80% {
+    text-shadow:
+      3px 0 0 rgba(255, 0, 0, 0.7),
+      -3px 0 0 rgba(0, 255, 255, 0.7);
+    transform: skewX(0.5deg);
+  }
+  100% {
+    text-shadow: none;
+    transform: skewX(0);
+  }
+}
+
+/**
+ * Glitch 啟用類別
+ * - 由 useGlitch hook 控制觸發時機
+ * - 僅套用於主標題（h1）
+ * - animation-fill-mode: forwards 保持最後一幀狀態
+ */
+.hero-title-glitching {
+  animation: colour-shift-glitch 250ms ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+/* ============================================
+   無障礙支援
+   ============================================ */
+
+/**
+ * 尊重使用者的動畫偏好設定
+ * - 停用游標閃爍動畫，但保持顯示
+ * - 完全停用 Glitch 效果
+ */
+@media (prefers-reduced-motion: reduce) {
+  .hero-title-with-cursor::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .hero-title-glitching {
+    animation: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+  }
+}
+
+/* ============================================
+   測試模式支援
+   ============================================ */
+
+/**
+ * 測試模式：完全隱藏游標
+ * - 用於單元測試和快照測試
+ * - 避免動畫影響測試穩定性
+ */
+.test-mode .hero-title-with-cursor::after {
+  display: none;
+}
