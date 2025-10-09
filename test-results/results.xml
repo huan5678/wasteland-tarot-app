@@ -1,10 +1,10 @@
-<testsuites id="" name="" tests="11" failures="11" skipped="0" errors="0" time="3.360198">
-<testsuite name="quick-reading.spec.ts" timestamp="2025-10-08T07:37:48.106Z" hostname="chromium" tests="11" failures="11" skipped="0" time="0.172" errors="0">
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示載入指示器並完成載入" classname="quick-reading.spec.ts" time="0.014">
-<failure message="quick-reading.spec.ts:15:7 應該顯示載入指示器並完成載入" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:15:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示載入指示器並完成載入 ─────────────────────
+<testsuites id="" name="" tests="11" failures="11" skipped="0" errors="0" time="2.8256310000000004">
+<testsuite name="ascii-donut-loading.spec.ts" timestamp="2025-10-09T03:44:02.518Z" hostname="chromium" tests="11" failures="11" skipped="0" time="0.162" errors="0">
+<testcase name="AsciiDonutLoading Component › Visual Rendering › should display ASCII donut animation on initial load" classname="ascii-donut-loading.spec.ts" time="0.022">
+<failure message="ascii-donut-loading.spec.ts:11:9 should display ASCII donut animation on initial load" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:11:9 › AsciiDonutLoading Component › Visual Rendering › should display ASCII donut animation on initial load 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -16,11 +16,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示 Carousel 與 5 張卡背" classname="quick-reading.spec.ts" time="0.02">
-<failure message="quick-reading.spec.ts:27:7 應該顯示 Carousel 與 5 張卡背" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:27:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示 Carousel 與 5 張卡背 ──────────────
+<testcase name="AsciiDonutLoading Component › Visual Rendering › should have proper accessibility attributes" classname="ascii-donut-loading.spec.ts" time="0.01">
+<failure message="ascii-donut-loading.spec.ts:39:9 should have proper accessibility attributes" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:39:9 › AsciiDonutLoading Component › Visual Rendering › should have proper accessibility attributes 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -32,11 +32,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能使用箭頭按鈕導航卡牌" classname="quick-reading.spec.ts" time="0.026">
-<failure message="quick-reading.spec.ts:42:7 應該能使用箭頭按鈕導航卡牌" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:42:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能使用箭頭按鈕導航卡牌 ──────────────────────
+<testcase name="AsciiDonutLoading Component › Styling and Theme › should use Fallout theme colors" classname="ascii-donut-loading.spec.ts" time="0.013">
+<failure message="ascii-donut-loading.spec.ts:61:9 should use Fallout theme colors" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:61:9 › AsciiDonutLoading Component › Styling and Theme › should use Fallout theme colors 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -48,11 +48,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能使用鍵盤方向鍵導航" classname="quick-reading.spec.ts" time="0.013">
-<failure message="quick-reading.spec.ts:69:7 應該能使用鍵盤方向鍵導航" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:69:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能使用鍵盤方向鍵導航 ───────────────────────
+<testcase name="AsciiDonutLoading Component › Styling and Theme › should use monospace font for ASCII art" classname="ascii-donut-loading.spec.ts" time="0.012">
+<failure message="ascii-donut-loading.spec.ts:87:9 should use monospace font for ASCII art" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:87:9 › AsciiDonutLoading Component › Styling and Theme › should use monospace font for ASCII art 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -64,11 +64,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該能點擊卡背翻牌" classname="quick-reading.spec.ts" time="0.023">
-<failure message="quick-reading.spec.ts:92:7 應該能點擊卡背翻牌" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:92:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該能點擊卡背翻牌 ──────────────────────────
+<testcase name="AsciiDonutLoading Component › Animation Behavior › should render static or animated content" classname="ascii-donut-loading.spec.ts" time="0.01">
+<failure message="ascii-donut-loading.spec.ts:106:9 should render static or animated content" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:106:9 › AsciiDonutLoading Component › Animation Behavior › should render static or animated content 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -80,11 +80,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該儲存至 localStorage" classname="quick-reading.spec.ts" time="0.015">
-<failure message="quick-reading.spec.ts:108:7 翻牌後應該儲存至 localStorage" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:108:7 › 快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該儲存至 localStorage ─────────────
+<testcase name="AsciiDonutLoading Component › Performance › should load within reasonable time" classname="ascii-donut-loading.spec.ts" time="0.01">
+<failure message="ascii-donut-loading.spec.ts:124:9 should load within reasonable time" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:124:9 › AsciiDonutLoading Component › Performance › should load within reasonable time 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -96,11 +96,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該顯示 CTA 區塊" classname="quick-reading.spec.ts" time="0.013">
-<failure message="quick-reading.spec.ts:136:7 翻牌後應該顯示 CTA 區塊" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:136:7 › 快速占卜 - 訪客首次抽卡完整流程 › 翻牌後應該顯示 CTA 區塊 ────────────────────
+<testcase name="AsciiDonutLoading Component › Responsive Design › should be visible on mobile viewport" classname="ascii-donut-loading.spec.ts" time="0.011">
+<failure message="ascii-donut-loading.spec.ts:141:9 should be visible on mobile viewport" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:141:9 › AsciiDonutLoading Component › Responsive Design › should be visible on mobile viewport 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -112,11 +112,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 訪客不應該看到重新抽卡按鈕" classname="quick-reading.spec.ts" time="0.015">
-<failure message="quick-reading.spec.ts:162:7 訪客不應該看到重新抽卡按鈕" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:162:7 › 快速占卜 - 訪客首次抽卡完整流程 › 訪客不應該看到重新抽卡按鈕 ─────────────────────
+<testcase name="AsciiDonutLoading Component › Responsive Design › should be visible on tablet viewport" classname="ascii-donut-loading.spec.ts" time="0.018">
+<failure message="ascii-donut-loading.spec.ts:158:9 should be visible on tablet viewport" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:158:9 › AsciiDonutLoading Component › Responsive Design › should be visible on tablet viewport 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -128,11 +128,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 頁面重新整理後應該恢復翻牌狀態" classname="quick-reading.spec.ts" time="0.011">
-<failure message="quick-reading.spec.ts:179:7 頁面重新整理後應該恢復翻牌狀態" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:179:7 › 快速占卜 - 訪客首次抽卡完整流程 › 頁面重新整理後應該恢復翻牌狀態 ───────────────────
+<testcase name="AsciiDonutLoading Component › Responsive Design › should be visible on desktop viewport" classname="ascii-donut-loading.spec.ts" time="0.034">
+<failure message="ascii-donut-loading.spec.ts:171:9 should be visible on desktop viewport" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:171:9 › AsciiDonutLoading Component › Responsive Design › should be visible on desktop viewport 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -144,11 +144,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › 應該顯示正確的 Header 資訊" classname="quick-reading.spec.ts" time="0.013">
-<failure message="quick-reading.spec.ts:204:7 應該顯示正確的 Header 資訊" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:204:7 › 快速占卜 - 訪客首次抽卡完整流程 › 應該顯示正確的 Header 資訊 ─────────────────
+<testcase name="AsciiDonutLoading Component › Reduced Motion › should respect prefers-reduced-motion" classname="ascii-donut-loading.spec.ts" time="0.011">
+<failure message="ascii-donut-loading.spec.ts:186:9 should respect prefers-reduced-motion" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:186:9 › AsciiDonutLoading Component › Reduced Motion › should respect prefers-reduced-motion 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║
@@ -160,11 +160,11 @@
 ]]>
 </failure>
 </testcase>
-<testcase name="快速占卜 - 訪客首次抽卡完整流程 › CTA 按鈕點擊應該導航至正確頁面" classname="quick-reading.spec.ts" time="0.009">
-<failure message="quick-reading.spec.ts:215:7 CTA 按鈕點擊應該導航至正確頁面" type="FAILURE">
-<![CDATA[  [chromium] › quick-reading.spec.ts:215:7 › 快速占卜 - 訪客首次抽卡完整流程 › CTA 按鈕點擊應該導航至正確頁面 ─────────────────
+<testcase name="AsciiDonutLoading Component › Integration with Auth Flow › should transition from loading to app content" classname="ascii-donut-loading.spec.ts" time="0.011">
+<failure message="ascii-donut-loading.spec.ts:209:9 should transition from loading to app content" type="FAILURE">
+<![CDATA[  [chromium] › ascii-donut-loading.spec.ts:209:9 › AsciiDonutLoading Component › Integration with Auth Flow › should transition from loading to app content 
 
-    Error: browserType.launch: Executable doesn't exist at C:\Users\Sean9\AppData\Local\ms-playwright\chromium_headless_shell-1193\chrome-win\headless_shell.exe
+    Error: browserType.launch: Executable doesn't exist at /home/huan/.cache/ms-playwright/chromium_headless_shell-1194/chrome-linux/headless_shell
     ╔═════════════════════════════════════════════════════════════════════════╗
     ║ Looks like Playwright Test or Playwright was just installed or updated. ║
     ║ Please run the following command to download new browsers:              ║

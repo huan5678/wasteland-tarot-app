@@ -96,3 +96,39 @@ export async function loadHeroTitles(): Promise<HeroTitlesCollection> {
 export function filterEnabledTitles(collection: HeroTitlesCollection): HeroTitle[] {
   return collection.titles.filter((title) => title.enabled);
 }
+
+/**
+ * 從陣列中隨機選擇指定數量的項目
+ *
+ * 使用 Fisher-Yates shuffle 演算法確保隨機性
+ *
+ * @param array - 來源陣列
+ * @param count - 要選擇的數量
+ * @returns 隨機選擇的項目陣列
+ */
+export function getRandomTitles<T>(array: T[], count: number): T[] {
+  // 如果來源陣列長度小於或等於要求數量，直接返回打亂後的完整陣列
+  if (array.length <= count) {
+    return shuffleArray([...array]);
+  }
+
+  // 複製陣列避免修改原始資料
+  const shuffled = shuffleArray([...array]);
+
+  // 取前 count 個項目
+  return shuffled.slice(0, count);
+}
+
+/**
+ * Fisher-Yates shuffle 演算法
+ *
+ * @param array - 要打亂的陣列
+ * @returns 打亂後的陣列（會修改原陣列）
+ */
+function shuffleArray<T>(array: T[]): T[] {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}

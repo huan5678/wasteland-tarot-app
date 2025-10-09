@@ -24,6 +24,18 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Determine which Python command to use
+if command -v python >/dev/null 2>&1; then
+    PYTHON_CMD="python"
+    print_info "使用 python 指令"
+elif command -v python3 >/dev/null 2>&1; then
+    PYTHON_CMD="python3"
+    print_info "python 指令未找到，使用 python3 指令"
+else
+    print_error "找不到 python 或 python3 指令！"
+    exit 1
+fi
+
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
@@ -44,7 +56,7 @@ print_info "啟動虛擬環境..."
 source .venv/bin/activate
 
 # Check Python version
-PYTHON_VERSION=$(python --version 2>&1 | awk '{print $2}')
+PYTHON_VERSION=$($PYTHON_CMD --version 2>&1 | awk '{print $2}')
 print_info "Python 版本: $PYTHON_VERSION"
 
 # Check if .env file exists
@@ -61,7 +73,7 @@ fi
 
 # Check if database is accessible (optional)
 print_info "檢查資料庫連線..."
-if python -c "from app.config import get_settings; settings = get_settings(); print(f'Database: {settings.database_url[:30]}...')" 2>/dev/null; then
+if $PYTHON_CMD -c "from app.config import get_settings; settings = get_settings(); print(f'Database: {settings.database_url[:30]}...')" 2>/dev/null; then
     print_info "資料庫配置正常"
 else
     print_warning "無法驗證資料庫配置"
@@ -105,7 +117,7 @@ print_info "按 Ctrl+C 停止伺服器"
 echo ""
 
 # Run the server
-python -m uvicorn app.main:app \
+$PYTHON_CMD -m uvicorn app.main:app \
     --host "$HOST" \
     --port "$PORT" \
     --log-level "$LOG_LEVEL" \

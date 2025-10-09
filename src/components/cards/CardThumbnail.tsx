@@ -15,8 +15,10 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PipBoyCard } from '@/components/ui/pipboy'
+import { SuitIcon } from '@/components/icons/SuitIcon'
 import type { TarotCard } from '@/types/api'
 import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/utils/cardImages'
 import { getSuitDisplayName } from '@/types/suits'
@@ -160,14 +162,12 @@ export function CardThumbnail({
           {/* 載入中骨架屏 */}
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
-              <div
-                className="text-2xl text-pip-boy-green/50"
-                style={{
-                  filter: 'drop-shadow(0 0 5px rgba(51, 255, 51, 0.3))',
-                }}
-              >
-                🃏
-              </div>
+              <SuitIcon
+                Icon={ImageIcon}
+                size="md"
+                className="text-pip-boy-green/50"
+                ariaHidden
+              />
             </div>
           )}
 
@@ -269,7 +269,12 @@ export function CardThumbnailSkeleton() {
       <div className="animate-pulse">
         {/* 圖片骨架 */}
         <div className="aspect-[2/3] bg-pip-boy-green/10 flex items-center justify-center">
-          <div className="text-2xl text-pip-boy-green/30">🃏</div>
+          <SuitIcon
+            Icon={ImageIcon}
+            size="md"
+            className="text-pip-boy-green/30"
+            ariaHidden
+          />
         </div>
 
         {/* 資訊骨架 */}

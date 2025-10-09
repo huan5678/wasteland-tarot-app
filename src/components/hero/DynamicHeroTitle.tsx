@@ -10,7 +10,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { HeroTitle, HeroTitlesCollection } from '@/types/hero';
 import { FALLBACK_TITLE } from '@/types/hero';
-import { loadHeroTitles, filterEnabledTitles } from '@/lib/heroTitlesLoader';
+import { loadHeroTitles, filterEnabledTitles, getRandomTitles } from '@/lib/heroTitlesLoader';
 import { usePageVisibility } from '@/hooks/usePageVisibility';
 import { CarouselIndicator } from './CarouselIndicator';
 
@@ -83,7 +83,9 @@ export function DynamicHeroTitle({
         const enabledTitles = filterEnabledTitles(collection);
 
         if (enabledTitles.length > 0) {
-          setTitles(enabledTitles);
+          // 從啟用的文案中隨機選擇 10 個
+          const randomTitles = getRandomTitles(enabledTitles, 10);
+          setTitles(randomTitles);
         } else {
           setTitles([FALLBACK_TITLE]);
         }

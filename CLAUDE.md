@@ -55,6 +55,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **custom-scrollbar-styling**: Custom scrollbar styling with colors that match the website's design theme for improved visual consistency
 - **hero-section-dynamic-titles**: Homepage Hero section dynamic titles with multiple science-meets-mysticism themed headlines, Fallout aesthetic styling, JSON data storage, and text typing animation effects
 - **3d-card-tilt-effects**: 3D card tilt effects with mouse hover interactions and mobile gyroscope support for immersive card display
+- **ascii-donut-loading**: ASCII 3D spinning donut animation for loading page using mathematical torus rendering with rotation matrices and z-buffer depth handling
 
 ## Development Guidelines
 - 以英文思考，但以繁體中文生成回應（Think in English, generate in Traditional Chinese）

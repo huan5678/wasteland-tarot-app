@@ -12,7 +12,7 @@ interface AuthState {
   oauthProvider: string | null
   profilePicture: string | null
 
-  initialize: () => Promise<void>
+  initialize: (onProgress?: (progress: number) => void) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   clearError: () => void
@@ -94,16 +94,59 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    * - 檢查 localStorage 登入狀態，若過期則直接設為未登入
    * - 僅在有效登入狀態時才呼叫後端 /api/v1/auth/me
    * - 後端會自動驗證 cookie 中的 access token 並返回過期時間
+   * - 支援進度回調（最小顯示時間 5 秒）
    */
-  initialize: async () => {
+  initialize: async (onProgress?: (progress: number) => void) => {
     if (get().isInitialized) return
     set({ isLoading: true })
 
+    // 最小 loading 時間：5 秒（讓使用者有時間欣賞 WebGL 動畫）
+    const minLoadingTime = 5000 // ms
+    const startTime = Date.now()
+
+    // Helper function to report progress
+    const reportProgress = (progress: number) => {
+      if (onProgress) {
+        onProgress(Math.min(100, Math.max(0, progress)))
+      }
+    }
+
     // 檢查 localStorage 中的登入狀態
-    if (!isAuthStateValid()) {
+    const hasValidAuthState = isAuthStateValid()
+
+    // Start progress tracking
+    let apiCompleted = false
+    let timeProgress = 0
+
+    // Time-based progress updater
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      timeProgress = Math.min(100, (elapsed / minLoadingTime) * 100)
+
+      if (hasValidAuthState) {
+        // 50% 權重給時間進度，50% 權重給 API 狀態
+        const progress = (timeProgress * 0.5) + (apiCompleted ? 50 : 0)
+        reportProgress(progress)
+      } else {
+        // 100% 時間進度
+        reportProgress(timeProgress)
+      }
+    }, 50) // Update every 50ms for smooth animation
+
+    if (!hasValidAuthState) {
       // 登入狀態過期或不存在，直接設為未登入（避免不必要的 API 呼叫）
       console.log('Auth state expired or not found, skipping API call')
       clearAuthState()
+
+      // 等待最小 loading 時間
+      const elapsed = Date.now() - startTime
+      if (elapsed < minLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsed))
+      }
+
+      clearInterval(progressInterval)
+      reportProgress(100)
+
       set({
         user: null,
         isOAuthUser: false,
@@ -118,11 +161,21 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     try {
       // 呼叫後端 /me 端點（會自動使用 httpOnly cookie 中的 token）
       const response = await authAPI.getCurrentUser()
+      apiCompleted = true
 
       // 儲存新的過期時間至 localStorage
       if (response.token_expires_at) {
         saveAuthState(response.token_expires_at)
       }
+
+      // 等待最小 loading 時間
+      const elapsed = Date.now() - startTime
+      if (elapsed < minLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsed))
+      }
+
+      clearInterval(progressInterval)
+      reportProgress(100)
 
       // 成功取得使用者，表示已登入
       set({
@@ -135,8 +188,19 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         error: null
       })
     } catch (error: any) {
+      apiCompleted = true
+      clearInterval(progressInterval)
+
       // 清除過期的登入狀態
       clearAuthState()
+
+      // 等待最小 loading 時間
+      const elapsed = Date.now() - startTime
+      if (elapsed < minLoadingTime) {
+        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsed))
+      }
+
+      reportProgress(100)
 
       // 401 表示未登入或 token 過期，這是正常情況
       if (error?.status === 401) {

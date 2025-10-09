@@ -1,0 +1,32 @@
+{
+  "name": "webgl-ascii-donut",
+  "title": "WebGL ASCII Donut Loading Optimization",
+  "description": "GPU-accelerated WebGL version of ASCII Donut Loading animation to improve mobile performance from 1.3 FPS to 30+ FPS",
+  "status": "planned",
+  "priority": "high",
+  "createdAt": "2025-10-09",
+  "updatedAt": "2025-10-09",
+  "phases": {
+    "requirements": "completed",
+    "design": "completed",
+    "tasks": "completed",
+    "implementation": "not_started"
+  },
+  "goals": {
+    "desktop_fps": "60 FPS (current: 24 FPS)",
+    "mobile_fps": "30+ FPS (current: 1.3 FPS)",
+    "api_compatibility": "100%",
+    "degradation_strategy": "WebGL → Canvas 2D → Static"
+  },
+  "estimatedDuration": "11-15 days",
+  "dependencies": [
+    "ascii-donut-loading"
+  ],
+  "tags": [
+    "webgl",
+    "gpu-acceleration",
+    "performance-optimization",
+    "ascii-art",
+    "loading-animation"
+  ]
+}

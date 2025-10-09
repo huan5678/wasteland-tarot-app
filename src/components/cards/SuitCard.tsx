@@ -13,8 +13,10 @@
 
 import React from 'react'
 import Link from 'next/link'
+import { Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PipBoyCard } from '@/components/ui/pipboy'
+import { SuitIcon } from '@/components/icons/SuitIcon'
 import { SuitType, SUIT_CONFIG, type SuitMetadata } from '@/types/suits'
 
 export interface SuitCardProps {
@@ -67,14 +69,12 @@ export function SuitCard({ suit, className }: SuitCardProps) {
       >
         {/* 花色圖示 */}
         <div className="flex items-center justify-center mb-4">
-          <div
-            className="text-5xl md:text-6xl lg:text-7xl transition-transform duration-300 group-hover:scale-110"
-            style={{
-              filter: 'drop-shadow(0 0 10px rgba(51, 255, 51, 0.4))',
-            }}
-            aria-hidden="true"
-          >
-            {metadata.icon || '🃏'}
+          <div className="transition-transform duration-300 group-hover:scale-110">
+            <SuitIcon
+              Icon={metadata.Icon}
+              size="lg"
+              ariaHidden
+            />
           </div>
         </div>
 
@@ -98,15 +98,11 @@ export function SuitCard({ suit, className }: SuitCardProps) {
 
         {/* 卡牌數量指示器 */}
         <div className="flex items-center justify-center gap-2 mt-auto pt-4 border-t border-pip-boy-green/30">
-          <div
-            className="text-pip-boy-green text-sm"
-            aria-hidden="true"
-            style={{
-              filter: 'drop-shadow(0 0 5px rgba(51, 255, 51, 0.3))',
-            }}
-          >
-            🃏
-          </div>
+          <SuitIcon
+            Icon={Layers}
+            size="sm"
+            ariaHidden
+          />
           <span className="text-sm md:text-base font-mono font-semibold text-pip-boy-green">
             {metadata.card_count} 張卡牌
           </span>

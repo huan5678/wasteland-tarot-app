@@ -3,6 +3,9 @@
  * 花色型別定義與配置常數
  */
 
+import type { LucideIcon } from 'lucide-react'
+import { Sparkles, Wine, Swords, Coins, Zap } from 'lucide-react'
+
 /**
  * 花色類型枚舉
  * 包含 Major Arcana 和 4 個 Minor Arcana 花色
@@ -24,7 +27,10 @@ export interface SuitMetadata {
   name_en: string
   description: string
   card_count: number
-  icon?: string // 圖示名稱(可選)
+  /** lucide-react 圖示元件 */
+  Icon: LucideIcon
+  /** @deprecated 使用 Icon 替代 - emoji 圖示字串(向後相容) */
+  icon?: string
 }
 
 /**
@@ -38,7 +44,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Major Arcana',
     description: '代表生命中的重大主題與轉折點',
     card_count: 22,
-    icon: '🌟',
+    Icon: Sparkles, // 🌟 → Sparkles: 代表閃耀、重要性和魔法元素
+    icon: '🌟', // 向後相容
   },
   [SuitType.NUKA_COLA_BOTTLES]: {
     suit: SuitType.NUKA_COLA_BOTTLES,
@@ -46,7 +53,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Nuka-Cola Bottles (Cups)',
     description: '代表情感、關係與內在體驗',
     card_count: 14,
-    icon: '🥤',
+    Icon: Wine, // 🥤 → Wine: 代表液體容器,符合「杯」的象徵意義
+    icon: '🥤', // 向後相容
   },
   [SuitType.COMBAT_WEAPONS]: {
     suit: SuitType.COMBAT_WEAPONS,
@@ -54,7 +62,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Combat Weapons (Swords)',
     description: '代表衝突、挑戰與智慧行動',
     card_count: 14,
-    icon: '⚔️',
+    Icon: Swords, // ⚔️ → Swords: 直接對應,武器和衝突的象徵
+    icon: '⚔️', // 向後相容
   },
   [SuitType.BOTTLE_CAPS]: {
     suit: SuitType.BOTTLE_CAPS,
@@ -62,7 +71,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Bottle Caps (Pentacles)',
     description: '代表物質、資源與實際成就',
     card_count: 14,
-    icon: '💰',
+    Icon: Coins, // 💰 → Coins: 直接對應,貨幣和物質財富
+    icon: '💰', // 向後相容
   },
   [SuitType.RADIATION_RODS]: {
     suit: SuitType.RADIATION_RODS,
@@ -70,7 +80,8 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Radiation Rods (Wands)',
     description: '代表能量、創造力與靈性追求',
     card_count: 14,
-    icon: '☢️',
+    Icon: Zap, // ☢️ → Zap: 代表能量、電力和危險輻射
+    icon: '☢️', // 向後相容
   },
 }
 

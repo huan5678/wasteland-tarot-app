@@ -86,6 +86,15 @@ export function logError(error: unknown, context?: ErrorContext) {
   const message = error instanceof Error ? error.message : typeof error === 'string' ? error : 'Unknown error'
   const stack = error instanceof Error ? error.stack : undefined
 
+  // Filter out harmless browser warnings that don't affect functionality
+  if (typeof message === 'string') {
+    // ResizeObserver errors are safe browser warnings from layout calculations
+    if (message.includes('ResizeObserver loop')) {
+      return
+    }
+    // Add other harmless errors here if needed in the future
+  }
+
   // Enhanced error context
   const enrichedContext: ErrorContext = {
     url: typeof window !== 'undefined' ? window.location.href : undefined,
@@ -411,6 +420,19 @@ async function sendBatchToServer(data: { events: LogEvent[], errors: LogEvent[] 
 if (typeof window !== 'undefined') {
   // Catch unhandled errors
   window.addEventListener('error', (event) => {
+    const errorMessage = event.error?.message || event.message || ''
+
+    // Filter out harmless ResizeObserver errors
+    // These are safe browser warnings that don't affect functionality
+    if (
+      typeof errorMessage === 'string' &&
+      errorMessage.includes('ResizeObserver loop')
+    ) {
+      // Silently ignore - this is a harmless browser warning from third-party libraries
+      event.preventDefault()
+      return
+    }
+
     logError(event.error || event.message, {
       component: 'window.error',
       filename: event.filename,

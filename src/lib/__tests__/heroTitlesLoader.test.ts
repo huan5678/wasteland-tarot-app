@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { validateHeroTitles, loadHeroTitles, filterEnabledTitles } from '../heroTitlesLoader';
+import { validateHeroTitles, loadHeroTitles, filterEnabledTitles, getRandomTitles } from '../heroTitlesLoader';
 import type { HeroTitlesCollection } from '@/types/hero';
 import { FALLBACK_TITLE } from '@/types/hero';
 
@@ -242,6 +242,98 @@ describe('heroTitlesLoader', () => {
 
       const result = filterEnabledTitles(collection);
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe('getRandomTitles', () => {
+    it('should return requested number of items when array is larger', () => {
+      const items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+      const result = getRandomTitles(items, 10);
+
+      expect(result).toHaveLength(10);
+      // All items should be from original array
+      result.forEach(item => {
+        expect(items).toContain(item);
+      });
+      // All items should be unique
+      expect(new Set(result).size).toBe(10);
+    });
+
+    it('should return all items shuffled when array is smaller than requested count', () => {
+      const items = [1, 2, 3, 4, 5];
+      const result = getRandomTitles(items, 10);
+
+      expect(result).toHaveLength(5);
+      // All original items should be in result
+      items.forEach(item => {
+        expect(result).toContain(item);
+      });
+    });
+
+    it('should return all items shuffled when array equals requested count', () => {
+      const items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      const result = getRandomTitles(items, 10);
+
+      expect(result).toHaveLength(10);
+      // All original items should be in result
+      items.forEach(item => {
+        expect(result).toContain(item);
+      });
+    });
+
+    it('should not modify original array', () => {
+      const items = [1, 2, 3, 4, 5];
+      const originalCopy = [...items];
+
+      getRandomTitles(items, 3);
+
+      expect(items).toEqual(originalCopy);
+    });
+
+    it('should return different results on multiple calls (randomness)', () => {
+      const items = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+      const result1 = getRandomTitles(items, 10);
+      const result2 = getRandomTitles(items, 10);
+
+      // Note: There's a very small chance they could be the same, but extremely unlikely
+      // with 20 items choosing 10
+      expect(result1).not.toEqual(result2);
+    });
+
+    it('should work with HeroTitle objects', () => {
+      const titles: HeroTitlesCollection = {
+        version: '1.0.0',
+        titles: [
+          { id: 'test-1', title: 'Title 1', subtitle: 'Sub 1', description: 'Desc 1', enabled: true },
+          { id: 'test-2', title: 'Title 2', subtitle: 'Sub 2', description: 'Desc 2', enabled: true },
+          { id: 'test-3', title: 'Title 3', subtitle: 'Sub 3', description: 'Desc 3', enabled: true },
+          { id: 'test-4', title: 'Title 4', subtitle: 'Sub 4', description: 'Desc 4', enabled: true },
+          { id: 'test-5', title: 'Title 5', subtitle: 'Sub 5', description: 'Desc 5', enabled: true },
+        ],
+      };
+
+      const result = getRandomTitles(titles.titles, 3);
+
+      expect(result).toHaveLength(3);
+      // All selected titles should be from original array
+      result.forEach(title => {
+        expect(titles.titles.some(t => t.id === title.id)).toBe(true);
+      });
+    });
+
+    it('should handle empty array', () => {
+      const items: number[] = [];
+      const result = getRandomTitles(items, 10);
+
+      expect(result).toHaveLength(0);
+    });
+
+    it('should handle single item array', () => {
+      const items = [1];
+      const result = getRandomTitles(items, 5);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toBe(1);
     });
   });
 });
