@@ -121,3 +121,62 @@ temp/
 dist/
 out/
 build/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/**/__pycache__/
+
+# Python Virtual Environment
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+
+# Pytest
+.pytest_cache/
+backend/.pytest_cache/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Alembic
+backend/alembic/versions_backup/
+
+# Test Results & Reports
+test-results/
+playwright-report/
+*.spec.ts.snap
+test-audio-simple.js
+test-integration.sh
+test-suit-mapping.ts
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# Database & SQL temp files
+backend/test-cors.html
+backend/verify_*.sql
+backend/check_*.sql
+backend/add_indexes_only.sql
+backend/add_optimization_indexes.sql
+backend/fix_uuid_*.sql
+backend/schema_validation_report.md
+
+# Keep important SQL files
+!backend/fix_completed_readings_cascade.sql
+!backend/test_db_operations.py
+
+# Temporary test reports (keep committed ones)
+*-TEST-REPORT.md
+!PHASE*.md
+
+# Bun lockfile (use bun.lock instead of bun.lockb)
+bun.lockb
