@@ -249,13 +249,13 @@ describe('Authentication Flow', () => {
       cy.visit('/auth/login')
 
       // Tab 順序測試
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       cy.focused().should('have.attr', 'name', 'username')
 
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'name', 'password')
 
-      cy.focused().tab()
+      cy.focused().type('{tab}')
       cy.focused().should('have.attr', 'type', 'submit')
     })
 

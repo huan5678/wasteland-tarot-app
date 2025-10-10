@@ -39,6 +39,7 @@
     "node_modules",
     "src/__tests__/**",
     "**/*.disabled",
-    "**/*.bak"
+    "**/*.bak",
+    "cypress"
   ]
 }

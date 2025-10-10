@@ -142,7 +142,7 @@ export default function DashboardPage() {
         <div className="mb-8">
           <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-4">
             <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
-              控制台 - {user?.username || 'Vault Dweller'}
+              控制台 - {user?.name || 'Vault Dweller'}
             </h1>
             <p className="text-pip-boy-green/70 font-mono text-sm">
               Pip-Boy 個人資料管理系統

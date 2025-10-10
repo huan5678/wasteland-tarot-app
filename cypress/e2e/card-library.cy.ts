@@ -39,8 +39,8 @@ describe('Card Library', () => {
       // 驗證第一張是 The Fool (0號牌)
       cy.get('[data-testid="card-item"]')
         .first()
-        .should('contain', 'The Fool')
-        .or('contain', '愚者')
+        .invoke('text')
+        .should('match', /(The Fool|愚者)/)
     })
 
     it('應該顯示小阿爾克那牌', () => {
@@ -66,8 +66,8 @@ describe('Card Library', () => {
       cy.get('[data-testid="card-item"]').each(($card) => {
         cy.wrap($card)
           .find('[data-testid="card-suit"]')
-          .should('contain', 'Radiation Rods')
-          .or('contain', '輻射之棒')
+          .invoke('text')
+          .should('match', /(Radiation Rods|輻射之棒)/)
       })
     })
 
@@ -321,7 +321,7 @@ describe('Card Library', () => {
       cy.visit('/cards')
 
       // Tab 到第一張卡片
-      cy.get('body').tab()
+      cy.get('body').type('{tab}')
       cy.focused().should('have.attr', 'data-testid', 'card-item')
 
       // 使用方向鍵導航
