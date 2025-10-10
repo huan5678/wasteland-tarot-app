@@ -206,9 +206,9 @@ export const readingsAPI = {
       body: JSON.stringify(readingData),
     }),
 
-  // 獲取用戶的占卜記錄
-  getUserReadings: (userId: string): Promise<Reading[]> =>
-    apiRequest<Reading[]>(`/api/v1/readings/user/${userId}`),
+  // 獲取用戶的占卜記錄（使用正確的後端端點）
+  getUserReadings: (userId: string): Promise<{ readings: Reading[], total_count: number, page: number, page_size: number, has_more: boolean }> =>
+    apiRequest(`/api/v1/readings/?page=1&page_size=100&sort_by=created_at&sort_order=desc`),
 
   // 根據 ID 獲取占卜
   getById: (id: string): Promise<Reading> =>
@@ -286,6 +286,75 @@ export const authAPI = {
 export const healthAPI = {
   check: (): Promise<{ status: string; service: string; version: string }> =>
     apiRequest('/health'),
+}
+
+// Sessions API (Reading Save & Resume)
+import type {
+  ReadingSession,
+  SessionListResponse,
+  SessionCreateRequest,
+  SessionUpdateRequest,
+  OfflineSessionSync,
+  SyncResponse,
+  ConflictResolution,
+  SessionCompletionResult,
+} from '@/types/session'
+
+export const sessionsAPI = {
+  // Create new session
+  create: (data: SessionCreateRequest): Promise<ReadingSession> =>
+    apiRequest('/api/v1/sessions', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // List user's incomplete sessions
+  list: (params?: { limit?: number; offset?: number; status?: string }): Promise<SessionListResponse> => {
+    const query = new URLSearchParams()
+    if (params?.limit) query.append('limit', params.limit.toString())
+    if (params?.offset) query.append('offset', params.offset.toString())
+    if (params?.status) query.append('status_filter', params.status)
+    return apiRequest(`/api/v1/sessions?${query.toString()}`)
+  },
+
+  // Get session by ID
+  getById: (id: string): Promise<ReadingSession> =>
+    apiRequest(`/api/v1/sessions/${id}`),
+
+  // Update session (auto-save)
+  update: (id: string, data: SessionUpdateRequest, expectedUpdatedAt?: string): Promise<ReadingSession> => {
+    const query = expectedUpdatedAt ? `?expected_updated_at=${expectedUpdatedAt}` : ''
+    return apiRequest(`/api/v1/sessions/${id}${query}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  },
+
+  // Delete session
+  delete: (id: string): Promise<void> =>
+    apiRequest(`/api/v1/sessions/${id}`, {
+      method: 'DELETE',
+    }),
+
+  // Complete session (convert to Reading)
+  complete: (id: string): Promise<SessionCompletionResult> =>
+    apiRequest(`/api/v1/sessions/${id}/complete`, {
+      method: 'POST',
+    }),
+
+  // Sync offline session
+  syncOffline: (data: OfflineSessionSync): Promise<SyncResponse> =>
+    apiRequest('/api/v1/sessions/sync', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // Resolve conflict
+  resolveConflict: (data: ConflictResolution): Promise<ReadingSession> =>
+    apiRequest('/api/v1/sessions/resolve-conflict', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
 }
 
 export type { TarotCard, Reading, User, APIError }

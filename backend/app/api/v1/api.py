@@ -16,7 +16,8 @@ from app.api.v1.endpoints import (
     monitoring,
     analytics,
     preferences,
-    bingo
+    bingo,
+    sessions
 )
 from app.api import oauth
 
@@ -88,6 +89,12 @@ api_router.include_router(
     bingo.router,
     prefix="/bingo",
     tags=["🎲 Bingo Game"]
+)
+
+api_router.include_router(
+    sessions.router,
+    prefix="/sessions",
+    tags=["💾 Sessions"]
 )
 
 api_router.include_router(

@@ -6,7 +6,7 @@ Supports offline-first architecture with conflict resolution strategies.
 """
 
 from typing import List, Optional, Dict, Any, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.exc import IntegrityError
