@@ -124,7 +124,7 @@ export default function RewardNotification({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl font-bold text-amber-400 font-mono tracking-wider mb-2"
+                  className="text-4xl font-bold text-amber-400 tracking-wider mb-2"
                 >
                   恭喜！
                 </motion.h2>
@@ -133,7 +133,7 @@ export default function RewardNotification({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-2xl text-green-400 font-mono mb-4"
+                  className="text-2xl text-green-400 mb-4"
                 >
                   達成三連線！
                 </motion.p>
@@ -145,11 +145,11 @@ export default function RewardNotification({
                   transition={{ delay: 0.5 }}
                   className="mb-6 p-4 bg-amber-900/30 border border-amber-600 rounded-lg"
                 >
-                  <p className="text-amber-300 font-mono text-lg mb-2">
+                  <p className="text-amber-300 text-lg mb-2">
                     {rewardDetails?.description || '本月賓果獎勵已發放'}
                   </p>
                   {rewardDetails?.amount && (
-                    <p className="text-green-400 font-mono text-2xl font-bold">
+                    <p className="text-green-400 text-2xl font-bold">
                       + {rewardDetails.amount} {rewardDetails.type || '點數'}
                     </p>
                   )}
@@ -162,10 +162,10 @@ export default function RewardNotification({
                   transition={{ delay: 0.6 }}
                   className="mb-6"
                 >
-                  <p className="text-gray-300 font-mono text-sm mb-2">
+                  <p className="text-gray-300 text-sm mb-2">
                     🎉 你在廢土中找到了珍貴的補給！
                   </p>
-                  <p className="text-gray-400 font-mono text-xs">
+                  <p className="text-gray-400 text-xs">
                     下個月可以再次挑戰賓果遊戲
                   </p>
                 </motion.div>
@@ -178,7 +178,7 @@ export default function RewardNotification({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={onClose}
-                  className="px-8 py-3 bg-green-600 border-2 border-green-400 rounded-lg font-mono font-bold text-lg text-black hover:bg-green-500 transition-all duration-200 shadow-lg shadow-green-600/50"
+                  className="px-8 py-3 bg-green-600 border-2 border-green-400 rounded-lg font-bold text-lg text-black hover:bg-green-500 transition-all duration-200 shadow-lg shadow-green-600/50"
                 >
                   太棒了！
                 </motion.button>

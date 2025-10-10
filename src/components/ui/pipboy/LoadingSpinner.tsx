@@ -81,7 +81,7 @@ export function LoadingSpinner({
       {text && (
         <p
           className={cn(
-            'font-mono text-pip-boy-green uppercase tracking-wider animate-pulse',
+            'text-pip-boy-green uppercase tracking-wider animate-pulse',
             size === 'sm' && 'text-xs',
             size === 'md' && 'text-sm',
             size === 'lg' && 'text-base'

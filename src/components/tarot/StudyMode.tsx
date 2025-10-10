@@ -358,8 +358,8 @@ export function StudyMode({
           </motion.div>
 
           <div>
-            <h3 className="text-2xl font-bold text-pip-boy-green font-mono mb-2">Study Session Complete!</h3>
-            <p className="text-pip-boy-green/70 font-mono">Great work on your tarot studies!</p>
+            <h3 className="text-2xl font-bold text-pip-boy-green mb-2">Study Session Complete!</h3>
+            <p className="text-pip-boy-green/70">Great work on your tarot studies!</p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -386,7 +386,7 @@ export function StudyMode({
               onClick={() => startSession(studyMode)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
+              className="px-6 py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
             >
               <Repeat className="w-4 h-4" />
               Study Again
@@ -396,7 +396,7 @@ export function StudyMode({
               onClick={onClose}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-3 border border-pip-boy-green/40 text-pip-boy-green/70 font-mono rounded hover:bg-pip-boy-green/10 transition-colors"
+              className="px-6 py-3 border border-pip-boy-green/40 text-pip-boy-green/70 rounded hover:bg-pip-boy-green/10 transition-colors"
             >
               Close
             </motion.button>
@@ -415,11 +415,11 @@ export function StudyMode({
       >
         <div className="text-center space-y-6">
           <div>
-            <h3 className="text-xl font-bold text-pip-boy-green font-mono mb-2 flex items-center justify-center gap-2">
+            <h3 className="text-xl font-bold text-pip-boy-green mb-2 flex items-center justify-center gap-2">
               <FlaskConical className="w-6 h-6" />
               Card Study Mode
             </h3>
-            <p className="text-pip-boy-green/70 font-mono text-sm">
+            <p className="text-pip-boy-green/70 text-sm">
               Choose your study method to deepen your understanding of the cards
             </p>
           </div>
@@ -436,7 +436,7 @@ export function StudyMode({
                   <Eye className="w-6 h-6 text-pip-boy-green" />
                 </div>
                 <div>
-                  <h4 className="font-mono font-bold text-pip-boy-green">Flashcard Mode</h4>
+                  <h4 className="font-bold text-pip-boy-green">Flashcard Mode</h4>
                   <p className="text-xs text-pip-boy-green/70 mt-1">Review cards at your own pace</p>
                 </div>
               </div>
@@ -453,14 +453,14 @@ export function StudyMode({
                   <Brain className="w-6 h-6 text-blue-400" />
                 </div>
                 <div>
-                  <h4 className="font-mono font-bold text-blue-400">Quiz Mode</h4>
+                  <h4 className="font-bold text-blue-400">Quiz Mode</h4>
                   <p className="text-xs text-pip-boy-green/70 mt-1">Test your knowledge with questions</p>
                 </div>
               </div>
             </motion.button>
           </div>
 
-          <div className="text-xs text-pip-boy-green/60 font-mono">
+          <div className="text-xs text-pip-boy-green/60">
             {studyCards.length} card{studyCards.length !== 1 ? 's' : ''} • {allQuestions.length} question{allQuestions.length !== 1 ? 's' : ''}
           </div>
         </div>
@@ -482,9 +482,9 @@ export function StudyMode({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <SuitIcon className="w-5 h-5 text-pip-boy-green" />
-            <span className="font-mono font-bold text-pip-boy-green">Flashcard Mode</span>
+            <span className="font-bold text-pip-boy-green">Flashcard Mode</span>
           </div>
-          <div className="flex items-center gap-4 text-sm font-mono text-pip-boy-green/70">
+          <div className="flex items-center gap-4 text-sm text-pip-boy-green/70">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {formatTime(timeSpent)}
@@ -512,8 +512,8 @@ export function StudyMode({
                   exit={{ opacity: 0 }}
                   className="text-center space-y-4"
                 >
-                  <h3 className="text-2xl font-bold text-pip-boy-green font-mono">{currentCard.name}</h3>
-                  <p className="text-pip-boy-green/70 font-mono">Click to reveal meaning</p>
+                  <h3 className="text-2xl font-bold text-pip-boy-green">{currentCard.name}</h3>
+                  <p className="text-pip-boy-green/70">Click to reveal meaning</p>
                   <EyeOff className="w-12 h-12 text-pip-boy-green/40 mx-auto" />
                 </motion.div>
               ) : (
@@ -524,11 +524,11 @@ export function StudyMode({
                   exit={{ opacity: 0 }}
                   className="text-center space-y-4"
                 >
-                  <h3 className="text-xl font-bold text-pip-boy-green font-mono">{currentCard.name}</h3>
+                  <h3 className="text-xl font-bold text-pip-boy-green">{currentCard.name}</h3>
                   <div className="space-y-3">
                     <div>
-                      <h4 className="text-pip-boy-green/80 font-mono text-sm mb-1">Upright Meaning</h4>
-                      <p className="text-pip-boy-green font-mono text-sm">
+                      <h4 className="text-pip-boy-green/80 text-sm mb-1">Upright Meaning</h4>
+                      <p className="text-pip-boy-green text-sm">
                         {currentCard.upright_meaning || currentCard.meaning_upright || 'No meaning available'}
                       </p>
                     </div>
@@ -537,7 +537,7 @@ export function StudyMode({
                         {currentCard.keywords.slice(0, 4).map((keyword, idx) => (
                           <span
                             key={idx}
-                            className="px-2 py-1 bg-pip-boy-green/20 text-pip-boy-green text-xs font-mono rounded"
+                            className="px-2 py-1 bg-pip-boy-green/20 text-pip-boy-green text-xs rounded"
                           >
                             {keyword}
                           </span>
@@ -567,7 +567,7 @@ export function StudyMode({
               onClick={flipCard}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
             >
               <RotateCcw className="w-4 h-4" />
               {showAnswer ? 'Hide' : 'Reveal'}
@@ -577,7 +577,7 @@ export function StudyMode({
               onClick={() => startSession('quiz')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 border border-blue-400/40 text-blue-400 font-mono rounded hover:bg-blue-500/10 transition-colors flex items-center gap-2"
+              className="px-4 py-2 border border-blue-400/40 text-blue-400 rounded hover:bg-blue-500/10 transition-colors flex items-center gap-2"
             >
               <Brain className="w-4 h-4" />
               Quiz Mode
@@ -609,9 +609,9 @@ export function StudyMode({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <Brain className="w-5 h-5 text-blue-400" />
-            <span className="font-mono font-bold text-blue-400">Quiz Mode</span>
+            <span className="font-bold text-blue-400">Quiz Mode</span>
           </div>
-          <div className="flex items-center gap-4 text-sm font-mono text-pip-boy-green/70">
+          <div className="flex items-center gap-4 text-sm text-pip-boy-green/70">
             <div className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {formatTime(timeSpent)}
@@ -642,14 +642,14 @@ export function StudyMode({
         >
           <div>
             <div className={cn(
-              "inline-flex px-2 py-1 rounded text-xs font-mono mb-3",
+              "inline-flex px-2 py-1 rounded text-xs mb-3",
               currentQuestion.difficulty === 'hard' ? 'bg-red-500/20 text-red-400' :
               currentQuestion.difficulty === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
               'bg-green-500/20 text-green-400'
             )}>
               {currentQuestion.difficulty.toUpperCase()}
             </div>
-            <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-4">
+            <h3 className="text-lg font-bold text-pip-boy-green mb-4">
               {currentQuestion.question}
             </h3>
           </div>
@@ -665,7 +665,7 @@ export function StudyMode({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className={cn(
-                    "w-full p-4 border rounded-lg text-left font-mono text-sm transition-all duration-200",
+                    "w-full p-4 border rounded-lg text-left text-sm transition-all duration-200",
                     selectedOption === option
                       ? "bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green"
                       : "border-pip-boy-green/30 text-pip-boy-green/70 hover:bg-pip-boy-green/10"
@@ -683,7 +683,7 @@ export function StudyMode({
               value={userAnswer}
               onChange={(e) => setUserAnswer(e.target.value)}
               placeholder="Type your answer here..."
-              className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-4 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
+              className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-4 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
               disabled={showAnswer}
             />
           )}
@@ -709,13 +709,13 @@ export function StudyMode({
                 )}
                 <div>
                   <p className={cn(
-                    "font-mono text-sm",
+                    "text-sm",
                     answerFeedback.isCorrect ? "text-green-300" : "text-red-300"
                   )}>
                     {answerFeedback.message}
                   </p>
                   {currentQuestion.explanation && (
-                    <p className="text-pip-boy-green/70 font-mono text-xs mt-2">
+                    <p className="text-pip-boy-green/70 text-xs mt-2">
                       {currentQuestion.explanation}
                     </p>
                   )}
@@ -730,7 +730,7 @@ export function StudyMode({
               onClick={() => startSession('flashcard')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-4 py-2 border border-pip-boy-green/40 text-pip-boy-green/70 font-mono rounded hover:bg-pip-boy-green/10 transition-colors flex items-center gap-2"
+              className="px-4 py-2 border border-pip-boy-green/40 text-pip-boy-green/70 rounded hover:bg-pip-boy-green/10 transition-colors flex items-center gap-2"
             >
               <Eye className="w-4 h-4" />
               Flashcards
@@ -742,7 +742,7 @@ export function StudyMode({
                 disabled={currentQuestion.options ? !selectedOption : !userAnswer.trim()}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-blue-500/20 border border-blue-400 text-blue-400 font-mono rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-2 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <Target className="w-4 h-4" />
                 Submit Answer
@@ -752,7 +752,7 @@ export function StudyMode({
                 onClick={nextQuestion}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
+                className="px-6 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
               >
                 {currentQuestionIndex < allQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
                 <ArrowRight className="w-4 h-4" />

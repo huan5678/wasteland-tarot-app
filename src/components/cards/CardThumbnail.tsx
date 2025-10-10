@@ -204,12 +204,12 @@ export function CardThumbnail({
         {/* 卡牌資訊 */}
         <div className="p-3 space-y-2">
           {/* 卡牌名稱 */}
-          <h4 className="text-sm md:text-base font-mono font-semibold text-pip-boy-green uppercase tracking-wide line-clamp-2 group-hover:text-pip-boy-green-bright transition-colors">
+          <h4 className="text-sm md:text-base font-semibold text-pip-boy-green uppercase tracking-wide line-clamp-2 group-hover:text-pip-boy-green-bright transition-colors">
             {card.name}
           </h4>
 
           {/* 花色與編號 */}
-          <div className="flex items-center justify-between text-xs font-mono text-pip-boy-green/70">
+          <div className="flex items-center justify-between text-xs text-pip-boy-green/70">
             <span>{suitName}</span>
             {card.number !== null && card.number !== undefined && (
               <span className="font-semibold">#{String(card.number).padStart(2, '0')}</span>
@@ -337,8 +337,8 @@ export function CardThumbnailList({ card, className }: CardThumbnailListProps) {
 
       {/* 資訊 */}
       <div className="flex-1 min-w-0">
-        <h5 className="text-sm font-mono font-semibold text-pip-boy-green truncate">{card.name}</h5>
-        <p className="text-xs font-mono text-pip-boy-green/60">
+        <h5 className="text-sm font-semibold text-pip-boy-green truncate">{card.name}</h5>
+        <p className="text-xs text-pip-boy-green/60">
           {suitName} {card.number ? `#${String(card.number).padStart(2, '0')}` : ''}
         </p>
       </div>

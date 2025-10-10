@@ -13,6 +13,8 @@ import { AudioInitializer } from '@/components/system/AudioInitializer';
 import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
 import { MusicPlayerInitializer } from '@/components/system/MusicPlayerInitializer';
 import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
+import { FontLoadMonitor } from '@/components/system/FontLoadMonitor';
+import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
 export const metadata: Metadata = {
@@ -49,13 +51,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-TW" className="dark">
-      <body className="text-pip-boy-green antialiased" style={{backgroundColor: 'var(--color-wasteland-darker)'}}>
+      {/*
+        font-cubic: Cubic 11 像素字體，完整支援中英文
+        使用 className 驅動的字體整合策略，所有子元件透過 inherit 繼承字體設定
+        參考: .kiro/specs/cubic-11-font-integration/design.md
+      */}
+      <body className={cn("font-cubic", "text-pip-boy-green", "antialiased")} style={{backgroundColor: 'var(--color-wasteland-darker)'}}>
         <DynamicBackground />
         <ErrorBoundary>
           <ZustandAuthInitializer>
             <AnalyticsProvider>
               <MetricsInitializer />
               <AudioInitializer />
+              {/* FontLoadMonitor: 開發環境字體載入監控 */}
+              <FontLoadMonitor />
               {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
               {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
               <TiltConfigProvider>

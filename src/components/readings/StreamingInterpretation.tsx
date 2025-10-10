@@ -90,7 +90,7 @@ export function StreamingInterpretation({
       {!streaming.text && streaming.isStreaming && (
         <div className="flex items-center gap-2 text-amber-500/80 mb-4">
           <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
-          <span className="text-sm font-mono">AI is thinking...</span>
+          <span className="text-sm">AI is thinking...</span>
         </div>
       )}
 
@@ -99,7 +99,7 @@ export function StreamingInterpretation({
         <div className="relative">
           {/* Interpretation text */}
           <div
-            className="text-gray-200 font-mono text-sm leading-relaxed whitespace-pre-wrap mb-4"
+            className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap mb-4"
             style={{
               textShadow: '0 0 10px rgba(251, 191, 36, 0.3)',
             }}
@@ -115,7 +115,7 @@ export function StreamingInterpretation({
           {streaming.isStreaming && (
             <button
               onClick={streaming.skip}
-              className="absolute top-0 right-0 px-3 py-1 text-xs font-mono bg-amber-900/50 hover:bg-amber-800/60 text-amber-400 border border-amber-600/50 rounded transition-colors duration-200"
+              className="absolute top-0 right-0 px-3 py-1 text-xs bg-amber-900/50 hover:bg-amber-800/60 text-amber-400 border border-amber-600/50 rounded transition-colors duration-200"
               aria-label="Skip to full text"
             >
               Skip
@@ -140,10 +140,10 @@ export function StreamingInterpretation({
               />
             </svg>
             <div>
-              <h3 className="text-red-400 font-mono text-sm font-semibold mb-1">
+              <h3 className="text-red-400 text-sm font-semibold mb-1">
                 Interpretation Error
               </h3>
-              <p className="text-red-300/90 font-mono text-xs">
+              <p className="text-red-300/90 text-xs">
                 {streaming.error.message}
               </p>
             </div>
@@ -153,7 +153,7 @@ export function StreamingInterpretation({
 
       {/* Completion indicator */}
       {streaming.isComplete && !streaming.error && (
-        <div className="flex items-center gap-2 text-green-500/80 text-xs font-mono mt-2">
+        <div className="flex items-center gap-2 text-green-500/80 text-xs mt-2">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
@@ -223,7 +223,7 @@ export function MultiCardStreamingInterpretation({
       {!streaming.text && streaming.isStreaming && (
         <div className="flex items-center gap-2 text-amber-500/80 mb-4">
           <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
-          <span className="text-sm font-mono">
+          <span className="text-sm">
             Analyzing your spread...
           </span>
         </div>
@@ -233,7 +233,7 @@ export function MultiCardStreamingInterpretation({
       {streaming.text && (
         <div className="relative">
           <div
-            className="text-gray-200 font-mono text-sm leading-relaxed whitespace-pre-wrap mb-4"
+            className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap mb-4"
             style={{
               textShadow: '0 0 10px rgba(251, 191, 36, 0.3)',
             }}
@@ -248,7 +248,7 @@ export function MultiCardStreamingInterpretation({
           {streaming.isStreaming && (
             <button
               onClick={streaming.skip}
-              className="absolute top-0 right-0 px-3 py-1 text-xs font-mono bg-amber-900/50 hover:bg-amber-800/60 text-amber-400 border border-amber-600/50 rounded transition-colors duration-200"
+              className="absolute top-0 right-0 px-3 py-1 text-xs bg-amber-900/50 hover:bg-amber-800/60 text-amber-400 border border-amber-600/50 rounded transition-colors duration-200"
               aria-label="Skip to full text"
             >
               Skip
@@ -273,10 +273,10 @@ export function MultiCardStreamingInterpretation({
               />
             </svg>
             <div>
-              <h3 className="text-red-400 font-mono text-sm font-semibold mb-1">
+              <h3 className="text-red-400 text-sm font-semibold mb-1">
                 Interpretation Error
               </h3>
-              <p className="text-red-300/90 font-mono text-xs">
+              <p className="text-red-300/90 text-xs">
                 {streaming.error.message}
               </p>
             </div>
@@ -286,7 +286,7 @@ export function MultiCardStreamingInterpretation({
 
       {/* Completion indicator */}
       {streaming.isComplete && !streaming.error && (
-        <div className="flex items-center gap-2 text-green-500/80 text-xs font-mono mt-2">
+        <div className="flex items-center gap-2 text-green-500/80 text-xs mt-2">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"

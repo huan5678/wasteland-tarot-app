@@ -30,8 +30,8 @@ export function GlobalErrorDisplay() {
         id: 'network-offline',
         classNames: {
           toast: 'border-2 border-[#ffdd00] bg-[#443300] backdrop-blur-sm',
-          title: 'text-[#ffff33] font-mono font-bold',
-          description: 'text-[#ffff33]/80 font-mono text-xs',
+          title: 'text-[#ffff33] font-bold',
+          description: 'text-[#ffff33]/80 text-xs',
           closeButton: 'text-[#ffdd00]/60 hover:text-[#ffdd00]',
         }
       })
@@ -70,9 +70,9 @@ export function GlobalErrorDisplay() {
       onDismiss: () => dismiss(latestError.id),
       classNames: {
         toast: 'border-2 border-[#cc3333] bg-[#441111] backdrop-blur-sm',
-        title: 'text-[#ff6666] font-mono font-bold',
-        description: 'text-[#ff6666]/70 font-mono text-xs',
-        actionButton: 'bg-[#ff4444] text-white font-mono hover:bg-[#cc3333]',
+        title: 'text-[#ff6666] font-bold',
+        description: 'text-[#ff6666]/70 text-xs',
+        actionButton: 'bg-[#ff4444] text-white hover:bg-[#cc3333]',
         closeButton: 'text-[#ff6666]/60 hover:text-[#ff6666]',
       }
     })
@@ -87,10 +87,10 @@ export function GlobalErrorDisplay() {
       toastOptions={{
         unstyled: true,
         classNames: {
-          toast: 'font-mono p-4 rounded-none shadow-lg flex items-start gap-3',
-          title: 'font-mono font-bold text-base',
-          description: 'font-mono text-xs mt-1',
-          actionButton: 'font-mono px-3 py-1.5 rounded-none transition-colors',
+          toast: 'p-4 rounded-none shadow-lg flex items-start gap-3',
+          title: 'font-bold text-base',
+          description: 'text-xs mt-1',
+          actionButton: 'px-3 py-1.5 rounded-none transition-colors',
           closeButton: 'transition-colors',
         },
       }}

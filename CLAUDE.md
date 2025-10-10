@@ -44,7 +44,6 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **reading-save-resume**: Reading save and resume functionality with automatic saving, session recovery, and reading history integration
 - **web-audio-system**: Sound effects system utilizing Web Audio APIs for audio generation, playback, and real-time processing
 - **daily-bingo-checkin**: Daily login bingo game with monthly card setup, system number generation (1-25 cycle), and reward system for three-line matches
-- **doto-font-numbers**: Apply Google Font Doto to all numeric displays across the frontend UI
 - **fallout-utilitarian-design**: Design system combining Fallout aesthetic with Utilitarian design principles for website visual identity
 - **critical-bugs-fix**: Fix critical P0 bugs identified in testing: missing registration API, audio file 404s, API path errors, and routing issues
 - **swagger-ui-zh-tw-localization**: Localize all Swagger UI descriptions, parameter names, and documentation to Traditional Chinese (zh-TW)
@@ -57,6 +56,41 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **3d-card-tilt-effects**: 3D card tilt effects with mouse hover interactions and mobile gyroscope support for immersive card display
 - **ascii-donut-loading**: ASCII 3D spinning donut animation for loading page using mathematical torus rendering with rotation matrices and z-buffer depth handling
 - **playlist-music-player**: User-controlled playlist music system with Fallout Pip-Boy styled player interface, replacing automatic scene-based background music
+- **cubic-11-font-integration**: Apply Cubic_11.woff2 font as the primary typeface across the entire website for consistent typography
+
+## Font Integration (Cubic 11 Pixel Font)
+
+**📖 完整使用指南請參考**: [`.kiro/specs/cubic-11-font-integration/USAGE.md`](.kiro/specs/cubic-11-font-integration/USAGE.md)
+
+### 快速摘要
+
+**字體名稱**: Cubic 11 (11×11 像素點陣字體)
+**字元支援**: 4808+ 繁體中文 + 完整拉丁字母
+**檔案位置**: `/public/fonts/Cubic_11.woff2` (400KB)
+
+### 核心原則
+
+```tsx
+// ✅ 推薦：什麼都不用做，自動繼承
+<div className="text-pip-boy-green">
+  這段文字會自動使用 Cubic 11 字體
+</div>
+
+// ❌ 不要硬編碼字體
+<div className="font-mono text-pip-boy-green">  // 不要這樣做
+  這會覆蓋全域字體設定
+</div>
+```
+
+### 整合策略
+- **全域應用**: `layout.tsx` 的 body 元素使用 `font-cubic` className
+- **自動繼承**: 所有子元件自動繼承，無需手動指定
+- **CSS 變數**: 自訂樣式使用 `font-family: inherit` 或 `var(--font-cubic)`
+
+### 參考文件
+- **使用指南**: `.kiro/specs/cubic-11-font-integration/USAGE.md` ⭐
+- **詳細設計**: `.kiro/specs/cubic-11-font-integration/design.md`
+- **實作計畫**: `.kiro/specs/cubic-11-font-integration/tasks.md`
 
 ## Development Guidelines
 - 以英文思考，但以繁體中文生成回應（Think in English, generate in Traditional Chinese）

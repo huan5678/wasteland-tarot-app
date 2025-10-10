@@ -215,16 +215,16 @@ export default function TestWebGLDonutPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-black text-pip-boy-green p-4">
       <div className="w-full max-w-4xl">
-        <h1 className="text-3xl font-mono mb-4 text-center">
+        <h1 className="text-3xl mb-4 text-center">
           WebGL ASCII Donut - Proof of Concept
         </h1>
 
         <div className="mb-4 p-4 bg-black border border-pip-boy-green rounded">
-          <h2 className="text-xl font-mono mb-2">Status</h2>
-          <p className="font-mono text-sm">{status}</p>
+          <h2 className="text-xl mb-2">Status</h2>
+          <p className="text-sm">{status}</p>
           {error && (
             <div className="mt-2 p-2 bg-red-900/20 border border-red-500 rounded">
-              <p className="text-red-500 font-mono text-sm">Error: {error}</p>
+              <p className="text-red-500 text-sm">Error: {error}</p>
             </div>
           )}
         </div>
@@ -241,13 +241,13 @@ export default function TestWebGLDonutPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-black border border-pip-boy-green rounded">
-            <h3 className="font-mono text-sm mb-2">Performance</h3>
-            <p className="font-mono text-2xl">{fps} FPS</p>
+            <h3 className="text-sm mb-2">Performance</h3>
+            <p className="text-2xl">{fps} FPS</p>
           </div>
 
           <div className="p-4 bg-black border border-pip-boy-green rounded">
-            <h3 className="font-mono text-sm mb-2">Tech Stack</h3>
-            <ul className="font-mono text-xs space-y-1">
+            <h3 className="text-sm mb-2">Tech Stack</h3>
+            <ul className="text-xs space-y-1">
               <li>✅ WebGL Context</li>
               <li>✅ Character Atlas</li>
               <li>✅ GLSL Shaders</li>
@@ -257,8 +257,8 @@ export default function TestWebGLDonutPage() {
         </div>
 
         <div className="mt-4 p-4 bg-black border border-pip-boy-green rounded">
-          <h3 className="font-mono text-sm mb-2">PoC Goals</h3>
-          <ul className="font-mono text-xs space-y-1 text-pip-boy-green/70">
+          <h3 className="text-sm mb-2">PoC Goals</h3>
+          <ul className="text-xs space-y-1 text-pip-boy-green/70">
             <li>1. Verify WebGL context creation (WebGL 2.0 → 1.0 fallback)</li>
             <li>2. Validate character texture atlas approach</li>
             <li>3. Confirm shader compilation and execution</li>
@@ -270,13 +270,13 @@ export default function TestWebGLDonutPage() {
         <div className="mt-4 flex justify-center gap-4">
           <a
             href="/test-donut"
-            className="bg-pip-boy-green text-black px-6 py-3 rounded font-mono"
+            className="bg-pip-boy-green text-black px-6 py-3 rounded"
           >
             ← Canvas 2D Version
           </a>
           <a
             href="/"
-            className="bg-pip-boy-green text-black px-6 py-3 rounded font-mono"
+            className="bg-pip-boy-green text-black px-6 py-3 rounded"
           >
             Home
           </a>

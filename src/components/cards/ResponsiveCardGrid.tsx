@@ -44,7 +44,7 @@ export function ResponsiveCardGrid({
   if (cards.length === 0) {
     return (
       <div className="flex items-center justify-center p-12">
-        <p className="text-gray-400 font-mono text-center">
+        <p className="text-gray-400 text-center">
           No cards available
         </p>
       </div>
@@ -144,7 +144,7 @@ function CardGridItem({ card, onClick, compact, aspectRatio }: CardGridItemProps
 
         {/* Rarity badge */}
         <div className="absolute top-2 right-2">
-          <span className="px-2 py-1 bg-black/80 backdrop-blur-sm rounded text-xs font-mono font-bold uppercase">
+          <span className="px-2 py-1 bg-black/80 backdrop-blur-sm rounded text-xs font-bold uppercase">
             {card.rarity_level}
           </span>
         </div>
@@ -152,7 +152,7 @@ function CardGridItem({ card, onClick, compact, aspectRatio }: CardGridItemProps
 
       {/* Card info */}
       <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-        <h3 className="text-green-400 font-mono font-bold text-sm sm:text-base mb-1 truncate">
+        <h3 className="text-green-400 font-bold text-sm sm:text-base mb-1 truncate">
           {card.name}
         </h3>
 
@@ -163,7 +163,7 @@ function CardGridItem({ card, onClick, compact, aspectRatio }: CardGridItemProps
             </p>
 
             {/* Card metadata */}
-            <div className="flex items-center gap-2 text-xs text-gray-400 font-mono">
+            <div className="flex items-center gap-2 text-xs text-gray-400">
               <span className="px-2 py-0.5 bg-black/60 rounded">
                 {card.suit.replace(/_/g, ' ').toLowerCase()}
               </span>

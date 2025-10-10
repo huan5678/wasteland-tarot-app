@@ -224,7 +224,7 @@ export function CarouselContainer({
       <div className="flex justify-center items-center gap-4 mt-4">
         {/* 數字指示器 */}
         <div
-          className="font-mono text-pip-boy-green text-sm"
+          className="text-pip-boy-green text-sm"
           aria-live="polite"
           aria-atomic="true"
           data-testid="position-indicator"
@@ -257,7 +257,7 @@ export function CarouselContainer({
 
       {/* 鍵盤提示 with Screen Reader Support */}
       <div className="text-center mt-4">
-        <p className="text-xs text-pip-boy-green/60 font-mono" role="note">
+        <p className="text-xs text-pip-boy-green/60" role="note">
           使用方向鍵 ← → 或滑動切換卡牌
         </p>
       </div>

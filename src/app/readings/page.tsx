@@ -31,15 +31,15 @@ export default function ReadingsPage() {
       <div className="min-h-screen bg-wasteland-dark flex items-center justify-center p-4">
         <div className="text-center">
           <Lock className="w-16 h-16 mb-4 mx-auto text-pip-boy-green" />
-          <h1 className="text-2xl font-bold text-pip-boy-green font-mono mb-4">
+          <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
             ACCESS DENIED
           </h1>
-          <p className="text-pip-boy-green/70 font-mono mb-6">
+          <p className="text-pip-boy-green/70 mb-6">
             你必須登入才能查看你的占卜記錄
           </p>
           <Link
             href="/auth/login"
-            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold hover:bg-pip-boy-green/80 transition-colors"
+            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
           >
 登入 Pip-Boy
           </Link>
@@ -53,7 +53,7 @@ export default function ReadingsPage() {
       <div className="min-h-screen bg-wasteland-dark flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-pip-boy-green font-mono">載入占卜記錄中...</p>
+          <p className="text-pip-boy-green">載入占卜記錄中...</p>
         </div>
       </div>
     )
@@ -97,14 +97,14 @@ export default function ReadingsPage() {
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
+              <h1 className="text-2xl font-bold text-pip-boy-green">
                 塔羅管理中心
               </h1>
-              <p className="text-pip-boy-green/70 font-mono text-sm">個人占卜記錄與數據分析</p>
+              <p className="text-pip-boy-green/70 text-sm">個人占卜記錄與數據分析</p>
             </div>
             <Link
               href="/readings/new"
-              className="px-4 py-2 bg-pip-boy-green text-wasteland-dark font-mono font-bold hover:bg-pip-boy-green/80 transition-colors"
+              className="px-4 py-2 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
             >
 + 新占卜
             </Link>
@@ -119,7 +119,7 @@ export default function ReadingsPage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 font-mono text-sm border transition-colors flex items-center gap-2 ${
+                  className={`px-4 py-2 text-sm border transition-colors flex items-center gap-2 ${
                     isActive
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'

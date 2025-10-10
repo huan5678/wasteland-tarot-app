@@ -135,37 +135,37 @@ export default function MobileDemoPage() {
   const DeviceInfo = () => (
     <MobileCard variant="outlined" className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-pip-boy-green font-mono font-bold">設備信息</h3>
+        <h3 className="text-pip-boy-green font-bold">設備信息</h3>
         <div className="flex items-center gap-2 text-pip-boy-green/70">
           {screenSize === 'mobile' && <Smartphone className="w-5 h-5" />}
           {screenSize === 'tablet' && <Tablet className="w-5 h-5" />}
           {screenSize === 'desktop' && <Monitor className="w-5 h-5" />}
-          <span className="text-sm font-mono">{screenSize}</span>
+          <span className="text-sm">{screenSize}</span>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm">
         <div>
           <div className="text-pip-boy-green/60">觸控設備</div>
-          <div className="text-pip-boy-green font-mono">
+          <div className="text-pip-boy-green">
             {isTouchDevice ? '是' : '否'}
           </div>
         </div>
         <div>
           <div className="text-pip-boy-green/60">操作系統</div>
-          <div className="text-pip-boy-green font-mono">
+          <div className="text-pip-boy-green">
             {isIOS ? 'iOS' : isAndroid ? 'Android' : '其他'}
           </div>
         </div>
         <div>
           <div className="text-pip-boy-green/60">畫質等級</div>
-          <div className="text-pip-boy-green font-mono">
+          <div className="text-pip-boy-green">
             {qualityLevel === 'low' ? '低' : qualityLevel === 'medium' ? '中' : '高'}
           </div>
         </div>
         <div>
           <div className="text-pip-boy-green/60">FPS</div>
-          <div className="text-pip-boy-green font-mono">
+          <div className="text-pip-boy-green">
             {performanceMetrics.fps}
           </div>
         </div>
@@ -181,14 +181,14 @@ export default function MobileDemoPage() {
             <DeviceInfo />
 
             <MobileCard>
-              <h3 className="text-pip-boy-green font-mono font-bold mb-4">移動卡牌演示</h3>
+              <h3 className="text-pip-boy-green font-bold mb-4">移動卡牌演示</h3>
               <p className="text-pip-boy-green/70 mb-6 text-sm">
                 體驗針對移動設備優化的塔羅牌交互功能
               </p>
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="text-center">
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">標準大小</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">標準大小</h4>
                   <MobileTarotCard
                     card={mockCard}
                     isRevealed={true}
@@ -203,7 +203,7 @@ export default function MobileDemoPage() {
                 </div>
 
                 <div className="text-center">
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">小尺寸</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">小尺寸</h4>
                   <MobileTarotCard
                     card={mockCard}
                     isRevealed={false}
@@ -216,7 +216,7 @@ export default function MobileDemoPage() {
               </div>
 
               <div className="mt-8 p-4 bg-pip-boy-green/10 rounded-lg">
-                <h4 className="text-pip-boy-green font-mono font-bold mb-2">手勢操作</h4>
+                <h4 className="text-pip-boy-green font-bold mb-2">手勢操作</h4>
                 <ul className="text-pip-boy-green/70 text-sm space-y-1">
                   <li>• 點擊：翻牌或選擇</li>
                   <li>• 長按：查看詳細信息</li>
@@ -229,7 +229,7 @@ export default function MobileDemoPage() {
               <button
                 onClick={() => setShowFullscreenReading(true)}
                 className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
-                         font-mono font-bold hover:bg-pip-boy-green/90 transition-colors
+                         font-bold hover:bg-pip-boy-green/90 transition-colors
                          flex items-center justify-center gap-2"
               >
                 體驗全螢幕閱讀
@@ -245,26 +245,26 @@ export default function MobileDemoPage() {
             <DeviceInfo />
 
             <MobileCard>
-              <h3 className="text-pip-boy-green font-mono font-bold mb-4">移動閱讀體驗</h3>
+              <h3 className="text-pip-boy-green font-bold mb-4">移動閱讀體驗</h3>
               <p className="text-pip-boy-green/70 mb-6 text-sm">
                 針對移動設備優化的占卜閱讀界面，支持全螢幕模式、語音朗讀和手勢導航
               </p>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                  <span className="text-pip-boy-green font-mono">全螢幕模式</span>
+                  <span className="text-pip-boy-green">全螢幕模式</span>
                   <span className="text-pip-boy-green/70 text-sm">✓</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                  <span className="text-pip-boy-green font-mono">手勢導航</span>
+                  <span className="text-pip-boy-green">手勢導航</span>
                   <span className="text-pip-boy-green/70 text-sm">✓</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                  <span className="text-pip-boy-green font-mono">語音朗讀</span>
+                  <span className="text-pip-boy-green">語音朗讀</span>
                   <span className="text-pip-boy-green/70 text-sm">✓</span>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                  <span className="text-pip-boy-green font-mono">觸覺回饋</span>
+                  <span className="text-pip-boy-green">觸覺回饋</span>
                   <span className="text-pip-boy-green/70 text-sm">✓</span>
                 </div>
               </div>
@@ -272,7 +272,7 @@ export default function MobileDemoPage() {
               <button
                 onClick={() => setShowFullscreenReading(true)}
                 className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
-                         font-mono font-bold hover:bg-pip-boy-green/90 transition-colors"
+                         font-bold hover:bg-pip-boy-green/90 transition-colors"
               >
                 開始演示閱讀
               </button>
@@ -286,7 +286,7 @@ export default function MobileDemoPage() {
             <DeviceInfo />
 
             <MobileCard>
-              <h3 className="text-pip-boy-green font-mono font-bold mb-4">智能牌陣選擇器</h3>
+              <h3 className="text-pip-boy-green font-bold mb-4">智能牌陣選擇器</h3>
               <p className="text-pip-boy-green/70 mb-6 text-sm">
                 移動優化的牌陣選擇界面，具備智能篩選、排序和詳細預覽功能
               </p>
@@ -310,7 +310,7 @@ export default function MobileDemoPage() {
             <DeviceInfo />
 
             <MobileCard>
-              <h3 className="text-pip-boy-green font-mono font-bold mb-4">移動導航系統</h3>
+              <h3 className="text-pip-boy-green font-bold mb-4">移動導航系統</h3>
               <p className="text-pip-boy-green/70 mb-6 text-sm">
                 針對移動設備設計的導航系統，支持下拉刷新、底部標籤欄和手勢操作
               </p>
@@ -318,7 +318,7 @@ export default function MobileDemoPage() {
               <div className="space-y-6">
                 {/* Tab Bar Demo */}
                 <div>
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">底部標籤欄</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">底部標籤欄</h4>
                   <div className="border border-pip-boy-green/30 rounded-lg overflow-hidden">
                     <MobileTabBar
                       tabs={demoTabs}
@@ -329,7 +329,7 @@ export default function MobileDemoPage() {
 
                 {/* Pull to Refresh Demo */}
                 <div>
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">下拉刷新</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">下拉刷新</h4>
                   <div className="h-32 border border-pip-boy-green/30 rounded-lg overflow-hidden">
                     <PullToRefresh onRefresh={refreshData}>
                       <div className="h-full flex items-center justify-center">
@@ -341,18 +341,18 @@ export default function MobileDemoPage() {
 
                 {/* Navigation Features */}
                 <div>
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">導航功能</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">導航功能</h4>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                      <span className="text-pip-boy-green font-mono">自動隱藏</span>
+                      <span className="text-pip-boy-green">自動隱藏</span>
                       <span className="text-pip-boy-green/70 text-sm">滾動時隱藏</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                      <span className="text-pip-boy-green font-mono">快速操作</span>
+                      <span className="text-pip-boy-green">快速操作</span>
                       <span className="text-pip-boy-green/70 text-sm">懸浮按鈕</span>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                      <span className="text-pip-boy-green font-mono">手勢支持</span>
+                      <span className="text-pip-boy-green">手勢支持</span>
                       <span className="text-pip-boy-green/70 text-sm">滑動導航</span>
                     </div>
                   </div>
@@ -368,7 +368,7 @@ export default function MobileDemoPage() {
             <DeviceInfo />
 
             <MobileCard>
-              <h3 className="text-pip-boy-green font-mono font-bold mb-4">性能監控</h3>
+              <h3 className="text-pip-boy-green font-bold mb-4">性能監控</h3>
               <p className="text-pip-boy-green/70 mb-6 text-sm">
                 實時監控應用性能，自動調整畫質以確保流暢體驗
               </p>
@@ -376,13 +376,13 @@ export default function MobileDemoPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-4 bg-pip-boy-green/10 rounded-lg text-center">
-                    <div className="text-2xl font-mono text-pip-boy-green font-bold">
+                    <div className="text-2xl text-pip-boy-green font-bold">
                       {performanceMetrics.fps}
                     </div>
                     <div className="text-pip-boy-green/70 text-sm">FPS</div>
                   </div>
                   <div className="p-4 bg-pip-boy-green/10 rounded-lg text-center">
-                    <div className="text-2xl font-mono text-pip-boy-green font-bold">
+                    <div className="text-2xl text-pip-boy-green font-bold">
                       {performanceMetrics.memoryUsage}%
                     </div>
                     <div className="text-pip-boy-green/70 text-sm">記憶體使用</div>
@@ -391,19 +391,19 @@ export default function MobileDemoPage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                    <span className="text-pip-boy-green font-mono">網路速度</span>
+                    <span className="text-pip-boy-green">網路速度</span>
                     <span className="text-pip-boy-green/70 text-sm">
                       {performanceMetrics.connectionSpeed}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                    <span className="text-pip-boy-green font-mono">低效能設備</span>
+                    <span className="text-pip-boy-green">低效能設備</span>
                     <span className="text-pip-boy-green/70 text-sm">
                       {performanceMetrics.isLowPerformanceDevice ? '是' : '否'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between p-3 bg-pip-boy-green/5 rounded-lg">
-                    <span className="text-pip-boy-green font-mono">自適應畫質</span>
+                    <span className="text-pip-boy-green">自適應畫質</span>
                     <span className="text-pip-boy-green/70 text-sm">
                       {qualityLevel === 'low' ? '低' : qualityLevel === 'medium' ? '中' : '高'}
                     </span>
@@ -411,7 +411,7 @@ export default function MobileDemoPage() {
                 </div>
 
                 <div className="p-4 bg-pip-boy-green/10 rounded-lg">
-                  <h5 className="text-pip-boy-green font-mono font-bold mb-2">優化設置</h5>
+                  <h5 className="text-pip-boy-green font-bold mb-2">優化設置</h5>
                   <div className="text-sm text-pip-boy-green/70 space-y-1">
                     <div>動畫時長: {settings.animationDuration}s</div>
                     <div>圖片品質: {settings.imageQuality}%</div>
@@ -434,7 +434,7 @@ export default function MobileDemoPage() {
       <PullToRefresh onRefresh={refreshData} className="min-h-screen">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-black/90 backdrop-blur-sm border-b border-pip-boy-green/30 p-4">
-          <h1 className="text-pip-boy-green font-mono text-xl font-bold text-center">
+          <h1 className="text-pip-boy-green text-xl font-bold text-center">
             廢土塔羅移動版演示
           </h1>
         </div>

@@ -91,6 +91,27 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
   compress: true,
+
+  // Font caching strategy
+  // 為字體檔案設定長期快取，提升載入效能
+  // Requirements: cubic-11-font-integration Task 16
+  async headers() {
+    return [
+      {
+        // 僅針對 /fonts/ 路徑下的所有字體檔案
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            // public: 允許 CDN 和瀏覽器快取
+            // max-age=31536000: 快取一年 (365 天)
+            // immutable: 告訴瀏覽器此資源永不改變，可安全快取
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
 }
 
 export default nextConfig

@@ -238,7 +238,7 @@ export function MobileReadingInterface({
           </button>
 
           <div className="flex items-center gap-2">
-            <h2 className="text-pip-boy-green font-mono text-lg font-bold truncate max-w-40">
+            <h2 className="text-pip-boy-green text-lg font-bold truncate max-w-40">
               {reading.title}
             </h2>
             <div className="text-pip-boy-green/60 text-sm">
@@ -263,7 +263,7 @@ export function MobileReadingInterface({
                 key={mode}
                 onClick={() => setViewMode(mode as any)}
                 className={`
-                  px-4 py-2 text-sm font-mono rounded-full transition-all duration-200
+                  px-4 py-2 text-sm rounded-full transition-all duration-200
                   ${viewMode === mode
                     ? 'bg-pip-boy-green text-wasteland-dark'
                     : 'text-pip-boy-green hover:bg-pip-boy-green/20'
@@ -306,7 +306,7 @@ export function MobileReadingInterface({
                     onLongPress={handleCardLongPress}
                     enableHaptic={true}
                   />
-                  <div className="text-center mt-2 text-pip-boy-green/70 text-sm font-mono">
+                  <div className="text-center mt-2 text-pip-boy-green/70 text-sm">
                     位置 {index + 1}
                   </div>
                 </div>
@@ -343,7 +343,7 @@ export function MobileReadingInterface({
           <div className="h-full overflow-y-auto">
             <div className="max-w-2xl mx-auto prose prose-invert prose-green">
               <div className="bg-black/60 rounded-lg p-6 border border-pip-boy-green/30">
-                <h3 className="text-pip-boy-green font-mono text-xl mb-4">整體解讀</h3>
+                <h3 className="text-pip-boy-green text-xl mb-4">整體解讀</h3>
                 <p className="text-pip-boy-green/90 leading-relaxed">
                   {reading.interpretation}
                 </p>
@@ -352,7 +352,7 @@ export function MobileReadingInterface({
                 <div className="mt-8 space-y-6">
                   {reading.cards.map((card, index) => (
                     <div key={card.id} className="border-t border-pip-boy-green/20 pt-4">
-                      <h4 className="text-pip-boy-green font-mono text-lg mb-2">
+                      <h4 className="text-pip-boy-green text-lg mb-2">
                         {card.name} - 位置 {index + 1}
                       </h4>
                       <p className="text-pip-boy-green/80 text-sm">
@@ -368,7 +368,7 @@ export function MobileReadingInterface({
                     {!isSpeaking ? (
                       <button
                         onClick={() => speakText(reading.interpretation)}
-                        className="flex items-center gap-2 px-4 py-2 bg-pip-boy-green text-wasteland-dark rounded-lg font-mono"
+                        className="flex items-center gap-2 px-4 py-2 bg-pip-boy-green text-wasteland-dark rounded-lg"
                       >
                         <Volume2 className="w-4 h-4" />
                         朗讀解讀
@@ -376,7 +376,7 @@ export function MobileReadingInterface({
                     ) : (
                       <button
                         onClick={stopSpeaking}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg font-mono"
+                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
                       >
                         <VolumeX className="w-4 h-4" />
                         停止朗讀
@@ -462,7 +462,7 @@ export function MobileReadingInterface({
       >
         <div className="p-6">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-pip-boy-green font-mono text-lg">選項</h3>
+            <h3 className="text-pip-boy-green text-lg">選項</h3>
             <button
               onClick={() => setShowMenu(false)}
               className="p-2 text-pip-boy-green hover:bg-pip-boy-green/20 rounded-full"
@@ -514,7 +514,7 @@ export function MobileReadingInterface({
                   onChange={(e) => setNotes(e.target.value)}
                   placeholder="在此添加您的筆記..."
                   className="w-full h-32 bg-transparent text-pip-boy-green placeholder-pip-boy-green/50
-                           border border-pip-boy-green/30 rounded-lg p-3 resize-none font-mono text-sm
+                           border border-pip-boy-green/30 rounded-lg p-3 resize-none text-sm
                            focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50"
                 />
                 {enableVoice && (
@@ -523,7 +523,7 @@ export function MobileReadingInterface({
                       onClick={startRecording}
                       disabled={isRecording}
                       className={`
-                        flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono transition-colors
+                        flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors
                         ${isRecording
                           ? 'bg-red-600 text-white'
                           : 'bg-pip-boy-green text-wasteland-dark hover:bg-pip-boy-green/90'

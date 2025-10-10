@@ -75,10 +75,10 @@ function CallbackContent() {
           {status === 'loading' && (
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <h2 className="text-pip-boy-green font-mono text-xl mb-2">
+              <h2 className="text-pip-boy-green text-xl mb-2">
                 正在完成登入...
               </h2>
-              <p className="text-pip-boy-green/70 font-mono text-sm">
+              <p className="text-pip-boy-green/70 text-sm">
                 請稍候，正在驗證您的 Google 帳號
               </p>
             </div>
@@ -91,10 +91,10 @@ function CallbackContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <h2 className="text-pip-boy-green font-mono text-xl mb-2">
+              <h2 className="text-pip-boy-green text-xl mb-2">
                 登入成功！
               </h2>
-              <p className="text-pip-boy-green/70 font-mono text-sm">
+              <p className="text-pip-boy-green/70 text-sm">
                 正在跳轉至控制台...
               </p>
             </div>
@@ -107,15 +107,15 @@ function CallbackContent() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <h2 className="text-red-400 font-mono text-xl mb-2">
+              <h2 className="text-red-400 text-xl mb-2">
                 登入失敗
               </h2>
-              <p className="text-red-400/70 font-mono text-sm mb-6">
+              <p className="text-red-400/70 text-sm mb-6">
                 {errorMessage}
               </p>
               <Link
                 href="/auth/login"
-                className="inline-block px-6 py-2 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 transition-colors"
+                className="inline-block px-6 py-2 bg-pip-boy-green text-wasteland-dark font-bold text-sm hover:bg-pip-boy-green/80 transition-colors"
               >
                 返回登入
               </Link>

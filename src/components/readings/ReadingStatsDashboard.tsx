@@ -112,14 +112,14 @@ export function ReadingStatsDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-pip-boy-green font-mono">占卜統計</h2>
-          <p className="text-pip-boy-green/70 font-mono text-sm">你的塔羅之旅數據分析</p>
+          <h2 className="text-2xl font-bold text-pip-boy-green">占卜統計</h2>
+          <p className="text-pip-boy-green/70 text-sm">你的塔羅之旅數據分析</p>
         </div>
         <div className="flex items-center gap-2">
           <select
             value={selectedPeriod}
             onChange={(e) => setSelectedPeriod(e.target.value as any)}
-            className="px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+            className="px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                      focus:border-pip-boy-green focus:outline-none"
           >
             <option value="week">最近一週</option>
@@ -135,7 +135,7 @@ export function ReadingStatsDashboard() {
           <div className="text-3xl font-bold text-pip-boy-green numeric tabular-nums mb-2">
             {stats.total_readings}
           </div>
-          <div className="text-pip-boy-green/70 font-mono text-sm flex items-center justify-center gap-1">
+          <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
             <Spade className="w-4 h-4" />
             總占卜次數
           </div>
@@ -145,7 +145,7 @@ export function ReadingStatsDashboard() {
           <div className="text-3xl font-bold text-yellow-400 numeric tabular-nums mb-2">
             {stats.favorite_readings}
           </div>
-          <div className="text-pip-boy-green/70 font-mono text-sm flex items-center justify-center gap-1">
+          <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
             <Star className="w-4 h-4" />
             最愛占卜
           </div>
@@ -155,7 +155,7 @@ export function ReadingStatsDashboard() {
           <div className="text-3xl font-bold text-orange-400 numeric tabular-nums mb-2">
             {stats.reading_streak}
           </div>
-          <div className="text-pip-boy-green/70 font-mono text-sm flex items-center justify-center gap-1">
+          <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
             <Flame className="w-4 h-4" />
             連續天數
           </div>
@@ -165,7 +165,7 @@ export function ReadingStatsDashboard() {
           <div className="text-3xl font-bold text-blue-400 numeric tabular-nums mb-2">
             {periodReadings.length}
           </div>
-          <div className="text-pip-boy-green/70 font-mono text-sm flex items-center justify-center gap-1">
+          <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
             <TrendingUp className="w-4 h-4" />
             {selectedPeriod === 'week' ? '本週' : selectedPeriod === 'month' ? '本月' : '今年'}占卜
           </div>
@@ -174,11 +174,11 @@ export function ReadingStatsDashboard() {
 
       {/* Insights Panel */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-        <h3 className="font-mono font-bold text-pip-boy-green mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
           <Target className="w-5 h-5" />
           智能洞察
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm font-mono">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
           <div>
             <div className="text-pip-boy-green/70">最活躍日</div>
             <div className="text-pip-boy-green font-bold">{insights.mostActiveDay}</div>
@@ -203,7 +203,7 @@ export function ReadingStatsDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Spread Type Distribution */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-          <h3 className="font-mono font-bold text-pip-boy-green mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
             牌陣使用分佈
           </h3>
@@ -211,7 +211,7 @@ export function ReadingStatsDashboard() {
             {spreadChartData.map((item, index) => (
               <div key={item.name} className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="font-mono text-sm text-pip-boy-green">{item.name}</span>
+                  <span className="text-sm text-pip-boy-green">{item.name}</span>
                   <span className="numeric text-sm text-pip-boy-green font-bold tabular-nums">{item.count}</span>
                 </div>
                 <div className="w-full bg-pip-boy-green/20 h-2">
@@ -227,7 +227,7 @@ export function ReadingStatsDashboard() {
 
         {/* Monthly Activity */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-          <h3 className="font-mono font-bold text-pip-boy-green mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
             <Calendar className="w-5 h-5" />
             月度活躍度
           </h3>
@@ -237,7 +237,7 @@ export function ReadingStatsDashboard() {
               const percentage = maxCount > 0 ? (item.count / maxCount) * 100 : 0
               return (
                 <div key={item.month} className="flex items-center gap-3">
-                  <div className="w-12 font-mono text-xs text-pip-boy-green/70">
+                  <div className="w-12 text-xs text-pip-boy-green/70">
                     {item.displayMonth}
                   </div>
                   <div className="flex-1">
@@ -259,7 +259,7 @@ export function ReadingStatsDashboard() {
 
         {/* Top Tags */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-          <h3 className="font-mono font-bold text-pip-boy-green mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
             <Hash className="w-5 h-5" />
             熱門標籤
           </h3>
@@ -268,14 +268,14 @@ export function ReadingStatsDashboard() {
               topTagsData.map((item, index) => (
                 <div key={item.tag} className="flex items-center justify-between p-2 bg-pip-boy-green/10">
                   <div className="flex items-center gap-2">
-                    <div className="text-pip-boy-green/60 font-mono text-xs w-4">#{index + 1}</div>
-                    <div className="font-mono text-sm text-pip-boy-green">{item.tag}</div>
+                    <div className="text-pip-boy-green/60 text-xs w-4">#{index + 1}</div>
+                    <div className="text-sm text-pip-boy-green">{item.tag}</div>
                   </div>
                   <div className="numeric text-sm text-pip-boy-green font-bold tabular-nums">{item.count}</div>
                 </div>
               ))
             ) : (
-              <div className="text-center text-pip-boy-green/60 font-mono text-sm py-4">
+              <div className="text-center text-pip-boy-green/60 text-sm py-4">
                 尚無標籤數據
               </div>
             )}
@@ -284,7 +284,7 @@ export function ReadingStatsDashboard() {
 
         {/* Top Cards */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-          <h3 className="font-mono font-bold text-pip-boy-green mb-4 flex items-center gap-2">
+          <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
             <Award className="w-5 h-5" />
             常見卡牌
           </h3>
@@ -293,14 +293,14 @@ export function ReadingStatsDashboard() {
               topCardsData.map((item, index) => (
                 <div key={item.card} className="flex items-center justify-between p-2 bg-pip-boy-green/10">
                   <div className="flex items-center gap-2">
-                    <div className="text-pip-boy-green/60 font-mono text-xs w-4">#{index + 1}</div>
-                    <div className="font-mono text-sm text-pip-boy-green">{item.card}</div>
+                    <div className="text-pip-boy-green/60 text-xs w-4">#{index + 1}</div>
+                    <div className="text-sm text-pip-boy-green">{item.card}</div>
                   </div>
                   <div className="numeric text-sm text-pip-boy-green font-bold tabular-nums">{item.count}</div>
                 </div>
               ))
             ) : (
-              <div className="text-center text-pip-boy-green/60 font-mono text-sm py-4">
+              <div className="text-center text-pip-boy-green/60 text-sm py-4">
                 尚無卡牌數據
               </div>
             )}
@@ -310,11 +310,11 @@ export function ReadingStatsDashboard() {
 
       {/* Additional Stats */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-        <h3 className="font-mono font-bold text-pip-boy-green mb-3 flex items-center gap-2">
+        <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
           <Clock className="w-5 h-5" />
           其他統計
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-mono">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <div className="text-pip-boy-green/70">平均解讀長度</div>
             <div className="text-pip-boy-green font-bold numeric tabular-nums">{stats.average_interpretation_length} 字</div>

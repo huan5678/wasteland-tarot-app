@@ -81,18 +81,18 @@ export function SuitCard({ suit, className }: SuitCardProps) {
         {/* 花色名稱 */}
         <div className="text-center space-y-2">
           {/* 中文名稱(主標題) */}
-          <h3 className="text-xl md:text-2xl font-bold font-mono uppercase tracking-wider text-pip-boy-green">
+          <h3 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-pip-boy-green">
             {metadata.name_zh_tw}
           </h3>
 
           {/* 英文名稱(副標題) */}
-          <p className="text-sm md:text-base font-mono text-pip-boy-green/70 uppercase tracking-wide">
+          <p className="text-sm md:text-base text-pip-boy-green/70 uppercase tracking-wide">
             {metadata.name_en}
           </p>
         </div>
 
         {/* 描述 */}
-        <p className="text-xs md:text-sm font-mono text-pip-boy-green/60 text-center mt-3 mb-4 px-2">
+        <p className="text-xs md:text-sm text-pip-boy-green/60 text-center mt-3 mb-4 px-2">
           {metadata.description}
         </p>
 
@@ -103,7 +103,7 @@ export function SuitCard({ suit, className }: SuitCardProps) {
             size="sm"
             ariaHidden
           />
-          <span className="text-sm md:text-base font-mono font-semibold text-pip-boy-green">
+          <span className="text-sm md:text-base font-semibold text-pip-boy-green">
             {metadata.card_count} 張卡牌
           </span>
         </div>

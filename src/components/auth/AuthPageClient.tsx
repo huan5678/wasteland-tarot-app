@@ -33,10 +33,10 @@ export function AuthPageClient() {
       <div className="max-w-md w-full">
         {/* Vault-Tec Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-mono text-pip-boy-green mb-2">
+          <h1 className="text-4xl text-pip-boy-green mb-2">
             VAULT-TEC
           </h1>
-          <p className="text-pip-boy-green text-lg font-mono">
+          <p className="text-pip-boy-green text-lg">
             Pip-Boy 身份驗證終端機
           </p>
           <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
@@ -67,10 +67,10 @@ export function AuthPageClient() {
 
         {/* Terminal Footer */}
         <div className="mt-8 text-center">
-          <p className="text-pip-boy-green/50 font-mono text-xs">
+          <p className="text-pip-boy-green/50 text-xs">
             Vault-Tec：在地下建造更美好的明天™
           </p>
-          <p className="text-pip-boy-green/30 font-mono text-xs mt-2">
+          <p className="text-pip-boy-green/30 text-xs mt-2">
             「戰爭，戰爭從未改變。」
           </p>
         </div>

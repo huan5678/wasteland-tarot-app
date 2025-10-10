@@ -69,14 +69,14 @@ export function SpreadRecommendationHint({
               border border-pip-boy-green/40
               text-pip-boy-green
               transition-colors
-              font-mono
+             
             "
           >
             切換至 {getSpreadName(recommendation.spread_type)}
           </button>
 
           <span className="
-            ml-2 text-xs text-wasteland-tan/60 font-mono
+            ml-2 text-xs text-wasteland-tan/60
           ">
             信心度: {Math.round(recommendation.confidence * 100)}%
           </span>

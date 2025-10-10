@@ -60,7 +60,7 @@ export function PipBoyCard({
         // 基礎樣式
         'border-2 border-pip-boy-green',
         'bg-black/80 backdrop-blur-sm',
-        'font-mono text-pip-boy-green',
+        'text-pip-boy-green',
         'transition-all duration-300',
 
         // 發光效果

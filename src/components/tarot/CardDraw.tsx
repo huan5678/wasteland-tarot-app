@@ -267,7 +267,7 @@ export function CardDraw({
                   <button
                     onClick={()=> setRevealCount(c=> Math.min(c+1, drawnCards.length))}
                     className={`
-                      mt-1 px-3 py-1 text-xs font-mono border border-pip-boy-green/40
+                      mt-1 px-3 py-1 text-xs border border-pip-boy-green/40
                       text-pip-boy-green/70 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/60
                       hover:text-pip-boy-green transition-all duration-200
                       focus:outline-none focus:ring-2 focus:ring-pip-boy-green/30
@@ -279,7 +279,7 @@ export function CardDraw({
 
                 {/* Position label */}
                 <div className={`
-                  text-center text-xs font-mono transition-all duration-300
+                  text-center text-xs transition-all duration-300
                   ${revealed ? 'text-pip-boy-green' : 'text-pip-boy-green/50'}
                 `}>
                   {(card as any)._position_meta || `位置 ${index+1}`}
@@ -294,7 +294,7 @@ export function CardDraw({
           <button
             onClick={()=> setManualRevealMode(m=>!m)}
             className={`
-              px-4 py-2 text-sm font-mono border border-pip-boy-green/50
+              px-4 py-2 text-sm border border-pip-boy-green/50
               text-pip-boy-green hover:bg-pip-boy-green/10 hover:border-pip-boy-green/70
               transition-all duration-200 rounded focus:outline-none focus:ring-2 focus:ring-pip-boy-green/30
               ${manualRevealMode ? 'bg-pip-boy-green/10' : ''}
@@ -307,7 +307,7 @@ export function CardDraw({
             <button
               onClick={()=> setRevealCount(c=> Math.min(c+1, drawnCards.length))}
               className={`
-                px-4 py-2 text-sm font-mono bg-pip-boy-green text-wasteland-dark font-bold
+                px-4 py-2 text-sm bg-pip-boy-green text-wasteland-dark font-bold
                 hover:bg-pip-boy-green/90 transition-all duration-200 rounded
                 focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
                 shadow-lg hover:shadow-xl transform hover:scale-105
@@ -318,7 +318,7 @@ export function CardDraw({
           )}
 
           {revealCount === drawnCards.length && drawnCards.length > 0 && (
-            <div className="flex items-center gap-2 text-sm font-mono text-pip-boy-green animate-pulse">
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green animate-pulse">
               <Star className="w-4 h-4" />
               <span>全部翻開完成</span>
             </div>

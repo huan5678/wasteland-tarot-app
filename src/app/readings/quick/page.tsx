@@ -211,7 +211,7 @@ export default function QuickReadingPage() {
       <div className="min-h-screen text-pip-boy-green flex items-center justify-center">
         <div className="text-center">
           <Spade className="w-12 h-12 mx-auto mb-4 text-pip-boy-green animate-pulse" />
-          <p className="text-sm font-mono text-pip-boy-green animate-pulse">
+          <p className="text-sm text-pip-boy-green animate-pulse">
             正在初始化廢土塔羅系統...
           </p>
         </div>
@@ -224,13 +224,13 @@ export default function QuickReadingPage() {
     return (
       <div className="min-h-screen text-pip-boy-green flex items-center justify-center p-4">
         <div className="max-w-md text-center border-2 border-red-400 p-8">
-          <h1 className="text-2xl font-bold text-red-400 font-mono mb-4">系統錯誤</h1>
-          <p className="text-sm text-pip-boy-green/70 font-mono mb-6">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">系統錯誤</h1>
+          <p className="text-sm text-pip-boy-green/70 mb-6">
             {error || '無法載入卡牌資料'}
           </p>
           <button
             onClick={handleGoBack}
-            className="border-2 border-pip-boy-green px-6 py-3 font-mono text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
+            className="border-2 border-pip-boy-green px-6 py-3 text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
           >
             返回首頁
           </button>
@@ -256,7 +256,7 @@ export default function QuickReadingPage() {
               >
                 <ArrowLeft className="w-6 h-6" />
               </button>
-              <div className="text-xs font-mono">
+              <div className="text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
                   <span>快速占卜模式</span>
@@ -267,7 +267,7 @@ export default function QuickReadingPage() {
             </div>
             <button
               onClick={handleRegister}
-              className="flex items-center gap-2 text-xs font-mono text-pip-boy-green hover:text-cyan-400 transition-colors px-3 py-1 border border-pip-boy-green"
+              className="flex items-center gap-2 text-xs text-pip-boy-green hover:text-cyan-400 transition-colors px-3 py-1 border border-pip-boy-green"
             >
               <UserPlus className="w-4 h-4" />
               註冊 Vault 帳號
@@ -282,10 +282,10 @@ export default function QuickReadingPage() {
         >
           <div className="text-center mb-8">
             <Spade className="w-16 h-16 mx-auto mb-4 text-pip-boy-green" />
-            <h1 className="text-3xl font-bold text-pip-boy-green font-mono mb-2">
+            <h1 className="text-3xl font-bold text-pip-boy-green mb-2">
               快速占卜
             </h1>
-            <p className="text-sm text-text-muted font-mono">
+            <p className="text-sm text-text-muted">
               無需登入，立即體驗廢土塔羅的智慧
             </p>
           </div>
@@ -354,16 +354,16 @@ export default function QuickReadingPage() {
             <div className="mt-8 border-2 border-pip-boy-green p-6 animate-pulse-border">
               <div className="flex items-center gap-3 mb-4">
                 <Spade className="w-8 h-8 text-pip-boy-green animate-pulse" />
-                <h3 className="text-xl font-mono text-pip-boy-green">
+                <h3 className="text-xl text-pip-boy-green">
                   這是你的專屬命運展示 - 僅此一次
                 </h3>
               </div>
 
-              <p className="text-sm font-mono text-pip-boy-green/70 mb-4">
+              <p className="text-sm text-pip-boy-green/70 mb-4">
                 想要探索更多可能性？註冊後可獲得：
               </p>
 
-              <ul className="space-y-2 mb-6 text-sm font-mono text-pip-boy-green/80">
+              <ul className="space-y-2 mb-6 text-sm text-pip-boy-green/80">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
                   <span><span className="text-pip-boy-green font-bold">無限次抽卡</span>，探索完整塔羅智慧</span>
@@ -389,13 +389,13 @@ export default function QuickReadingPage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleRegister}
-                  className="flex-1 border-2 border-pip-boy-green px-6 py-3 font-mono text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
+                  className="flex-1 border-2 border-pip-boy-green px-6 py-3 text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
                 >
                   立即註冊 - 解鎖完整體驗
                 </button>
                 <button
                   onClick={handleLogin}
-                  className="text-sm font-mono text-pip-boy-green hover:text-cyan-400 transition-colors"
+                  className="text-sm text-pip-boy-green hover:text-cyan-400 transition-colors"
                 >
                   已有帳號？立即登入 →
                 </button>
@@ -408,7 +408,7 @@ export default function QuickReadingPage() {
             className="mt-8 border border-pip-boy-green p-4"
             style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
           >
-            <p className="text-xs text-text-muted font-mono text-center flex items-center justify-center gap-2">
+            <p className="text-xs text-text-muted text-center flex items-center justify-center gap-2">
               <FileText className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
               <span>註冊 Vault 帳號後，你可以：儲存占卜歷史 | 使用高級牌陣 | 獲得 AI 詳細解讀 | 追蹤 Karma 變化</span>
             </p>

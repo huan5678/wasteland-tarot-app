@@ -133,10 +133,10 @@ export default function BingoGrid({
     <div className="relative max-w-2xl mx-auto">
       {/* 賓果卡標題 */}
       <div className="mb-4 text-center">
-        <h3 className="text-2xl font-bold text-amber-400 font-mono tracking-wider">
+        <h3 className="text-2xl font-bold text-amber-400 tracking-wider">
           廢土賓果卡
         </h3>
-        <p className="text-green-400 text-sm font-mono mt-1">
+        <p className="text-green-400 text-sm mt-1">
           領取每日號碼來完成連線
         </p>
       </div>
@@ -161,7 +161,7 @@ export default function BingoGrid({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: idx * 0.02 }}
                 className={`
-                  relative aspect-square rounded-lg font-mono
+                  relative aspect-square rounded-lg
                   flex items-center justify-center text-2xl sm:text-3xl font-bold
                   transition-all duration-300 border-2
                   ${claimed
@@ -210,16 +210,16 @@ export default function BingoGrid({
         </div>
 
         {/* 角標裝飾 */}
-        <div className="absolute top-2 left-2 text-amber-600 text-xs font-mono opacity-50">
+        <div className="absolute top-2 left-2 text-amber-600 text-xs opacity-50">
           VAULT-TEC
         </div>
-        <div className="absolute bottom-2 right-2 text-amber-600 text-xs font-mono opacity-50">
+        <div className="absolute bottom-2 right-2 text-amber-600 text-xs opacity-50">
           BINGO-76
         </div>
       </div>
 
       {/* 圖例 */}
-      <div className="mt-4 flex flex-wrap justify-center gap-4 text-sm font-mono">
+      <div className="mt-4 flex flex-wrap justify-center gap-4 text-sm">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-gray-800 border-2 border-gray-600 rounded" />
           <span className="text-gray-400">未領取</span>

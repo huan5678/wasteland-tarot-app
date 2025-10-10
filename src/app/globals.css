@@ -1,5 +1,47 @@
 @import "tailwindcss";
 
+/* === CUBIC 11 FONT DECLARATION === */
+/**
+ * Cubic_11 字體宣告
+ *
+ * 字體來源: /public/fonts/Cubic_11.woff2
+ * 字體風格: 80 年代復古像素風格
+ * 授權: SIL Open Font License 1.1
+ * 用途: Wasteland Tarot 專案的 Fallout Pip-Boy 介面主要字體
+ *
+ * 字元支援範圍:
+ * - 繁體中文: 常用國字標準字體 4808 字、Big5 第一字面 5401 字、IICore Taiwan
+ * - 簡體中文: 通用规范汉字表一级、GB 2312 Level-1
+ * - 注音符號: 完整支援 Bopomofo/Zhuyin
+ * - 拉丁字母: A-Z, a-z, 0-9, 標點符號
+ * - 來源: ACh-K/Cubic-11 (https://github.com/ACh-K/Cubic-11)
+ *
+ * 字體特性:
+ * - 11×11 像素點陣字體,衍生自 M⁺ gothic 12r
+ * - 專為像素風格遊戲和數位藝術設計
+ * - 強調台灣標準字形和繁體中文慣例
+ *
+ * 效能最佳化策略:
+ * - 使用 font-display: swap 避免文字不可見 (FOIT - Flash of Invisible Text)
+ * - 字體載入期間先顯示降級字體,載入完成後平滑切換至 Cubic 11
+ * - WOFF2 格式提供最佳壓縮比 (檔案大小: 400KB)
+ * - 瀏覽器支援: Chrome 36+, Firefox 39+, Safari 10+, Edge 14+
+ *
+ * 整合策略:
+ * - 使用 className 驅動的字體應用策略
+ * - 在元件層級透過 .font-cubic utility class 套用字體
+ * - Cubic 11 同時支援中英文,無需混合字體策略
+ *
+ * Requirements: 1.1, 1.2, 1.3, 9.1
+ */
+@font-face {
+  font-family: 'Cubic 11';
+  src: url('/fonts/Cubic_11.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* === TAILWIND CSS V4 THEME CONFIGURATION === */
 /**
  * Theme variables defined here automatically generate utility classes.
@@ -8,8 +50,35 @@
 @theme {
   /* === FONT FAMILY CONFIGURATION === */
   /**
-   * Noto Sans TC 作為主要字體（中英文統一）
+   * Cubic 11 字體系統配置
+   *
+   * 主要字體: Cubic 11 (80 年代像素風格,完整繁體中文支援)
+   * 降級堆疊: ui-monospace → SFMono-Regular → SF Mono → Consolas → Monaco → monospace
+   *
+   * 字元支援:
+   * - Cubic 11 包含 4808+ 繁體中文字元,完整支援中英文混排
+   * - 無需分離字體策略,單一字體即可處理所有內容
+   *
+   * 降級策略理由:
+   * - Cubic 11 為像素字體,monospace 降級最為接近視覺風格
+   * - ui-monospace: macOS/iOS 系統等寬字體 (包含中文字元)
+   * - SFMono-Regular / SF Mono: macOS 開發者字體
+   * - Consolas: Windows 等寬字體 (部分中文支援)
+   * - Monaco: 傳統 macOS 等寬字體
+   * - monospace: 通用降級字體
+   *
+   * 使用方式: 在元件中添加 className="font-cubic"
+   * Tailwind v4 自動生成 .font-cubic utility class
+   *
+   * Requirements: 3.1, 3.2, 5.1, 9.2
+   */
+  --font-cubic: 'Cubic 11', ui-monospace, 'SFMono-Regular', 'SF Mono', Consolas, Monaco, monospace;
+
+  /**
+   * Noto Sans TC 作為預設字體（保留向後相容性）
    * 字體堆疊：Noto Sans TC → sans-serif (降級)
+   *
+   * 注意: 未添加 font-cubic className 的元件將繼續使用 Noto Sans TC
    */
   --font-sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
@@ -500,7 +569,8 @@
   /* Text Variants */
   .text-pip-boy {
     color: var(--color-text-primary);
-    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* 繼承父元素字體設定,支援 font-cubic 全域應用 */
+    font-family: inherit;
   }
 
   .text-pip-boy-green {
@@ -522,7 +592,8 @@
   .interface-header {
     background-color: var(--color-pip-boy-green);
     color: var(--color-wasteland-dark);
-    font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* 繼承父元素字體設定,支援 font-cubic 全域應用 */
+    font-family: inherit;
     font-weight: bold;
     padding: 0.25rem 0.75rem;
     font-size: 0.75rem;
@@ -916,14 +987,14 @@
 
 /* 數字專用樣式類別（向後相容） */
 .numeric {
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
 }
 
 /* 統計數據大號顯示 - 響應式 */
 .stat-number {
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 700;
@@ -946,7 +1017,7 @@
 
 /* 小型計數器 - 響應式 */
 .counter {
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
   font-size: 0.75rem;
   line-height: 1rem;
   font-variant-numeric: tabular-nums;
@@ -997,67 +1068,67 @@
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1.2;
   font-weight: 700;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .heading-2 {
   font-size: clamp(1.75rem, 4vw, 3rem);
   line-height: 1.2;
   font-weight: 700;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .heading-3 {
   font-size: clamp(1.5rem, 3.5vw, 2.5rem);
   line-height: 1.3;
   font-weight: 600;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .heading-4 {
   font-size: clamp(1.25rem, 3vw, 2rem);
   line-height: 1.3;
   font-weight: 600;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .heading-5 {
   font-size: clamp(1.125rem, 2.5vw, 1.75rem);
   line-height: 1.4;
   font-weight: 600;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .heading-6 {
   font-size: clamp(1rem, 2vw, 1.5rem);
   line-height: 1.4;
   font-weight: 600;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 /* Body text variants */
 .body-lg {
   font-size: 1.25rem;
   line-height: 1.75;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .body-base {
   font-size: 1rem;
   line-height: 1.6;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .body-sm {
   font-size: 0.875rem;
   line-height: 1.6;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 .body-xs {
   font-size: 0.75rem;
   line-height: 1.6;
-  font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: inherit;
 }
 
 /* Responsive typography adjustments for mobile */

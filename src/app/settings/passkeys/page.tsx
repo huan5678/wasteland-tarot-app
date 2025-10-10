@@ -148,11 +148,11 @@ export default function PasskeysPage() {
       <div className="max-w-4xl mx-auto">
         {/* 頁面標題 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-mono text-pip-boy-green mb-2 flex items-center gap-3">
+          <h1 className="text-3xl text-pip-boy-green mb-2 flex items-center gap-3">
             <Fingerprint className="w-8 h-8" />
             Passkey 管理終端機
           </h1>
-          <p className="text-pip-boy-green/70 font-mono text-sm">
+          <p className="text-pip-boy-green/70 text-sm">
             管理你的生物辨識憑證（Touch ID、Face ID、Windows Hello）
           </p>
           <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
@@ -160,7 +160,7 @@ export default function PasskeysPage() {
 
         {/* 不支援警告 */}
         {!isSupported && (
-          <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 font-mono text-sm flex items-center">
+          <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
             <AlertTriangle className="w-5 h-5 mr-3" />
             你的瀏覽器不支援 Passkey，請使用最新版本的 Chrome、Safari、Edge 或 Firefox
           </div>
@@ -168,7 +168,7 @@ export default function PasskeysPage() {
 
         {/* 錯誤訊息 */}
         {error && (
-          <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 font-mono text-sm flex items-center">
+          <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
             <AlertTriangle className="w-5 h-5 mr-3" />
             {error}
           </div>
@@ -179,7 +179,7 @@ export default function PasskeysPage() {
           <button
             onClick={handleAddPasskey}
             disabled={!isSupported || isLoading}
-            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
             {isLoading ? '處理中...' : '新增 Passkey'}
@@ -188,20 +188,20 @@ export default function PasskeysPage() {
 
         {/* Passkeys 列表 */}
         <div className="bg-wasteland-dark border-2 border-pip-boy-green p-6">
-          <h2 className="text-xl font-mono text-pip-boy-green mb-4">你的 Passkeys</h2>
+          <h2 className="text-xl text-pip-boy-green mb-4">你的 Passkeys</h2>
 
           {loadingCredentials ? (
             <div className="py-8 text-center">
               <div className="inline-block w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-pip-boy-green font-mono text-sm">載入中...</p>
+              <p className="mt-4 text-pip-boy-green text-sm">載入中...</p>
             </div>
           ) : credentials.length === 0 ? (
             <div className="py-8 text-center">
               <Fingerprint className="w-16 h-16 mx-auto text-pip-boy-green/30 mb-4" />
-              <p className="text-pip-boy-green/70 font-mono text-sm">
+              <p className="text-pip-boy-green/70 text-sm">
                 尚未設定 Passkey
               </p>
-              <p className="text-pip-boy-green/50 font-mono text-xs mt-2">
+              <p className="text-pip-boy-green/50 text-xs mt-2">
                 點擊上方按鈕新增你的第一個 Passkey
               </p>
             </div>
@@ -221,7 +221,7 @@ export default function PasskeysPage() {
                             type="text"
                             value={editingName}
                             onChange={(e) => setEditingName(e.target.value)}
-                            className="w-full max-w-md px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono text-sm focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
+                            className="w-full max-w-md px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
                             placeholder="輸入裝置名稱..."
                             autoFocus
                           />
@@ -229,27 +229,27 @@ export default function PasskeysPage() {
                             <button
                               onClick={() => saveDeviceName(credential.id)}
                               disabled={isLoading}
-                              className="px-3 py-1 bg-pip-boy-green text-wasteland-dark font-mono text-xs hover:bg-pip-boy-green/80 disabled:opacity-50"
+                              className="px-3 py-1 bg-pip-boy-green text-wasteland-dark text-xs hover:bg-pip-boy-green/80 disabled:opacity-50"
                             >
                               儲存
                             </button>
                             <button
                               onClick={cancelEditing}
                               disabled={isLoading}
-                              className="px-3 py-1 bg-black border border-pip-boy-green text-pip-boy-green font-mono text-xs hover:bg-pip-boy-green/10 disabled:opacity-50"
+                              className="px-3 py-1 bg-black border border-pip-boy-green text-pip-boy-green text-xs hover:bg-pip-boy-green/10 disabled:opacity-50"
                             >
                               取消
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <h3 className="text-lg font-mono text-pip-boy-green mb-2">
+                        <h3 className="text-lg text-pip-boy-green mb-2">
                           {credential.device_name}
                         </h3>
                       )}
 
                       {/* 裝置資訊 */}
-                      <div className="space-y-1 text-pip-boy-green/70 font-mono text-xs">
+                      <div className="space-y-1 text-pip-boy-green/70 text-xs">
                         <p>建立時間: {formatDate(credential.created_at)}</p>
                         <p>最後使用: {formatDate(credential.last_used_at)}</p>
                         {credential.transports && credential.transports.length > 0 && (
@@ -290,7 +290,7 @@ export default function PasskeysPage() {
                   {/* 刪除確認 */}
                   {deletingId === credential.id && (
                     <div className="mt-4 pt-4 border-t border-pip-boy-green/30">
-                      <div className="flex items-center gap-2 text-red-400 font-mono text-sm mb-3">
+                      <div className="flex items-center gap-2 text-red-400 text-sm mb-3">
                         <AlertTriangle className="w-5 h-5" />
                         確定要刪除此 Passkey？此操作無法復原
                       </div>
@@ -298,14 +298,14 @@ export default function PasskeysPage() {
                         <button
                           onClick={() => handleDelete(credential.id)}
                           disabled={isLoading}
-                          className="px-4 py-2 bg-red-600 text-white font-mono text-xs hover:bg-red-700 disabled:opacity-50"
+                          className="px-4 py-2 bg-red-600 text-white text-xs hover:bg-red-700 disabled:opacity-50"
                         >
                           確認刪除
                         </button>
                         <button
                           onClick={cancelDelete}
                           disabled={isLoading}
-                          className="px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono text-xs hover:bg-pip-boy-green/10 disabled:opacity-50"
+                          className="px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-xs hover:bg-pip-boy-green/10 disabled:opacity-50"
                         >
                           取消
                         </button>
@@ -320,11 +320,11 @@ export default function PasskeysPage() {
 
         {/* 說明資訊 */}
         <div className="mt-8 p-4 border border-pip-boy-green/30 bg-pip-boy-green/5">
-          <h3 className="text-pip-boy-green font-mono text-sm mb-2 flex items-center gap-2">
+          <h3 className="text-pip-boy-green text-sm mb-2 flex items-center gap-2">
             <CheckCircle className="w-4 h-4" />
             關於 Passkeys
           </h3>
-          <ul className="text-pip-boy-green/70 font-mono text-xs space-y-1 list-disc list-inside">
+          <ul className="text-pip-boy-green/70 text-xs space-y-1 list-disc list-inside">
             <li>Passkey 使用生物辨識（指紋、Face ID）或裝置 PIN 碼</li>
             <li>比傳統密碼更安全，無法被釣魚攻擊</li>
             <li>可以在多個裝置上建立 Passkeys</li>
@@ -337,7 +337,7 @@ export default function PasskeysPage() {
         <div className="mt-8 text-center">
           <button
             onClick={() => router.push('/profile')}
-            className="px-6 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono text-sm hover:bg-pip-boy-green/10 transition-colors"
+            className="px-6 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm hover:bg-pip-boy-green/10 transition-colors"
           >
             返回個人資料
           </button>

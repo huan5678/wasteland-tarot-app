@@ -254,7 +254,7 @@ export function CardRelationships({
       {relevantSynergies.length === 0 ? (
         <div className="text-center py-8 text-pip-boy-green/60">
           <Network className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="font-mono text-sm">暫無已知的卡片協同效應</p>
+          <p className="text-sm">暫無已知的卡片協同效應</p>
         </div>
       ) : (
         relevantSynergies.map((synergy) => {
@@ -276,7 +276,7 @@ export function CardRelationships({
                 <div className="flex items-center gap-3">
                   <SynergyIcon className={cn("w-5 h-5", synergyColor)} />
                   <div className="text-left">
-                    <div className="font-mono font-bold text-pip-boy-green capitalize">
+                    <div className="font-bold text-pip-boy-green capitalize">
                       {synergy.synergyType.replace('_', ' ')}
                     </div>
                     <div className="text-xs text-pip-boy-green/70">
@@ -301,16 +301,16 @@ export function CardRelationships({
                     className="border-t border-pip-boy-green/20"
                   >
                     <div className="p-4 space-y-3">
-                      <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+                      <p className="text-pip-boy-green/90 text-sm leading-relaxed">
                         {synergy.description}
                       </p>
 
                       {synergy.conditions && synergy.conditions.length > 0 && (
                         <div>
-                          <h5 className="text-pip-boy-green/80 font-mono font-bold text-xs mb-2">觸發條件</h5>
+                          <h5 className="text-pip-boy-green/80 font-bold text-xs mb-2">觸發條件</h5>
                           <ul className="space-y-1">
                             {synergy.conditions.map((condition, idx) => (
-                              <li key={idx} className="text-pip-boy-green/70 font-mono text-xs flex items-start gap-2">
+                              <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
                                 <Target className="w-3 h-3 mt-0.5 flex-shrink-0" />
                                 <span>{condition}</span>
                               </li>
@@ -321,10 +321,10 @@ export function CardRelationships({
 
                       {synergy.effects && synergy.effects.length > 0 && (
                         <div>
-                          <h5 className="text-pip-boy-green/80 font-mono font-bold text-xs mb-2">協同效果</h5>
+                          <h5 className="text-pip-boy-green/80 font-bold text-xs mb-2">協同效果</h5>
                           <ul className="space-y-1">
                             {synergy.effects.map((effect, idx) => (
-                              <li key={idx} className="text-pip-boy-green/70 font-mono text-xs flex items-start gap-2">
+                              <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
                                 <Lightbulb className="w-3 h-3 mt-0.5 flex-shrink-0 text-yellow-400" />
                                 <span>{effect}</span>
                               </li>
@@ -348,7 +348,7 @@ export function CardRelationships({
       {cardConnections.length === 0 ? (
         <div className="text-center py-8 text-pip-boy-green/60">
           <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="font-mono text-sm">暫無相關卡片連結</p>
+          <p className="text-sm">暫無相關卡片連結</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -372,19 +372,19 @@ export function CardRelationships({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <SuitIcon className={cn("w-4 h-4", suitConfig.color)} />
-                    <span className={cn("font-mono font-bold text-sm", suitConfig.color)}>
+                    <span className={cn("font-bold text-sm", suitConfig.color)}>
                       {connection.name}
                     </span>
                   </div>
                   <ArrowRight className={cn("w-4 h-4", suitConfig.color)} />
                 </div>
 
-                <p className="text-pip-boy-green/80 font-mono text-xs mb-2">
+                <p className="text-pip-boy-green/80 text-xs mb-2">
                   {connection.relationship}
                 </p>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-pip-boy-green/60 font-mono text-xs capitalize">
+                  <span className="text-pip-boy-green/60 text-xs capitalize">
                     {connection.connectionType}
                   </span>
                   <div className="flex items-center gap-1">
@@ -396,7 +396,7 @@ export function CardRelationships({
                         transition={{ duration: 1, delay: index * 0.1 }}
                       />
                     </div>
-                    <span className={cn("font-mono text-xs", suitConfig.color)}>
+                    <span className={cn("text-xs", suitConfig.color)}>
                       {(connection.strength * 100).toFixed(0)}%
                     </span>
                   </div>
@@ -414,7 +414,7 @@ export function CardRelationships({
       {/* Elemental Associations */}
       {elementalAssociations.length > 0 && (
         <div>
-          <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+          <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
             <RotateCw className="w-5 h-5" />
             元素關聯
           </h4>
@@ -428,9 +428,9 @@ export function CardRelationships({
                 className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-mono font-bold text-pip-boy-green">{association.element}</span>
+                  <span className="font-bold text-pip-boy-green">{association.element}</span>
                   <div className={cn(
-                    "px-2 py-1 rounded text-xs font-mono",
+                    "px-2 py-1 rounded text-xs",
                     association.influence === 'positive' ? 'bg-green-500/20 text-green-400' :
                     association.influence === 'negative' ? 'bg-red-500/20 text-red-400' :
                     'bg-pip-boy-green/20 text-pip-boy-green'
@@ -438,7 +438,7 @@ export function CardRelationships({
                     {association.influence}
                   </div>
                 </div>
-                <p className="text-pip-boy-green/80 font-mono text-xs mb-2">
+                <p className="text-pip-boy-green/80 text-xs mb-2">
                   {association.description}
                 </p>
                 <div className="w-full bg-pip-boy-green/20 rounded-full h-1">
@@ -458,7 +458,7 @@ export function CardRelationships({
       {/* Numerical Patterns */}
       {numericalPatterns.length > 0 && (
         <div>
-          <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+          <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
             <Brain className="w-5 h-5" />
             數字規律
           </h4>
@@ -473,13 +473,13 @@ export function CardRelationships({
               >
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 bg-pip-boy-green/20 rounded-full flex items-center justify-center">
-                    <span className="text-pip-boy-green font-mono font-bold text-sm">{pattern.number}</span>
+                    <span className="text-pip-boy-green font-bold text-sm">{pattern.number}</span>
                   </div>
                   <div>
-                    <span className="text-pip-boy-green font-mono font-bold capitalize">
+                    <span className="text-pip-boy-green font-bold capitalize">
                       {pattern.pattern.replace('_', ' ')} Pattern
                     </span>
-                    <p className="text-pip-boy-green/70 font-mono text-xs">
+                    <p className="text-pip-boy-green/70 text-xs">
                       {pattern.significance}
                     </p>
                   </div>
@@ -489,7 +489,7 @@ export function CardRelationships({
                     <span
                       key={idx}
                       className={cn(
-                        "px-2 py-1 rounded text-xs font-mono",
+                        "px-2 py-1 rounded text-xs",
                         cardName === card.name
                           ? "bg-pip-boy-green text-wasteland-dark"
                           : "bg-pip-boy-green/20 text-pip-boy-green"
@@ -508,7 +508,7 @@ export function CardRelationships({
       {elementalAssociations.length === 0 && numericalPatterns.length === 0 && (
         <div className="text-center py-8 text-pip-boy-green/60">
           <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="font-mono text-sm">暫無發現的規律模式</p>
+          <p className="text-sm">暫無發現的規律模式</p>
         </div>
       )}
     </div>
@@ -529,7 +529,7 @@ export function CardRelationships({
               key={section.id}
               onClick={() => setActiveSection(section.id as any)}
               className={cn(
-                "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded font-mono text-sm transition-all duration-200",
+                "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded text-sm transition-all duration-200",
                 isActive
                   ? "bg-pip-boy-green text-wasteland-dark shadow-lg"
                   : "text-pip-boy-green/70 hover:text-pip-boy-green hover:bg-pip-boy-green/10"

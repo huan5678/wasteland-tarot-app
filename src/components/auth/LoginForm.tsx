@@ -191,10 +191,10 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
         {/* Vault-Tec Header */}
         {!hideHeader && (
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-mono text-pip-boy-green mb-2">
+            <h1 className="text-4xl text-pip-boy-green mb-2">
               VAULT-TEC
             </h1>
-            <p className="text-pip-boy-green text-lg font-mono">
+            <p className="text-pip-boy-green text-lg">
               Pip-Boy 身份驗證終端機
             </p>
             <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
@@ -212,7 +212,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
             <div
               role="alert"
               aria-live="polite"
-              className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 font-mono text-sm flex items-center"
+              className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center"
             >
               <AlertTriangle className="w-4 h-4 mr-2" />{submitError}
             </div>
@@ -220,7 +220,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
           {/* Loading State */}
           {isFormDisabled && (
-            <div className="mb-4 p-3 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green font-mono text-sm">
+            <div className="mb-4 p-3 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm">
               <div className="flex items-center gap-2">
                 <div
                   data-testid="pip-boy-loading-spinner"
@@ -235,7 +235,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           <div className="mb-4">
             <label
               htmlFor="email"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               Email 信箱
             </label>
@@ -243,14 +243,14 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               id="email"
               type="email"
               aria-required="true"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入你的 Email..."
               value={formData.email}
               onChange={handleInputChange('email')}
               disabled={isFormDisabled}
             />
             {errors.email && (
-              <p className="mt-1 text-red-400 font-mono text-xs flex items-center">
+              <p className="mt-1 text-red-400 text-xs flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.email}
               </p>
             )}
@@ -260,7 +260,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           <div className="mb-4">
             <label
               htmlFor="password"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               存取密碼
             </label>
@@ -268,14 +268,14 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               id="password"
               type="password"
               aria-required="true"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入存取密碼..."
               value={formData.password}
               onChange={handleInputChange('password')}
               disabled={isFormDisabled}
             />
             {errors.password && (
-              <p className="mt-1 text-red-400 font-mono text-xs">
+              <p className="mt-1 text-red-400 text-xs">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.password}
               </p>
             )}
@@ -283,7 +283,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
           {/* Remember Me */}
           <div className="mb-6">
-            <label className="flex items-center text-pip-boy-green font-mono text-sm">
+            <label className="flex items-center text-pip-boy-green text-sm">
               <input
                 type="checkbox"
                 className="mr-2 accent-pip-boy-green"
@@ -299,7 +299,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           <button
             type="submit"
             disabled={isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             {isFormDisabled ? '身份驗證中...' : '初始化 Pip-Boy'}
           </button>
@@ -307,7 +307,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           {/* Divider */}
           <div className="mt-6 mb-6 flex items-center">
             <div className="flex-1 h-px bg-pip-boy-green/30"></div>
-            <span className="px-4 text-pip-boy-green/70 font-mono text-xs">或</span>
+            <span className="px-4 text-pip-boy-green/70 text-xs">或</span>
             <div className="flex-1 h-px bg-pip-boy-green/30"></div>
           </div>
 
@@ -316,7 +316,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
             type="button"
             onClick={handleGoogleLogin}
             disabled={oauthLoading || isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -329,7 +329,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
           {/* OAuth Error Display */}
           {oauthError && (
-            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 font-mono text-xs flex items-center">
+            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2" />{oauthError}
             </div>
           )}
@@ -340,7 +340,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               type="button"
               onClick={handlePasskeyLogin}
               disabled={passkeyLoading || isFormDisabled}
-              className="w-full mt-4 py-3 bg-black border-2 border-amber-500 text-amber-500 font-mono font-bold text-sm hover:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-4 py-3 bg-black border-2 border-amber-500 text-amber-500 font-bold text-sm hover:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               <Fingerprint className="w-5 h-5" />
               {passkeyLoading ? '生物辨識驗證中...' : '使用 Passkey 登入'}
@@ -349,14 +349,14 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
           {/* Passkey Error Display */}
           {passkeyError && (
-            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 font-mono text-xs flex items-center">
+            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2" />{passkeyError}
             </div>
           )}
 
           {/* Passkey Info */}
           {passkeySupported && (
-            <div className="mt-4 p-3 border border-amber-500/30 bg-amber-500/5 text-amber-500/80 font-mono text-xs">
+            <div className="mt-4 p-3 border border-amber-500/30 bg-amber-500/5 text-amber-500/80 text-xs">
               💡 提示：使用 Passkey 可免密碼登入（Touch ID、Face ID、Windows Hello）
             </div>
           )}
@@ -364,12 +364,12 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           {/* Links */}
           {!hideHeader && (
             <div className="mt-6 text-center space-y-2">
-              <div className="text-pip-boy-green/70 font-mono text-xs">
+              <div className="text-pip-boy-green/70 text-xs">
                 忘記存取密碼？（即將推出）
               </div>
               <Link
                 href="/auth?tab=register"
-                className="block text-pip-boy-green font-mono text-sm hover:text-pip-boy-green/80 transition-colors"
+                className="block text-pip-boy-green text-sm hover:text-pip-boy-green/80 transition-colors"
               >
                 加入 Vault-Tec - 註冊新 Vault Dweller
               </Link>
@@ -380,7 +380,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
         {/* Terminal Footer */}
         {!hideHeader && (
           <div className="mt-8 text-center">
-            <p className="text-pip-boy-green/50 font-mono text-xs">
+            <p className="text-pip-boy-green/50 text-xs">
               Vault-Tec：在地下建造更美好的明天
             </p>
           </div>

@@ -113,7 +113,7 @@ export default function StaticPageLayout({
       <div className="relative z-10 container mx-auto max-w-4xl px-4 py-12">
         {/* Breadcrumb Navigation */}
         <nav
-          className="mb-8 text-sm font-mono text-green-600"
+          className="mb-8 text-sm text-green-600"
           aria-label="麵包屑導航"
         >
           <ol className="flex items-center space-x-2">
@@ -133,7 +133,7 @@ export default function StaticPageLayout({
         </nav>
 
         {/* Terminal-Style Page Header */}
-        <header className="mb-12 border-2 border-green-600 bg-black/80 p-6 font-mono">
+        <header className="mb-12 border-2 border-green-600 bg-black/80 p-6">
           {/* ASCII Decoration */}
           <div
             className="mb-4 text-center text-xs text-green-700"
@@ -169,10 +169,10 @@ export default function StaticPageLayout({
         </header>
 
         {/* Page Content */}
-        <main className="font-mono text-green-500">{children}</main>
+        <main className="text-green-500">{children}</main>
 
         {/* Terminal Footer */}
-        <footer className="mt-16 border-t-2 border-green-900 pt-8 text-center font-mono text-xs text-green-700">
+        <footer className="mt-16 border-t-2 border-green-900 pt-8 text-center text-xs text-green-700">
           <p>
             <span aria-hidden="true">&gt;&gt;&gt;</span>{' '}
             <span className="text-green-600">END OF DOCUMENT</span>{' '}

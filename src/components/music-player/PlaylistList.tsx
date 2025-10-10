@@ -183,7 +183,7 @@ export function PlaylistList({
                 'relative p-4 rounded-md',
                 'border-2 transition-all duration-300',
                 // Pip-Boy Theme
-                'bg-black/60 font-mono',
+                'bg-black/60',
                 // Current Playlist Highlight
                 isCurrentPlaylist
                   ? 'border-pip-boy-green shadow-[0_0_15px_rgba(0,255,136,0.5)]'

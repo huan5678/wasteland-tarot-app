@@ -65,7 +65,7 @@ export function AutoSaveIndicator() {
   const { icon: Icon, text, className } = getStatusInfo()
 
   return (
-    <div className="flex items-center gap-2 text-sm font-mono">
+    <div className="flex items-center gap-2 text-sm">
       <div className={`flex items-center gap-1.5 ${className}`}>
         <Icon className="w-4 h-4" />
         <span>{text}</span>

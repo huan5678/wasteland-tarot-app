@@ -83,7 +83,7 @@ export default function ContactForm() {
       {/* Success Message */}
       {submitSuccess && (
         <div
-          className="mb-6 border-2 border-green-600 bg-green-950/50 p-4 font-mono animate-pulse"
+          className="mb-6 border-2 border-green-600 bg-green-950/50 p-4 animate-pulse"
           role="alert"
           aria-live="polite"
         >
@@ -107,7 +107,7 @@ export default function ContactForm() {
       {/* Contact Form */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-6 border-2 border-green-800 bg-black/80 p-6 font-mono"
+        className="space-y-6 border-2 border-green-800 bg-black/80 p-6"
         noValidate
       >
         {/* Form Header */}

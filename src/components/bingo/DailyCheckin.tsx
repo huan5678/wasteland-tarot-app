@@ -53,7 +53,7 @@ export default function DailyCheckin() {
   if (dailyNumber === null) {
     return (
       <div className="max-w-md mx-auto p-6 bg-black/80 border-2 border-gray-600 rounded-lg backdrop-blur-sm text-center">
-        <p className="text-gray-400 font-mono">
+        <p className="text-gray-400">
           {isLoading ? '載入今日號碼中...' : '今日號碼尚未生成'}
         </p>
       </div>
@@ -70,10 +70,10 @@ export default function DailyCheckin() {
       >
         {/* 標題 */}
         <div className="text-center mb-4">
-          <h3 className="text-xl font-bold text-amber-400 font-mono tracking-wider">
+          <h3 className="text-xl font-bold text-amber-400 tracking-wider">
             今日廢土號碼
           </h3>
-          <p className="text-green-400 text-sm font-mono mt-1">
+          <p className="text-green-400 text-sm mt-1">
             {new Date().toLocaleDateString('zh-TW', {
               year: 'numeric',
               month: 'long',
@@ -95,7 +95,7 @@ export default function DailyCheckin() {
           className={`
             relative mx-auto w-32 h-32 rounded-full
             flex items-center justify-center
-            text-6xl font-bold font-mono
+            text-6xl font-bold
             border-4
             ${hasClaimed
               ? 'bg-green-600 border-green-400 text-black shadow-lg shadow-green-600/50'
@@ -122,10 +122,10 @@ export default function DailyCheckin() {
         <div className="mt-6">
           {hasClaimed ? (
             <div className="text-center p-3 bg-green-900/30 border border-green-600 rounded-lg">
-              <p className="text-green-400 font-mono text-sm">
+              <p className="text-green-400 text-sm">
                 ✓ 今日號碼已領取
               </p>
-              <p className="text-green-500 font-mono text-xs mt-1">
+              <p className="text-green-500 text-xs mt-1">
                 明天再來領取新號碼吧！
               </p>
             </div>
@@ -136,7 +136,7 @@ export default function DailyCheckin() {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={`
-                w-full px-6 py-4 rounded-lg font-mono font-bold text-lg
+                w-full px-6 py-4 rounded-lg font-bold text-lg
                 transition-all duration-200
                 ${isClaiming || isLoading
                   ? 'bg-gray-700 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
@@ -155,7 +155,7 @@ export default function DailyCheckin() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3 bg-red-900/50 border border-red-600 rounded text-red-300 font-mono text-sm"
+            className="mt-4 p-3 bg-red-900/50 border border-red-600 rounded text-red-300 text-sm"
           >
             {error}
           </motion.div>
@@ -167,14 +167,14 @@ export default function DailyCheckin() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="mt-4 p-3 bg-green-900/50 border border-green-600 rounded text-green-300 font-mono text-sm text-center"
+            className="mt-4 p-3 bg-green-900/50 border border-green-600 rounded text-green-300 text-sm text-center"
           >
             🎉 領取成功！號碼已加入你的賓果卡
           </motion.div>
         )}
 
         {/* 說明文字 */}
-        <div className="mt-4 p-3 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-xs font-mono">
+        <div className="mt-4 p-3 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-xs">
           <p className="mb-1">💡 <span className="text-amber-400">提示:</span></p>
           <ul className="list-disc list-inside space-y-1">
             <li>每天只能領取一次號碼</li>

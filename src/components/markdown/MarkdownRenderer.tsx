@@ -275,7 +275,7 @@ export default function MarkdownRenderer({
   className = '',
 }: MarkdownRendererProps) {
   return (
-    <div className={`prose prose-invert max-w-none font-mono ${className}`}>
+    <div className={`prose prose-invert max-w-none ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={markdownComponents}

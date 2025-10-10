@@ -39,7 +39,7 @@ export function SpreadInteractiveDraw({ spreadType, onDone }: Props) {
     <div ref={containerRef} className="space-y-6">
       {/* Enhanced spread preview */}
       <div className="border border-pip-boy-green/40 p-4 rounded-lg bg-pip-boy-green/5">
-        <div className="text-sm font-mono text-pip-boy-green/90 mb-3 flex items-center gap-2">
+        <div className="text-sm text-pip-boy-green/90 mb-3 flex items-center gap-2">
           <span>牌陣位置概覽</span>
           <span className="text-xs text-pip-boy-green/60">({layout.length} 張牌)</span>
         </div>
@@ -68,7 +68,7 @@ export function SpreadInteractiveDraw({ spreadType, onDone }: Props) {
                 className={`
                   absolute transition-all duration-500 ease-out animate-card-position
                   ${deviceType === 'mobile' ? 'w-6 h-9' : 'w-8 h-12'}
-                  border border-pip-boy-green/40 text-[10px] font-mono
+                  border border-pip-boy-green/40 text-[10px]
                   flex items-center justify-center bg-pip-boy-green/10
                   hover:bg-pip-boy-green/20 hover:border-pip-boy-green/60
                   rounded shadow-sm hover:animate-card-glow

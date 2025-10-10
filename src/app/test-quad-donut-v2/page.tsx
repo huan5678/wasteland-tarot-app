@@ -109,7 +109,7 @@ export default function TestQuadDonutV2Page() {
   }, [animationMode]); // Re-run when animation mode changes
 
   return (
-    <div className="min-h-screen bg-black text-green-500 p-8 font-mono">
+    <div className="min-h-screen bg-black text-green-500 p-8">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-6 text-center">
           WebGL Quad Donut Renderer V2 Test

@@ -1,0 +1,23 @@
+{
+  "feature_name": "cubic-11-font-integration",
+  "created_at": "2025-10-10T20:00:00Z",
+  "updated_at": "2025-10-10T23:00:00Z",
+  "language": "zh-TW",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "revision_notes": "Updated to className-driven approach as requested by user"
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": false
+}

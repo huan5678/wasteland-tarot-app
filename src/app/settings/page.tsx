@@ -100,7 +100,7 @@ export default function SettingsPage() {
         <button
           onClick={() => setActiveTab('visual')}
           className={`
-            px-4 py-2 font-mono text-sm
+            px-4 py-2 text-sm
             border-b-2 transition-colors
             ${activeTab === 'visual'
               ? 'border-pip-boy-green text-pip-boy-green'
@@ -115,7 +115,7 @@ export default function SettingsPage() {
         <button
           onClick={() => setActiveTab('accessibility')}
           className={`
-            px-4 py-2 font-mono text-sm
+            px-4 py-2 text-sm
             border-b-2 transition-colors
             ${activeTab === 'accessibility'
               ? 'border-pip-boy-green text-pip-boy-green'
@@ -149,7 +149,7 @@ export default function SettingsPage() {
                   className="
                     w-full px-3 py-2 rounded
                     bg-wasteland-dark border border-pip-boy-green/40
-                    text-pip-boy-green font-mono
+                    text-pip-boy-green
                     focus:outline-none focus:border-pip-boy-green
                   "
                 >

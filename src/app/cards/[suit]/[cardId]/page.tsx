@@ -221,15 +221,15 @@ export default function CardDetailPage() {
           <div className="space-y-6">
             {/* 卡牌標題 */}
             <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-6">
-              <h1 className="text-3xl md:text-4xl font-bold text-pip-boy-green font-mono uppercase tracking-wider mb-2">
+              <h1 className="text-3xl md:text-4xl font-bold text-pip-boy-green uppercase tracking-wider mb-2">
                 {card.name}
               </h1>
               {card.name_en && (
-                <p className="text-lg md:text-xl text-pip-boy-green/70 font-mono uppercase mb-4">
+                <p className="text-lg md:text-xl text-pip-boy-green/70 uppercase mb-4">
                   {card.name_en}
                 </p>
               )}
-              <div className="flex items-center gap-4 text-sm md:text-base text-pip-boy-green/60 font-mono">
+              <div className="flex items-center gap-4 text-sm md:text-base text-pip-boy-green/60">
                 <span>{suitName}</span>
                 {card.number !== null && card.number !== undefined && (
                   <span>#{String(card.number).padStart(2, '0')}</span>
@@ -245,10 +245,10 @@ export default function CardDetailPage() {
             {/* 正位牌義 */}
             {card.upright_meaning && (
               <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   正位牌義
                 </h2>
-                <p className="text-sm md:text-base text-pip-boy-green/70 font-mono leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm md:text-base text-pip-boy-green/70 leading-relaxed whitespace-pre-wrap">
                   {card.upright_meaning}
                 </p>
               </PipBoyCard>
@@ -257,10 +257,10 @@ export default function CardDetailPage() {
             {/* 逆位牌義 */}
             {card.reversed_meaning && (
               <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   逆位牌義
                 </h2>
-                <p className="text-sm md:text-base text-pip-boy-green/70 font-mono leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm md:text-base text-pip-boy-green/70 leading-relaxed whitespace-pre-wrap">
                   {card.reversed_meaning}
                 </p>
               </PipBoyCard>
@@ -269,10 +269,10 @@ export default function CardDetailPage() {
             {/* Fallout 主題描述 */}
             {card.fallout_description && (
               <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   廢土主題
                 </h2>
-                <p className="text-sm md:text-base text-pip-boy-green/70 font-mono leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm md:text-base text-pip-boy-green/70 leading-relaxed whitespace-pre-wrap">
                   {card.fallout_description}
                 </p>
               </PipBoyCard>
@@ -281,14 +281,14 @@ export default function CardDetailPage() {
             {/* 關鍵字 */}
             {card.keywords && card.keywords.length > 0 && (
               <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   關鍵字
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {card.keywords.map((keyword, index) => (
                     <span
                       key={index}
-                      className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 text-pip-boy-green font-mono text-sm"
+                      className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 text-pip-boy-green text-sm"
                     >
                       {keyword}
                     </span>
@@ -300,10 +300,10 @@ export default function CardDetailPage() {
             {/* 元資料 */}
             {card.metadata && (
               <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green font-mono uppercase mb-4">
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   輻射與威脅等級
                 </h2>
-                <div className="space-y-2 text-sm md:text-base text-pip-boy-green/70 font-mono">
+                <div className="space-y-2 text-sm md:text-base text-pip-boy-green/70">
                   {card.metadata.radiation_level !== undefined && (
                     <div className="flex justify-between">
                       <span>輻射等級:</span>

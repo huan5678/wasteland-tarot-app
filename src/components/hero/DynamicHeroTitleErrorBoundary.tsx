@@ -45,19 +45,19 @@ export class DynamicHeroTitleErrorBoundary extends Component<Props, State> {
       // 降級 UI：顯示靜態預設文案
       return (
         <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-pip-boy-green">
             玄學的盡頭是科學™
           </h1>
           <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80">
             由 Nuka-Cola 量子科學部贊助播出
           </p>
-          <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed">
             「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：
             命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」
           </p>
 
           {process.env.NODE_ENV === 'development' && (
-            <div className="mt-4 text-xs text-red-400 font-mono">
+            <div className="mt-4 text-xs text-red-400">
               Error: {this.state.error?.message}
             </div>
           )}

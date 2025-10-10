@@ -105,23 +105,23 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
             </div>
 
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-green-400 font-mono mb-2">
+              <h2 className="text-3xl font-bold text-green-400 mb-2">
                 {card.name}
               </h2>
               <div className="flex flex-wrap gap-2 mb-3">
-                <span className={`px-3 py-1 rounded font-mono text-sm font-bold ${getRarityColor(card.rarity_level)}`}>
+                <span className={`px-3 py-1 rounded text-sm font-bold ${getRarityColor(card.rarity_level)}`}>
                   {card.rarity_level.toUpperCase()}
                 </span>
-                <span className={`px-3 py-1 rounded font-mono text-sm ${getKarmaColor(card.karma_alignment)}`}>
+                <span className={`px-3 py-1 rounded text-sm ${getKarmaColor(card.karma_alignment)}`}>
                   {card.karma_alignment}
                 </span>
-                <span className="px-3 py-1 bg-blue-900/50 text-blue-300 rounded font-mono text-sm">
+                <span className="px-3 py-1 bg-blue-900/50 text-blue-300 rounded text-sm">
                   {card.suit.replace(/_/g, ' ')}
                 </span>
               </div>
 
               {card.description && (
-                <p className="text-gray-300 font-mono text-sm">{card.description}</p>
+                <p className="text-gray-300 text-sm">{card.description}</p>
               )}
             </div>
           </div>
@@ -132,14 +132,14 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Keywords */}
           {card.keywords && card.keywords.length > 0 && (
             <div>
-              <h3 className="text-green-400 font-mono font-semibold mb-2 text-sm uppercase">
+              <h3 className="text-green-400 font-semibold mb-2 text-sm uppercase">
                 Keywords
               </h3>
               <div className="flex flex-wrap gap-2">
                 {card.keywords.map((keyword, index) => (
                   <span
                     key={index}
-                    className="px-2 py-1 bg-green-900/30 text-green-300 rounded text-xs font-mono"
+                    className="px-2 py-1 bg-green-900/30 text-green-300 rounded text-xs"
                   >
                     {keyword}
                   </span>
@@ -151,14 +151,14 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Meanings */}
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-green-900/10 border border-green-900/50 rounded p-4">
-              <h3 className="text-green-400 font-mono font-semibold mb-2 uppercase text-sm">
+              <h3 className="text-green-400 font-semibold mb-2 uppercase text-sm">
                 Upright
               </h3>
               <p className="text-gray-300 text-sm">{card.upright_meaning}</p>
             </div>
 
             <div className="bg-red-900/10 border border-red-900/50 rounded p-4">
-              <h3 className="text-red-400 font-mono font-semibold mb-2 uppercase text-sm">
+              <h3 className="text-red-400 font-semibold mb-2 uppercase text-sm">
                 Reversed
               </h3>
               <p className="text-gray-300 text-sm">{card.reversed_meaning}</p>
@@ -167,7 +167,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
           {/* Character Voice Interpretations */}
           <div>
-            <h3 className="text-green-400 font-mono font-semibold mb-3 text-sm uppercase">
+            <h3 className="text-green-400 font-semibold mb-3 text-sm uppercase">
               Character Interpretations
             </h3>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -175,7 +175,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
                 <button
                   key={voice}
                   onClick={() => setSelectedVoice(voice)}
-                  className={`px-3 py-1 rounded font-mono text-sm transition-colors ${
+                  className={`px-3 py-1 rounded text-sm transition-colors ${
                     selectedVoice === voice
                       ? 'bg-green-700 text-white'
                       : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -187,7 +187,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
               ))}
             </div>
             <div className="bg-black/40 border border-green-900/50 rounded p-4">
-              <p className="text-green-300 font-mono text-sm">{currentInterpretation}</p>
+              <p className="text-green-300 text-sm">{currentInterpretation}</p>
             </div>
           </div>
 
@@ -195,7 +195,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           <div className="grid md:grid-cols-2 gap-4">
             {card.fallout_reference && (
               <div>
-                <h4 className="text-green-400 font-mono font-semibold mb-2 text-xs uppercase">
+                <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
                   Fallout Reference
                 </h4>
                 <p className="text-gray-300 text-sm">{card.fallout_reference}</p>
@@ -204,7 +204,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
             {card.vault_reference !== undefined && (
               <div>
-                <h4 className="text-green-400 font-mono font-semibold mb-2 text-xs uppercase">
+                <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
                   Vault Reference
                 </h4>
                 <p className="text-gray-300 text-sm">Vault {card.vault_reference}</p>
@@ -215,30 +215,30 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Wasteland stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-              <div className="text-xs text-gray-400 font-mono mb-1 uppercase">Radiation</div>
-              <div className="text-green-400 font-mono font-bold">
+              <div className="text-xs text-gray-400 mb-1 uppercase">Radiation</div>
+              <div className="text-green-400 font-bold">
                 {(card.radiation_factor * 100).toFixed(0)}%
               </div>
             </div>
 
             {card.threat_level !== undefined && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 font-mono mb-1 uppercase">Threat Level</div>
-                <div className="text-red-400 font-mono font-bold">{card.threat_level}</div>
+                <div className="text-xs text-gray-400 mb-1 uppercase">Threat Level</div>
+                <div className="text-red-400 font-bold">{card.threat_level}</div>
               </div>
             )}
 
             {card.element && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 font-mono mb-1 uppercase">Element</div>
-                <div className="text-blue-400 font-mono font-bold">{card.element}</div>
+                <div className="text-xs text-gray-400 mb-1 uppercase">Element</div>
+                <div className="text-blue-400 font-bold">{card.element}</div>
               </div>
             )}
 
             {card.astrological_association && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 font-mono mb-1 uppercase">Astrology</div>
-                <div className="text-purple-400 font-mono font-bold">
+                <div className="text-xs text-gray-400 mb-1 uppercase">Astrology</div>
+                <div className="text-purple-400 font-bold">
                   {card.astrological_association}
                 </div>
               </div>
@@ -248,7 +248,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Symbolism */}
           {card.symbolism && (
             <div>
-              <h4 className="text-green-400 font-mono font-semibold mb-2 text-xs uppercase">
+              <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
                 Symbolism
               </h4>
               <p className="text-gray-300 text-sm">{card.symbolism}</p>
@@ -258,10 +258,10 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Wasteland humor */}
           {card.wasteland_humor && (
             <div className="bg-amber-900/20 border border-amber-800/50 rounded p-4">
-              <h4 className="text-amber-400 font-mono font-semibold mb-2 text-xs uppercase">
+              <h4 className="text-amber-400 font-semibold mb-2 text-xs uppercase">
                 Wasteland Wisdom
               </h4>
-              <p className="text-amber-300 font-mono text-sm italic">{card.wasteland_humor}</p>
+              <p className="text-amber-300 text-sm italic">{card.wasteland_humor}</p>
             </div>
           )}
         </div>

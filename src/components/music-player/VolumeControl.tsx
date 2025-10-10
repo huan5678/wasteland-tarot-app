@@ -82,7 +82,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
         {/* Visual Feedback Animation */}
         {!isMuted && volume > 0 && (
           <motion.div
-            className="absolute -top-6 right-0 px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded text-xs font-mono text-pip-boy-green"
+            className="absolute -top-6 right-0 px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded text-xs text-pip-boy-green"
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2 }}
@@ -95,7 +95,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
 
       {/* Volume Percentage Display */}
       <div
-        className="min-w-[3rem] text-right text-sm font-mono text-pip-boy-green/80"
+        className="min-w-[3rem] text-right text-sm text-pip-boy-green/80"
         aria-live="polite"
         aria-atomic="true"
       >

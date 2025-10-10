@@ -92,7 +92,7 @@ export function Breadcrumb({
                 <Link
                   href={item.href}
                   className={cn(
-                    'font-mono text-pip-boy-green hover:text-pip-boy-green-bright',
+                    'text-pip-boy-green hover:text-pip-boy-green-bright',
                     'transition-colors duration-200',
                     'focus:outline-none focus-visible:underline focus-visible:underline-offset-4',
                     'hover:underline hover:underline-offset-4'
@@ -104,7 +104,6 @@ export function Breadcrumb({
               ) : (
                 <span
                   className={cn(
-                    'font-mono',
                     isLast
                       ? 'text-pip-boy-green-bright font-semibold' // 當前頁面
                       : 'text-pip-boy-green/70' // 無連結項目
@@ -118,7 +117,7 @@ export function Breadcrumb({
               {/* 分隔符 */}
               {!isLast && (
                 <span
-                  className="text-pip-boy-green/50 font-mono select-none"
+                  className="text-pip-boy-green/50 select-none"
                   aria-hidden="true"
                 >
                   {separator}
@@ -163,7 +162,7 @@ export function CompactBreadcrumb({ parent, current, className }: CompactBreadcr
           href={parent.href}
           className={cn(
             'flex items-center gap-1',
-            'font-mono text-pip-boy-green hover:text-pip-boy-green-bright',
+            'text-pip-boy-green hover:text-pip-boy-green-bright',
             'transition-colors duration-200',
             'focus:outline-none focus-visible:underline'
           )}
@@ -176,13 +175,13 @@ export function CompactBreadcrumb({ parent, current, className }: CompactBreadcr
       )}
 
       {/* 分隔符 */}
-      <span className="text-pip-boy-green/50 font-mono" aria-hidden="true">
+      <span className="text-pip-boy-green/50" aria-hidden="true">
         /
       </span>
 
       {/* 當前頁面 */}
       <span
-        className="font-mono text-pip-boy-green-bright font-semibold truncate"
+        className="text-pip-boy-green-bright font-semibold truncate"
         aria-current="page"
       >
         {current}
@@ -202,7 +201,7 @@ export function BreadcrumbSkeleton({ items = 3 }: { items?: number }) {
           <React.Fragment key={index}>
             <div className="h-4 w-20 bg-pip-boy-green/20 rounded" />
             {index < items - 1 && (
-              <span className="text-pip-boy-green/30 font-mono">/</span>
+              <span className="text-pip-boy-green/30">/</span>
             )}
           </React.Fragment>
         ))}
@@ -245,7 +244,7 @@ export function IconBreadcrumb({ items, separator = '/', className }: IconBreadc
                   href={item.href}
                   className={cn(
                     'flex items-center gap-1.5',
-                    'font-mono text-pip-boy-green hover:text-pip-boy-green-bright',
+                    'text-pip-boy-green hover:text-pip-boy-green-bright',
                     'transition-colors duration-200',
                     'focus:outline-none focus-visible:underline'
                   )}
@@ -260,7 +259,7 @@ export function IconBreadcrumb({ items, separator = '/', className }: IconBreadc
               ) : (
                 <span
                   className={cn(
-                    'flex items-center gap-1.5 font-mono',
+                    'flex items-center gap-1.5',
                     isLast ? 'text-pip-boy-green-bright font-semibold' : 'text-pip-boy-green/70'
                   )}
                   aria-current={isLast ? 'page' : undefined}
@@ -276,7 +275,7 @@ export function IconBreadcrumb({ items, separator = '/', className }: IconBreadc
 
               {/* 分隔符 */}
               {!isLast && (
-                <span className="text-pip-boy-green/50 font-mono" aria-hidden="true">
+                <span className="text-pip-boy-green/50" aria-hidden="true">
                   {separator}
                 </span>
               )}

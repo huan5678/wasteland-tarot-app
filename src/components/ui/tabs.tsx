@@ -85,7 +85,7 @@ export function TabsTrigger({ value, children, className = '' }: TabsTriggerProp
       role="tab"
       aria-selected={isActive}
       className={`
-        flex-1 px-4 py-3 font-mono text-sm font-bold uppercase tracking-wider
+        flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wider
         transition-all duration-200 border-r border-pip-boy-green last:border-r-0
         ${
           isActive

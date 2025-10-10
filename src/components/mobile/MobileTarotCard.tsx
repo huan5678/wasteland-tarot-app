@@ -327,7 +327,7 @@ export function MobileTarotCard({
       {enableGyroscope && gyroscopePermission.status === 'prompt' && isIOS && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
           <div className="max-w-sm space-y-4 text-center">
-            <div className="text-pip-boy-green font-mono text-sm">
+            <div className="text-pip-boy-green text-sm">
               啟用陀螺儀以體驗 3D 傾斜效果
             </div>
             <PipBoyButton
@@ -338,7 +338,7 @@ export function MobileTarotCard({
               啟用陀螺儀
             </PipBoyButton>
             {gyroscopePermission.error && (
-              <div className="text-xs text-red-500 font-mono">
+              <div className="text-xs text-red-500">
                 {gyroscopePermission.error}
               </div>
             )}
@@ -413,7 +413,7 @@ export function MobileTarotCard({
           `}>
             <div className="text-center text-pip-boy-green">
               <Spade className={`${size === 'small' ? 'w-4 h-4' : size === 'medium' ? 'w-6 h-6' : 'w-8 h-8'} mb-2 mx-auto`} />
-              <div className={`${size === 'small' ? 'text-[8px]' : size === 'medium' ? 'text-[10px]' : 'text-sm'} font-mono`}>
+              <div className={`${size === 'small' ? 'text-[8px]' : size === 'medium' ? 'text-[10px]' : 'text-sm'}`}>
                 WASTELAND
               </div>
               {size === 'fullscreen' && (
@@ -454,7 +454,7 @@ export function MobileTarotCard({
               {imageError ? (
                 <div className="text-pip-boy-green/60 text-center">
                   <Spade className={`${size === 'small' ? 'w-6 h-6' : 'w-8 h-8'} mb-2 mx-auto`} />
-                  <div className={`${size === 'small' ? 'text-[8px]' : 'text-xs'} font-mono`}>無圖</div>
+                  <div className={`${size === 'small' ? 'text-[8px]' : 'text-xs'}`}>無圖</div>
                 </div>
               ) : (
                 <img
@@ -477,13 +477,13 @@ export function MobileTarotCard({
               ${size === 'fullscreen' ? 'max-h-32 overflow-y-auto' : ''}
             `}>
               <div className={`
-                text-center text-pip-boy-green font-mono font-bold leading-tight
+                text-center text-pip-boy-green font-bold leading-tight
                 ${size === 'small' ? 'text-[9px]' : size === 'medium' ? 'text-[11px]' : 'text-sm'}
               `}>
                 {card.name}
               </div>
               <div className={`
-                text-center text-pip-boy-green/60 font-mono line-clamp-2 mt-0.5
+                text-center text-pip-boy-green/60 line-clamp-2 mt-0.5
                 ${size === 'small' ? 'text-[8px]' : size === 'medium' ? 'text-[10px]' : 'text-xs'}
               `}>
                 {position === 'upright' ? card.meaning_upright : card.meaning_reversed}

@@ -135,7 +135,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
           aria-atomic="true"
         >
           {/* Toast Container */}
-          <div className="relative rounded-md border-2 border-pip-boy-green bg-black/95 p-4 font-mono shadow-pip-boy-green backdrop-blur-sm">
+          <div className="relative rounded-md border-2 border-pip-boy-green bg-black/95 p-4 shadow-pip-boy-green backdrop-blur-sm">
             {/* Scanline Effect */}
             <div className="pointer-events-none absolute inset-0 rounded-md bg-gradient-to-b from-transparent via-pip-boy-green/5 to-transparent" />
 

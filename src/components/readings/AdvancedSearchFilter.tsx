@@ -100,7 +100,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
               placeholder="搜尋問題、解讀內容、筆記..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-black border-2 border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+              className="w-full pl-10 pr-4 py-3 bg-black border-2 border-pip-boy-green/30 text-pip-boy-green text-sm
                        focus:border-pip-boy-green focus:outline-none placeholder:text-pip-boy-green/40"
             />
             {query && (
@@ -116,7 +116,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
           {/* Filter Toggle Button */}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-4 py-3 border-2 font-mono text-sm flex items-center gap-2 transition-colors
+            className={`px-4 py-3 border-2 text-sm flex items-center gap-2 transition-colors
               ${isExpanded
                 ? 'border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green'
                 : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -137,7 +137,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
             <button
               onClick={clearAllFilters}
               className="px-3 py-3 border-2 border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60 hover:text-pip-boy-green
-                       font-mono text-sm flex items-center gap-2"
+                       text-sm flex items-center gap-2"
             >
               <RotateCcw className="w-4 h-4" />
               清除
@@ -153,11 +153,11 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             {/* Category Filter */}
             <div className="space-y-2">
-              <label className="block text-pip-boy-green font-mono text-sm font-bold">類別</label>
+              <label className="block text-pip-boy-green text-sm font-bold">類別</label>
               <select
                 value={filters.category || ''}
                 onChange={(e) => updateFilters({ category: e.target.value || undefined })}
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          focus:border-pip-boy-green focus:outline-none"
               >
                 <option value="">所有類別</option>
@@ -171,11 +171,11 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             {/* Spread Type Filter */}
             <div className="space-y-2">
-              <label className="block text-pip-boy-green font-mono text-sm font-bold">牌陣類型</label>
+              <label className="block text-pip-boy-green text-sm font-bold">牌陣類型</label>
               <select
                 value={filters.spreadType || ''}
                 onChange={(e) => updateFilters({ spreadType: e.target.value || undefined })}
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          focus:border-pip-boy-green focus:outline-none"
               >
                 <option value="">所有牌陣</option>
@@ -191,10 +191,10 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             {/* Date Range Filter */}
             <div className="space-y-2">
-              <label className="block text-pip-boy-green font-mono text-sm font-bold">日期範圍</label>
+              <label className="block text-pip-boy-green text-sm font-bold">日期範圍</label>
               <button
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          text-left hover:border-pip-boy-green/60 flex items-center justify-between"
               >
                 <span>
@@ -210,7 +210,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                 <div className="absolute z-10 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green space-y-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-pip-boy-green font-mono text-xs mb-1">開始日期</label>
+                      <label className="block text-pip-boy-green text-xs mb-1">開始日期</label>
                       <input
                         type="date"
                         onChange={(e) => {
@@ -222,11 +222,11 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                             }
                           })
                         }}
-                        className="w-full px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-xs"
+                        className="w-full px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green text-xs"
                       />
                     </div>
                     <div>
-                      <label className="block text-pip-boy-green font-mono text-xs mb-1">結束日期</label>
+                      <label className="block text-pip-boy-green text-xs mb-1">結束日期</label>
                       <input
                         type="date"
                         onChange={(e) => {
@@ -239,20 +239,20 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                             }
                           })
                         }}
-                        className="w-full px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-xs"
+                        className="w-full px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green text-xs"
                       />
                     </div>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-pip-boy-green/30">
                     <button
                       onClick={() => updateFilters({ dateRange: undefined })}
-                      className="text-pip-boy-green/60 hover:text-pip-boy-green font-mono text-xs"
+                      className="text-pip-boy-green/60 hover:text-pip-boy-green text-xs"
                     >
                       清除日期
                     </button>
                     <button
                       onClick={() => setShowDatePicker(false)}
-                      className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green font-mono text-xs hover:border-pip-boy-green"
+                      className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green text-xs hover:border-pip-boy-green"
                     >
                       確定
                     </button>
@@ -264,7 +264,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
           {/* Tag Filter */}
           <div className="space-y-2">
-            <label className="block text-pip-boy-green font-mono text-sm font-bold">標籤</label>
+            <label className="block text-pip-boy-green text-sm font-bold">標籤</label>
             <div className="flex flex-wrap gap-2">
               {availableOptions.tags.map(tag => {
                 const isSelected = filters.tags?.includes(tag)
@@ -272,7 +272,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                   <button
                     key={tag}
                     onClick={() => isSelected ? removeTag(tag) : addTag(tag)}
-                    className={`px-2 py-1 border font-mono text-xs flex items-center gap-1 transition-colors
+                    className={`px-2 py-1 border text-xs flex items-center gap-1 transition-colors
                       ${isSelected
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -288,11 +288,11 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             {filters.tags && filters.tags.length > 0 && (
               <div className="flex items-center gap-2">
-                <span className="text-pip-boy-green/70 font-mono text-xs">標籤匹配模式:</span>
+                <span className="text-pip-boy-green/70 text-xs">標籤匹配模式:</span>
                 <select
                   value={filters.tagMode || 'any'}
                   onChange={(e) => updateFilters({ tagMode: e.target.value as 'any' | 'all' })}
-                  className="px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-xs"
+                  className="px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green text-xs"
                 >
                   <option value="any">任一標籤</option>
                   <option value="all">所有標籤</option>
@@ -305,7 +305,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => updateFilters({ isFavorite: filters.isFavorite === true ? undefined : true })}
-              className={`px-3 py-2 border font-mono text-sm flex items-center gap-2 transition-colors
+              className={`px-3 py-2 border text-sm flex items-center gap-2 transition-colors
                 ${filters.isFavorite === true
                   ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -317,7 +317,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             <button
               onClick={() => updateFilters({ isArchived: filters.isArchived === true ? undefined : true })}
-              className={`px-3 py-2 border font-mono text-sm flex items-center gap-2 transition-colors
+              className={`px-3 py-2 border text-sm flex items-center gap-2 transition-colors
                 ${filters.isArchived === true
                   ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -329,7 +329,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
             <button
               onClick={() => updateFilters({ hasNotes: filters.hasNotes === true ? undefined : true })}
-              className={`px-3 py-2 border font-mono text-sm flex items-center gap-2 transition-colors
+              className={`px-3 py-2 border text-sm flex items-center gap-2 transition-colors
                 ${filters.hasNotes === true
                   ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -342,7 +342,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
           {/* Accuracy Rating Filter */}
           <div className="space-y-2">
-            <label className="block text-pip-boy-green font-mono text-sm font-bold">準確度評分</label>
+            <label className="block text-pip-boy-green text-sm font-bold">準確度評分</label>
             <div className="flex gap-2">
               {availableOptions.accuracyRatings.map(rating => {
                 const isSelected = filters.accuracyRating?.includes(rating)
@@ -350,7 +350,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                   <button
                     key={rating}
                     onClick={() => toggleAccuracyRating(rating)}
-                    className={`px-3 py-2 border font-mono text-sm transition-colors
+                    className={`px-3 py-2 border text-sm transition-colors
                       ${isSelected
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -366,7 +366,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
       )}
 
       {/* Search Results Summary */}
-      <div className="text-pip-boy-green/70 font-mono text-sm">
+      <div className="text-pip-boy-green/70 text-sm">
         {query && `搜尋: "${query}" • `}
         {activeFilterCount > 0 && `${activeFilterCount} 個篩選條件 • `}
         找到結果將在下方顯示

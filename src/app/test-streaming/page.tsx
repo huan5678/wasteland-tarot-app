@@ -25,10 +25,10 @@ export default function TestStreamingPage() {
       {/* Header */}
       <div className="bg-amber-900/20 border-b border-amber-600/30 py-6 mb-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-amber-400 mb-2 font-mono">
+          <h1 className="text-4xl font-bold text-amber-400 mb-2">
             AI Streaming Test Lab
           </h1>
-          <p className="text-gray-400 font-mono text-sm">
+          <p className="text-gray-400 text-sm">
             Test real-time AI interpretation streaming with Fallout character voices
           </p>
         </div>
@@ -37,34 +37,34 @@ export default function TestStreamingPage() {
       <div className="container mx-auto px-4 pb-12">
         {/* Configuration Panel */}
         <div className="bg-gray-800/50 border border-amber-600/30 rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-amber-400 mb-4 font-mono">
+          <h2 className="text-2xl font-bold text-amber-400 mb-4">
             Configuration
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Question */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-mono text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-2">
                 Question
               </label>
               <input
                 type="text"
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
-                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 font-mono text-sm focus:outline-none focus:border-amber-500"
+                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
                 placeholder="Ask the wasteland..."
               />
             </div>
 
             {/* Character Voice */}
             <div>
-              <label className="block text-sm font-mono text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-2">
                 Character Voice
               </label>
               <select
                 value={characterVoice}
                 onChange={(e) => setCharacterVoice(e.target.value)}
-                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 font-mono text-sm focus:outline-none focus:border-amber-500"
+                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
               >
                 <option value="pip_boy">Pip-Boy 3000</option>
                 <option value="vault_dweller">Vault Dweller</option>
@@ -76,13 +76,13 @@ export default function TestStreamingPage() {
 
             {/* Karma Alignment */}
             <div>
-              <label className="block text-sm font-mono text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-2">
                 Karma Alignment
               </label>
               <select
                 value={karmaAlignment}
                 onChange={(e) => setKarmaAlignment(e.target.value)}
-                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 font-mono text-sm focus:outline-none focus:border-amber-500"
+                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
               >
                 <option value="good">Good</option>
                 <option value="neutral">Neutral</option>
@@ -92,7 +92,7 @@ export default function TestStreamingPage() {
 
             {/* Stream Speed */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-mono text-gray-300 mb-2">
+              <label className="block text-sm text-gray-300 mb-2">
                 Stream Speed: {streamSpeed} chars/sec
               </label>
               <input
@@ -110,12 +110,12 @@ export default function TestStreamingPage() {
         {/* Single Card Test */}
         <div className="bg-gray-800/50 border border-amber-600/30 rounded-lg p-6 mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-amber-400 font-mono">
+            <h2 className="text-2xl font-bold text-amber-400">
               Single Card Interpretation
             </h2>
             <button
               onClick={() => setSingleCardEnabled(!singleCardEnabled)}
-              className={`px-4 py-2 rounded font-mono text-sm transition-colors ${
+              className={`px-4 py-2 rounded text-sm transition-colors ${
                 singleCardEnabled
                   ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-green-600 hover:bg-green-700 text-white'
@@ -142,7 +142,7 @@ export default function TestStreamingPage() {
                 }}
               />
             ) : (
-              <div className="text-gray-500 font-mono text-sm">
+              <div className="text-gray-500 text-sm">
                 Click "Start Streaming" to test single card interpretation
               </div>
             )}
@@ -152,12 +152,12 @@ export default function TestStreamingPage() {
         {/* Multi-Card Test */}
         <div className="bg-gray-800/50 border border-amber-600/30 rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-amber-400 font-mono">
+            <h2 className="text-2xl font-bold text-amber-400">
               Multi-Card Spread Interpretation
             </h2>
             <button
               onClick={() => setMultiCardEnabled(!multiCardEnabled)}
-              className={`px-4 py-2 rounded font-mono text-sm transition-colors ${
+              className={`px-4 py-2 rounded text-sm transition-colors ${
                 multiCardEnabled
                   ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-green-600 hover:bg-green-700 text-white'
@@ -185,7 +185,7 @@ export default function TestStreamingPage() {
                 }}
               />
             ) : (
-              <div className="text-gray-500 font-mono text-sm">
+              <div className="text-gray-500 text-sm">
                 Click "Start Streaming" to test multi-card spread interpretation
               </div>
             )}
@@ -194,10 +194,10 @@ export default function TestStreamingPage() {
 
         {/* Information Panel */}
         <div className="mt-8 bg-amber-900/10 border border-amber-600/20 rounded-lg p-6">
-          <h3 className="text-lg font-bold text-amber-400 mb-3 font-mono">
+          <h3 className="text-lg font-bold text-amber-400 mb-3">
             Test Information
           </h3>
-          <ul className="space-y-2 text-sm text-gray-300 font-mono">
+          <ul className="space-y-2 text-sm text-gray-300">
             <li>• Streaming uses Server-Sent Events (SSE) format</li>
             <li>• Backend supports OpenAI, Anthropic, and Gemini providers</li>
             <li>• Typewriter effect is configurable (10-100 chars/sec)</li>
@@ -209,10 +209,10 @@ export default function TestStreamingPage() {
 
         {/* Performance Metrics */}
         <div className="mt-4 bg-gray-800/30 border border-amber-600/20 rounded-lg p-4">
-          <h4 className="text-sm font-bold text-amber-400 mb-2 font-mono">
+          <h4 className="text-sm font-bold text-amber-400 mb-2">
             Performance Metrics
           </h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
             <div>
               <div className="text-gray-500">Latency</div>
               <div className="text-green-400">~50-200ms</div>

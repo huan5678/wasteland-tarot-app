@@ -397,7 +397,7 @@ export function AsciiDonutLoading({
       {(!useWebGL || useFallback || forceFallback) && (
         <pre
           ref={preRef}
-          className="font-mono text-pip-boy-green whitespace-pre text-xs sm:text-sm leading-tight"
+          className="text-pip-boy-green whitespace-pre text-xs sm:text-sm leading-tight"
           aria-label="Loading animation"
         >
           {/* Content updated by animation loop or static fallback */}
@@ -414,19 +414,19 @@ export function AsciiDonutLoading({
           />
         </div>
         {/* Progress Percentage */}
-        <p className="font-mono text-pip-boy-green/60 text-xs text-center mt-2">
+        <p className="text-pip-boy-green/60 text-xs text-center mt-2">
           {Math.round(progress)}%
         </p>
       </div>
 
       {/* Loading Message */}
-      <p className="font-mono text-pip-boy-green/80 text-sm mt-4">
+      <p className="text-pip-boy-green/80 text-sm mt-4">
         {message}
       </p>
 
       {/* Fallout-style Flavor Text (dev mode only) */}
       {process.env.NODE_ENV !== 'production' && currentFPS > 0 && (
-        <p className="font-mono text-pip-boy-green/50 text-xs mt-2">
+        <p className="text-pip-boy-green/50 text-xs mt-2">
           [ {flavorText} ]
         </p>
       )}

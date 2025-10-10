@@ -63,7 +63,7 @@ export function VolumeControl() {
             <h3 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
               音量控制
             </h3>
-            <span className="text-xs text-pip-boy-green/70 font-mono">
+            <span className="text-xs text-pip-boy-green/70">
               VOL-CTRL v1.0
             </span>
           </div>
@@ -71,7 +71,7 @@ export function VolumeControl() {
           {/* 主音量（靜音按鈕） */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm text-pip-boy-green font-mono uppercase">
+              <label className="text-sm text-pip-boy-green uppercase">
                 主音量
               </label>
               <button
@@ -81,7 +81,7 @@ export function VolumeControl() {
                   toggleMute('voice');
                 }}
                 className="
-                  px-3 py-1 text-xs font-mono uppercase
+                  px-3 py-1 text-xs uppercase
                   border border-pip-boy-green/50 rounded
                   text-pip-boy-green hover:text-wasteland-darker
                   hover:bg-pip-boy-green
@@ -91,7 +91,7 @@ export function VolumeControl() {
                 {isMuted ? '取消靜音' : '靜音'}
               </button>
             </div>
-            <div className="text-xs text-pip-boy-green/70 font-mono text-right">
+            <div className="text-xs text-pip-boy-green/70 text-right">
               {isMuted ? 'MUTED' : `${masterVolume}%`}
             </div>
           </div>
@@ -99,7 +99,7 @@ export function VolumeControl() {
           {/* 音效音量 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-pip-boy-green font-mono uppercase">
+              <label className="text-xs text-pip-boy-green uppercase">
                 音效 (SFX)
               </label>
               <div className="flex items-center gap-2">
@@ -114,7 +114,7 @@ export function VolumeControl() {
                     <Volume2 className="w-4 h-4" />
                   )}
                 </button>
-                <span className="text-xs text-pip-boy-green/70 font-mono w-10 text-right">
+                <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.sfx ? 'OFF' : `${Math.round(volumes.sfx * 100)}%`}
                 </span>
               </div>
@@ -132,7 +132,7 @@ export function VolumeControl() {
           {/* 音樂音量 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-pip-boy-green font-mono uppercase">
+              <label className="text-xs text-pip-boy-green uppercase">
                 音樂 (MUSIC)
               </label>
               <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export function VolumeControl() {
                     <Volume2 className="w-4 h-4" />
                   )}
                 </button>
-                <span className="text-xs text-pip-boy-green/70 font-mono w-10 text-right">
+                <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.music ? 'OFF' : `${Math.round(volumes.music * 100)}%`}
                 </span>
               </div>
@@ -165,7 +165,7 @@ export function VolumeControl() {
           {/* 語音音量 */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs text-pip-boy-green font-mono uppercase">
+              <label className="text-xs text-pip-boy-green uppercase">
                 語音 (VOICE)
               </label>
               <div className="flex items-center gap-2">
@@ -180,7 +180,7 @@ export function VolumeControl() {
                     <Volume2 className="w-4 h-4" />
                   )}
                 </button>
-                <span className="text-xs text-pip-boy-green/70 font-mono w-10 text-right">
+                <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.voice ? 'OFF' : `${Math.round(volumes.voice * 100)}%`}
                 </span>
               </div>
@@ -197,7 +197,7 @@ export function VolumeControl() {
 
           {/* 底部資訊 */}
           <div className="pt-2 border-t border-pip-boy-green/30">
-            <p className="text-xs text-pip-boy-green/50 font-mono text-center">
+            <p className="text-xs text-pip-boy-green/50 text-center">
               VAULT-TEC AUDIO SYSTEM
             </p>
           </div>

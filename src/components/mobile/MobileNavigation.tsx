@@ -137,7 +137,7 @@ export function MobileNavigation({
                     className="flex flex-col items-center gap-1 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-xl transition-colors"
                   >
                     {action.icon}
-                    <span className="text-xs font-mono">{action.label}</span>
+                    <span className="text-xs">{action.label}</span>
                   </button>
                 ))}
               </div>
@@ -170,7 +170,7 @@ export function MobileNavigation({
                   className="flex flex-col items-center gap-2 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-xl transition-colors"
                 >
                   {action.icon}
-                  <span className="text-xs font-mono">{action.label}</span>
+                  <span className="text-xs">{action.label}</span>
                 </button>
               ))}
             </div>
@@ -206,7 +206,7 @@ export function MobileNavigation({
                     <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-pip-boy-green rounded-full animate-pulse" />
                   )}
                 </div>
-                <span className={`text-xs font-mono ${isActive ? 'font-bold' : ''}`}>
+                <span className={`text-xs ${isActive ? 'font-bold' : ''}`}>
                   {item.label}
                 </span>
               </button>
@@ -228,7 +228,7 @@ export function MobileNavigation({
             `}
           >
             <ChevronUp className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-            <span className="text-xs font-mono">更多</span>
+            <span className="text-xs">更多</span>
           </button>
         </div>
 
@@ -301,7 +301,7 @@ export function MobileTabBar({
                 </span>
               )}
             </div>
-            <span className={`text-xs font-mono ${tab.isActive ? 'font-bold' : ''}`}>
+            <span className={`text-xs ${tab.isActive ? 'font-bold' : ''}`}>
               {tab.label}
             </span>
           </button>
@@ -379,7 +379,7 @@ export function PullToRefresh({
             w-8 h-8 border-2 border-pip-boy-green rounded-full
             ${isRefreshing ? 'animate-spin border-t-transparent' : ''}
           `} />
-          <span className="ml-2 text-pip-boy-green font-mono text-sm">
+          <span className="ml-2 text-pip-boy-green text-sm">
             {isRefreshing ? '正在更新...' : pullDistance >= threshold ? '釋放以更新' : '下拉更新'}
           </span>
         </div>

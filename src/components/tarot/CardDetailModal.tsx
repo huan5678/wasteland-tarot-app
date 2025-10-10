@@ -233,7 +233,7 @@ const CharacterVoiceSelector = ({
   return (
     <div className="mb-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h4 className="text-pip-boy-green font-mono font-bold text-sm">選擇角色聲音</h4>
+        <h4 className="text-pip-boy-green font-bold text-sm">選擇角色聲音</h4>
         <button
           onClick={() => setAudioEnabled(!audioEnabled)}
           className={cn(
@@ -258,7 +258,7 @@ const CharacterVoiceSelector = ({
               key={voice}
               onClick={() => onVoiceChange(voice)}
               className={cn(
-                "relative p-3 text-xs font-mono border rounded-lg transition-all duration-200 hover:scale-105",
+                "relative p-3 text-xs border rounded-lg transition-all duration-200 hover:scale-105",
                 isSelected
                   ? `${personality.bgColor} ${personality.textColor} ${personality.borderColor} shadow-lg`
                   : `border-pip-boy-green/20 text-pip-boy-green/70 hover:${personality.bgColor} hover:${personality.textColor}`
@@ -583,7 +583,7 @@ export function CardDetailModal({
               <div className="w-full h-full flex items-center justify-center text-pip-boy-green/60">
                 <div className="text-center">
                   <AlertTriangle className="w-12 h-12 mx-auto mb-2" />
-                  <div className="font-mono text-sm">圖片載入失敗</div>
+                  <div className="text-sm">圖片載入失敗</div>
                 </div>
               </div>
             ) : (
@@ -625,7 +625,7 @@ export function CardDetailModal({
           </div>
 
           {card.position === 'reversed' && (
-            <div className="absolute top-2 left-2 bg-red-900/80 text-red-400 px-2 py-1 rounded text-xs font-mono">
+            <div className="absolute top-2 left-2 bg-red-900/80 text-red-400 px-2 py-1 rounded text-xs">
               逆位
             </div>
           )}
@@ -633,7 +633,7 @@ export function CardDetailModal({
 
         {/* Card Metadata */}
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded space-y-3">
-          <div className="grid grid-cols-2 gap-3 text-sm font-mono">
+          <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-pip-boy-green/70">花色：</span>
               <span className="text-pip-boy-green">{card.suit}</span>
@@ -659,7 +659,7 @@ export function CardDetailModal({
           {card.average_rating && (
             <div className="flex items-center gap-2 pt-2 border-t border-pip-boy-green/10">
               <Trophy className="w-4 h-4 text-yellow-400" />
-              <span className="text-pip-boy-green/70 text-sm font-mono">
+              <span className="text-pip-boy-green/70 text-sm">
                 評分：{card.average_rating.toFixed(1)}/5.0
               </span>
             </div>
@@ -669,7 +669,7 @@ export function CardDetailModal({
         {/* Keywords */}
         {card.keywords && card.keywords.length > 0 && (
           <div>
-            <h4 className="text-pip-boy-green font-mono font-bold mb-2 flex items-center gap-2">
+            <h4 className="text-pip-boy-green font-bold mb-2 flex items-center gap-2">
               <Target className="w-4 h-4" />
               關鍵詞
             </h4>
@@ -680,7 +680,7 @@ export function CardDetailModal({
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: index * 0.1 }}
-                  className="px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green/80 text-xs font-mono rounded hover:bg-pip-boy-green/20 transition-colors"
+                  className="px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green/80 text-xs rounded hover:bg-pip-boy-green/20 transition-colors"
                 >
                   {keyword}
                 </motion.span>
@@ -693,13 +693,13 @@ export function CardDetailModal({
       {/* Right Column - Current Meaning */}
       <div className="space-y-6">
         <div>
-          <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+          <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
             <BookOpen className="w-5 h-5" />
             {card.position === 'reversed' ? '逆位含義' : '正位含義'}
             {card.position === 'reversed' && <AlertTriangle className="w-4 h-4 text-orange-400" />}
           </h4>
           <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
-            <p id="card-modal-description" className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+            <p id="card-modal-description" className="text-pip-boy-green/90 text-sm leading-relaxed">
               {currentMeaning}
             </p>
           </div>
@@ -708,12 +708,12 @@ export function CardDetailModal({
         {/* Description */}
         {card.description && (
           <div>
-            <h4 className="text-pip-boy-green font-mono font-bold mb-2 flex items-center gap-2">
+            <h4 className="text-pip-boy-green font-bold mb-2 flex items-center gap-2">
               <Info className="w-4 h-4" />
               描述
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-3 rounded">
-              <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+              <p className="text-pip-boy-green/90 text-sm leading-relaxed">
                 {card.description}
               </p>
             </div>
@@ -723,11 +723,11 @@ export function CardDetailModal({
         {/* Quick Stats */}
         {(card.draw_frequency || card.total_appearances) && (
           <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
-            <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+            <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
               <History className="w-4 h-4" />
               使用統計
             </h4>
-            <div className="grid grid-cols-2 gap-4 text-sm font-mono">
+            <div className="grid grid-cols-2 gap-4 text-sm">
               {card.total_appearances && (
                 <div className="text-center">
                   <div className="text-2xl font-bold text-pip-boy-green">{card.total_appearances}</div>
@@ -747,12 +747,12 @@ export function CardDetailModal({
         {/* Lore Section - Integrated from Lore Tab */}
         {card.fallout_reference && (
           <div className="mt-6 pt-6 border-t border-pip-boy-green/20">
-            <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+            <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
               <Radiation className="w-5 h-5" />
               廢土背景
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
-              <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+              <p className="text-pip-boy-green/90 text-sm leading-relaxed">
                 {card.fallout_reference}
               </p>
             </div>
@@ -764,24 +764,24 @@ export function CardDetailModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
             {card.vault_reference && (
               <div>
-                <h5 className="text-blue-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                <h5 className="text-blue-400 font-bold text-sm mb-2 flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   避難所關聯
                 </h5>
                 <div className="bg-blue-500/5 border border-blue-400/20 p-3 rounded">
-                  <p className="text-blue-300/80 font-mono text-sm">Vault {card.vault_reference}</p>
+                  <p className="text-blue-300/80 text-sm">Vault {card.vault_reference}</p>
                 </div>
               </div>
             )}
 
             {card.threat_level !== undefined && (
               <div>
-                <h5 className="text-red-400 font-mono font-bold text-sm mb-2 flex items-center gap-2">
+                <h5 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   威脅等級
                 </h5>
                 <div className="bg-red-500/5 border border-red-400/20 p-3 rounded">
-                  <p className="text-red-300/80 font-mono text-sm">{card.threat_level}/10</p>
+                  <p className="text-red-300/80 text-sm">{card.threat_level}/10</p>
                 </div>
               </div>
             )}
@@ -793,9 +793,9 @@ export function CardDetailModal({
           <div className="space-y-4 mt-4">
             {card.wasteland_humor && (
               <div>
-                <h5 className="text-yellow-400 font-mono font-bold text-sm mb-2">廢土幽默</h5>
+                <h5 className="text-yellow-400 font-bold text-sm mb-2">廢土幽默</h5>
                 <div className="bg-yellow-500/5 border border-yellow-400/20 p-3 rounded">
-                  <p className="text-yellow-300/80 font-mono text-sm italic">
+                  <p className="text-yellow-300/80 text-sm italic">
                     "{card.wasteland_humor}"
                   </p>
                 </div>
@@ -804,18 +804,18 @@ export function CardDetailModal({
 
             {card.nuka_cola_reference && (
               <div>
-                <h5 className="text-cyan-400 font-mono font-bold text-sm mb-2">核子可樂關聯</h5>
+                <h5 className="text-cyan-400 font-bold text-sm mb-2">核子可樂關聯</h5>
                 <div className="bg-cyan-500/5 border border-cyan-400/20 p-3 rounded">
-                  <p className="text-cyan-300/80 font-mono text-sm">{card.nuka_cola_reference}</p>
+                  <p className="text-cyan-300/80 text-sm">{card.nuka_cola_reference}</p>
                 </div>
               </div>
             )}
 
             {card.special_ability && (
               <div>
-                <h5 className="text-purple-400 font-mono font-bold text-sm mb-2">特殊能力</h5>
+                <h5 className="text-purple-400 font-bold text-sm mb-2">特殊能力</h5>
                 <div className="bg-purple-500/5 border border-purple-400/20 p-3 rounded">
-                  <p className="text-purple-300/80 font-mono text-sm">{card.special_ability}</p>
+                  <p className="text-purple-300/80 text-sm">{card.special_ability}</p>
                 </div>
               </div>
             )}
@@ -841,12 +841,12 @@ export function CardDetailModal({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h4 className="text-blue-400 font-mono font-bold text-lg mb-3 flex items-center gap-2">
+          <h4 className="text-blue-400 font-bold text-lg mb-3 flex items-center gap-2">
             <ArrowLeft className="w-5 h-5" />
             正位意義
           </h4>
           <div className="bg-blue-500/5 border border-blue-400/20 p-4 rounded-lg">
-            <p className="text-blue-300/90 font-mono text-sm leading-relaxed">
+            <p className="text-blue-300/90 text-sm leading-relaxed">
               {uprightMeaning}
             </p>
           </div>
@@ -857,12 +857,12 @@ export function CardDetailModal({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <h4 className="text-orange-400 font-mono font-bold text-lg mb-3 flex items-center gap-2">
+          <h4 className="text-orange-400 font-bold text-lg mb-3 flex items-center gap-2">
             <ArrowRight className="w-5 h-5" />
             逆位意義
           </h4>
           <div className="bg-orange-500/5 border border-orange-400/20 p-4 rounded-lg">
-            <p className="text-orange-300/90 font-mono text-sm leading-relaxed">
+            <p className="text-orange-300/90 text-sm leading-relaxed">
               {reversedMeaning}
             </p>
           </div>
@@ -877,12 +877,12 @@ export function CardDetailModal({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <h4 className="text-pip-boy-green font-mono font-bold mb-3 flex items-center gap-2">
+            <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
               <Star className="w-5 h-5" />
               象徵意義
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
-              <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+              <p className="text-pip-boy-green/90 text-sm leading-relaxed">
                 {card.symbolism}
               </p>
             </div>
@@ -898,17 +898,17 @@ export function CardDetailModal({
           >
             {card.element && (
               <div>
-                <h5 className="text-pip-boy-green/80 font-mono font-bold text-sm mb-2">元素</h5>
+                <h5 className="text-pip-boy-green/80 font-bold text-sm mb-2">元素</h5>
                 <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-3 rounded">
-                  <p className="text-pip-boy-green/80 font-mono text-sm">{card.element}</p>
+                  <p className="text-pip-boy-green/80 text-sm">{card.element}</p>
                 </div>
               </div>
             )}
             {card.astrological_association && (
               <div>
-                <h5 className="text-pip-boy-green/80 font-mono font-bold text-sm mb-2">占星關聯</h5>
+                <h5 className="text-pip-boy-green/80 font-bold text-sm mb-2">占星關聯</h5>
                 <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-3 rounded">
-                  <p className="text-pip-boy-green/80 font-mono text-sm">{card.astrological_association}</p>
+                  <p className="text-pip-boy-green/80 text-sm">{card.astrological_association}</p>
                 </div>
               </div>
             )}
@@ -946,7 +946,7 @@ export function CardDetailModal({
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <MessageCircle className="w-5 h-5 text-pip-boy-green" />
-                <h4 className="text-pip-boy-green font-mono font-bold">
+                <h4 className="text-pip-boy-green font-bold">
                   {selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} 的解讀
                 </h4>
               </div>
@@ -971,19 +971,19 @@ export function CardDetailModal({
                   {isSpeaking ? (
                     <>
                       <VolumeX className="w-4 h-4" />
-                      <span className="font-mono text-xs">播放中...</span>
+                      <span className="text-xs">播放中...</span>
                     </>
                   ) : (
                     <>
                       <Volume2 className="w-4 h-4" />
-                      <span className="font-mono text-xs">播放</span>
+                      <span className="text-xs">播放</span>
                     </>
                   )}
                 </motion.button>
               )}
             </div>
 
-            <p className="text-pip-boy-green/90 font-mono text-sm leading-relaxed">
+            <p className="text-pip-boy-green/90 text-sm leading-relaxed">
               {card.character_voice_interpretations[selectedVoice] || '無可用解讀'}
             </p>
 
@@ -991,7 +991,7 @@ export function CardDetailModal({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mt-4 flex items-center gap-2 text-xs font-mono text-orange-400"
+                className="mt-4 flex items-center gap-2 text-xs text-orange-400"
               >
                 <div className="flex space-x-1">
                   <motion.div
@@ -1040,7 +1040,7 @@ export function CardDetailModal({
 
       {/* Usage Analytics */}
       <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-        <h4 className="text-pip-boy-green font-mono font-bold mb-4 flex items-center gap-2">
+        <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
           <Brain className="w-5 h-5" />
           卡牌分析洞察
         </h4>
@@ -1076,7 +1076,7 @@ export function CardDetailModal({
           <div className="flex items-center justify-center gap-4 pt-4 border-t border-pip-boy-green/10">
             <div className="flex items-center gap-2">
               <Trophy className="w-5 h-5 text-yellow-400" />
-              <span className="text-pip-boy-green font-mono">平均評分</span>
+              <span className="text-pip-boy-green">平均評分</span>
             </div>
             <div className="text-2xl font-bold text-yellow-400">
               {card.average_rating.toFixed(1)}/5.0
@@ -1087,14 +1087,14 @@ export function CardDetailModal({
 
       {/* Personal Progress */}
       <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-        <h4 className="text-pip-boy-green font-mono font-bold mb-4 flex items-center gap-2">
+        <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
           <Target className="w-5 h-5" />
           個人學習進度
         </h4>
 
         <div className="space-y-4">
           <div>
-            <div className="flex justify-between text-sm font-mono mb-2">
+            <div className="flex justify-between text-sm mb-2">
               <span className="text-pip-boy-green/70">理解程度</span>
               <span className="text-pip-boy-green">{cardStudyProgress?.studyProgress || 0}%</span>
             </div>
@@ -1109,14 +1109,14 @@ export function CardDetailModal({
           </div>
 
           {cardStudyProgress?.lastViewed && (
-            <div className="flex items-center gap-2 text-sm font-mono text-pip-boy-green/70">
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
               <Calendar className="w-4 h-4" />
               <span>上次查看：{cardStudyProgress.lastViewed.toLocaleDateString()}</span>
             </div>
           )}
 
           {cardStudyProgress?.masteryLevel && (
-            <div className="flex items-center gap-2 text-sm font-mono">
+            <div className="flex items-center gap-2 text-sm">
               <Trophy className="w-4 h-4 text-yellow-400" />
               <span className="text-pip-boy-green/70">熟練度：</span>
               <span className="text-pip-boy-green capitalize">{cardStudyProgress.masteryLevel}</span>
@@ -1139,7 +1139,7 @@ export function CardDetailModal({
       {/* Quick Actions */}
       {showQuickActions && (
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-          <h4 className="text-pip-boy-green font-mono font-bold mb-4">快速操作</h4>
+          <h4 className="text-pip-boy-green font-bold mb-4">快速操作</h4>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {showBookmark && (
               <motion.button
@@ -1147,7 +1147,7 @@ export function CardDetailModal({
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "p-3 rounded border font-mono text-sm transition-colors flex flex-col items-center gap-2",
+                  "p-3 rounded border text-sm transition-colors flex flex-col items-center gap-2",
                   cardIsBookmarked
                     ? "bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green"
                     : "border-pip-boy-green/40 text-pip-boy-green/70 hover:bg-pip-boy-green/10"
@@ -1162,7 +1162,7 @@ export function CardDetailModal({
               onClick={handleAddToReading}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-3 rounded border border-blue-400/40 text-blue-400 font-mono text-sm hover:bg-blue-500/10 transition-colors flex flex-col items-center gap-2"
+              className="p-3 rounded border border-blue-400/40 text-blue-400 text-sm hover:bg-blue-500/10 transition-colors flex flex-col items-center gap-2"
             >
               <Target className="w-5 h-5" />
               <span>加入占卜</span>
@@ -1173,7 +1173,7 @@ export function CardDetailModal({
                 onClick={handleShareCard}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-3 rounded border border-purple-400/40 text-purple-400 font-mono text-sm hover:bg-purple-500/10 transition-colors flex flex-col items-center gap-2"
+                className="p-3 rounded border border-purple-400/40 text-purple-400 text-sm hover:bg-purple-500/10 transition-colors flex flex-col items-center gap-2"
               >
                 <Share2 className="w-5 h-5" />
                 <span>分享</span>
@@ -1184,7 +1184,7 @@ export function CardDetailModal({
               onClick={() => navigator.clipboard.writeText(`${card.name}: ${currentMeaning}`)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="p-3 rounded border border-cyan-400/40 text-cyan-400 font-mono text-sm hover:bg-cyan-500/10 transition-colors flex flex-col items-center gap-2"
+              className="p-3 rounded border border-cyan-400/40 text-cyan-400 text-sm hover:bg-cyan-500/10 transition-colors flex flex-col items-center gap-2"
             >
               <Copy className="w-5 h-5" />
               <span>複製</span>
@@ -1196,7 +1196,7 @@ export function CardDetailModal({
       {/* Personal Notes */}
       {showPersonalNotes && (
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-          <h4 className="text-pip-boy-green font-mono font-bold mb-4 flex items-center gap-2">
+          <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
             <MessageCircle className="w-5 h-5" />
             個人筆記
           </h4>
@@ -1204,7 +1204,7 @@ export function CardDetailModal({
             defaultValue={cardIsBookmarked ? '' : ''}
             onChange={(e) => handleNotesUpdate(e.target.value)}
             placeholder="記下你對這張卡片的想法和感悟..."
-            className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
+            className="w-full h-32 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-3 rounded resize-none focus:outline-none focus:border-pip-boy-green/60"
           />
         </div>
       )}
@@ -1279,7 +1279,7 @@ export function CardDetailModal({
                 >
                   {getSuitIcon(card.suit)}
                 </motion.div>
-                <h2 id="card-modal-title" className="text-xl font-bold text-pip-boy-green font-mono">
+                <h2 id="card-modal-title" className="text-xl font-bold text-pip-boy-green">
                   {card.name}
                 </h2>
               </div>
@@ -1289,7 +1289,7 @@ export function CardDetailModal({
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   className={cn(
-                    "px-3 py-1 rounded text-xs font-mono flex items-center gap-2",
+                    "px-3 py-1 rounded text-xs flex items-center gap-2",
                     radiationInfo.bgColor,
                     radiationInfo.color
                   )}
@@ -1302,7 +1302,7 @@ export function CardDetailModal({
 
             <div className="flex items-center gap-2">
               {/* Keyboard shortcuts hint */}
-              <div className="hidden md:block text-xs text-pip-boy-green/60 font-mono mr-4">
+              <div className="hidden md:block text-xs text-pip-boy-green/60 mr-4">
                 Ctrl+← → 切換分頁 | ESC 關閉
               </div>
 
@@ -1329,7 +1329,7 @@ export function CardDetailModal({
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex items-center gap-2 px-4 py-3 font-mono text-sm border-b-2 transition-all duration-200 whitespace-nowrap",
+                      "flex items-center gap-2 px-4 py-3 text-sm border-b-2 transition-all duration-200 whitespace-nowrap",
                       isActive
                         ? `${tab.color} border-current bg-pip-boy-green/5`
                         : "text-pip-boy-green/60 border-transparent hover:text-pip-boy-green/80 hover:bg-pip-boy-green/5"
@@ -1364,10 +1364,10 @@ export function CardDetailModal({
               <div className="max-w-3xl mx-auto text-center space-y-4">
                 <div className="flex items-center justify-center gap-2 text-pip-boy-green">
                   <Radiation className="w-5 h-5 animate-pulse" />
-                  <h3 className="text-lg font-mono font-bold">想要更深入的解讀？</h3>
+                  <h3 className="text-lg font-bold">想要更深入的解讀？</h3>
                   <Radiation className="w-5 h-5 animate-pulse" />
                 </div>
-                <p className="text-pip-boy-green/80 font-mono text-sm leading-relaxed">
+                <p className="text-pip-boy-green/80 text-sm leading-relaxed">
                   註冊 Vault 帳號後，你可以：<br />
                   <span className="inline-flex items-center gap-2 mt-2">
                     <Bookmark className="w-4 h-4" /> 收藏卡牌
@@ -1390,7 +1390,7 @@ export function CardDetailModal({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.href = '/auth/register'}
-                    className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-mono font-bold rounded border-2 border-pip-boy-green hover:bg-transparent hover:text-pip-boy-green transition-all duration-300 shadow-lg shadow-pip-boy-green/20"
+                    className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold rounded border-2 border-pip-boy-green hover:bg-transparent hover:text-pip-boy-green transition-all duration-300 shadow-lg shadow-pip-boy-green/20"
                   >
                     立即註冊
                   </motion.button>
@@ -1398,7 +1398,7 @@ export function CardDetailModal({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => window.location.href = '/auth/login'}
-                    className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold rounded hover:bg-pip-boy-green hover:text-wasteland-dark transition-all duration-300"
+                    className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green font-bold rounded hover:bg-pip-boy-green hover:text-wasteland-dark transition-all duration-300"
                   >
                     已有帳號？登入
                   </motion.button>
@@ -1409,7 +1409,7 @@ export function CardDetailModal({
 
           {/* Enhanced Footer */}
           <div className="border-t border-pip-boy-green/30 p-4 bg-pip-boy-green/5">
-            <div className="flex justify-between items-center text-xs font-mono text-pip-boy-green/60">
+            <div className="flex justify-between items-center text-xs text-pip-boy-green/60">
               <div className="flex items-center gap-4">
                 <span>VAULT-TEC 塔羅系統 v3.0.0</span>
                 <span>輻射等級: {radiationInfo.label}</span>

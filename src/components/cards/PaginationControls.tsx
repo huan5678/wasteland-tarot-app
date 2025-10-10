@@ -148,7 +148,7 @@ export function PaginationControls({
         aria-live="polite"
         aria-atomic="true"
       >
-        <span className="font-mono text-sm md:text-base text-pip-boy-green">
+        <span className="text-sm md:text-base text-pip-boy-green">
           <span className="font-semibold">{currentPage}</span>
           <span className="mx-1 text-pip-boy-green/70">/</span>
           <span className="text-pip-boy-green/70">{totalPages}</span>
@@ -280,7 +280,7 @@ function PageNumberButton({
     <button
       className={cn(
         'min-w-[44px] min-h-[44px] px-3 py-2',
-        'font-mono text-sm md:text-base font-semibold',
+        'text-sm md:text-base font-semibold',
         'border-2 transition-all duration-200',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2',
         isCurrent

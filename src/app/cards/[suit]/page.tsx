@@ -134,20 +134,20 @@ export default function CardListPage() {
         {/* 花色標題 */}
         <header className="mb-8">
           <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-6 md:p-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-pip-boy-green font-mono uppercase tracking-wider mb-3">
+            <h1 className="text-3xl md:text-4xl font-bold text-pip-boy-green uppercase tracking-wider mb-3">
               {suitName}
             </h1>
             {suitDescription && (
-              <p className="text-base md:text-lg text-pip-boy-green/70 font-mono mb-4">
+              <p className="text-base md:text-lg text-pip-boy-green/70 mb-4">
                 {suitDescription}
               </p>
             )}
             <div className="flex items-center justify-between pt-4 border-t border-pip-boy-green/30">
-              <p className="text-sm md:text-base text-pip-boy-green/60 font-mono">
+              <p className="text-sm md:text-base text-pip-boy-green/60">
                 共 {suitCardCount} 張卡牌
               </p>
               {pagination && (
-                <p className="text-sm md:text-base text-pip-boy-green/60 font-mono">
+                <p className="text-sm md:text-base text-pip-boy-green/60">
                   第 {page} / {pagination.totalPages} 頁
                 </p>
               )}
@@ -210,7 +210,7 @@ export default function CardListPage() {
         {!isLoading && !error && cards.length === 0 && (
           <div className="text-center py-12">
             <div className="border-2 border-pip-boy-green/30 bg-black/40 p-8">
-              <p className="text-pip-boy-green/70 font-mono text-lg mb-4">
+              <p className="text-pip-boy-green/70 text-lg mb-4">
                 此花色目前沒有卡牌
               </p>
               <Link href="/cards">

@@ -173,7 +173,7 @@ export default function FAQAccordion({
 
   return (
     <div
-      className={`border-2 border-green-800 bg-black/80 font-mono ${className}`}
+      className={`border-2 border-green-800 bg-black/80 ${className}`}
     >
       {/* Accordion Header */}
       <div className="border-b-2 border-green-800 bg-green-950/50 px-4 py-3">

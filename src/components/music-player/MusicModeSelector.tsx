@@ -10,15 +10,16 @@ import React, { useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect';
 import type { MusicMode } from '@/lib/audio/playlistTypes';
+import { Piano, Sparkles, Headphones, Waves, LucideIcon } from 'lucide-react';
 
 /**
  * 音樂模式資訊
  */
-const MODES: Array<{ id: MusicMode; label: string; icon: string; description: string }> = [
-  { id: 'synthwave', label: 'Synthwave', icon: '🎹', description: '80 年代電子合成器風格' },
-  { id: 'divination', label: '占卜', icon: '🔮', description: '神秘氛圍音樂' },
-  { id: 'lofi', label: 'Lo-fi', icon: '🎧', description: 'Lo-fi 節奏音樂' },
-  { id: 'ambient', label: 'Ambient', icon: '🌊', description: '環境音樂' },
+const MODES: Array<{ id: MusicMode; label: string; icon: LucideIcon; description: string }> = [
+  { id: 'synthwave', label: 'Synthwave', icon: Piano, description: '80 年代電子合成器風格' },
+  { id: 'divination', label: '占卜', icon: Sparkles, description: '神秘氛圍音樂' },
+  { id: 'lofi', label: 'Lo-fi', icon: Headphones, description: 'Lo-fi 節奏音樂' },
+  { id: 'ambient', label: 'Ambient', icon: Waves, description: '環境音樂' },
 ];
 
 /**
@@ -89,9 +90,7 @@ export const MusicModeSelector = React.memo(function MusicModeSelector({
               transition={{ duration: 0.2, ease: 'easeOut' }}
             >
               {/* Icon */}
-              <div className="text-2xl" aria-hidden="true">
-                {mode.icon}
-              </div>
+              <mode.icon className="w-8 h-8" aria-hidden="true" />
 
               {/* Label */}
               <div className="text-sm font-bold text-center">{mode.label}</div>

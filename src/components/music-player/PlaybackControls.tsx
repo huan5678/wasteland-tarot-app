@@ -194,7 +194,7 @@ export const PlaybackControls = React.memo(function PlaybackControls({
       </div>
 
       {/* Keyboard Hints */}
-      <div className="text-center text-xs text-pip-boy-green/50 font-mono">
+      <div className="text-center text-xs text-pip-boy-green/50">
         快捷鍵: 空白鍵 (播放/暫停) | ← → (上一首/下一首)
       </div>
     </div>

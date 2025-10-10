@@ -103,7 +103,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-bold text-pip-boy-green font-mono">標籤分析</h3>
+          <h3 className="text-lg font-bold text-pip-boy-green">標籤分析</h3>
           {onClose && (
             <button onClick={onClose} className="text-pip-boy-green/70 hover:text-pip-boy-green">
               <X className="w-5 h-5" />
@@ -114,28 +114,28 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
         {/* Statistics Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-            <div className="text-2xl font-bold text-pip-boy-green font-mono">{tagStats.length}</div>
-            <div className="text-sm text-pip-boy-green/70 font-mono">總標籤數</div>
+            <div className="text-2xl font-bold text-pip-boy-green">{tagStats.length}</div>
+            <div className="text-sm text-pip-boy-green/70">總標籤數</div>
           </div>
 
           <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-            <div className="text-2xl font-bold text-pip-boy-green font-mono">
+            <div className="text-2xl font-bold text-pip-boy-green">
               {tagStats.reduce((sum, tag) => sum + tag.count, 0)}
             </div>
-            <div className="text-sm text-pip-boy-green/70 font-mono">標籤使用次數</div>
+            <div className="text-sm text-pip-boy-green/70">標籤使用次數</div>
           </div>
 
           <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-            <div className="text-2xl font-bold text-pip-boy-green font-mono">
+            <div className="text-2xl font-bold text-pip-boy-green">
               {Math.round(tagStats.reduce((sum, tag) => sum + tag.count, 0) / Math.max(tagStats.length, 1))}
             </div>
-            <div className="text-sm text-pip-boy-green/70 font-mono">平均使用次數</div>
+            <div className="text-sm text-pip-boy-green/70">平均使用次數</div>
           </div>
         </div>
 
         {/* Popular Tags */}
         <div className="space-y-3">
-          <h4 className="font-mono font-bold text-pip-boy-green flex items-center gap-2">
+          <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
             <TrendingUp className="w-4 h-4" />
             熱門標籤
           </h4>
@@ -144,11 +144,11 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
               <div key={tag.name} className="border border-pip-boy-green/30 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Tag className="w-4 h-4 text-pip-boy-green/60" />
-                  <span className="font-mono text-pip-boy-green">{tag.name}</span>
+                  <span className="text-pip-boy-green">{tag.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="font-mono text-sm text-pip-boy-green font-bold">{tag.count} 次</div>
-                  <div className="font-mono text-xs text-pip-boy-green/60">
+                  <div className="text-sm text-pip-boy-green font-bold">{tag.count} 次</div>
+                  <div className="text-xs text-pip-boy-green/60">
                     {new Date(tag.lastUsed).toLocaleDateString()}
                   </div>
                 </div>
@@ -160,7 +160,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
         {/* All Tags with Search */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-mono font-bold text-pip-boy-green flex items-center gap-2">
+            <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
               <Hash className="w-4 h-4" />
               所有標籤
             </h4>
@@ -171,7 +171,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                 placeholder="搜尋標籤..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 pr-4 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+                className="pl-10 pr-4 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          focus:border-pip-boy-green focus:outline-none"
               />
             </div>
@@ -182,9 +182,9 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
               <div key={tag.name} className="border border-pip-boy-green/30 p-2 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
                   <Tag className="w-3 h-3 text-pip-boy-green/60" />
-                  <span className="font-mono text-pip-boy-green">{tag.name}</span>
+                  <span className="text-pip-boy-green">{tag.name}</span>
                 </div>
-                <span className="font-mono text-pip-boy-green/70">{tag.count}</span>
+                <span className="text-pip-boy-green/70">{tag.count}</span>
               </div>
             ))}
           </div>
@@ -198,7 +198,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-pip-boy-green font-mono">選擇標籤</h3>
+        <h3 className="text-lg font-bold text-pip-boy-green">選擇標籤</h3>
         {onClose && (
           <button onClick={onClose} className="text-pip-boy-green/70 hover:text-pip-boy-green">
             <X className="w-5 h-5" />
@@ -209,12 +209,12 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       {/* Selected Tags */}
       {selectedTags.length > 0 && (
         <div className="space-y-2">
-          <label className="block text-pip-boy-green font-mono text-sm font-bold">已選標籤</label>
+          <label className="block text-pip-boy-green text-sm font-bold">已選標籤</label>
           <div className="flex flex-wrap gap-2">
             {selectedTags.map(tag => (
               <div
                 key={tag}
-                className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono text-sm
+                className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm
                          flex items-center gap-2"
               >
                 <Tag className="w-3 h-3" />
@@ -233,7 +233,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
 
       {/* Add New Tag */}
       <div className="space-y-2">
-        <label className="block text-pip-boy-green font-mono text-sm font-bold">新增標籤</label>
+        <label className="block text-pip-boy-green text-sm font-bold">新增標籤</label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -241,14 +241,14 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
             onChange={(e) => setNewTag(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && addNewTag()}
             placeholder="輸入新標籤名稱"
-            className="flex-1 px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+            className="flex-1 px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                      focus:border-pip-boy-green focus:outline-none"
             maxLength={30}
           />
           <button
             onClick={addNewTag}
             disabled={!newTag.trim() || selectedTags.includes(newTag.trim())}
-            className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green font-mono text-sm
+            className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                      hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -259,7 +259,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
 
       {/* Search Existing Tags */}
       <div className="space-y-2">
-        <label className="block text-pip-boy-green font-mono text-sm font-bold">選擇現有標籤</label>
+        <label className="block text-pip-boy-green text-sm font-bold">選擇現有標籤</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
           <input
@@ -267,7 +267,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
             placeholder="搜尋標籤..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+            className="w-full pl-10 pr-4 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                      focus:border-pip-boy-green focus:outline-none"
           />
         </div>
@@ -276,7 +276,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       {/* Recent Tags */}
       {recentTags.length > 0 && !searchQuery && (
         <div className="space-y-2">
-          <label className="block text-pip-boy-green font-mono text-sm font-bold">最近使用</label>
+          <label className="block text-pip-boy-green text-sm font-bold">最近使用</label>
           <div className="flex flex-wrap gap-2">
             {recentTags.slice(0, 8).map(tag => {
               const isSelected = selectedTags.includes(tag.name)
@@ -284,7 +284,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                 <button
                   key={tag.name}
                   onClick={() => toggleTag(tag.name)}
-                  className={`px-3 py-1 border font-mono text-sm flex items-center gap-1 transition-colors
+                  className={`px-3 py-1 border text-sm flex items-center gap-1 transition-colors
                     ${isSelected
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -303,7 +303,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       {/* All Available Tags */}
       {filteredTags.length > 0 && (
         <div className="space-y-2">
-          <label className="block text-pip-boy-green font-mono text-sm font-bold">
+          <label className="block text-pip-boy-green text-sm font-bold">
             {searchQuery ? '搜尋結果' : '所有標籤'}
             <span className="text-pip-boy-green/60 font-normal ml-2">({filteredTags.length})</span>
           </label>
@@ -315,7 +315,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                   <button
                     key={tag.name}
                     onClick={() => toggleTag(tag.name)}
-                    className={`px-3 py-1 border font-mono text-sm flex items-center gap-1 transition-colors
+                    className={`px-3 py-1 border text-sm flex items-center gap-1 transition-colors
                       ${isSelected
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -336,11 +336,11 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       {filteredTags.length === 0 && (
         <div className="text-center py-8 border-2 border-pip-boy-green/30">
           <Hash className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
-          <div className="font-mono text-sm text-pip-boy-green/70">
+          <div className="text-sm text-pip-boy-green/70">
             {searchQuery ? '沒有找到相關標籤' : '尚無可用標籤'}
           </div>
           {!searchQuery && (
-            <div className="font-mono text-xs text-pip-boy-green/50 mt-1">
+            <div className="text-xs text-pip-boy-green/50 mt-1">
               使用上方的輸入框建立第一個標籤
             </div>
           )}

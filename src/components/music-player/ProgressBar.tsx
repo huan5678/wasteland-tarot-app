@@ -59,7 +59,7 @@ export const ProgressBar = React.memo(function ProgressBar({
       </div>
 
       {/* Time Display (Simulated for procedural music) */}
-      <div className="flex justify-between mt-2 text-xs text-pip-boy-green/60 font-mono">
+      <div className="flex justify-between mt-2 text-xs text-pip-boy-green/60">
         <span aria-live="polite">
           {isPlaying ? '播放中' : '已暫停'}
         </span>

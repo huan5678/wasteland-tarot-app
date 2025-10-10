@@ -266,7 +266,7 @@ export function PlaylistEditor({
             className={cn(
               'w-full px-4 py-2 rounded',
               'bg-black border-2 border-pip-boy-green/30',
-              'text-pip-boy-green font-mono placeholder:text-pip-boy-green/30',
+              'text-pip-boy-green placeholder:text-pip-boy-green/30',
               'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/30',
               'transition-all duration-200',
               errors.name && 'border-red-500 focus:border-red-500 focus:ring-red-500/30'
@@ -362,7 +362,7 @@ export function PlaylistEditor({
             disabled={isSubmitting || selectedModes.length === 0}
             className={cn(
               'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded',
-              'bg-pip-boy-green text-black font-semibold font-mono',
+              'bg-pip-boy-green text-black font-semibold',
               'hover:bg-pip-boy-green/80 transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',
               'disabled:opacity-50 disabled:cursor-not-allowed'
@@ -379,7 +379,7 @@ export function PlaylistEditor({
             disabled={isSubmitting}
             className={cn(
               'flex items-center justify-center gap-2 px-4 py-2 rounded',
-              'border-2 border-pip-boy-green/30 text-pip-boy-green font-mono',
+              'border-2 border-pip-boy-green/30 text-pip-boy-green',
               'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
               'transition-all duration-200',
               'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',

@@ -49,10 +49,10 @@ export default function TestInteractionsPage() {
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Device Info */}
         <div className="bg-pip-boy-green/10 border border-pip-boy-green/30 p-4 rounded-lg">
-          <h2 className="text-lg font-mono font-bold text-pip-boy-green mb-3">
+          <h2 className="text-lg font-bold text-pip-boy-green mb-3">
             裝置資訊
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm font-mono">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
             <div className="text-pip-boy-green/70">
               觸控裝置: {isTouchDevice ? '是' : '否'}
             </div>
@@ -73,15 +73,15 @@ export default function TestInteractionsPage() {
 
         {/* Interaction Log */}
         <div className="bg-wasteland-dark/50 border border-pip-boy-green/30 p-4 rounded-lg">
-          <h2 className="text-lg font-mono font-bold text-pip-boy-green mb-3">
+          <h2 className="text-lg font-bold text-pip-boy-green mb-3">
             互動記錄
           </h2>
           <div className="space-y-1 max-h-40 overflow-y-auto">
             {interactionLog.length === 0 ? (
-              <div className="text-pip-boy-green/50 font-mono text-sm">等待互動...</div>
+              <div className="text-pip-boy-green/50 text-sm">等待互動...</div>
             ) : (
               interactionLog.map((log, index) => (
-                <div key={index} className="text-pip-boy-green/80 font-mono text-xs">
+                <div key={index} className="text-pip-boy-green/80 text-xs">
                   {log}
                 </div>
               ))
@@ -91,7 +91,7 @@ export default function TestInteractionsPage() {
 
         {/* Single Card Tests */}
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-          <h2 className="text-xl font-mono font-bold text-pip-boy-green mb-4">
+          <h2 className="text-xl font-bold text-pip-boy-green mb-4">
             單卡互動測試
           </h2>
           <div className="text-sm text-pip-boy-green/70 mb-4">
@@ -118,7 +118,7 @@ export default function TestInteractionsPage() {
                   cardIndex={0}
                   totalCards={3}
                 />
-                <span className="text-xs font-mono text-pip-boy-green/60">
+                <span className="text-xs text-pip-boy-green/60">
                   {size}
                 </span>
               </div>
@@ -128,7 +128,7 @@ export default function TestInteractionsPage() {
 
         {/* Card Draw Tests */}
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-          <h2 className="text-xl font-mono font-bold text-pip-boy-green mb-4">
+          <h2 className="text-xl font-bold text-pip-boy-green mb-4">
             抽牌動畫測試
           </h2>
           <CardDraw
@@ -141,14 +141,14 @@ export default function TestInteractionsPage() {
 
         {/* Spread Layout Tests */}
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
-          <h2 className="text-xl font-mono font-bold text-pip-boy-green mb-4">
+          <h2 className="text-xl font-bold text-pip-boy-green mb-4">
             牌陣布局測試
           </h2>
           <div className="mb-4">
             <select
               value={selectedSpread}
               onChange={(e) => setSelectedSpread(e.target.value)}
-              className="bg-wasteland-dark border border-pip-boy-green/40 text-pip-boy-green p-2 rounded font-mono"
+              className="bg-wasteland-dark border border-pip-boy-green/40 text-pip-boy-green p-2 rounded"
             >
               <option value="single_wasteland">單卡 - 廢土</option>
               <option value="vault_tec_spread">三卡 - Vault-Tec</option>
@@ -166,10 +166,10 @@ export default function TestInteractionsPage() {
 
         {/* Performance Tips */}
         <div className="bg-radiation-orange/10 border border-radiation-orange/30 p-4 rounded-lg">
-          <h3 className="text-md font-mono font-bold text-radiation-orange mb-2">
+          <h3 className="text-md font-bold text-radiation-orange mb-2">
             效能提示
           </h3>
-          <ul className="text-sm text-radiation-orange/80 space-y-1 font-mono">
+          <ul className="text-sm text-radiation-orange/80 space-y-1">
             <li>• 在較舊裝置上，複雜動畫可能會降低效能</li>
             <li>• 觸控互動針對 44px 最小觸控目標進行最佳化</li>
             <li>• 震動回饋在 iOS Safari 中可能無法使用</li>

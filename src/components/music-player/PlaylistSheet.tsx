@@ -200,7 +200,7 @@ export function PlaylistSheet({
           'w-[90vw] md:w-[400px] h-full flex flex-col',
           // Pip-Boy Theme
           'bg-black border-2 border-pip-boy-green',
-          'font-mono text-pip-boy-green',
+          'text-pip-boy-green',
           // CRT Scanline Effect
           'before:absolute before:inset-0 before:pointer-events-none before:z-10',
           'before:bg-[linear-gradient(transparent_50%,rgba(0,255,136,0.03)_50%)]',
@@ -218,7 +218,7 @@ export function PlaylistSheet({
         {/* Header */}
         <SheetHeader className="border-b-2 border-pip-boy-green pb-4 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <SheetTitle className="font-mono text-pip-boy-green text-xl">
+            <SheetTitle className="text-pip-boy-green text-xl">
               {mode === 'list' && '播放清單'}
               {mode === 'create' && '新增播放清單'}
               {mode === 'edit' && '編輯播放清單'}
@@ -254,7 +254,7 @@ export function PlaylistSheet({
                 className={cn(
                   'w-full pl-10 pr-10 py-2 rounded',
                   'bg-black border-2 border-pip-boy-green/30',
-                  'text-pip-boy-green text-sm font-mono placeholder:text-pip-boy-green/30',
+                  'text-pip-boy-green text-sm placeholder:text-pip-boy-green/30',
                   'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/30',
                   'transition-all duration-200'
                 )}

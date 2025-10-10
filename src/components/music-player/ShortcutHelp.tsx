@@ -109,7 +109,7 @@ export function ShortcutHelp({
               'relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto',
               // Pip-Boy Theme
               'bg-black border-2 border-pip-boy-green',
-              'font-mono text-pip-boy-green',
+              'text-pip-boy-green',
               'p-6 rounded-lg',
               // CRT Scanline Effect
               'before:absolute before:inset-0 before:pointer-events-none before:z-10',

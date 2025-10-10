@@ -120,7 +120,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-pip-boy-green font-mono">初始化 Pip-Boy 介面...</p>
+          <p className="text-pip-boy-green">初始化 Pip-Boy 介面...</p>
         </div>
       </div>
     )
@@ -142,10 +142,10 @@ export default function DashboardPage() {
         {/* Dashboard Header */}
         <div className="mb-8">
           <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-4">
-            <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
+            <h1 className="text-2xl font-bold text-pip-boy-green">
               控制台 - {user?.name || 'Vault Dweller'}
             </h1>
-            <p className="text-pip-boy-green/70 font-mono text-sm">
+            <p className="text-pip-boy-green/70 text-sm">
               Pip-Boy 個人資料管理系統
             </p>
           </div>
@@ -153,23 +153,23 @@ export default function DashboardPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-2xl font-bold text-pip-boy-green font-mono">{stats.totalReadings}</div>
-              <div className="text-pip-boy-green/70 text-xs font-mono">占卜總數</div>
+              <div className="text-2xl font-bold text-pip-boy-green">{stats.totalReadings}</div>
+              <div className="text-pip-boy-green/70 text-xs">占卜總數</div>
             </div>
 
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-sm font-bold text-pip-boy-green font-mono">{stats.karmaLevel}</div>
-              <div className="text-pip-boy-green/70 text-xs font-mono">業力狀態</div>
+              <div className="text-sm font-bold text-pip-boy-green">{stats.karmaLevel}</div>
+              <div className="text-pip-boy-green/70 text-xs">業力狀態</div>
             </div>
 
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-2xl font-bold text-pip-boy-green font-mono">{stats.daysInVault}</div>
-              <div className="text-pip-boy-green/70 text-xs font-mono">服務天數</div>
+              <div className="text-2xl font-bold text-pip-boy-green">{stats.daysInVault}</div>
+              <div className="text-pip-boy-green/70 text-xs">服務天數</div>
             </div>
 
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-sm font-bold text-pip-boy-green font-mono">Vault {user?.vault_number || '111'}</div>
-              <div className="text-pip-boy-green/70 text-xs font-mono">分配</div>
+              <div className="text-sm font-bold text-pip-boy-green">Vault {user?.vault_number || '111'}</div>
+              <div className="text-pip-boy-green/70 text-xs">分配</div>
             </div>
           </div>
         </div>
@@ -183,8 +183,8 @@ export default function DashboardPage() {
           >
             <div className="text-center">
               <Spade className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
-              <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">新占卜</h3>
-              <p className="text-pip-boy-green/70 text-sm font-mono">
+              <h3 className="text-lg font-bold text-pip-boy-green mb-2">新占卜</h3>
+              <p className="text-pip-boy-green/70 text-sm">
                 開始一場全新的塔羅占卜會議
               </p>
             </div>
@@ -197,8 +197,8 @@ export default function DashboardPage() {
           >
             <div className="text-center">
               <Library className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
-              <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">卡牌圖書館</h3>
-              <p className="text-pip-boy-green/70 text-sm font-mono">
+              <h3 className="text-lg font-bold text-pip-boy-green mb-2">卡牌圖書館</h3>
+              <p className="text-pip-boy-green/70 text-sm">
                 瀏覽所有可用的塔羅牌
               </p>
             </div>
@@ -211,8 +211,8 @@ export default function DashboardPage() {
           >
             <div className="text-center">
               <UserCircle className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
-              <h3 className="text-lg font-bold text-pip-boy-green font-mono mb-2">個人檔案</h3>
-              <p className="text-pip-boy-green/70 text-sm font-mono">
+              <h3 className="text-lg font-bold text-pip-boy-green mb-2">個人檔案</h3>
+              <p className="text-pip-boy-green/70 text-sm">
                 管理你的 Vault Dweller 設定
               </p>
             </div>
@@ -230,7 +230,7 @@ export default function DashboardPage() {
         {/* Recent Readings */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <h2 className="text-xl font-bold text-pip-boy-green font-mono mb-4 flex items-center">
+            <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
               <ScrollText className="w-5 h-5 mr-2" />最近占卜
             </h2>
 
@@ -242,15 +242,15 @@ export default function DashboardPage() {
                     className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200"
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-sm font-bold text-pip-boy-green font-mono">
+                      <h3 className="text-sm font-bold text-pip-boy-green">
                         {reading.spread_type === 'single' ? '單張牌' : '三張牌'} 占卜
                       </h3>
-                      <span className="text-xs text-pip-boy-green/70 font-mono">
+                      <span className="text-xs text-pip-boy-green/70">
                         {formatDate(reading.date)}
                       </span>
                     </div>
 
-                    <p className="text-pip-boy-green/80 text-sm font-mono mb-3 italic">
+                    <p className="text-pip-boy-green/80 text-sm mb-3 italic">
                       "{reading.question}"
                     </p>
 
@@ -262,7 +262,7 @@ export default function DashboardPage() {
                       ))}
                     </div>
 
-                    <p className="text-pip-boy-green/70 text-xs font-mono line-clamp-2">
+                    <p className="text-pip-boy-green/70 text-xs line-clamp-2">
                       {reading.interpretation}
                     </p>
                   </div>
@@ -270,13 +270,13 @@ export default function DashboardPage() {
               ) : (
                 <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 text-center">
                   <Spade className="w-10 h-10 mb-3 mx-auto text-pip-boy-green opacity-50" />
-                  <p className="text-pip-boy-green/70 font-mono text-sm">
+                  <p className="text-pip-boy-green/70 text-sm">
                     尚無占卜記錄。開始你的第一次占卜會議！
                   </p>
                   <button
                     onClick={() => window.location.href = '/readings/new'}
                     className="inline-block mt-3 px-4 py-2 border border-pip-boy-green text-pip-boy-green
-                             hover:bg-pip-boy-green/10 text-xs font-mono transition-colors cursor-pointer"
+                             hover:bg-pip-boy-green/10 text-xs transition-colors cursor-pointer"
                   >
                     新占卜
                   </button>
@@ -288,7 +288,7 @@ export default function DashboardPage() {
               <button
                 onClick={() => window.location.href = '/readings'}
                 className="inline-block mt-4 text-pip-boy-green hover:text-pip-boy-green/80
-                         text-sm font-mono transition-colors cursor-pointer"
+                         text-sm transition-colors cursor-pointer"
               >
                 → 查看所有占卜
               </button>
@@ -297,23 +297,23 @@ export default function DashboardPage() {
 
           {/* Favorite Card & System Status */}
           <div>
-            <h2 className="text-xl font-bold text-pip-boy-green font-mono mb-4 flex items-center">
+            <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
               <Star className="w-5 h-5 mr-2" />Dweller 狀態
             </h2>
 
             {/* Favorite Card - Temporarily simplified to fix React errors */}
             {stats.favoriteCard && (
               <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 mb-6">
-                <h3 className="text-sm font-bold text-pip-boy-green font-mono mb-3">最常抽到的牌</h3>
+                <h3 className="text-sm font-bold text-pip-boy-green mb-3">最常抽到的牌</h3>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-24 border-2 border-pip-boy-green/50 bg-pip-boy-green/10 rounded flex items-center justify-center">
                     <Spade className="w-6 h-6" />
                   </div>
                   <div>
-                    <p className="text-pip-boy-green font-mono text-sm font-bold">
+                    <p className="text-pip-boy-green text-sm font-bold">
                       {stats.favoriteCard.name}
                     </p>
-                    <p className="text-pip-boy-green/70 text-xs font-mono">
+                    <p className="text-pip-boy-green/70 text-xs">
                       已抽取 8 次
                     </p>
                   </div>
@@ -323,38 +323,38 @@ export default function DashboardPage() {
 
             {/* System Status */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-              <h3 className="text-sm font-bold text-pip-boy-green font-mono mb-3">系統狀態</h3>
+              <h3 className="text-sm font-bold text-pip-boy-green mb-3">系統狀態</h3>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs font-mono">Pip-Boy 連線</span>
+                  <span className="text-pip-boy-green/70 text-xs">Pip-Boy 連線</span>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs font-mono">線上</span>
+                    <span className="text-pip-boy-green text-xs">線上</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs font-mono">卡牌資料庫</span>
+                  <span className="text-pip-boy-green/70 text-xs">卡牌資料庫</span>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs font-mono">已同步</span>
+                    <span className="text-pip-boy-green text-xs">已同步</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs font-mono">量子處理</span>
+                  <span className="text-pip-boy-green/70 text-xs">量子處理</span>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs font-mono">啓動中</span>
+                    <span className="text-pip-boy-green text-xs">啓動中</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs font-mono">備份狀態</span>
+                  <span className="text-pip-boy-green/70 text-xs">備份狀態</span>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                    <span className="text-yellow-400 text-xs font-mono">等待中</span>
+                    <span className="text-yellow-400 text-xs">等待中</span>
                   </div>
                 </div>
               </div>

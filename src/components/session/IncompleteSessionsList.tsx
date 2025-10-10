@@ -69,7 +69,7 @@ export function IncompleteSessionsList() {
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-pip-boy-green font-mono">載入會話...</p>
+        <p className="text-pip-boy-green">載入會話...</p>
       </div>
     )
   }
@@ -78,10 +78,10 @@ export function IncompleteSessionsList() {
     return (
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-8 text-center">
         <Clock className="w-12 h-12 mx-auto mb-3 text-pip-boy-green opacity-50" />
-        <p className="text-pip-boy-green/70 font-mono">
+        <p className="text-pip-boy-green/70">
           目前沒有未完成的占卜會話
         </p>
-        <p className="text-pip-boy-green/50 font-mono text-sm mt-2">
+        <p className="text-pip-boy-green/50 text-sm mt-2">
           開始新的占卜，系統會自動為你儲存進度
         </p>
       </div>
@@ -91,7 +91,7 @@ export function IncompleteSessionsList() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-pip-boy-green font-mono">
+        <h3 className="text-lg font-bold text-pip-boy-green">
           未完成的占卜 ({totalSessions})
         </h3>
       </div>
@@ -127,19 +127,19 @@ function SessionCard({
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
-            <span className="px-2 py-0.5 bg-pip-boy-green/20 border border-pip-boy-green/50 text-pip-boy-green text-xs font-mono rounded">
+            <span className="px-2 py-0.5 bg-pip-boy-green/20 border border-pip-boy-green/50 text-pip-boy-green text-xs rounded">
               {session.spread_type}
             </span>
-            <span className="text-pip-boy-green/50 text-xs font-mono">
+            <span className="text-pip-boy-green/50 text-xs">
               {formatDate(session.updated_at)}
             </span>
           </div>
 
-          <p className="text-pip-boy-green font-mono text-sm line-clamp-2 mb-2">
+          <p className="text-pip-boy-green text-sm line-clamp-2 mb-2">
             {session.question}
           </p>
 
-          <div className="flex items-center gap-2 text-xs text-pip-boy-green/70 font-mono">
+          <div className="flex items-center gap-2 text-xs text-pip-boy-green/70">
             <Clock className="w-3 h-3" />
             <span>建立於 {new Date(session.created_at).toLocaleDateString('zh-TW')}</span>
           </div>
@@ -148,7 +148,7 @@ function SessionCard({
         <div className="flex items-center gap-2">
           <button
             onClick={onResume}
-            className="flex items-center gap-1.5 px-3 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors font-mono text-sm"
+            className="flex items-center gap-1.5 px-3 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
             title="恢復會話"
           >
             <Play className="w-4 h-4" />

@@ -12,19 +12,19 @@ export default function TestLoadingWebGLPage() {
   return (
     <div className="min-h-screen bg-gray-900 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-green-400 mb-6 text-center font-mono">
+        <h1 className="text-3xl font-bold text-green-400 mb-6 text-center">
           AsciiDonutLoading WebGL Integration Test
         </h1>
 
         {/* Mode Selector */}
         <div className="mb-8 p-6 border border-green-500 rounded bg-black/50">
-          <h2 className="text-xl font-semibold text-green-400 mb-4 font-mono">
+          <h2 className="text-xl font-semibold text-green-400 mb-4">
             Rendering Mode:
           </h2>
           <div className="flex gap-4">
             <button
               onClick={() => setMode('webgl')}
-              className={`flex-1 px-4 py-3 border rounded transition-all font-mono ${
+              className={`flex-1 px-4 py-3 border rounded transition-all ${
                 mode === 'webgl'
                   ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
                   : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
@@ -38,7 +38,7 @@ export default function TestLoadingWebGLPage() {
 
             <button
               onClick={() => setMode('cpu')}
-              className={`flex-1 px-4 py-3 border rounded transition-all font-mono ${
+              className={`flex-1 px-4 py-3 border rounded transition-all ${
                 mode === 'cpu'
                   ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
                   : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
@@ -52,7 +52,7 @@ export default function TestLoadingWebGLPage() {
 
             <button
               onClick={() => setMode('fallback')}
-              className={`flex-1 px-4 py-3 border rounded transition-all font-mono ${
+              className={`flex-1 px-4 py-3 border rounded transition-all ${
                 mode === 'fallback'
                   ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
                   : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
@@ -66,7 +66,7 @@ export default function TestLoadingWebGLPage() {
           </div>
 
           {/* Current mode info */}
-          <div className="mt-4 p-3 border border-green-700/50 rounded bg-black/30 text-sm font-mono text-green-300">
+          <div className="mt-4 p-3 border border-green-700/50 rounded bg-black/30 text-sm text-green-300">
             <span className="text-cyan-400 font-semibold">Current Mode:</span>{' '}
             {mode === 'webgl' && (
               <>
@@ -106,7 +106,7 @@ export default function TestLoadingWebGLPage() {
         </div>
 
         {/* Info */}
-        <div className="mt-6 p-4 border border-green-500 rounded bg-black/50 text-sm font-mono text-green-300">
+        <div className="mt-6 p-4 border border-green-500 rounded bg-black/50 text-sm text-green-300">
           <h3 className="text-lg font-semibold mb-2 text-green-400">
             Expected Behavior:
           </h3>

@@ -55,10 +55,10 @@ export function ReadingDetailModal({ id, onClose }: Props) {
         <div className="border-b border-pip-boy-green/30 p-4 flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <h2 className="text-xl font-bold text-pip-boy-green font-mono">占卜詳細資訊</h2>
+              <h2 className="text-xl font-bold text-pip-boy-green">占卜詳細資訊</h2>
               {reading.is_favorite && <Star className="w-5 h-5 text-yellow-400" />}
               {reading.archived && <Archive className="w-5 h-5 text-pip-boy-green/60" />}
-              {reading._offline && <div className="px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs font-mono">離線</div>}
+              {reading._offline && <div className="px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs">離線</div>}
             </div>
             <div className="flex items-center gap-2">
               {/* Quick Actions */}
@@ -78,7 +78,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
               </button>
               <button
                 onClick={() => setEditing(!editing)}
-                className="px-3 py-1 border border-pip-boy-green/50 text-pip-boy-green text-xs font-mono hover:bg-pip-boy-green/10"
+                className="px-3 py-1 border border-pip-boy-green/50 text-pip-boy-green text-xs hover:bg-pip-boy-green/10"
               >
                 {editing ? '完成' : '編輯'}
               </button>
@@ -95,7 +95,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 font-mono text-sm border transition-colors flex items-center gap-2 ${
+                  className={`px-4 py-2 text-sm border transition-colors flex items-center gap-2 ${
                     isActive
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -126,21 +126,21 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                 <div>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-pip-boy-green font-mono">
+                      <h3 className="text-lg font-bold text-pip-boy-green">
                         {reading.spread_type === 'single' ? '單張卡牌' : '三張卡牌'} 占卜
                       </h3>
                       {category && (
                         <div className="flex items-center gap-1 px-2 py-1 border border-pip-boy-green/30 bg-pip-boy-green/5">
                           <span style={{ color: category.color }}>{category.icon}</span>
-                          <span className="text-pip-boy-green/70 font-mono text-xs">{category.name}</span>
+                          <span className="text-pip-boy-green/70 text-xs">{category.name}</span>
                         </div>
                       )}
                     </div>
-                    <span className="text-pip-boy-green/70 text-sm font-mono">
+                    <span className="text-pip-boy-green/70 text-sm">
                       {new Date(reading.created_at || reading.date).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-pip-boy-green/80 font-mono text-sm italic mb-4">
+                  <p className="text-pip-boy-green/80 text-sm italic mb-4">
                     問題："{reading.question}"
                   </p>
 
@@ -148,7 +148,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                   {reading.tags && reading.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {reading.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/30 text-pip-boy-green font-mono text-xs">
+                        <span key={tag} className="px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/30 text-pip-boy-green text-xs">
                           #{tag}
                         </span>
                       ))}
@@ -158,7 +158,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
 
                 {/* Cards */}
                 <div>
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">抽取的卡牌：</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">抽取的卡牌：</h4>
                   <div className="grid gap-3">
                     {(reading.cards_drawn || reading.cards || []).map((card: any, index: number) => (
                       <div
@@ -171,15 +171,15 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                             <Spade className="w-4 h-4" />
                           </div>
                           <div className="flex-1">
-                            <p className="text-pip-boy-green font-mono text-sm font-bold">{card.name || '未知卡牌'}</p>
-                            <p className="text-pip-boy-green/70 font-mono text-xs">{card.suit || 'Suit'}</p>
+                            <p className="text-pip-boy-green text-sm font-bold">{card.name || '未知卡牌'}</p>
+                            <p className="text-pip-boy-green/70 text-xs">{card.suit || 'Suit'}</p>
                             {reading.spread_type === 'three_card' && (
-                              <p className="text-pip-boy-green/60 font-mono text-xs">
+                              <p className="text-pip-boy-green/60 text-xs">
                                 {index === 0 ? '過去' : index === 1 ? '現在' : '未來'}
                               </p>
                             )}
                           </div>
-                          <div className="text-pip-boy-green/40 text-xs font-mono">點擊查看詳情</div>
+                          <div className="text-pip-boy-green/40 text-xs">點擊查看詳情</div>
                         </div>
                       </div>
                     ))}
@@ -188,9 +188,9 @@ export function ReadingDetailModal({ id, onClose }: Props) {
 
                 {/* Interpretation */}
                 <div>
-                  <h4 className="text-pip-boy-green font-mono font-bold mb-3">解讀：</h4>
+                  <h4 className="text-pip-boy-green font-bold mb-3">解讀：</h4>
                   <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-                    <p className="text-pip-boy-green/80 font-mono text-sm leading-relaxed whitespace-pre-line">
+                    <p className="text-pip-boy-green/80 text-sm leading-relaxed whitespace-pre-line">
                       {reading.interpretation}
                     </p>
                   </div>
@@ -201,27 +201,27 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                   <div className="space-y-3">
                     {reading.character_voice && (
                       <div>
-                        <h5 className="text-pip-boy-green font-mono font-bold text-sm mb-2">角色觀點：</h5>
+                        <h5 className="text-pip-boy-green font-bold text-sm mb-2">角色觀點：</h5>
                         <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-                          <p className="text-pip-boy-green/70 font-mono text-sm">{reading.character_voice}</p>
+                          <p className="text-pip-boy-green/70 text-sm">{reading.character_voice}</p>
                         </div>
                       </div>
                     )}
 
                     {reading.karma_context && (
                       <div>
-                        <h5 className="text-pip-boy-green font-mono font-bold text-sm mb-2">業力脈絡：</h5>
+                        <h5 className="text-pip-boy-green font-bold text-sm mb-2">業力脈絡：</h5>
                         <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-                          <p className="text-pip-boy-green/70 font-mono text-sm">{reading.karma_context}</p>
+                          <p className="text-pip-boy-green/70 text-sm">{reading.karma_context}</p>
                         </div>
                       </div>
                     )}
 
                     {reading.faction_influence && (
                       <div>
-                        <h5 className="text-pip-boy-green font-mono font-bold text-sm mb-2">派系影響：</h5>
+                        <h5 className="text-pip-boy-green font-bold text-sm mb-2">派系影響：</h5>
                         <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3">
-                          <p className="text-pip-boy-green/70 font-mono text-sm">{reading.faction_influence}</p>
+                          <p className="text-pip-boy-green/70 text-sm">{reading.faction_influence}</p>
                         </div>
                       </div>
                     )}

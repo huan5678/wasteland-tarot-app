@@ -97,14 +97,14 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-bold text-pip-boy-green font-mono">
+        <h3 className="text-lg font-bold text-pip-boy-green">
           {selectedReadingId ? '選擇類別' : '類別管理'}
         </h3>
         <div className="flex items-center gap-2">
           {!selectedReadingId && (
             <button
               onClick={startCreate}
-              className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+              className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
               <Plus className="w-4 h-4" />
@@ -125,20 +125,20 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
       {/* Category Creation/Edit Form */}
       {(isCreating || editingCategory) && (
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
-          <h4 className="font-mono font-bold text-pip-boy-green">
+          <h4 className="font-bold text-pip-boy-green">
             {editingCategory ? '編輯類別' : '新增類別'}
           </h4>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name */}
             <div className="space-y-1">
-              <label className="block text-pip-boy-green font-mono text-sm">類別名稱 *</label>
+              <label className="block text-pip-boy-green text-sm">類別名稱 *</label>
               <input
                 type="text"
                 value={formData.name || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="輸入類別名稱"
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          focus:border-pip-boy-green focus:outline-none"
                 maxLength={50}
               />
@@ -146,7 +146,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
             {/* Icon */}
             <div className="space-y-1">
-              <label className="block text-pip-boy-green font-mono text-sm">圖示</label>
+              <label className="block text-pip-boy-green text-sm">圖示</label>
               <div className="flex items-center gap-2">
                 <div
                   className="w-10 h-10 border border-pip-boy-green/30 bg-black flex items-center justify-center text-lg cursor-pointer hover:border-pip-boy-green/60"
@@ -156,7 +156,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                 </div>
                 <button
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono text-xs hover:border-pip-boy-green/60"
+                  className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60"
                 >
                   選擇
                 </button>
@@ -183,7 +183,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
           {/* Color */}
           <div className="space-y-1">
-            <label className="block text-pip-boy-green font-mono text-sm">顏色</label>
+            <label className="block text-pip-boy-green text-sm">顏色</label>
             <div className="flex items-center gap-2">
               <div
                 className="w-10 h-6 border border-pip-boy-green/30 cursor-pointer"
@@ -192,7 +192,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               />
               <button
                 onClick={() => setShowColorPicker(!showColorPicker)}
-                className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono text-xs hover:border-pip-boy-green/60 flex items-center gap-1"
+                className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60 flex items-center gap-1"
               >
                 <Palette className="w-3 h-3" />
                 選擇顏色
@@ -225,17 +225,17 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
           {/* Description */}
           <div className="space-y-1">
-            <label className="block text-pip-boy-green font-mono text-sm">描述</label>
+            <label className="block text-pip-boy-green text-sm">描述</label>
             <textarea
               value={formData.description || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="類別用途說明（選填）"
               rows={2}
               maxLength={200}
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                        focus:border-pip-boy-green focus:outline-none resize-none"
             />
-            <div className="text-xs text-pip-boy-green/60 font-mono">
+            <div className="text-xs text-pip-boy-green/60">
               <span className="numeric tabular-nums">{(formData.description || '').length}</span>/<span className="numeric tabular-nums">200</span>
             </div>
           </div>
@@ -244,7 +244,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
           <div className="flex justify-end gap-2">
             <button
               onClick={resetForm}
-              className="px-3 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono text-sm
+              className="px-3 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
               <X className="w-4 h-4" />
@@ -253,7 +253,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
             <button
               onClick={handleSave}
               disabled={!formData.name?.trim()}
-              className="px-3 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green font-mono text-sm
+              className="px-3 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                        hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
@@ -276,8 +276,8 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                 <X className="w-4 h-4" />
               </div>
               <div className="flex-1">
-                <div className="font-mono font-bold text-pip-boy-green/70 text-sm">無類別</div>
-                <div className="font-mono text-xs text-pip-boy-green/50">移除類別標籤</div>
+                <div className="font-bold text-pip-boy-green/70 text-sm">無類別</div>
+                <div className="text-xs text-pip-boy-green/50">移除類別標籤</div>
               </div>
             </div>
           </div>
@@ -305,14 +305,14 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                     {category.icon}
                   </div>
                   <div className="flex-1">
-                    <div className="font-mono font-bold text-pip-boy-green text-sm">
+                    <div className="font-bold text-pip-boy-green text-sm">
                       {category.name}
                     </div>
-                    <div className="font-mono text-xs text-pip-boy-green/70">
+                    <div className="text-xs text-pip-boy-green/70">
                       {category.description}
                     </div>
                     {!selectedReadingId && (
-                      <div className="font-mono text-xs text-pip-boy-green/50 mt-1">
+                      <div className="text-xs text-pip-boy-green/50 mt-1">
                         {readingsInCategory.length} 個占卜記錄
                       </div>
                     )}
@@ -349,10 +349,10 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
         {categories.length === 0 && (
           <div className="text-center py-8 border-2 border-pip-boy-green/30">
             <Hash className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
-            <div className="font-mono text-sm text-pip-boy-green/70">尚無類別</div>
+            <div className="text-sm text-pip-boy-green/70">尚無類別</div>
             <button
               onClick={startCreate}
-              className="mt-2 px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono text-xs hover:border-pip-boy-green/60"
+              className="mt-2 px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60"
             >
               建立第一個類別
             </button>
@@ -364,7 +364,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
       {!selectedReadingId && (
         <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-start gap-2">
           <Info className="w-4 h-4 text-pip-boy-green/60 mt-0.5" />
-          <div className="text-pip-boy-green/70 font-mono text-xs">
+          <div className="text-pip-boy-green/70 text-xs">
             類別可以幫助你整理不同主題的占卜記錄。預設類別無法刪除，但可以編輯名稱和描述。
           </div>
         </div>

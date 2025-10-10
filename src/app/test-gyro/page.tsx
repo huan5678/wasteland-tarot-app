@@ -42,14 +42,14 @@ export default function TestGyroPage() {
   return (
     <div className="min-h-screen bg-black p-4">
       <div className="max-w-2xl mx-auto space-y-4">
-        <h1 className="text-2xl font-mono text-pip-boy-green mb-6">
+        <h1 className="text-2xl text-pip-boy-green mb-6">
           陀螺儀權限測試
         </h1>
 
         {/* 裝置資訊 */}
         <PipBoyCard>
-          <h2 className="text-lg font-mono text-pip-boy-green mb-3">裝置資訊</h2>
-          <div className="space-y-2 font-mono text-sm text-pip-boy-green/80">
+          <h2 className="text-lg text-pip-boy-green mb-3">裝置資訊</h2>
+          <div className="space-y-2 text-sm text-pip-boy-green/80">
             <div>User Agent: {navigator.userAgent}</div>
             <div>isTouchDevice: {isTouchDevice ? '是' : '否'}</div>
             <div>isIOS: {isIOS ? '是' : '否'}</div>
@@ -61,14 +61,14 @@ export default function TestGyroPage() {
 
         {/* 權限狀態 */}
         <PipBoyCard>
-          <h2 className="text-lg font-mono text-pip-boy-green mb-3">權限狀態</h2>
+          <h2 className="text-lg text-pip-boy-green mb-3">權限狀態</h2>
           <div className="space-y-3">
-            <div className="font-mono text-pip-boy-green">
+            <div className="text-pip-boy-green">
               狀態: <span className="text-pip-boy-green-bright font-bold">{status}</span>
             </div>
 
             {error && (
-              <div className="font-mono text-red-500 text-sm">
+              <div className="text-red-500 text-sm">
                 錯誤: {error}
               </div>
             )}
@@ -76,7 +76,7 @@ export default function TestGyroPage() {
             {/* 權限請求按鈕 */}
             {status === 'prompt' && (
               <div className="space-y-2">
-                <div className="text-sm font-mono text-pip-boy-green/70">
+                <div className="text-sm text-pip-boy-green/70">
                   iOS 13+ 需要使用者授權才能存取陀螺儀資料
                 </div>
                 <PipBoyButton
@@ -98,19 +98,19 @@ export default function TestGyroPage() {
             )}
 
             {status === 'granted' && (
-              <div className="text-sm font-mono text-green-500">
+              <div className="text-sm text-green-500">
                 ✅ 權限已授予！陀螺儀資料應該正在接收中...
               </div>
             )}
 
             {status === 'denied' && (
-              <div className="text-sm font-mono text-red-500">
+              <div className="text-sm text-red-500">
                 ❌ 權限被拒絕。請至 Safari 設定重置權限。
               </div>
             )}
 
             {status === 'unsupported' && (
-              <div className="text-sm font-mono text-yellow-500">
+              <div className="text-sm text-yellow-500">
                 ⚠️ 此裝置不支援 DeviceOrientation API
               </div>
             )}
@@ -120,8 +120,8 @@ export default function TestGyroPage() {
         {/* 陀螺儀資料即時顯示 */}
         {status === 'granted' && (
           <PipBoyCard>
-            <h2 className="text-lg font-mono text-pip-boy-green mb-3">陀螺儀資料</h2>
-            <div className="space-y-2 font-mono text-sm">
+            <h2 className="text-lg text-pip-boy-green mb-3">陀螺儀資料</h2>
+            <div className="space-y-2 text-sm">
               <div className="text-pip-boy-green/70">事件次數: {eventCount}</div>
               <div className="grid grid-cols-3 gap-4 mt-3">
                 <div className="text-center">
@@ -153,7 +153,7 @@ export default function TestGyroPage() {
         {/* 視覺化傾斜指示器 */}
         {status === 'granted' && (
           <PipBoyCard className="relative overflow-hidden">
-            <h2 className="text-lg font-mono text-pip-boy-green mb-3">3D 傾斜視覺化</h2>
+            <h2 className="text-lg text-pip-boy-green mb-3">3D 傾斜視覺化</h2>
             <div className="flex items-center justify-center h-64">
               <div
                 className="w-32 h-48 bg-pip-boy-green/20 border-2 border-pip-boy-green rounded-lg transition-transform duration-100"
@@ -162,7 +162,7 @@ export default function TestGyroPage() {
                   boxShadow: '0 0 20px rgba(51, 255, 51, 0.3)'
                 }}
               >
-                <div className="flex items-center justify-center h-full text-pip-boy-green font-mono text-sm">
+                <div className="flex items-center justify-center h-full text-pip-boy-green text-sm">
                   傾斜我
                 </div>
               </div>
@@ -172,7 +172,7 @@ export default function TestGyroPage() {
 
         {/* 手動測試按鈕 */}
         <PipBoyCard>
-          <h2 className="text-lg font-mono text-pip-boy-green mb-3">手動測試</h2>
+          <h2 className="text-lg text-pip-boy-green mb-3">手動測試</h2>
           <div className="space-y-2">
             <PipBoyButton
               onClick={() => {
@@ -205,8 +205,8 @@ export default function TestGyroPage() {
 
         {/* 說明文件 */}
         <PipBoyCard>
-          <h2 className="text-lg font-mono text-pip-boy-green mb-3">測試步驟</h2>
-          <ol className="list-decimal list-inside space-y-2 font-mono text-sm text-pip-boy-green/80">
+          <h2 className="text-lg text-pip-boy-green mb-3">測試步驟</h2>
+          <ol className="list-decimal list-inside space-y-2 text-sm text-pip-boy-green/80">
             <li>在 iOS 裝置（iPhone/iPad）上使用 Safari 瀏覽器開啟此頁面</li>
             <li>確認「裝置資訊」顯示 isIOS: 是</li>
             <li>確認「裝置資訊」顯示 requestPermission API: 是</li>

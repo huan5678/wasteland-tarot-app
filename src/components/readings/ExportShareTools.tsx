@@ -156,8 +156,8 @@ ${reading.interpretation || '無解讀內容'}
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-pip-boy-green font-mono">匯出與分享</h3>
-          <p className="text-pip-boy-green/70 font-mono text-sm">
+          <h3 className="text-lg font-bold text-pip-boy-green">匯出與分享</h3>
+          <p className="text-pip-boy-green/70 text-sm">
             {selectedReadingIds.length > 0
               ? `已選擇 ${selectedReadingIds.length} 個占卜記錄`
               : `全部 ${readingsToExport.length} 個占卜記錄`
@@ -178,14 +178,14 @@ ${reading.interpretation || '無解讀內容'}
       {exportSuccess && (
         <div className="border-2 border-green-500/30 bg-green-500/10 p-3 flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span className="font-mono text-sm text-green-400">操作成功完成！</span>
+          <span className="text-sm text-green-400">操作成功完成！</span>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Export Section */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
-          <h4 className="font-mono font-bold text-pip-boy-green flex items-center gap-2">
+          <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
             <Download className="w-5 h-5" />
             匯出資料
           </h4>
@@ -193,11 +193,11 @@ ${reading.interpretation || '無解讀內容'}
           <div className="space-y-3">
             {/* Export Format Selection */}
             <div>
-              <label className="block text-pip-boy-green font-mono text-sm mb-2">匯出格式</label>
+              <label className="block text-pip-boy-green text-sm mb-2">匯出格式</label>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setExportFormat('json')}
-                  className={`p-3 border-2 font-mono text-sm transition-colors ${
+                  className={`p-3 border-2 text-sm transition-colors ${
                     exportFormat === 'json'
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -209,7 +209,7 @@ ${reading.interpretation || '無解讀內容'}
                 </button>
                 <button
                   onClick={() => setExportFormat('csv')}
-                  className={`p-3 border-2 font-mono text-sm transition-colors ${
+                  className={`p-3 border-2 text-sm transition-colors ${
                     exportFormat === 'csv'
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -227,7 +227,7 @@ ${reading.interpretation || '無解讀內容'}
               onClick={handleExport}
               disabled={isExporting || readingsToExport.length === 0}
               className="w-full px-4 py-3 border-2 border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green
-                       font-mono font-bold hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed
+                       font-bold hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed
                        flex items-center justify-center gap-2"
             >
               {isExporting ? (
@@ -243,7 +243,7 @@ ${reading.interpretation || '無解讀內容'}
               )}
             </button>
 
-            <div className="text-xs font-mono text-pip-boy-green/60">
+            <div className="text-xs text-pip-boy-green/60">
               匯出的檔案將包含所有選擇的占卜記錄，包括問題、卡牌、解讀、標籤和筆記等完整資訊。
             </div>
           </div>
@@ -251,7 +251,7 @@ ${reading.interpretation || '無解讀內容'}
 
         {/* Share Section */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
-          <h4 className="font-mono font-bold text-pip-boy-green flex items-center gap-2">
+          <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
             <Share2 className="w-5 h-5" />
             分享占卜
           </h4>
@@ -260,11 +260,11 @@ ${reading.interpretation || '無解讀內容'}
             <div className="space-y-4">
               {/* Share Method Selection */}
               <div>
-                <label className="block text-pip-boy-green font-mono text-sm mb-2">分享方式</label>
+                <label className="block text-pip-boy-green text-sm mb-2">分享方式</label>
                 <div className="grid grid-cols-3 gap-2 text-xs">
                   <button
                     onClick={() => setShareMethod('text')}
-                    className={`p-2 border font-mono transition-colors ${
+                    className={`p-2 border transition-colors ${
                       shareMethod === 'text'
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -275,7 +275,7 @@ ${reading.interpretation || '無解讀內容'}
                   </button>
                   <button
                     onClick={() => setShareMethod('link')}
-                    className={`p-2 border font-mono transition-colors ${
+                    className={`p-2 border transition-colors ${
                       shareMethod === 'link'
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -286,7 +286,7 @@ ${reading.interpretation || '無解讀內容'}
                   </button>
                   <button
                     onClick={() => setShareMethod('image')}
-                    className={`p-2 border font-mono transition-colors ${
+                    className={`p-2 border transition-colors ${
                       shareMethod === 'image'
                         ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
@@ -302,7 +302,7 @@ ${reading.interpretation || '無解讀內容'}
               <button
                 onClick={() => handleShare()}
                 className="w-full px-4 py-3 border-2 border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green
-                         font-mono font-bold hover:bg-pip-boy-green/20 flex items-center justify-center gap-2"
+                         font-bold hover:bg-pip-boy-green/20 flex items-center justify-center gap-2"
               >
                 <Copy className="w-4 h-4" />
                 複製到剪貼簿
@@ -310,7 +310,7 @@ ${reading.interpretation || '無解讀內容'}
 
               {/* Social Share Buttons */}
               <div>
-                <label className="block text-pip-boy-green font-mono text-sm mb-2">社群媒體分享</label>
+                <label className="block text-pip-boy-green text-sm mb-2">社群媒體分享</label>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {[
                     { id: 'line', name: 'LINE', icon: MessageCircle, color: 'text-green-400' },
@@ -323,7 +323,7 @@ ${reading.interpretation || '無解讀內容'}
                       <button
                         key={platform.id}
                         onClick={() => openSocialShare(platform.id, readings.find(r => r.id === selectedReadingIds[0]))}
-                        className="p-2 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono
+                        className="p-2 border border-pip-boy-green/30 text-pip-boy-green/70
                                  hover:border-pip-boy-green/60 hover:text-pip-boy-green flex items-center gap-2"
                       >
                         <Icon className={`w-4 h-4 ${platform.color}`} />
@@ -337,10 +337,10 @@ ${reading.interpretation || '無解讀內容'}
           ) : (
             <div className="text-center py-8">
               <Share2 className="w-12 h-12 mx-auto mb-3 text-pip-boy-green/40" />
-              <div className="font-mono text-sm text-pip-boy-green/70 mb-2">
+              <div className="text-sm text-pip-boy-green/70 mb-2">
                 請選擇單一占卜記錄來分享
               </div>
-              <div className="font-mono text-xs text-pip-boy-green/50">
+              <div className="text-xs text-pip-boy-green/50">
                 分享功能需要選擇一個特定的占卜記錄
               </div>
             </div>
@@ -350,7 +350,7 @@ ${reading.interpretation || '無解讀內容'}
 
       {/* Import Section */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-        <h4 className="font-mono font-bold text-pip-boy-green mb-3 flex items-center gap-2">
+        <h4 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
           <FileText className="w-5 h-5" />
           匯入資料
         </h4>
@@ -381,11 +381,11 @@ ${reading.interpretation || '無解讀內容'}
                 alert('檔案讀取失敗')
               }
             }}
-            className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+            className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                      file:mr-4 file:py-1 file:px-3 file:border file:border-pip-boy-green/30 file:bg-pip-boy-green/10
-                     file:text-pip-boy-green file:font-mono file:text-sm"
+                     file:text-pip-boy-green file:file:text-sm"
           />
-          <div className="text-xs font-mono text-pip-boy-green/60">
+          <div className="text-xs text-pip-boy-green/60">
             僅支援 JSON 格式的占卜記錄檔案。匯入的資料會與現有記錄合併，不會覆蓋重複的記錄。
           </div>
         </div>

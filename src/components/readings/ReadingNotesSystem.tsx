@@ -119,7 +119,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
   if (!reading) {
     return (
       <div className="text-center py-8">
-        <div className="text-pip-boy-green/70 font-mono">找不到占卜記錄</div>
+        <div className="text-pip-boy-green/70">找不到占卜記錄</div>
       </div>
     )
   }
@@ -129,15 +129,15 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold text-pip-boy-green font-mono">占卜筆記</h3>
-          <p className="text-pip-boy-green/70 font-mono text-sm">
+          <h3 className="text-lg font-bold text-pip-boy-green">占卜筆記</h3>
+          <p className="text-pip-boy-green/70 text-sm">
             "{reading.question}"
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={startCreate}
-            className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+            className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green text-sm
                      hover:border-pip-boy-green/60 flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -158,14 +158,14 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
       {(isCreating || editingNote) && (
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="font-mono font-bold text-pip-boy-green">
+            <h4 className="font-bold text-pip-boy-green">
               {editingNote ? '編輯筆記' : '新增筆記'}
             </h4>
           </div>
 
           {/* Note Type Selection */}
           <div className="space-y-2">
-            <label className="block text-pip-boy-green font-mono text-sm font-bold">筆記類型</label>
+            <label className="block text-pip-boy-green text-sm font-bold">筆記類型</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {NOTE_TYPES.map(type => {
                 const Icon = type.icon
@@ -182,11 +182,11 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <Icon className={`w-4 h-4 ${isSelected ? type.color : 'text-pip-boy-green/60'}`} />
-                      <span className={`font-mono text-sm ${isSelected ? type.color : 'text-pip-boy-green/80'}`}>
+                      <span className={`text-sm ${isSelected ? type.color : 'text-pip-boy-green/80'}`}>
                         {type.name}
                       </span>
                     </div>
-                    <p className={`font-mono text-xs ${isSelected ? type.color.replace('text-', 'text-') + '/80' : 'text-pip-boy-green/50'}`}>
+                    <p className={`text-xs ${isSelected ? type.color.replace('text-', 'text-') + '/80' : 'text-pip-boy-green/50'}`}>
                       {type.description}
                     </p>
                   </button>
@@ -197,17 +197,17 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
 
           {/* Note Content */}
           <div className="space-y-2">
-            <label className="block text-pip-boy-green font-mono text-sm font-bold">筆記內容</label>
+            <label className="block text-pip-boy-green text-sm font-bold">筆記內容</label>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
               placeholder="在此輸入你的筆記..."
               rows={6}
               maxLength={2000}
-              className="w-full px-3 py-3 bg-black border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+              className="w-full px-3 py-3 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                        focus:border-pip-boy-green focus:outline-none resize-none"
             />
-            <div className="text-xs text-pip-boy-green/60 font-mono">
+            <div className="text-xs text-pip-boy-green/60">
               <span className="numeric tabular-nums">{formData.content.length}</span>/<span className="numeric tabular-nums">2000</span>
             </div>
           </div>
@@ -216,7 +216,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
           <div className="flex justify-end gap-2">
             <button
               onClick={resetForm}
-              className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 font-mono text-sm
+              className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
               <X className="w-4 h-4" />
@@ -225,7 +225,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
             <button
               onClick={handleSave}
               disabled={!formData.content.trim()}
-              className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green font-mono text-sm
+              className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                        hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <Save className="w-4 h-4" />
@@ -247,10 +247,10 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
             <div key={noteType.id} className="space-y-2">
               <div className="flex items-center gap-2">
                 <Icon className={`w-5 h-5 ${noteType.color}`} />
-                <h4 className={`font-mono font-bold ${noteType.color}`}>
+                <h4 className={`font-bold ${noteType.color}`}>
                   {noteType.name}
                 </h4>
-                <span className="text-pip-boy-green/60 font-mono text-sm">
+                <span className="text-pip-boy-green/60 text-sm">
                   ({notesOfType.length})
                 </span>
               </div>
@@ -266,7 +266,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Icon className={`w-4 h-4 ${noteType.color}`} />
-                          <span className="font-mono text-xs text-pip-boy-green/60">
+                          <span className="text-xs text-pip-boy-green/60">
                             {new Date(note.created_at).toLocaleString()}
                             {note.updated_at && note.updated_at !== note.created_at && (
                               <span className="ml-2">(已編輯)</span>
@@ -291,7 +291,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                         </div>
                       </div>
 
-                      <div className={`${noteType.color} font-mono text-sm leading-relaxed whitespace-pre-wrap`}>
+                      <div className={`${noteType.color} text-sm leading-relaxed whitespace-pre-wrap`}>
                         {note.content}
                       </div>
                     </div>
@@ -306,15 +306,15 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
         {notes.length === 0 && (
           <div className="text-center py-12 border-2 border-pip-boy-green/30">
             <MessageSquare className="w-12 h-12 mx-auto mb-4 text-pip-boy-green/40" />
-            <div className="font-mono text-lg font-bold text-pip-boy-green/70 mb-2">
+            <div className="text-lg font-bold text-pip-boy-green/70 mb-2">
               尚無筆記
             </div>
-            <div className="font-mono text-sm text-pip-boy-green/50 mb-4">
+            <div className="text-sm text-pip-boy-green/50 mb-4">
               為這個占卜添加你的想法和感悟
             </div>
             <button
               onClick={startCreate}
-              className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm
+              className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2 mx-auto"
             >
               <Plus className="w-4 h-4" />
@@ -326,7 +326,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
 
       {/* Notes Summary */}
       {notes.length > 0 && (
-        <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-center gap-4 text-sm font-mono text-pip-boy-green/70">
+        <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-center gap-4 text-sm text-pip-boy-green/70">
           <div>總共 <span className="numeric tabular-nums">{notes.length}</span> 個筆記</div>
           {NOTE_TYPES.map(type => {
             const count = groupedNotes[type.id]?.length || 0

@@ -8,6 +8,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
+import { Music2 } from 'lucide-react';
 
 /**
  * MusicVisualizer Props
@@ -163,13 +164,13 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
       {/* Overlay Text (when not playing) */}
       {!isPlaying && (
         <motion.div
-          className="absolute inset-0 flex items-center justify-center text-pip-boy-green/50 font-mono text-sm"
+          className="absolute inset-0 flex items-center justify-center text-pip-boy-green/50 text-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <div className="text-center">
-            <div className="text-2xl mb-2">🎵</div>
+            <Music2 className="w-12 h-12 mx-auto mb-2" />
             <div>點擊播放以查看視覺化</div>
           </div>
         </motion.div>
@@ -177,7 +178,7 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
 
       {/* FPS Counter (Development Only) */}
       {process.env.NODE_ENV === 'development' && isPlaying && (
-        <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 border border-pip-boy-green/50 rounded text-xs font-mono text-pip-boy-green">
+        <div className="absolute top-2 right-2 px-2 py-1 bg-black/60 border border-pip-boy-green/50 rounded text-xs text-pip-boy-green">
           FPS: ~60
         </div>
       )}

@@ -157,10 +157,10 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
         {/* Vault-Tec Header */}
         {!hideHeader && (
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-mono text-pip-boy-green mb-2">
+            <h1 className="text-4xl text-pip-boy-green mb-2">
               VAULT-TEC
             </h1>
-            <p className="text-pip-boy-green text-lg font-mono">
+            <p className="text-pip-boy-green text-lg">
               新 Vault Dweller 註冊終端機
             </p>
             <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
@@ -174,7 +174,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
         >
           {/* Error Display */}
           {submitError && (
-            <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 font-mono text-sm flex items-center">
+            <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2" />{submitError}
             </div>
           )}
@@ -183,21 +183,21 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           <div className="mb-4">
             <label
               htmlFor="email"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               Email 信箱
             </label>
             <input
               id="email"
               type="email"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入你的 Email..."
               value={formData.email}
               onChange={handleInputChange('email')}
               disabled={isFormDisabled}
             />
             {errors.email && (
-              <p className="mt-1 text-red-400 font-mono text-xs flex items-center">
+              <p className="mt-1 text-red-400 text-xs flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.email}
               </p>
             )}
@@ -207,21 +207,21 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           <div className="mb-4">
             <label
               htmlFor="name"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               名稱
             </label>
             <input
               id="name"
               type="text"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入你的名稱..."
               value={formData.name}
               onChange={handleInputChange('name')}
               disabled={isFormDisabled}
             />
             {errors.name && (
-              <p className="mt-1 text-red-400 font-mono text-xs flex items-center">
+              <p className="mt-1 text-red-400 text-xs flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.name}
               </p>
             )}
@@ -231,7 +231,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           <div className="mb-4">
             <label
               htmlFor="password"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               密碼
             </label>
@@ -239,14 +239,14 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
               id="password"
               type="password"
               autoComplete="new-password"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="至少 8 個字元..."
               value={formData.password}
               onChange={handleInputChange('password')}
               disabled={isFormDisabled}
             />
             {errors.password && (
-              <p className="mt-1 text-red-400 font-mono text-xs flex items-center">
+              <p className="mt-1 text-red-400 text-xs flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.password}
               </p>
             )}
@@ -256,7 +256,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           <div className="mb-4">
             <label
               htmlFor="confirmPassword"
-              className="block text-pip-boy-green font-mono text-sm mb-2"
+              className="block text-pip-boy-green text-sm mb-2"
             >
               確認密碼
             </label>
@@ -264,14 +264,14 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
               id="confirmPassword"
               type="password"
               autoComplete="new-password"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green font-mono placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="再次輸入密碼..."
               value={formData.confirmPassword}
               onChange={handleInputChange('confirmPassword')}
               disabled={isFormDisabled}
             />
             {errors.confirmPassword && (
-              <p className="mt-1 text-red-400 font-mono text-xs flex items-center">
+              <p className="mt-1 text-red-400 text-xs flex items-center">
                 <AlertTriangle className="w-3 h-3 mr-1" />{errors.confirmPassword}
               </p>
             )}
@@ -281,7 +281,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           <button
             type="submit"
             disabled={isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
           >
             {isSubmitting ? '註冊中...' : '加入 Vault-Tec'}
           </button>
@@ -289,7 +289,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           {/* Divider */}
           <div className="mt-6 mb-6 flex items-center">
             <div className="flex-1 h-px bg-pip-boy-green/30"></div>
-            <span className="px-4 text-pip-boy-green/70 font-mono text-xs">或</span>
+            <span className="px-4 text-pip-boy-green/70 text-xs">或</span>
             <div className="flex-1 h-px bg-pip-boy-green/30"></div>
           </div>
 
@@ -298,7 +298,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             type="button"
             onClick={handleGoogleRegister}
             disabled={isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -311,7 +311,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
 
           {/* OAuth Error Display */}
           {oauthError && (
-            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 font-mono text-xs flex items-center">
+            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
               <AlertTriangle className="w-4 h-4 mr-2" />{oauthError}
             </div>
           )}
@@ -321,7 +321,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             <div className="mt-6 text-center">
               <Link
                 href="/auth?tab=login"
-                className="text-pip-boy-green font-mono text-sm hover:text-pip-boy-green/80 transition-colors"
+                className="text-pip-boy-green text-sm hover:text-pip-boy-green/80 transition-colors"
               >
                 已經有帳號？返回登入
               </Link>
@@ -332,7 +332,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
         {/* Terminal Footer */}
         {!hideHeader && (
           <div className="mt-8 text-center">
-            <p className="text-pip-boy-green/50 font-mono text-xs">
+            <p className="text-pip-boy-green/50 text-xs">
               Vault-Tec：在地下建造更美好的明天
             </p>
           </div>

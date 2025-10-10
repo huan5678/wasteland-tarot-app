@@ -40,7 +40,7 @@ export const ModalLoading = () => (
   <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
     <div className="border-2 border-pip-boy-green bg-wasteland-dark p-8">
       <LoadingSpinner />
-      <p className="text-pip-boy-green font-mono text-center mt-4">載入中...</p>
+      <p className="text-pip-boy-green text-center mt-4">載入中...</p>
     </div>
   </div>
 )

@@ -84,7 +84,7 @@ export function StudyCardsRecommendation({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="
-                    text-xs font-mono
+                    text-xs
                     px-2 py-0.5 rounded
                     bg-pip-boy-green/20
                     text-pip-boy-green
@@ -108,7 +108,7 @@ export function StudyCardsRecommendation({
                       style={{ width: `${card.confidence * 100}%` }}
                     />
                   </div>
-                  <span className="text-xs text-wasteland-tan/60 font-mono">
+                  <span className="text-xs text-wasteland-tan/60">
                     {Math.round(card.confidence * 100)}%
                   </span>
                 </div>
@@ -122,7 +122,7 @@ export function StudyCardsRecommendation({
                   text-pip-boy-green
                   transition-colors
                   opacity-0 group-hover:opacity-100
-                  font-mono
+                 
                 "
               >
                 學習

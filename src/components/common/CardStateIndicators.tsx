@@ -178,7 +178,7 @@ export function CardStateIndicators({
       <IconComponent className={sizeProps.iconSize} />
 
       {showLabels && (
-        <span className={`${sizeProps.textSize} font-mono font-medium whitespace-nowrap`}>
+        <span className={`${sizeProps.textSize} font-medium whitespace-nowrap`}>
           {config.label}
         </span>
       )}
@@ -295,7 +295,7 @@ export function CardProgressIndicator({
 
       {/* Numbers */}
       {showNumbers && (
-        <span className={`${sizeProps.textSize} font-mono font-medium text-pip-boy-green`}>
+        <span className={`${sizeProps.textSize} font-medium text-pip-boy-green`}>
           {current}/{total}
         </span>
       )}

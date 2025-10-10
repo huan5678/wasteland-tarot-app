@@ -128,7 +128,7 @@ export function Header() {
                 key={link.href}
                 onClick={() => handleNavigation(link.href)}
                 className={`
-                  relative flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm font-mono cursor-pointer
+                  relative flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm cursor-pointer
                   border border-pip-boy-green/30 hover:border-pip-boy-green
                   hover:bg-pip-boy-green/10 transition-all duration-200
                   ${isActive(link.href)
@@ -153,7 +153,7 @@ export function Header() {
             {user && (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm font-mono
+                className="flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm
                          border border-red-500/30 hover:border-red-500
                          hover:bg-red-500/10 text-red-400 hover:text-red-500
                          transition-all duration-200"

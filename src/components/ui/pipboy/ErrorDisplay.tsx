@@ -95,7 +95,7 @@ export function ErrorDisplay({
         >
           ⚠️
         </div>
-        <h3 className="text-xl font-mono font-bold text-red-500 uppercase tracking-wider">
+        <h3 className="text-xl font-bold text-red-500 uppercase tracking-wider">
           {title}
         </h3>
         {/* 關閉按鈕 */}
@@ -112,17 +112,17 @@ export function ErrorDisplay({
 
       {/* 錯誤訊息 */}
       <div className="mb-6">
-        <p className="font-mono text-red-400 text-sm md:text-base mb-2">
+        <p className="text-red-400 text-sm md:text-base mb-2">
           {error.message || '未知錯誤'}
         </p>
 
         {/* 錯誤堆疊(開發模式) */}
         {showStack && error.stack && (
           <details className="mt-4">
-            <summary className="cursor-pointer font-mono text-xs text-red-500/70 hover:text-red-500 mb-2">
+            <summary className="cursor-pointer text-xs text-red-500/70 hover:text-red-500 mb-2">
               顯示詳細資訊
             </summary>
-            <pre className="text-xs text-red-400/60 font-mono overflow-x-auto bg-black/50 p-3 rounded border border-red-500/30">
+            <pre className="text-xs text-red-400/60 overflow-x-auto bg-black/50 p-3 rounded border border-red-500/30">
               {error.stack}
             </pre>
           </details>
@@ -195,7 +195,7 @@ export function InlineError({ message, className }: InlineErrorProps) {
     <div
       className={cn(
         'flex items-center gap-2',
-        'text-red-500 font-mono text-xs md:text-sm',
+        'text-red-500 text-xs md:text-sm',
         'mt-1',
         className
       )}
@@ -241,10 +241,10 @@ export function NotFound({
         </div>
 
         {/* 標題與訊息 */}
-        <h1 className="text-3xl font-mono font-bold text-pip-boy-green uppercase mb-4">
+        <h1 className="text-3xl font-bold text-pip-boy-green uppercase mb-4">
           {title}
         </h1>
-        <p className="text-pip-boy-green/80 font-mono text-sm mb-6">{message}</p>
+        <p className="text-pip-boy-green/80 text-sm mb-6">{message}</p>
 
         {/* 返回首頁按鈕 */}
         {onBackHome && (

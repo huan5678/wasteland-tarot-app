@@ -215,13 +215,13 @@ export function MobileSpreadSelector({
 
         <div className={`${viewMode === 'list' ? 'flex-1' : ''}`}>
           {/* Spread Title */}
-          <h3 className="text-pip-boy-green font-mono font-bold text-lg mb-2">
+          <h3 className="text-pip-boy-green font-bold text-lg mb-2">
             {spread.name}
           </h3>
 
           {/* Spread Info */}
           <div className="flex items-center gap-2 mb-3 text-sm">
-            <span className={`px-2 py-1 rounded-full text-xs font-mono ${difficultyColors[spread.difficulty]}`}>
+            <span className={`px-2 py-1 rounded-full text-xs ${difficultyColors[spread.difficulty]}`}>
               {difficultyLabels[spread.difficulty]}
             </span>
             <span className="text-pip-boy-green/70">{spread.cardCount} 張牌</span>
@@ -244,7 +244,7 @@ export function MobileSpreadSelector({
                 handleStartReading(spread)
               }}
               className="flex items-center gap-2 px-3 py-2 bg-pip-boy-green text-wasteland-dark
-                       rounded-lg text-sm font-mono font-bold hover:bg-pip-boy-green/90
+                       rounded-lg text-sm font-bold hover:bg-pip-boy-green/90
                        transition-colors active:scale-95"
             >
               <Play className="w-4 h-4" />
@@ -282,7 +282,7 @@ export function MobileSpreadSelector({
             className="w-full pl-10 pr-12 py-3 bg-black/60 border border-pip-boy-green/30
                      text-pip-boy-green placeholder-pip-boy-green/50 rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
-                     font-mono"
+                    "
           />
           <button
             onClick={() => setShowFilters(true)}
@@ -302,7 +302,7 @@ export function MobileSpreadSelector({
             style={style}
             onClick={() => setSelectedCategory(category.id)}
             className={`
-              flex items-center gap-2 px-4 py-2 rounded-full font-mono text-sm
+              flex items-center gap-2 px-4 py-2 rounded-full text-sm
               whitespace-nowrap transition-all duration-200 min-w-fit
               ${selectedCategory === category.id
                 ? 'bg-pip-boy-green text-wasteland-dark'
@@ -318,7 +318,7 @@ export function MobileSpreadSelector({
 
       {/* View Mode Toggle */}
       <div className="flex justify-between items-center mb-4">
-        <div className="text-pip-boy-green/70 text-sm font-mono">
+        <div className="text-pip-boy-green/70 text-sm">
           找到 {filteredSpreads.length} 個牌陣
         </div>
 
@@ -327,7 +327,7 @@ export function MobileSpreadSelector({
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             className="bg-black/60 border border-pip-boy-green/30 text-pip-boy-green
-                     text-sm rounded-lg px-3 py-1 font-mono focus:outline-none"
+                     text-sm rounded-lg px-3 py-1 focus:outline-none"
           >
             <option value="popularity">熱門度</option>
             <option value="name">名稱</option>
@@ -387,7 +387,7 @@ export function MobileSpreadSelector({
       {filteredSpreads.length === 0 && (
         <div className="text-center py-12">
           <Search className="w-16 h-16 text-pip-boy-green/30 mx-auto mb-4" />
-          <p className="text-pip-boy-green/60 font-mono">
+          <p className="text-pip-boy-green/60">
             沒有找到符合條件的牌陣
           </p>
           <button
@@ -396,7 +396,7 @@ export function MobileSpreadSelector({
               setSelectedCategory('all')
             }}
             className="mt-4 px-4 py-2 border border-pip-boy-green/50 text-pip-boy-green
-                     rounded-lg hover:bg-pip-boy-green/10 transition-colors font-mono"
+                     rounded-lg hover:bg-pip-boy-green/10 transition-colors"
           >
             重置篩選
           </button>
@@ -410,17 +410,17 @@ export function MobileSpreadSelector({
         snapPoints={['40%', '80%']}
       >
         <div className="p-6">
-          <h3 className="text-pip-boy-green font-mono text-lg font-bold mb-6">篩選選項</h3>
+          <h3 className="text-pip-boy-green text-lg font-bold mb-6">篩選選項</h3>
 
           <div className="space-y-6">
             {/* Difficulty Filter */}
             <div>
-              <h4 className="text-pip-boy-green font-mono font-bold mb-3">難度</h4>
+              <h4 className="text-pip-boy-green font-bold mb-3">難度</h4>
               <div className="flex gap-2">
                 {Object.entries(difficultyLabels).map(([key, label]) => (
                   <button
                     key={key}
-                    className={`px-3 py-2 rounded-lg text-sm font-mono transition-colors
+                    className={`px-3 py-2 rounded-lg text-sm transition-colors
                       ${difficultyColors[key as keyof typeof difficultyColors]}`}
                   >
                     {label}
@@ -431,15 +431,15 @@ export function MobileSpreadSelector({
 
             {/* Card Count Filter */}
             <div>
-              <h4 className="text-pip-boy-green font-mono font-bold mb-3">牌數</h4>
+              <h4 className="text-pip-boy-green font-bold mb-3">牌數</h4>
               <div className="flex gap-2">
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm font-mono">
+                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
                   1 張
                 </button>
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm font-mono">
+                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
                   3 張
                 </button>
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm font-mono">
+                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
                   5+ 張
                 </button>
               </div>
@@ -450,14 +450,14 @@ export function MobileSpreadSelector({
             <button
               onClick={() => setShowFilters(false)}
               className="flex-1 py-3 border border-pip-boy-green/50 text-pip-boy-green
-                       rounded-lg font-mono hover:bg-pip-boy-green/10 transition-colors"
+                       rounded-lg hover:bg-pip-boy-green/10 transition-colors"
             >
               取消
             </button>
             <button
               onClick={() => setShowFilters(false)}
               className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
-                       rounded-lg font-mono font-bold hover:bg-pip-boy-green/90 transition-colors"
+                       rounded-lg font-bold hover:bg-pip-boy-green/90 transition-colors"
             >
               套用篩選
             </button>
@@ -479,11 +479,11 @@ export function MobileSpreadSelector({
                   {selectedSpreadDetails.icon}
                 </div>
                 <div>
-                  <h3 className="text-pip-boy-green font-mono text-xl font-bold">
+                  <h3 className="text-pip-boy-green text-xl font-bold">
                     {selectedSpreadDetails.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-mono ${difficultyColors[selectedSpreadDetails.difficulty]}`}>
+                    <span className={`px-2 py-1 rounded-full text-xs ${difficultyColors[selectedSpreadDetails.difficulty]}`}>
                       {difficultyLabels[selectedSpreadDetails.difficulty]}
                     </span>
                     <span className="text-pip-boy-green/70 text-sm">
@@ -509,16 +509,16 @@ export function MobileSpreadSelector({
 
             {/* Position Details */}
             <div className="mb-8">
-              <h4 className="text-pip-boy-green font-mono font-bold mb-4">牌位說明</h4>
+              <h4 className="text-pip-boy-green font-bold mb-4">牌位說明</h4>
               <div className="space-y-3">
                 {selectedSpreadDetails.positions.map((position, index) => (
                   <div key={position.id} className="flex items-start gap-3 p-3 bg-pip-boy-green/5 rounded-lg">
                     <div className="w-8 h-8 bg-pip-boy-green/20 rounded-full flex items-center justify-center
-                                 text-pip-boy-green font-mono text-sm font-bold">
+                                 text-pip-boy-green text-sm font-bold">
                       {index + 1}
                     </div>
                     <div>
-                      <h5 className="text-pip-boy-green font-mono font-bold">{position.label}</h5>
+                      <h5 className="text-pip-boy-green font-bold">{position.label}</h5>
                       <p className="text-pip-boy-green/70 text-sm mt-1">{position.meaning}</p>
                     </div>
                   </div>
@@ -530,14 +530,14 @@ export function MobileSpreadSelector({
               <button
                 onClick={() => setShowSpreadDetails(false)}
                 className="flex-1 py-3 border border-pip-boy-green/50 text-pip-boy-green
-                         rounded-lg font-mono hover:bg-pip-boy-green/10 transition-colors"
+                         rounded-lg hover:bg-pip-boy-green/10 transition-colors"
               >
                 關閉
               </button>
               <button
                 onClick={() => handleStartReading(selectedSpreadDetails)}
                 className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
-                         rounded-lg font-mono font-bold hover:bg-pip-boy-green/90
+                         rounded-lg font-bold hover:bg-pip-boy-green/90
                          transition-colors flex items-center justify-center gap-2"
               >
                 <Play className="w-5 h-5" />
@@ -552,7 +552,7 @@ export function MobileSpreadSelector({
       {isLowPerformanceDevice && (
         <div className="fixed bottom-4 right-4 z-50">
           <div className="bg-black/90 border border-pip-boy-green/30 rounded-lg p-3">
-            <p className="text-pip-boy-green/70 text-xs font-mono">
+            <p className="text-pip-boy-green/70 text-xs">
               低效能模式已啟用
             </p>
           </div>

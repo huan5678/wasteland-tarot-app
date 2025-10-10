@@ -89,13 +89,13 @@ export default function BingoCardSetup() {
     <div className="max-w-4xl mx-auto p-6 bg-black/80 border-2 border-amber-600/50 rounded-lg backdrop-blur-sm">
       {/* Header */}
       <div className="mb-6 text-center">
-        <h2 className="text-3xl font-bold text-amber-400 mb-2 font-mono tracking-wider">
+        <h2 className="text-3xl font-bold text-amber-400 mb-2 tracking-wider">
           設定你的賓果卡
         </h2>
-        <p className="text-green-400 text-sm font-mono">
+        <p className="text-green-400 text-sm">
           選擇 25 個號碼 (1-25) 來建立你的廢土賓果卡
         </p>
-        <div className="mt-3 text-amber-300 font-mono">
+        <div className="mt-3 text-amber-300">
           已選擇: <span className="text-2xl font-bold">{selectedCount}</span> / 25
         </div>
       </div>
@@ -105,7 +105,7 @@ export default function BingoCardSetup() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-4 p-3 bg-red-900/50 border border-red-600 rounded text-red-300 font-mono text-sm"
+          className="mb-4 p-3 bg-red-900/50 border border-red-600 rounded text-red-300 text-sm"
         >
           {validationError || error}
         </motion.div>
@@ -124,7 +124,7 @@ export default function BingoCardSetup() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={`
-                relative aspect-square rounded-lg font-mono text-2xl font-bold
+                relative aspect-square rounded-lg text-2xl font-bold
                 transition-all duration-200 border-2
                 ${isSelected
                   ? 'bg-amber-600 border-amber-400 text-black shadow-lg shadow-amber-600/50'
@@ -158,7 +158,7 @@ export default function BingoCardSetup() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={`
-            flex-1 px-6 py-3 rounded-lg font-mono font-bold
+            flex-1 px-6 py-3 rounded-lg font-bold
             bg-blue-900/50 border-2 border-blue-600 text-blue-300
             hover:bg-blue-800/50 hover:border-blue-400
             transition-all duration-200
@@ -176,7 +176,7 @@ export default function BingoCardSetup() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className={`
-            flex-1 px-6 py-3 rounded-lg font-mono font-bold
+            flex-1 px-6 py-3 rounded-lg font-bold
             bg-red-900/50 border-2 border-red-600 text-red-300
             hover:bg-red-800/50 hover:border-red-400
             transition-all duration-200
@@ -194,7 +194,7 @@ export default function BingoCardSetup() {
           whileHover={canSubmit ? { scale: 1.02 } : {}}
           whileTap={canSubmit ? { scale: 0.98 } : {}}
           className={`
-            flex-1 px-6 py-3 rounded-lg font-mono font-bold text-lg
+            flex-1 px-6 py-3 rounded-lg font-bold text-lg
             transition-all duration-200
             ${canSubmit
               ? 'bg-green-600 border-2 border-green-400 text-black hover:bg-green-500 shadow-lg shadow-green-600/50'
@@ -208,7 +208,7 @@ export default function BingoCardSetup() {
       </div>
 
       {/* 說明文字 */}
-      <div className="mt-6 p-4 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-sm font-mono">
+      <div className="mt-6 p-4 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-sm">
         <p className="mb-2">💡 <span className="text-amber-400">提示:</span></p>
         <ul className="list-disc list-inside space-y-1">
           <li>點擊號碼來選擇或取消選擇</li>

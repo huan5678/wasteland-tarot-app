@@ -13,7 +13,7 @@ import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistManager } from '@/hooks/useMusicPlayer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { Music } from 'lucide-react';
+import { Music, Play, Pause, Maximize2, Minimize2, List, Turntable } from 'lucide-react';
 
 // Import all child components (will be created in following tasks)
 import { PlaybackControls } from './PlaybackControls';
@@ -124,7 +124,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
           className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-pip-boy-green text-black rounded-full border-2 border-pip-boy-green-dark shadow-[0_0_20px_rgba(0,255,136,0.5)] hover:shadow-[0_0_30px_rgba(0,255,136,0.7)] transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
           aria-label="開啟音樂播放器"
         >
-          <Music className="w-6 h-6" aria-hidden="true" />
+          <Turntable className="w-6 h-6" aria-hidden="true" />
           {isPlaying && (
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-pip-boy-green"
@@ -138,7 +138,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
       {/* Drawer Content */}
       <DrawerContent
         ref={drawerContentRef}
-        className="border-2 border-pip-boy-green bg-wasteland-darker text-pip-boy-green font-mono"
+        className="border-2 border-pip-boy-green bg-wasteland-darker text-pip-boy-green"
         style={{
           height: isDrawerMinimized ? DRAWER_HEIGHTS.minimized : DRAWER_HEIGHTS[drawerHeight],
         }}
@@ -174,19 +174,19 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
             {/* Play/Pause Button */}
             <button
               onClick={handlePlayPause}
-              className="px-4 py-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+              className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label={isPlaying ? '暫停' : '播放'}
             >
-              {isPlaying ? '暫停' : '播放'}
+              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
             </button>
 
             {/* Expand Button */}
             <button
               onClick={handleExpand}
-              className="px-4 py-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+              className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label="展開播放器"
             >
-              展開
+              <Maximize2 className="w-5 h-5" />
             </button>
           </motion.div>
         ) : (
@@ -208,17 +208,17 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               <div className="flex gap-2">
                 <button
                   onClick={handleMinimize}
-                  className="px-3 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="最小化播放器"
                 >
-                  最小化
+                  <Minimize2 className="w-3.5 h-3.5" />
                 </button>
                 <button
                   onClick={openSheet}
-                  className="px-3 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="開啟播放清單"
                 >
-                  播放清單
+                  <List className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

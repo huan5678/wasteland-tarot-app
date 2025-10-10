@@ -89,7 +89,7 @@ export function SavedSessionsList({
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-green-400 font-mono">
+        <div className="text-green-400">
           Loading saved sessions...
         </div>
       </div>
@@ -99,7 +99,7 @@ export function SavedSessionsList({
   if (error) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-red-400 font-mono">{error}</div>
+        <div className="text-red-400">{error}</div>
       </div>
     );
   }
@@ -107,7 +107,7 @@ export function SavedSessionsList({
   if (sessions.length === 0) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-gray-400 font-mono text-center">
+        <div className="text-gray-400 text-center">
           <p className="text-xl mb-2">No saved sessions found</p>
           <p className="text-sm">Start a new reading to create a session</p>
         </div>
@@ -129,10 +129,10 @@ export function SavedSessionsList({
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <h3 className="text-green-400 font-mono font-semibold truncate">
+                <h3 className="text-green-400 font-semibold truncate">
                   {session.question}
                 </h3>
-                <div className="flex items-center gap-2 mt-2 text-sm text-gray-400 font-mono">
+                <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
                   <span className="capitalize">{session.spread_type.replace('-', ' ')}</span>
                   <span>•</span>
                   <span
@@ -143,7 +143,7 @@ export function SavedSessionsList({
                     {session.status}
                   </span>
                 </div>
-                <div className="mt-1 text-xs text-gray-500 font-mono">
+                <div className="mt-1 text-xs text-gray-500">
                   Updated {formatDistanceToNow(new Date(session.updated_at))} ago
                 </div>
               </div>
@@ -151,14 +151,14 @@ export function SavedSessionsList({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleResume(session.id)}
-                  className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded font-mono text-sm transition-colors"
+                  className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded text-sm transition-colors"
                   aria-label="Resume session"
                 >
                   Resume
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(session.id)}
-                  className="px-4 py-2 bg-red-900/50 hover:bg-red-800/70 text-red-300 rounded font-mono text-sm transition-colors"
+                  className="px-4 py-2 bg-red-900/50 hover:bg-red-800/70 text-red-300 rounded text-sm transition-colors"
                   aria-label="Delete session"
                   disabled={deletingId === session.id}
                 >
@@ -170,20 +170,20 @@ export function SavedSessionsList({
             {/* Delete confirmation */}
             {showDeleteConfirm === session.id && (
               <div className="mt-4 p-3 bg-red-900/20 border border-red-800/50 rounded">
-                <p className="text-red-300 font-mono text-sm mb-3">
+                <p className="text-red-300 text-sm mb-3">
                   Are you sure you want to delete this session? This action cannot be undone.
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleDelete(session.id)}
-                    className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white rounded font-mono text-sm"
+                    className="px-3 py-1 bg-red-900 hover:bg-red-800 text-white rounded text-sm"
                     aria-label="Confirm deletion"
                   >
                     Confirm
                   </button>
                   <button
                     onClick={() => setShowDeleteConfirm(null)}
-                    className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded font-mono text-sm"
+                    className="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded text-sm"
                   >
                     Cancel
                   </button>
@@ -197,14 +197,14 @@ export function SavedSessionsList({
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-4 border-t border-green-900/50">
-          <div className="text-sm text-gray-400 font-mono">
+          <div className="text-sm text-gray-400">
             Page {page + 1} of {totalPages} ({total} total)
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => setPage(page - 1)}
               disabled={!hasPrevPage}
-              className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded font-mono text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Previous page"
             >
               Previous
@@ -212,7 +212,7 @@ export function SavedSessionsList({
             <button
               onClick={() => setPage(page + 1)}
               disabled={!hasNextPage}
-              className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded font-mono text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-green-900/50 hover:bg-green-800/70 text-green-300 rounded text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Next page"
             >
               Next

@@ -45,30 +45,30 @@ export function ReadingMetaEditor({ readingId, onClose }: Props) {
 
   return (
     <div className="border-2 border-pip-boy-green/40 p-4 space-y-4 bg-pip-boy-green/5">
-      <h4 className="font-mono text-pip-boy-green font-bold text-sm">編輯標籤 / 筆記</h4>
+      <h4 className="text-pip-boy-green font-bold text-sm">編輯標籤 / 筆記</h4>
       <div className="space-y-2">
-        <label className="font-mono text-xs text-pip-boy-green/70">標籤（逗號分隔）</label>
+        <label className="text-xs text-pip-boy-green/70">標籤（逗號分隔）</label>
         <input
           value={tags}
           onChange={e=>setTags(e.target.value)}
-          className="w-full px-2 py-1 bg-black border border-pip-boy-green text-pip-boy-green text-xs font-mono"
+          className="w-full px-2 py-1 bg-black border border-pip-boy-green text-pip-boy-green text-xs"
           placeholder="ex: 關係, 工作, 旅程"
         />
       </div>
       <div className="space-y-2">
-        <label className="font-mono text-xs text-pip-boy-green/70">筆記 / 反思</label>
+        <label className="text-xs text-pip-boy-green/70">筆記 / 反思</label>
         <textarea
           value={notes}
           onChange={e=>setNotes(e.target.value)}
           rows={4}
-          className="w-full px-2 py-1 bg-black border border-pip-boy-green text-pip-boy-green text-xs font-mono resize-none"
+          className="w-full px-2 py-1 bg-black border border-pip-boy-green text-pip-boy-green text-xs resize-none"
           placeholder="你的想法、驗證、後續行動..."
         />
       </div>
-      {error && <div className="text-red-400 text-xs font-mono">{error}</div>}
+      {error && <div className="text-red-400 text-xs">{error}</div>}
       <div className="flex gap-2 justify-end">
-        <button onClick={onClose} className="px-3 py-1 border border-pip-boy-green/40 text-xs font-mono text-pip-boy-green hover:bg-pip-boy-green/10">取消</button>
-        <button disabled={saving} onClick={handleSave} className="px-3 py-1 bg-pip-boy-green text-wasteland-dark text-xs font-mono font-bold disabled:opacity-50">{saving ? '儲存中...' : '儲存'}</button>
+        <button onClick={onClose} className="px-3 py-1 border border-pip-boy-green/40 text-xs text-pip-boy-green hover:bg-pip-boy-green/10">取消</button>
+        <button disabled={saving} onClick={handleSave} className="px-3 py-1 bg-pip-boy-green text-wasteland-dark text-xs font-bold disabled:opacity-50">{saving ? '儲存中...' : '儲存'}</button>
       </div>
     </div>
   )

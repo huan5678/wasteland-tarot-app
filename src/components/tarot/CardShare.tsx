@@ -322,7 +322,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
       {/* Header */}
       <div className="p-4 border-b border-pip-boy-green/20 bg-pip-boy-green/5">
         <div className="flex items-center justify-between">
-          <h3 className="text-pip-boy-green font-mono font-bold flex items-center gap-2">
+          <h3 className="text-pip-boy-green font-bold flex items-center gap-2">
             <Share2 className="w-5 h-5" />
             Share {card.name}
           </h3>
@@ -349,7 +349,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2 rounded font-mono text-sm transition-all",
+                  "flex items-center gap-2 px-3 py-2 rounded text-sm transition-all",
                   isActive
                     ? `${method.color} bg-current/10 border border-current/30`
                     : "text-pip-boy-green/60 hover:text-pip-boy-green hover:bg-pip-boy-green/10"
@@ -364,7 +364,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
 
         {/* Share Options */}
         <div className="bg-wasteland-dark/30 p-4 rounded border border-pip-boy-green/20">
-          <h4 className="text-pip-boy-green font-mono font-bold mb-3 text-sm">Share Options</h4>
+          <h4 className="text-pip-boy-green font-bold mb-3 text-sm">Share Options</h4>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
               { key: 'includeImage', label: 'Include Image' },
@@ -383,18 +383,18 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   }))}
                   className="w-4 h-4 accent-pip-boy-green"
                 />
-                <span className="text-pip-boy-green/80 font-mono">{option.label}</span>
+                <span className="text-pip-boy-green/80">{option.label}</span>
               </label>
             ))}
           </div>
 
           {shareOptions.includeCharacterVoice && card.character_voice_interpretations && (
             <div className="mt-3">
-              <label className="block text-pip-boy-green/80 font-mono text-sm mb-2">Character Voice:</label>
+              <label className="block text-pip-boy-green/80 text-sm mb-2">Character Voice:</label>
               <select
                 value={shareOptions.selectedVoice || ''}
                 onChange={(e) => setShareOptions(prev => ({ ...prev, selectedVoice: e.target.value }))}
-                className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
+                className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded"
               >
                 {Object.keys(card.character_voice_interpretations).map(voice => (
                   <option key={voice} value={voice}>
@@ -406,12 +406,12 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
           )}
 
           <div className="mt-3">
-            <label className="block text-pip-boy-green/80 font-mono text-sm mb-2">Custom Message:</label>
+            <label className="block text-pip-boy-green/80 text-sm mb-2">Custom Message:</label>
             <textarea
               value={shareOptions.customMessage}
               onChange={(e) => setShareOptions(prev => ({ ...prev, customMessage: e.target.value }))}
               placeholder="Add your personal message..."
-              className="w-full h-20 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded resize-none"
+              className="w-full h-20 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded resize-none"
             />
           </div>
         </div>
@@ -429,19 +429,19 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
             {activeMethod === 'url' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-pip-boy-green/80 font-mono text-sm mb-2">Shareable URL:</label>
+                  <label className="block text-pip-boy-green/80 text-sm mb-2">Shareable URL:</label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={shareData.url || window.location.href}
                       readOnly
-                      className="flex-1 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-2 rounded"
+                      className="flex-1 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded"
                     />
                     <motion.button
                       onClick={() => copyToClipboard(shareData.url || window.location.href, 'url')}
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono text-sm rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
                     >
                       {copyStatus.url ? (
                         <><CheckCircle className="w-4 h-4" /> Copied!</>
@@ -457,7 +457,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     onClick={nativeShare}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-full py-3 bg-blue-500/20 border border-blue-400 text-blue-400 font-mono rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
                   >
                     <Smartphone className="w-5 h-5" />
                     Share via Device
@@ -470,18 +470,18 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
             {activeMethod === 'text' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-pip-boy-green/80 font-mono text-sm mb-2">Share Text:</label>
+                  <label className="block text-pip-boy-green/80 text-sm mb-2">Share Text:</label>
                   <textarea
                     value={shareData.text}
                     readOnly
-                    className="w-full h-48 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm p-3 rounded resize-none"
+                    className="w-full h-48 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-3 rounded resize-none"
                   />
                 </div>
                 <motion.button
                   onClick={() => copyToClipboard(shareData.text, 'text')}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                 >
                   {copyStatus.text ? (
                     <><CheckCircle className="w-5 h-5" /> Text Copied!</>
@@ -507,7 +507,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     onClick={generateCardImage}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="py-3 bg-blue-500/20 border border-blue-400 text-blue-400 font-mono rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
+                    className="py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
                   >
                     <ImageIcon className="w-4 h-4" />
                     Generate
@@ -516,7 +516,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     onClick={downloadImage}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
+                    className="py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                   >
                     <Download className="w-4 h-4" />
                     Download
@@ -540,7 +540,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={cn(
-                      "py-3 border font-mono rounded hover:opacity-80 transition-all flex items-center justify-center gap-2",
+                      "py-3 border rounded hover:opacity-80 transition-all flex items-center justify-center gap-2",
                       social.color
                     )}
                   >
@@ -571,14 +571,14 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     />
                   )}
                 </div>
-                <p className="text-center text-pip-boy-green/70 font-mono text-sm">
+                <p className="text-center text-pip-boy-green/70 text-sm">
                   Scan to view card details
                 </p>
                 <motion.button
                   onClick={() => copyToClipboard(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`, 'qr')}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green font-mono rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                 >
                   {copyStatus.qr ? (
                     <><CheckCircle className="w-5 h-5" /> QR URL Copied!</>
@@ -604,7 +604,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="py-3 bg-purple-500/20 border border-purple-400 text-purple-400 font-mono rounded hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2"
+                  className="py-3 bg-purple-500/20 border border-purple-400 text-purple-400 rounded hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
                   Export as JSON
@@ -624,7 +624,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="py-3 bg-cyan-500/20 border border-cyan-400 text-cyan-400 font-mono rounded hover:bg-cyan-500/30 transition-colors flex items-center justify-center gap-2"
+                  className="py-3 bg-cyan-500/20 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors flex items-center justify-center gap-2"
                 >
                   <Download className="w-4 h-4" />
                   Export as CSV

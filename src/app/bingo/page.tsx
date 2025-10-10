@@ -73,7 +73,7 @@ export default function BingoPage() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4" />
-          <p className="text-amber-400 font-mono">載入中...</p>
+          <p className="text-amber-400">載入中...</p>
         </div>
       </div>
     )
@@ -89,14 +89,14 @@ export default function BingoPage() {
             animate={{ y: 0, opacity: 1 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-amber-400 font-mono tracking-wider mb-2">
+            <h1 className="text-4xl md:text-5xl font-bold text-amber-400 tracking-wider mb-2">
               廢土賓果簽到
             </h1>
-            <p className="text-green-400 font-mono">
+            <p className="text-green-400">
               每日簽到領取號碼，達成三連線獲得獎勵
             </p>
             {user && (
-              <p className="text-gray-400 font-mono text-sm mt-2">
+              <p className="text-gray-400 text-sm mt-2">
                 歡迎回來, <span className="text-amber-400">{user.username}</span>
               </p>
             )}
@@ -111,7 +111,7 @@ export default function BingoPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-900/50 border-2 border-red-600 rounded-lg text-red-300 font-mono"
+            className="mb-6 p-4 bg-red-900/50 border-2 border-red-600 rounded-lg text-red-300"
           >
             <div className="flex items-center justify-between">
               <span>{error}</span>
@@ -129,7 +129,7 @@ export default function BingoPage() {
         {isLoading && !hasCard ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-400 mx-auto mb-4" />
-            <p className="text-amber-400 font-mono">載入賓果狀態中...</p>
+            <p className="text-amber-400">載入賓果狀態中...</p>
           </div>
         ) : !hasCard ? (
           /* 賓果卡設定介面 */
@@ -147,7 +147,7 @@ export default function BingoPage() {
               <button
                 onClick={() => setActiveTab('game')}
                 className={`
-                  px-6 py-3 rounded-lg font-mono font-bold transition-all duration-200
+                  px-6 py-3 rounded-lg font-bold transition-all duration-200
                   ${activeTab === 'game'
                     ? 'bg-amber-600 border-2 border-amber-400 text-black'
                     : 'bg-gray-800 border-2 border-gray-600 text-gray-400 hover:border-amber-600/50'
@@ -159,7 +159,7 @@ export default function BingoPage() {
               <button
                 onClick={() => setActiveTab('history')}
                 className={`
-                  px-6 py-3 rounded-lg font-mono font-bold transition-all duration-200
+                  px-6 py-3 rounded-lg font-bold transition-all duration-200
                   ${activeTab === 'history'
                     ? 'bg-amber-600 border-2 border-amber-400 text-black'
                     : 'bg-gray-800 border-2 border-gray-600 text-gray-400 hover:border-amber-600/50'
@@ -206,10 +206,10 @@ export default function BingoPage() {
                     animate={{ scale: 1, opacity: 1 }}
                     className="p-6 bg-green-900/30 border-2 border-green-600 rounded-lg text-center"
                   >
-                    <p className="text-2xl font-bold text-green-400 font-mono mb-2">
+                    <p className="text-2xl font-bold text-green-400 mb-2">
                       🏆 本月已達成三連線！
                     </p>
-                    <p className="text-green-500 font-mono text-sm">
+                    <p className="text-green-500 text-sm">
                       獎勵已發放，下個月可以繼續挑戰
                     </p>
                   </motion.div>
@@ -244,7 +244,7 @@ export default function BingoPage() {
       {/* Footer */}
       <div className="mt-12 py-6 border-t-2 border-gray-800">
         <div className="container mx-auto px-4">
-          <div className="text-center text-gray-500 font-mono text-sm">
+          <div className="text-center text-gray-500 text-sm">
             <p>每日簽到領取號碼 | 達成三連線獲得獎勵</p>
             <p className="mt-2 text-xs">
               系統每月1日自動重置 | 號碼每25天循環一次

@@ -383,7 +383,7 @@ export function DynamicHeroTitle({
   if (isLoading) {
     return (
       <div className="text-center mb-12" aria-live="polite" aria-busy="true">
-        <div className="text-pip-boy-green font-mono">載入中...</div>
+        <div className="text-pip-boy-green">載入中...</div>
       </div>
     );
   }
@@ -395,7 +395,7 @@ export function DynamicHeroTitle({
         {/* 主標題 */}
         <div
           className={cn(
-            'text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center',
+            'text-5xl md:text-7xl font-bold mb-6 tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center',
             isGlitching && styles['hero-title-glitching']
           )}
           aria-live="polite"
@@ -419,7 +419,7 @@ export function DynamicHeroTitle({
         </div>
 
         {/* 描述段落 */}
-        <div className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
+        <div className="text-sm text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
           <p className={cn('inline', styles['hero-description-text'])}>
             {displayDescription}
             {!testMode && (phase === 'typing-description' || phase === 'waiting' || deletingSection === 'description') && (

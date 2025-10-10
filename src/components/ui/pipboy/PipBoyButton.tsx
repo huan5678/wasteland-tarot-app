@@ -54,7 +54,7 @@ export function PipBoyButton({
     <button
       className={cn(
         // 基礎樣式
-        'font-mono font-semibold uppercase tracking-wider transition-all duration-200',
+        'font-semibold uppercase tracking-wider transition-all duration-200',
         'border-2 border-pip-boy-green',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2',
 
