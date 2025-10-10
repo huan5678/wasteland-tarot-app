@@ -307,13 +307,19 @@ export function usePlaylistManager(): PlaylistManager {
   const currentPlaylist = useMusicPlayerStore((state) => state.currentPlaylist);
   const currentModeIndex = useMusicPlayerStore((state) => state.currentModeIndex);
 
-  // 從 playlistStore 取得播放清單摘要
-  const playlists = usePlaylistStore((state) =>
-    state.playlists.map((p) => ({
-      id: p.id,
-      name: p.name,
-      modesCount: p.modes.length,
-    }))
+  // 從 playlistStore 取得播放清單數量（用於依賴追蹤）
+  const playlistsCount = usePlaylistStore((state) => state.playlists.length);
+  const rawPlaylists = usePlaylistStore((state) => state.playlists);
+
+  // Memoize playlists 摘要以避免無限循環
+  const playlists = useMemo(
+    () =>
+      rawPlaylists.map((p) => ({
+        id: p.id,
+        name: p.name,
+        modesCount: p.modes.length,
+      })),
+    [playlistsCount, rawPlaylists]
   );
 
   // ========== Action Selectors ==========

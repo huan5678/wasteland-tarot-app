@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from '@/components/ui/drawer';
 import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistManager } from '@/hooks/useMusicPlayer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -147,6 +147,9 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
         aria-atomic="false"
         role="region"
       >
+        {/* Visually Hidden Title for Accessibility */}
+        <DrawerTitle className="sr-only">音樂播放器</DrawerTitle>
+
         {/* Minimized Mode (80px) */}
         {isDrawerMinimized ? (
           <motion.div
