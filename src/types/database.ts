@@ -38,9 +38,19 @@ export interface Database {
         Update: InterpretationTemplateUpdate;
       };
       reading_sessions: {
-        Row: ReadingSession;
-        Insert: ReadingSessionInsert;
-        Update: ReadingSessionUpdate;
+        Row: SavedSession;
+        Insert: SavedSessionInsert;
+        Update: SavedSessionUpdate;
+      };
+      completed_readings: {
+        Row: CompletedReading;
+        Insert: CompletedReadingInsert;
+        Update: CompletedReadingUpdate;
+      };
+      session_events: {
+        Row: SessionEvent;
+        Insert: SessionEventInsert;
+        Update: SessionEventUpdate;
       };
       reading_card_positions: {
         Row: ReadingCardPosition;
@@ -185,7 +195,9 @@ export interface WastelandCard {
 export interface User {
   id: string;
   email: string;
-  username: string;
+  name: string;  // Changed from username in backend schema
+  /** @deprecated Use name instead. Kept for backwards compatibility */
+  username?: string;  // Alias for name (deprecated)
   display_name?: string;
   bio?: string;
   avatar_url?: string;
@@ -339,29 +351,87 @@ export interface InterpretationTemplate {
   updated_at: string;
 }
 
-export interface ReadingSession {
+// SavedSession represents incomplete reading sessions (reading_sessions table)
+// This is for the save/resume feature where users can pause and continue later
+export interface SavedSession {
   id: string;
   user_id: string;
-  question: string;
-  spread_template_id?: string;
-  session_state: SessionState;
-  character_voice: CharacterVoice;
-  karma_influence?: string;
-  faction_influence?: FactionAlignment;
-  mood_context?: string;
-  location_context?: string;
+  spread_type: string;
+  question?: string;
+  selected_cards: any[];  // JSONB array of selected cards
+  current_position: number;
+  session_data: Record<string, any>;  // JSONB metadata
+  device_info?: Record<string, any>;  // JSONB device information
+  status: 'active' | 'paused' | 'complete';
   started_at: string;
+  last_accessed_at: string;
   completed_at?: string;
-  session_duration?: number;
-  final_interpretation?: string;
-  user_feedback?: string;
-  accuracy_rating?: number;
-  is_private: boolean;
-  allow_public_sharing: boolean;
-  share_with_friends: boolean;
   created_at: string;
   updated_at: string;
 }
+
+// CompletedReading represents finished reading sessions (completed_readings table)
+// This includes full interpretation and social features
+export interface CompletedReading {
+  id: string;
+  user_id: string;
+  spread_template_id?: string;
+  interpretation_template_id?: string;
+  question: string;
+  focus_area?: string;  // career, relationships, health, etc.
+  context_notes?: string;
+  character_voice_used: CharacterVoice;
+  karma_context: string;
+  faction_influence?: FactionAlignment;
+  radiation_factor?: number;
+  overall_interpretation?: string;
+  summary_message?: string;
+  prediction_confidence?: number;  // 0.0 to 1.0
+  energy_reading?: Record<string, any>;  // JSONB
+  session_duration?: number;  // seconds
+  start_time?: string;
+  end_time?: string;
+  location?: string;
+  mood_before?: string;
+  mood_after?: string;
+  privacy_level: 'private' | 'friends' | 'public';
+  allow_public_sharing: boolean;
+  is_favorite?: boolean;
+  share_with_friends?: boolean;
+  anonymous_sharing?: boolean;
+  shared_with_users?: string[];  // JSONB array
+  user_satisfaction?: number;  // 1-5 rating
+  accuracy_rating?: number;  // 1-5 rating
+  helpful_rating?: number;  // 1-5 rating
+  user_feedback?: string;
+  tags?: string[];  // JSONB array
+  likes_count?: number;
+  shares_count?: number;
+  comments_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// SessionEvent represents events during reading sessions (session_events table)
+// Immutable audit log for analytics and debugging
+export interface SessionEvent {
+  id: string;
+  session_id: string;  // FK to reading_sessions.id
+  user_id: string;
+  event_type: string;
+  event_data: Record<string, any>;  // JSONB
+  card_position?: number;
+  timestamp: string;
+  user_agent?: string;
+  ip_address?: string;
+  created_at: string;
+}
+
+/**
+ * @deprecated Use SavedSession for incomplete sessions or CompletedReading for finished readings
+ * This type is kept for backwards compatibility but will be removed in future versions
+ */
+export type ReadingSession = CompletedReading;
 
 export interface ReadingCardPosition {
   id: string;
@@ -482,11 +552,27 @@ export type InterpretationTemplateInsert = Omit<InterpretationTemplate, 'id' | '
   updated_at?: string;
 };
 
-export type ReadingSessionInsert = Omit<ReadingSession, 'id' | 'created_at' | 'updated_at'> & {
+export type SavedSessionInsert = Omit<SavedSession, 'id' | 'created_at' | 'updated_at'> & {
   id?: string;
   created_at?: string;
   updated_at?: string;
 };
+
+export type CompletedReadingInsert = Omit<CompletedReading, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type SessionEventInsert = Omit<SessionEvent, 'id' | 'created_at'> & {
+  id?: string;
+  created_at?: string;
+};
+
+/**
+ * @deprecated Use SavedSessionInsert or CompletedReadingInsert instead
+ */
+export type ReadingSessionInsert = CompletedReadingInsert;
 
 export type ReadingCardPositionInsert = Omit<ReadingCardPosition, 'id' | 'created_at'> & {
   id?: string;
@@ -540,9 +626,20 @@ export type InterpretationTemplateUpdate = Partial<Omit<InterpretationTemplate, 
   updated_at?: string;
 };
 
-export type ReadingSessionUpdate = Partial<Omit<ReadingSession, 'id' | 'created_at'>> & {
+export type SavedSessionUpdate = Partial<Omit<SavedSession, 'id' | 'created_at'>> & {
   updated_at?: string;
 };
+
+export type CompletedReadingUpdate = Partial<Omit<CompletedReading, 'id' | 'created_at'>> & {
+  updated_at?: string;
+};
+
+export type SessionEventUpdate = Partial<Omit<SessionEvent, 'id' | 'created_at'>>;
+
+/**
+ * @deprecated Use SavedSessionUpdate or CompletedReadingUpdate instead
+ */
+export type ReadingSessionUpdate = CompletedReadingUpdate;
 
 export type ReadingCardPositionUpdate = Partial<Omit<ReadingCardPosition, 'id' | 'created_at'>>;
 

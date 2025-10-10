@@ -3,6 +3,7 @@ Social Features Models - Achievement system, friendships, and community features
 """
 
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, Boolean, DateTime, ForeignKey, UniqueConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from typing import List, Dict, Any, Optional
@@ -52,7 +53,7 @@ class UserAchievement(BaseModel):
     __tablename__ = "user_achievements"
 
     # User and Achievement Info
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     achievement_id = Column(String, nullable=False)
     achievement_name = Column(String(150), nullable=False)
     achievement_category = Column(String(50), nullable=False)
@@ -166,8 +167,8 @@ class UserFriendship(BaseModel):
     __tablename__ = "user_friendships"
 
     # Friendship Participants
-    requester_id = Column(String, ForeignKey("users.id"), nullable=False)
-    recipient_id = Column(String, ForeignKey("users.id"), nullable=False)
+    requester_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    recipient_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Friendship Status
     status = Column(String(20), default=FriendshipStatus.PENDING.value)
@@ -296,7 +297,7 @@ class KarmaHistory(BaseModel):
     __tablename__ = "karma_history"
 
     # User and Change Info
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     karma_before = Column(Integer, nullable=False)
     karma_after = Column(Integer, nullable=False)
     karma_change = Column(Integer, nullable=False)  # Can be positive or negative
@@ -305,8 +306,8 @@ class KarmaHistory(BaseModel):
     reason = Column(String(50), nullable=False)
     reason_description = Column(Text)
     triggered_by_action = Column(String(100))  # What action triggered this change
-    related_reading_id = Column(String, ForeignKey("completed_readings.id"))
-    related_user_id = Column(String, ForeignKey("users.id"))  # If change involves another user
+    related_reading_id = Column(UUID(as_uuid=True), ForeignKey("completed_readings.id"), index=True)
+    related_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)  # If change involves another user
 
     # Detailed Context
     action_context = Column(JSON)  # Additional context about the action
@@ -334,7 +335,7 @@ class KarmaHistory(BaseModel):
 
     # Relationships
     user = relationship("User", foreign_keys=[user_id])
-    related_reading = relationship("ReadingSession")
+    related_reading = relationship("CompletedReading")
     related_user = relationship("User", foreign_keys=[related_user_id])
 
     def calculate_karma_delta(self) -> int:

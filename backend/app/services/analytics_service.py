@@ -9,7 +9,7 @@ from collections import Counter
 from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.reading_enhanced import ReadingSession as ReadingSessionModel
+from app.models.reading_enhanced import CompletedReading as CompletedReadingModel
 
 
 class AnalyticsService:
@@ -26,14 +26,14 @@ class AnalyticsService:
     ) -> Dict[str, Any]:
         """Get basic reading statistics"""
         # Build base query
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
         )
 
         if start_date:
-            query = query.where(ReadingSessionModel.created_at >= start_date)
+            query = query.where(CompletedReadingModel.created_at >= start_date)
         if end_date:
-            query = query.where(ReadingSessionModel.created_at <= end_date)
+            query = query.where(CompletedReadingModel.created_at <= end_date)
 
         result = await self.db.execute(query)
         readings = result.scalars().all()
@@ -79,12 +79,12 @@ class AnalyticsService:
         days = int(period.rstrip('d'))
         start_date = datetime.utcnow() - timedelta(days=days)
 
-        query = select(ReadingSessionModel).where(
+        query = select(CompletedReadingModel).where(
             and_(
-                ReadingSessionModel.user_id == user_id,
-                ReadingSessionModel.created_at >= start_date
+                CompletedReadingModel.user_id == user_id,
+                CompletedReadingModel.created_at >= start_date
             )
-        ).order_by(ReadingSessionModel.created_at)
+        ).order_by(CompletedReadingModel.created_at)
 
         result = await self.db.execute(query)
         readings = result.scalars().all()
@@ -108,8 +108,8 @@ class AnalyticsService:
 
     async def get_spread_usage(self, user_id: str) -> Dict[str, Any]:
         """Get spread type usage statistics"""
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
         )
 
         result = await self.db.execute(query)
@@ -123,8 +123,8 @@ class AnalyticsService:
 
     async def get_voice_preferences(self, user_id: str) -> Dict[str, Any]:
         """Get character voice preferences"""
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
         )
 
         result = await self.db.execute(query)
@@ -140,8 +140,8 @@ class AnalyticsService:
 
     async def get_karma_distribution(self, user_id: str) -> Dict[str, Any]:
         """Get karma context distribution"""
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
         )
 
         result = await self.db.execute(query)
@@ -162,13 +162,13 @@ class AnalyticsService:
         days = int(period.rstrip('d'))
         start_date = datetime.utcnow() - timedelta(days=days)
 
-        query = select(ReadingSessionModel).where(
+        query = select(CompletedReadingModel).where(
             and_(
-                ReadingSessionModel.user_id == user_id,
-                ReadingSessionModel.created_at >= start_date,
-                ReadingSessionModel.satisfaction_rating.isnot(None)
+                CompletedReadingModel.user_id == user_id,
+                CompletedReadingModel.created_at >= start_date,
+                CompletedReadingModel.satisfaction_rating.isnot(None)
             )
-        ).order_by(ReadingSessionModel.created_at)
+        ).order_by(CompletedReadingModel.created_at)
 
         result = await self.db.execute(query)
         readings = result.scalars().all()
@@ -203,9 +203,9 @@ class AnalyticsService:
 
     async def get_reading_patterns(self, user_id: str) -> Dict[str, Any]:
         """Get reading pattern analysis"""
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
-        ).order_by(ReadingSessionModel.created_at)
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
+        ).order_by(CompletedReadingModel.created_at)
 
         result = await self.db.execute(query)
         readings = result.scalars().all()
@@ -261,8 +261,8 @@ class AnalyticsService:
         limit: int = 10
     ) -> Dict[str, Any]:
         """Get most drawn cards"""
-        query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == user_id
+        query = select(CompletedReadingModel).where(
+            CompletedReadingModel.user_id == user_id
         )
 
         result = await self.db.execute(query)
@@ -317,11 +317,11 @@ class AnalyticsService:
 
         # Get data for both periods
         async def get_period_data(start: datetime, end: datetime) -> Dict[str, Any]:
-            query = select(ReadingSessionModel).where(
+            query = select(CompletedReadingModel).where(
                 and_(
-                    ReadingSessionModel.user_id == user_id,
-                    ReadingSessionModel.created_at >= start,
-                    ReadingSessionModel.created_at < end
+                    CompletedReadingModel.user_id == user_id,
+                    CompletedReadingModel.created_at >= start,
+                    CompletedReadingModel.created_at < end
                 )
             )
             result = await self.db.execute(query)

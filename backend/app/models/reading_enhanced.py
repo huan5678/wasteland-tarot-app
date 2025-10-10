@@ -4,6 +4,7 @@ Includes spread templates, interpretation templates, card positions, and synergi
 """
 
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, Boolean, DateTime, ForeignKey, Enum
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from typing import List, Dict, Any, Optional
@@ -234,21 +235,20 @@ class InterpretationTemplate(BaseModel):
         }
 
 
-class ReadingSession(BaseModel):
+class CompletedReading(BaseModel):
     """
     Enhanced reading tracking with privacy controls and comprehensive metadata
 
-    NOTE: This model's table name has been changed to 'completed_readings' to avoid
-    conflict with the new save/resume feature's 'reading_sessions' table.
-    This represents COMPLETED readings with full interpretation and social features.
+    This model represents COMPLETED readings with full interpretation and social features.
+    Uses the 'completed_readings' table to store finalized readings with interpretations.
     """
 
     __tablename__ = "completed_readings"
 
     # Basic Reading Information
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    spread_template_id = Column(String, ForeignKey("spread_templates.id"))
-    interpretation_template_id = Column(String, ForeignKey("interpretation_templates.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    spread_template_id = Column(UUID(as_uuid=True), ForeignKey("spread_templates.id"), index=True)
+    interpretation_template_id = Column(UUID(as_uuid=True), ForeignKey("interpretation_templates.id"), index=True)
 
     # Reading Content
     question = Column(Text, nullable=False)
@@ -299,7 +299,7 @@ class ReadingSession(BaseModel):
     user = relationship("User", back_populates="readings")
     spread_template = relationship("SpreadTemplate")
     interpretation_template = relationship("InterpretationTemplate")
-    card_positions = relationship("ReadingCardPosition", back_populates="reading_session")
+    card_positions = relationship("ReadingCardPosition", back_populates="completed_reading")
 
     def calculate_total_duration(self) -> int:
         """Calculate reading duration in seconds"""
@@ -364,8 +364,8 @@ class ReadingCardPosition(BaseModel):
     __tablename__ = "reading_card_positions"
 
     # Reading and Card References
-    reading_session_id = Column(String, ForeignKey("completed_readings.id"), nullable=False)
-    card_id = Column(String, ForeignKey("wasteland_cards.id"), nullable=False)
+    completed_reading_id = Column(UUID(as_uuid=True), ForeignKey("completed_readings.id"), nullable=False, index=True)
+    card_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
 
     # Position Information
     position_number = Column(Integer, nullable=False)  # 1, 2, 3, etc.
@@ -392,7 +392,7 @@ class ReadingCardPosition(BaseModel):
     interpretation_confidence = Column(Float)  # AI confidence in interpretation
 
     # Relationships
-    reading_session = relationship("ReadingSession", back_populates="card_positions")
+    completed_reading = relationship("CompletedReading", back_populates="card_positions")
     card = relationship("WastelandCard")
 
     def get_effective_meaning(self) -> str:
@@ -414,7 +414,7 @@ class ReadingCardPosition(BaseModel):
         """Convert card position to dictionary"""
         return {
             "id": self.id,
-            "reading_session_id": self.reading_session_id,
+            "completed_reading_id": self.completed_reading_id,
             "card_id": self.card_id,
             "position_number": self.position_number,
             "position_name": self.position_name,
@@ -443,9 +443,9 @@ class CardSynergy(BaseModel):
     __tablename__ = "card_synergies"
 
     # Card Combination
-    card_1_id = Column(String, ForeignKey("wasteland_cards.id"), nullable=False)
-    card_2_id = Column(String, ForeignKey("wasteland_cards.id"), nullable=False)
-    card_3_id = Column(String, ForeignKey("wasteland_cards.id"), nullable=True)  # For 3-card synergies
+    card_1_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
+    card_2_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
+    card_3_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=True, index=True)  # For 3-card synergies
 
     # Synergy Properties
     synergy_type = Column(String(30), nullable=False)  # amplification, contradiction, etc.

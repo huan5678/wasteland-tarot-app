@@ -5,6 +5,7 @@ Tracks user behavior and engagement patterns for personalization
 from datetime import datetime
 from typing import Optional, Dict, Any
 from sqlalchemy import Column, String, Integer, DateTime, JSON, Float, ForeignKey, Index
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -19,7 +20,7 @@ class UserAnalytics(Base):
     __tablename__ = "user_analytics"
 
     id = Column(String, primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Session tracking
     session_count = Column(Integer, default=0)
@@ -98,8 +99,8 @@ class AnalyticsEvent(Base):
     __tablename__ = "analytics_events"
 
     id = Column(String, primary_key=True)
-    analytics_id = Column(String, ForeignKey("user_analytics.id"), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    analytics_id = Column(String, ForeignKey("user_analytics.id"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Event details
     event_type = Column(String, nullable=False)  # e.g., "reading_created", "card_viewed"
@@ -159,7 +160,7 @@ class ReadingPattern(Base):
     __tablename__ = "reading_patterns"
 
     id = Column(String, primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Pattern identification
     pattern_type = Column(String, nullable=False)  # e.g., "frequent_question", "card_combination"
@@ -212,7 +213,7 @@ class UserRecommendation(Base):
     __tablename__ = "user_recommendations"
 
     id = Column(String, primary_key=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Recommendation details
     recommendation_type = Column(String, nullable=False)  # spread, card, theme, voice

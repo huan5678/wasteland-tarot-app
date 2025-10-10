@@ -34,23 +34,39 @@ export default function DashboardPage() {
       setIsLoading(true)
 
       try {
-        // Get user's readings
-        const userReadings = await readingsAPI.getUserReadings(user.id)
+        // Get user's readings (使用正確的 API 回應格式)
+        // NOTE: Temporarily handling 503 errors gracefully until completed_readings table is created
+        let transformedReadings: Reading[] = []
+        let totalReadings = 0
 
-        // Transform API data to match component interface
-        const transformedReadings: Reading[] = userReadings.map(reading => ({
-          id: reading.id,
-          date: reading.created_at,
-          question: reading.question,
-          cards: reading.cards_drawn,
-          spread_type: reading.spread_type as 'single' | 'three_card',
-          interpretation: reading.interpretation || ''
-        }))
+        try {
+          const response = await readingsAPI.getUserReadings(user.id)
+
+          // Transform API data to match component interface
+          transformedReadings = response.readings.map(reading => ({
+            id: reading.id,
+            date: reading.created_at,
+            question: reading.question,
+            cards: reading.cards_drawn,
+            spread_type: reading.spread_type as 'single' | 'three_card',
+            interpretation: reading.interpretation || ''
+          }))
+
+          totalReadings = response.total_count
+        } catch (apiError: any) {
+          // Gracefully handle 503 (service unavailable) - table doesn't exist yet
+          if (apiError?.status === 503 || apiError?.status === 500) {
+            console.info('Readings table not available yet - showing empty state')
+            transformedReadings = []
+            totalReadings = 0
+          } else {
+            throw apiError // Re-throw other errors
+          }
+        }
 
         setRecentReadings(transformedReadings.slice(0, 5)) // Show only recent 5
 
         // Calculate stats from real data
-        const totalReadings = userReadings.length
         const daysInVault = user.created_at
           ? Math.floor((Date.now() - Date.parse(user.created_at)) / (1000 * 60 * 60 * 24))
           : 0
@@ -64,7 +80,7 @@ export default function DashboardPage() {
 
         // Find most frequent card (simplified)
         let favoriteCard = null
-        if (userReadings.length > 0) {
+        if (transformedReadings.length > 0) {
           try {
             const allCards = await cardsAPI.getAll()
             favoriteCard = allCards[0] // Simplified - just take first card
@@ -151,7 +167,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-sm font-bold text-pip-boy-green font-mono">Vault {user?.vaultNumber || '111'}</div>
+              <div className="text-sm font-bold text-pip-boy-green font-mono">Vault {user?.vault_number || '111'}</div>
               <div className="text-pip-boy-green/70 text-xs font-mono">分配</div>
             </div>
           </div>

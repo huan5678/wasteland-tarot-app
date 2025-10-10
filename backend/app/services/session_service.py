@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.exc import IntegrityError
 
-from app.models.reading_session import SessionSave
+from app.models.reading_session import ReadingSession
 from app.models.session_event import SessionEvent
 from app.models.user import User
 from app.schemas.sessions import (
@@ -79,7 +79,7 @@ class SessionService:
             raise UserNotFoundError(f"User with ID '{session_data.user_id}' not found")
 
         # Create session
-        session = SessionSave(
+        session = ReadingSession(
             user_id=session_data.user_id,
             spread_type=session_data.spread_type,
             spread_config=session_data.spread_config,
@@ -124,7 +124,7 @@ class SessionService:
 
         # Fetch from database
         result = await self.db.execute(
-            select(SessionSave).where(SessionSave.id == session_id)
+            select(ReadingSession).where(ReadingSession.id == session_id)
         )
         session = result.scalar_one_or_none()
 
@@ -161,11 +161,11 @@ class SessionService:
             Tuple of (list of SessionMetadataSchema, total count)
         """
         # Build query
-        query = select(SessionSave).where(SessionSave.user_id == user_id)
+        query = select(ReadingSession).where(ReadingSession.user_id == user_id)
 
         # Apply status filter if provided
         if status:
-            query = query.where(SessionSave.status == status)
+            query = query.where(ReadingSession.status == status)
 
         # Get total count
         count_query = select(func.count()).select_from(query.subquery())
@@ -173,7 +173,7 @@ class SessionService:
         total_count = total_result.scalar() or 0
 
         # Apply pagination and ordering
-        query = query.order_by(SessionSave.updated_at.desc()).limit(limit).offset(offset)
+        query = query.order_by(ReadingSession.updated_at.desc()).limit(limit).offset(offset)
 
         # Execute query
         result = await self.db.execute(query)
@@ -211,7 +211,7 @@ class SessionService:
         """
         # Fetch session
         result = await self.db.execute(
-            select(SessionSave).where(SessionSave.id == session_id)
+            select(ReadingSession).where(ReadingSession.id == session_id)
         )
         session = result.scalar_one_or_none()
 
@@ -262,7 +262,7 @@ class SessionService:
         """
         # Fetch session
         result = await self.db.execute(
-            select(SessionSave).where(SessionSave.id == session_id)
+            select(ReadingSession).where(ReadingSession.id == session_id)
         )
         session = result.scalar_one_or_none()
 
@@ -308,7 +308,7 @@ class SessionService:
         """
         # Fetch session
         result = await self.db.execute(
-            select(SessionSave).where(SessionSave.id == session_id)
+            select(ReadingSession).where(ReadingSession.id == session_id)
         )
         session = result.scalar_one_or_none()
 
@@ -319,7 +319,7 @@ class SessionService:
             raise InvalidRequestError(f"Session '{session_id}' is already completed")
 
         # Import Reading model here to avoid circular dependency
-        from app.models.reading_enhanced import ReadingSession as Reading
+        from app.models.reading_enhanced import CompletedReading as Reading
 
         # Create Reading from session data
         reading_data = {
@@ -387,12 +387,12 @@ class SessionService:
         if conflicts:
             # Return existing session with conflict information
             result = await self.db.execute(
-                select(SessionSave).where(
+                select(ReadingSession).where(
                     and_(
-                        SessionSave.user_id == offline_data.user_id,
-                        SessionSave.question == offline_data.question
+                        ReadingSession.user_id == offline_data.user_id,
+                        ReadingSession.question == offline_data.question
                     )
-                ).order_by(SessionSave.created_at.desc()).limit(1)
+                ).order_by(ReadingSession.created_at.desc()).limit(1)
             )
             existing_session = result.scalar_one_or_none()
 
@@ -440,12 +440,12 @@ class SessionService:
         # (same user, same question, created within 1 hour window)
         time_window = timedelta(hours=1)
         result = await self.db.execute(
-            select(SessionSave).where(
+            select(ReadingSession).where(
                 and_(
-                    SessionSave.user_id == offline_data.user_id,
-                    SessionSave.question == offline_data.question,
-                    SessionSave.created_at >= offline_data.created_at - time_window,
-                    SessionSave.created_at <= offline_data.created_at + time_window
+                    ReadingSession.user_id == offline_data.user_id,
+                    ReadingSession.question == offline_data.question,
+                    ReadingSession.created_at >= offline_data.created_at - time_window,
+                    ReadingSession.created_at <= offline_data.created_at + time_window
                 )
             )
         )
@@ -511,7 +511,7 @@ class SessionService:
         """
         # Fetch server session
         result = await self.db.execute(
-            select(SessionSave).where(SessionSave.id == resolution_data.session_id)
+            select(ReadingSession).where(ReadingSession.id == resolution_data.session_id)
         )
         server_session = result.scalar_one_or_none()
 
@@ -557,7 +557,7 @@ class SessionService:
         return SessionResponseSchema.model_validate(server_session)
 
     # Helper methods for Redis caching (to be implemented when Redis is added)
-    # async def _cache_session(self, session: SessionSave) -> None:
+    # async def _cache_session(self, session: ReadingSession) -> None:
     #     """Cache session in Redis with TTL."""
     #     pass
     #

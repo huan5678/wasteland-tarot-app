@@ -4,6 +4,7 @@ User authentication, profiles, and social features for the wasteland
 """
 
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, Boolean, DateTime, ForeignKey, Index, LargeBinary
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from typing import List, Dict, Any, Optional
@@ -77,7 +78,7 @@ class User(BaseModel):
     # Relationships
     profile = relationship("UserProfile", back_populates="user", uselist=False, cascade="all, delete-orphan")
     preferences = relationship("UserPreferences", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    readings = relationship("ReadingSession", back_populates="user", cascade="all, delete-orphan")
+    readings = relationship("CompletedReading", back_populates="user", cascade="all, delete-orphan")
     analytics = relationship("UserAnalytics", back_populates="user", uselist=False, cascade="all, delete-orphan")
     credentials = relationship("Credential", back_populates="user", cascade="all, delete-orphan")  # WebAuthn credentials
 
@@ -244,7 +245,7 @@ class UserProfile(BaseModel):
 
     __tablename__ = "user_profiles"
 
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Wasteland Character Info
     preferred_voice = Column(String(50), default=CharacterVoice.PIP_BOY.value)
@@ -343,7 +344,7 @@ class UserPreferences(BaseModel):
 
     __tablename__ = "user_preferences"
 
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Reading Preferences
     default_character_voice = Column(String(50), default=CharacterVoice.PIP_BOY.value)

@@ -10,7 +10,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.user import User
 from app.models.social_features import KarmaHistory, KarmaChangeReason
-from app.models.reading_enhanced import ReadingSession
+from app.models.reading_enhanced import CompletedReading
 from app.models.wasteland_card import KarmaAlignment
 from app.core.exceptions import UserNotFoundError, InsufficientPermissionsError
 

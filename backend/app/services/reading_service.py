@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func, desc
 from sqlalchemy.orm import selectinload
 from app.models.user import User
-from app.models.reading_enhanced import ReadingSession as Reading
+from app.models.reading_enhanced import CompletedReading as Reading
 from app.models.wasteland_card import WastelandCard, KarmaAlignment, CharacterVoice, FactionAlignment
 from app.services.wasteland_card_service import WastelandCardService, RadiationRandomnessEngine
 from app.services.ai_interpretation_service import AIInterpretationService

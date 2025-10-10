@@ -2,49 +2,50 @@
 SQLAlchemy model for reading_sessions table.
 
 This model represents an incomplete reading session that can be saved and resumed.
-
-NOTE: This class is temporarily named SessionSave to avoid conflict with the legacy
-ReadingSession model in reading_enhanced.py. The legacy model incorrectly uses the
-'reading_sessions' table name. Once the legacy code is refactored, this should be
-renamed back to ReadingSession to match the design specification.
+This is the primary model for in-progress reading sessions, allowing users to save
+their progress and resume later.
 """
 
-from sqlalchemy import Column, String, Text, JSON, DateTime, CheckConstraint, Index
+from sqlalchemy import Column, String, Text, JSON, Integer, DateTime, CheckConstraint, Index, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from datetime import datetime
-import uuid
+import uuid as uuid_pkg
 
 from app.models.base import Base
 
 
-class SessionSave(Base):
+class ReadingSession(Base):
     """
-    SessionSave model for incomplete reading sessions (save/resume feature).
+    ReadingSession model for incomplete reading sessions (save/resume feature).
 
     Allows users to save incomplete readings and resume them later.
     Supports offline-first architecture with sync capabilities.
 
     This model uses the reading_sessions table which stores incomplete sessions.
-    It should eventually be renamed to ReadingSession once legacy models are refactored.
     """
 
     __tablename__ = "reading_sessions"
 
-    # Primary key
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    # Primary key - UUID type to match database
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_pkg.uuid4)
 
-    # User relationship
-    user_id = Column(String(36), nullable=False, index=True)
+    # User relationship - UUID type with FK constraint
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Spread configuration
     spread_type = Column(String(50), nullable=False)
-    spread_config = Column(JSON, nullable=True)
 
     # Reading context
-    question = Column(Text, nullable=False)
+    question = Column(Text, nullable=True)
 
-    # Session state (cards drawn, positions, etc.)
-    session_state = Column(JSON, nullable=False)
+    # Card selection state - matching DB schema
+    selected_cards = Column(JSONB, nullable=False, default=list, server_default='[]')
+    current_position = Column(Integer, nullable=False, default=0, server_default='0')
+
+    # Additional session metadata
+    session_data = Column(JSONB, nullable=False, default=dict, server_default='{}')
+    device_info = Column(JSONB, nullable=True)
 
     # Status tracking
     status = Column(
@@ -55,9 +56,11 @@ class SessionSave(Base):
     )
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-    last_accessed_at = Column(DateTime(timezone=True), nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default='NOW()')
+    last_accessed_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default='NOW()')
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default='NOW()')
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow, server_default='NOW()')
 
     # Relationships
     # Note: SessionEvent relationship will be added when SessionEvent model is created
@@ -72,19 +75,23 @@ class SessionSave(Base):
     )
 
     def __repr__(self) -> str:
-        return f"<SessionSave(id={self.id}, user_id={self.user_id}, status={self.status})>"
+        return f"<ReadingSession(id={self.id}, user_id={self.user_id}, status={self.status})>"
 
     def to_dict(self) -> dict:
         """Convert model to dictionary for serialization."""
         return {
-            'id': self.id,
-            'user_id': self.user_id,
+            'id': str(self.id),  # Convert UUID to string
+            'user_id': str(self.user_id),  # Convert UUID to string
             'spread_type': self.spread_type,
-            'spread_config': self.spread_config,
             'question': self.question,
-            'session_state': self.session_state,
+            'selected_cards': self.selected_cards,
+            'current_position': self.current_position,
+            'session_data': self.session_data,
+            'device_info': self.device_info,
             'status': self.status,
+            'started_at': self.started_at.isoformat() if self.started_at else None,
+            'last_accessed_at': self.last_accessed_at.isoformat() if self.last_accessed_at else None,
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None,
-            'last_accessed_at': self.last_accessed_at.isoformat() if self.last_accessed_at else None,
         }

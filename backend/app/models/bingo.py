@@ -4,6 +4,7 @@ Database models for monthly bingo cards, daily numbers, claims, and rewards
 """
 
 from sqlalchemy import Column, String, Integer, Date, JSON, Boolean, DateTime, ForeignKey, UniqueConstraint, Index, CheckConstraint
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from typing import Dict, Any, List, Optional
@@ -21,7 +22,7 @@ class UserBingoCard(BaseModel):
 
     __tablename__ = "user_bingo_cards"
 
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)  # First day of the month (e.g., 2025-10-01)
     card_data = Column(JSON, nullable=False)  # 5x5 array: [[1,2,3,4,5], [6,7,8,9,10], ...]
     is_active = Column(Boolean, nullable=False, default=True)
@@ -136,9 +137,9 @@ class UserNumberClaim(BaseModel):
 
     __tablename__ = "user_number_claims"
 
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    card_id = Column(String, ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False, index=True)
-    daily_number_id = Column(String, ForeignKey("daily_bingo_numbers.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    card_id = Column(UUID(as_uuid=True), ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False, index=True)
+    daily_number_id = Column(UUID(as_uuid=True), ForeignKey("daily_bingo_numbers.id", ondelete="CASCADE"), nullable=False, index=True)
     claim_date = Column(Date, nullable=False, index=True)
     number = Column(Integer, nullable=False)  # Denormalized for quick access
     claimed_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
@@ -179,8 +180,8 @@ class BingoReward(BaseModel):
 
     __tablename__ = "bingo_rewards"
 
-    user_id = Column(String, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    card_id = Column(String, ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    card_id = Column(UUID(as_uuid=True), ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)
     line_types = Column(JSON, nullable=False)  # Array of line identifiers: ['row-0', 'col-2', 'diagonal-main']
     issued_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())

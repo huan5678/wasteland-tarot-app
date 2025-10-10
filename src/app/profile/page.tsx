@@ -8,7 +8,7 @@ import { Edit, UserCircle, Save, Settings, BarChart3, AlertTriangle, Lock, Spade
 interface UserProfile {
   username: string
   email: string
-  vaultNumber: string
+  vault_number: string
   joinDate: string
   karmaLevel: string
   totalReadings: number
@@ -46,7 +46,7 @@ export default function ProfilePage() {
       const mockProfile: UserProfile = {
         username: user?.username || 'VaultDweller111',
         email: 'dweller@vault-tec.com',
-        vaultNumber: user?.vaultNumber || '111',
+        vault_number: user?.vault_number || '111',
         joinDate: '2023-10-01T00:00:00Z',
         karmaLevel: '善業流浪者',
         totalReadings: 24,
@@ -207,7 +207,7 @@ export default function ProfilePage() {
                   {user?.name || profile.username}
                 </h2>
                 <p className="text-pip-boy-green/70 font-mono text-sm">
-                  Vault {profile.vaultNumber} 居民
+                  Vault {profile.vault_number} 居民
                 </p>
 
                 {/* OAuth Badge */}
@@ -383,7 +383,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-pip-boy-green/70 font-mono text-sm">Vault 指派</p>
-                      <p className="text-pip-boy-green font-mono">Vault {profile.vaultNumber}</p>
+                      <p className="text-pip-boy-green font-mono">Vault {profile.vault_number}</p>
                     </div>
                     <div>
                       <p className="text-pip-boy-green/70 font-mono text-sm">Email 信箱</p>

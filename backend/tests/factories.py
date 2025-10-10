@@ -11,7 +11,7 @@ from typing import List, Dict, Any
 import random
 
 from app.models.user import User, UserProfile, UserPreferences
-from app.models.reading_enhanced import ReadingSession
+from app.models.reading_enhanced import CompletedReading
 from app.models.wasteland_card import WastelandCard, KarmaAlignment, CharacterVoice, FactionAlignment
 
 
@@ -335,7 +335,7 @@ class ReadingFactory(factory.Factory):
     """Factory for creating readings with Fallout theming"""
 
     class Meta:
-        model = ReadingSession
+        model = CompletedReading
 
     id = factory.Sequence(lambda n: f"reading_{n}")
     user_id = factory.SubFactory(UserFactory)
@@ -554,7 +554,7 @@ def create_faction_test_data() -> Dict[str, List[User]]:
     }
 
 
-def create_reading_variety_pack(user: User) -> List[ReadingSession]:
+def create_reading_variety_pack(user: User) -> List[CompletedReading]:
     """Create a variety of different reading types for a user"""
     return [
         SingleCardReadingFactory(user_id=user.id),

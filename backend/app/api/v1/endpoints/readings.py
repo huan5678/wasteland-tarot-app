@@ -13,7 +13,7 @@ import logging
 
 from app.db.session import get_db
 from app.models.reading_enhanced import (
-    ReadingSession as ReadingSessionModel,
+    CompletedReading as ReadingSessionModel,
     ReadingCardPosition as ReadingCardPositionModel,
     SpreadTemplate as SpreadTemplateModel
 )

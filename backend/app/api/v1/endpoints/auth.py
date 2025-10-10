@@ -192,7 +192,7 @@ async def verify_access_token(
             "is_oauth_user": bool(user.oauth_provider),
             "oauth_provider": user.oauth_provider,
             "karma_score": user.karma_score,
-            "karma_alignment": user.karma_alignment
+            "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment)
         },
         is_valid=True
     )
@@ -427,7 +427,7 @@ async def get_current_user(
             "oauth_provider": user.oauth_provider,
             "profile_picture_url": user.profile_picture_url,
             "karma_score": user.karma_score,
-            "karma_alignment": user.karma_alignment,
+            "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
             "faction_alignment": user.faction_alignment,
             "vault_number": user.vault_number,
             "wasteland_location": user.wasteland_location,
@@ -608,7 +608,7 @@ async def login_user(
                 "display_name": user.display_name,
                 "faction_alignment": user.faction_alignment,
                 "karma_score": user.karma_score,
-                "karma_alignment": user.karma_alignment,
+                "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
                 "vault_number": user.vault_number,
                 "wasteland_location": user.wasteland_location,
                 "profile_picture_url": user.profile_picture_url,

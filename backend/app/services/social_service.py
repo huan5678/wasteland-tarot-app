@@ -16,7 +16,7 @@ from app.models.social_features import (
     FriendshipStatus,
     AchievementCategory
 )
-from app.models.reading_enhanced import ReadingSession
+from app.models.reading_enhanced import CompletedReading
 from app.core.exceptions import (
     UserNotFoundError,
     InsufficientPermissionsError,
@@ -522,7 +522,7 @@ class SocialService:
 
         # Get reading count
         result = await self.db.execute(
-            select(func.count(ReadingSession.id)).where(ReadingSession.user_id == user_id)
+            select(func.count(CompletedReading.id)).where(CompletedReading.user_id == user_id)
         )
         readings_count = result.scalar() or 0
 
@@ -542,10 +542,10 @@ class SocialService:
 
         # Get average accuracy (if ratings exist)
         result = await self.db.execute(
-            select(func.avg(ReadingSession.accuracy_rating)).where(
+            select(func.avg(CompletedReading.accuracy_rating)).where(
                 and_(
-                    ReadingSession.user_id == user_id,
-                    ReadingSession.accuracy_rating.is_not(None)
+                    CompletedReading.user_id == user_id,
+                    CompletedReading.accuracy_rating.is_not(None)
                 )
             )
         )

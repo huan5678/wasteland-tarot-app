@@ -308,6 +308,38 @@
 
   /* Transition timing - Smooth state changes */
   --scrollbar-transition: all 0.2s ease;
+
+  /* === CRT SCREEN VISUAL EFFECTS VARIABLES === */
+  /**
+   * CRT 螢幕視覺特效的全域 CSS 變數
+   * 用於 Hero Section 標題的復古 CRT 顯示器效果
+   *
+   * 變數命名模式：--crt-{category}-{property}
+   * - category: grid（網格）、color（色彩）、shadow（陰影）、opacity（透明度）
+   * - property: 具體屬性名稱
+   *
+   * 用途：
+   * - RGB 像素網格疊加效果（::after pseudo-element）
+   * - 靜態色彩分離效果（text-shadow chromatic aberration）
+   *
+   * v2 調整：降低效果強度以改善可讀性與對比度
+   */
+
+  /* RGB 網格配置 */
+  --crt-grid-size: 3px; /* 網格像素大小（3px 密度適中） */
+
+  /* 色彩分離配置 - v7: 平衡美學與可讀性 */
+  --crt-red-offset: 1.5px; /* 紅色陰影向右偏移量 */
+  --crt-blue-offset: -1.5px; /* 藍色陰影向左偏移量 */
+  --crt-shadow-opacity: 0.3; /* 靜態色彩分離陰影透明度（平衡值 0.3） */
+
+  /* 網格層透明度配置 - v13: 進一步降低掃描線，幾乎隱形 */
+  --crt-grid-opacity-vertical: 0.015; /* 垂直掃描線透明度（降至 1.5%） */
+  --crt-grid-opacity-horizontal: 0.01; /* 水平 RGB 子像素透明度（降至 1%） */
+
+  /* 綠色光暈效果 - v9: 進一步降低光暈強度 */
+  --crt-text-glow: rgba(0, 255, 136, 0.15); /* 主文字光暈（降至 15%） */
+  --crt-text-glow-strong: rgba(0, 255, 136, 0.2); /* 強光暈（降至 20%） */
 }
 
 /* === SCROLLBAR ACCESSIBILITY OVERRIDES === */

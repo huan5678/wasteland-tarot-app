@@ -4,10 +4,11 @@ SQLAlchemy model for session_events table.
 This model tracks events during reading sessions for analytics and debugging.
 """
 
-from sqlalchemy import Column, String, JSON, DateTime, Index
+from sqlalchemy import Column, String, Integer, Text, DateTime, Index, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID, JSONB, INET
 from sqlalchemy.orm import relationship
 from datetime import datetime
-import uuid
+import uuid as uuid_pkg
 
 from app.models.base import Base
 
@@ -18,24 +19,35 @@ class SessionEvent(Base):
 
     Captures user interactions during reading sessions for analytics,
     debugging, and user experience optimization.
+
+    This is an immutable audit log - events cannot be modified or deleted by users.
     """
 
     __tablename__ = "session_events"
 
-    # Primary key
-    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    # Primary key - UUID type to match database
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_pkg.uuid4)
 
-    # Foreign keys
-    session_id = Column(String(36), nullable=False, index=True)
-    user_id = Column(String(36), nullable=False, index=True)
+    # Foreign keys - UUID types with FK constraints
+    session_id = Column(UUID(as_uuid=True), ForeignKey("reading_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Event information
     event_type = Column(String(50), nullable=False)
-    event_data = Column(JSON, nullable=True)
-    device_info = Column(JSON, nullable=True)
+    event_data = Column(JSONB, nullable=False, default=dict, server_default='{}')
 
-    # Timestamp
-    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    # Card context
+    card_position = Column(Integer, nullable=True)
+
+    # Event timestamp
+    timestamp = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default='NOW()')
+
+    # Device/browser info
+    user_agent = Column(Text, nullable=True)
+    ip_address = Column(INET, nullable=True)
+
+    # Created timestamp
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow, server_default='NOW()')
 
     # Table args with composite indexes for analytics queries
     __table_args__ = (
@@ -50,11 +62,14 @@ class SessionEvent(Base):
     def to_dict(self) -> dict:
         """Convert model to dictionary for serialization."""
         return {
-            'id': self.id,
-            'session_id': self.session_id,
-            'user_id': self.user_id,
+            'id': str(self.id),  # Convert UUID to string
+            'session_id': str(self.session_id),  # Convert UUID to string
+            'user_id': str(self.user_id),  # Convert UUID to string
             'event_type': self.event_type,
             'event_data': self.event_data,
-            'device_info': self.device_info,
+            'card_position': self.card_position,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None,
+            'user_agent': self.user_agent,
+            'ip_address': str(self.ip_address) if self.ip_address else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
         }

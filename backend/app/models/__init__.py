@@ -18,7 +18,7 @@ from .user import (
 from .reading_enhanced import (
     SpreadTemplate,
     InterpretationTemplate,
-    ReadingSession,
+    CompletedReading,
     ReadingCardPosition,
     CardSynergy,
     SpreadType,
@@ -35,7 +35,7 @@ from .social_features import (
     KarmaChangeReason,
 )
 from .reading_session import (
-    SessionSave,
+    ReadingSession,
 )
 from .session_event import (
     SessionEvent,
@@ -73,10 +73,10 @@ __all__ = [
     "User",
     "UserProfile",
     "UserPreferences",
-    # Enhanced Reading Models
+    # Enhanced Reading Models (Completed Readings)
     "SpreadTemplate",
     "InterpretationTemplate",
-    "ReadingSession",
+    "CompletedReading",
     "ReadingCardPosition",
     "CardSynergy",
     "SpreadType",
@@ -90,8 +90,8 @@ __all__ = [
     "AchievementCategory",
     "FriendshipStatus",
     "KarmaChangeReason",
-    # Session Save/Resume Models
-    "SessionSave",
+    # Session Save/Resume Models (In-Progress Readings)
+    "ReadingSession",
     "SessionEvent",
     # Analytics Models
     "UserAnalytics",
