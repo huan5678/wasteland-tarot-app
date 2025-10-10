@@ -10,8 +10,12 @@ import { toCanonical } from '@/lib/spreadMapping'
 import { SpreadInteractiveDraw } from '@/components/readings/SpreadInteractiveDraw'
 import { useAuthStore } from '@/lib/authStore'
 import { useRouter } from 'next/navigation'
-import { useToast } from '@/components/common/Toast'
+import { toast } from 'sonner'
 import { useAnalytics, useReadingTracking } from '@/hooks/useAnalytics'
+import { useSessionStore } from '@/lib/sessionStore'
+import { useAutoSave, useSessionChangeTracker } from '@/hooks/useAutoSave'
+import { AutoSaveIndicator } from '@/components/session/AutoSaveIndicator'
+import type { SessionState } from '@/types/session'
 
 interface TarotCardWithPosition {
   id: number
@@ -29,7 +33,6 @@ export default function NewReadingPage() {
   const router = useRouter()
   const user = useAuthStore(s => s.user)
   const token = useAuthStore(s => s.token)
-  const { showSuccess, showError } = useToast()
   const [step, setStep] = useState<'setup' | 'drawing' | 'results'>('setup')
   const [question, setQuestion] = useState('')
   const [spreadType, setSpreadType] = useState<string>('single')
@@ -44,9 +47,165 @@ export default function NewReadingPage() {
   const { trackCardView } = useReadingTracking(readingId)
   const readingStartTime = useRef<number>(Date.now())
 
-  const handleQuestionSubmit = (e: React.FormEvent) => {
+  // Session store hooks
+  const {
+    activeSession,
+    createSession,
+    updateSession,
+    completeSession,
+    setActiveSession,
+    resumeSession,
+  } = useSessionStore()
+
+  // Auto-save hook
+  const { triggerSave, saveNow, status: autoSaveStatus } = useAutoSave({
+    debounceMs: 2000,
+    enabled: true,
+    onSaveSuccess: (session) => {
+      console.log('Session auto-saved:', session.id)
+    },
+    onSaveError: (error) => {
+      console.error('Auto-save failed:', error)
+      toast.error('自動儲存失敗', { description: error.message })
+    },
+  })
+
+  // Track session changes for auto-save
+  useSessionChangeTracker(activeSession, {
+    onChange: triggerSave,
+    watchFields: ['session_state', 'question'],
+  })
+
+  // Initialize or resume session on mount
+  useEffect(() => {
+    const initializeSession = async () => {
+      if (!user?.id) return
+
+      // Check if there's an active session to resume
+      if (activeSession) {
+        // Restore state from active session
+        if (activeSession.question) setQuestion(activeSession.question)
+        if (activeSession.spread_type) setSpreadType(activeSession.spread_type)
+
+        const sessionState = activeSession.session_state
+        if (sessionState) {
+          // Restore cards if they exist
+          if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
+            const restoredCards: TarotCardWithPosition[] = sessionState.cards_drawn.map((card) => ({
+              id: parseInt(card.card_id),
+              name: card.card_name,
+              suit: card.suit || '',
+              position: card.position as 'upright' | 'reversed',
+              meaning_upright: '',
+              meaning_reversed: '',
+              image_url: '',
+              keywords: [],
+            }))
+            setDrawnCards(restoredCards)
+          }
+
+          // Restore interpretation progress
+          if (sessionState.interpretation_progress?.text) {
+            setInterpretation(sessionState.interpretation_progress.text)
+          }
+
+          // Determine current step based on state
+          if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
+            if (sessionState.interpretation_progress?.completed) {
+              setStep('results')
+            } else {
+              setStep('drawing')
+            }
+          } else {
+            setStep('setup')
+          }
+        }
+
+        console.log('恢復現有會話:', activeSession.id)
+      } else {
+        // No active session, we'll create one when user starts
+        console.log('無現有會話，等待用戶開始新占卜')
+      }
+    }
+
+    initializeSession()
+  }, [user, activeSession])
+
+  // Create session when question is submitted
+  const createNewSession = async () => {
+    if (!user?.id || !question.trim()) return
+
+    try {
+      const sessionState: SessionState = {
+        cards_drawn: [],
+        current_card_index: 0,
+        interpretation_progress: {
+          started: false,
+          completed: false,
+        },
+      }
+
+      const session = await createSession({
+        user_id: user.id,
+        spread_type: toCanonical(spreadType),
+        question: question.trim(),
+        session_state: sessionState,
+        status: 'active',
+      })
+
+      console.log('新會話已建立:', session.id)
+      toast.success('會話已建立', { description: '你的占卜進度將自動儲存' })
+    } catch (error) {
+      console.error('建立會話失敗:', error)
+      // Continue anyway - user can still use the reading without save/resume
+    }
+  }
+
+  // Update session state when cards are drawn or interpretation changes
+  const updateSessionState = async () => {
+    if (!activeSession) return
+
+    const sessionState: SessionState = {
+      cards_drawn: drawnCards.map((card) => ({
+        card_id: card.id.toString(),
+        card_name: card.name,
+        suit: card.suit,
+        position: card.position,
+        drawn_at: new Date().toISOString(),
+      })),
+      current_card_index: drawnCards.length,
+      interpretation_progress: {
+        started: interpretation.length > 0,
+        completed: !isGeneratingInterpretation && interpretation.length > 0,
+        text: interpretation,
+      },
+    }
+
+    try {
+      await updateSession(activeSession.id, {
+        session_state: sessionState,
+        question: question,
+      })
+    } catch (error) {
+      console.error('更新會話狀態失敗:', error)
+    }
+  }
+
+  // Update session state when relevant data changes
+  useEffect(() => {
+    if (activeSession && (drawnCards.length > 0 || interpretation)) {
+      updateSessionState()
+    }
+  }, [drawnCards, interpretation, isGeneratingInterpretation])
+
+  const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (question.trim()) {
+      // Create session if not already exists
+      if (!activeSession) {
+        await createNewSession()
+      }
+
       // Track question submission
       trackFeatureUsage('reading_creation', 'question_submitted', {
         spread_type: spreadType,
@@ -159,6 +318,17 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         setReadingId(savedReading.id)
       }
 
+      // Complete the session (convert to reading)
+      if (activeSession) {
+        try {
+          await completeSession(activeSession.id)
+          console.log('會話已標記為完成:', activeSession.id)
+        } catch (error) {
+          console.error('標記會話為完成失敗:', error)
+          // Continue anyway - reading is saved
+        }
+      }
+
       // Track reading completion
       const duration = Math.floor((Date.now() - readingStartTime.current) / 1000)
       trackReadingCompleted({
@@ -167,23 +337,27 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
       })
 
       // Show success message and redirect
-      showSuccess('占卜已保存', '你的占卜結果已成功儲存至 Vault')
+      toast.success('占卜已保存', { description: '你的占卜結果已成功儲存至 Vault' })
       router.push('/dashboard')
     } catch (error) {
       console.error('Failed to save reading:', error)
       const errorMessage = error instanceof Error ? error.message : '保存失敗'
-      showError('保存失敗', '無法儲存占卜結果，請稍後再試')
+      toast.error('保存失敗', { description: '無法儲存占卜結果，請稍後再試' })
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleNewReading = () => {
+    // Clear active session to start fresh
+    setActiveSession(null)
+
     setStep('setup')
     setQuestion('')
     setSpreadType('single')
     setDrawnCards([])
     setInterpretation('')
+    readingStartTime.current = Date.now()
   }
 
   return (
@@ -191,12 +365,21 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
-          <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
-            新塔羅占卜
-          </h1>
-          <p className="text-pip-boy-green/70 font-mono text-sm">
-            廢土占卜協議 - Pip-Boy 增強版
-          </p>
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-pip-boy-green font-mono">
+                新塔羅占卜
+              </h1>
+              <p className="text-pip-boy-green/70 font-mono text-sm">
+                廢土占卜協議 - Pip-Boy 增強版
+              </p>
+            </div>
+            {activeSession && (
+              <div className="ml-4">
+                <AutoSaveIndicator />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Progress Indicator */}

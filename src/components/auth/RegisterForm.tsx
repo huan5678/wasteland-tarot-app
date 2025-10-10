@@ -9,9 +9,9 @@ import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle } from 'lucide-react'
-import { useToast } from '@/components/common/Toast'
 import { useOAuth } from '@/hooks/useOAuth'
 import { authAPI } from '@/lib/api'
+import { toast } from 'sonner'
 
 interface FormData {
   email: string
@@ -33,7 +33,6 @@ interface RegisterFormProps {
 
 export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
   const router = useRouter()
-  const { showSuccess, showError } = useToast()
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
 
   const [formData, setFormData] = useState<FormData>({
@@ -114,7 +113,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
       })
 
       // 註冊成功後自動登入（後端會設定 httpOnly cookies）
-      showSuccess('註冊成功', `歡迎加入，${formData.name}!`)
+      toast.success('註冊成功', { description: `歡迎加入，${formData.name}!` })
       router.push('/dashboard')
     } catch (err: any) {
       // 處理各種錯誤情況
@@ -132,7 +131,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
       }
 
       setSubmitError(errorMessage)
-      showError('註冊失敗', errorMessage)
+      toast.error('註冊失敗', { description: errorMessage })
     } finally {
       setIsSubmitting(false)
     }
@@ -142,11 +141,11 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
     try {
       const result = await signInWithGoogle()
       if (result.success) {
-        showSuccess('正在跳轉至 Google 註冊...')
+        toast.info('正在跳轉至 Google 註冊...')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Google 註冊失敗'
-      showError('Google 註冊失敗', errorMessage)
+      toast.error('Google 註冊失敗', { description: errorMessage })
     }
   }
 

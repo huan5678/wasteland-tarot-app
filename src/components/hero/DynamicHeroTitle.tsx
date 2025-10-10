@@ -390,40 +390,43 @@ export function DynamicHeroTitle({
 
   return (
     <div className={cn('text-center mb-12', testMode && 'test-mode')}>
-      {/* 主標題 */}
-      <div
-        className={cn(
-          'text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center',
-          isGlitching && styles['hero-title-glitching']
-        )}
-        aria-live="polite"
-      >
-        <h1 className="inline">
-          {displayTitle}
-          {!testMode && (phase === 'typing-title' || deletingSection === 'title') && (
-            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
+      {/* CRT 視覺特效容器 - 包裹主標題、副標題、描述（承載 ::after RGB 網格疊加層） */}
+      <div className={styles['hero-title-container']}>
+        {/* 主標題 */}
+        <div
+          className={cn(
+            'text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green min-h-[4rem] md:min-h-[6rem] flex items-center justify-center',
+            isGlitching && styles['hero-title-glitching']
           )}
-        </h1>
-      </div>
+          aria-live="polite"
+        >
+          <h1 className={cn('inline', styles['hero-title-text'])}>
+            {displayTitle}
+            {!testMode && (phase === 'typing-title' || deletingSection === 'title') && (
+              <span className={styles['typing-cursor-inline']} aria-hidden="true" />
+            )}
+          </h1>
+        </div>
 
-      {/* 副標題 */}
-      <div className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
-        <p className="inline">
-          {displaySubtitle}
-          {!testMode && (phase === 'typing-subtitle' || deletingSection === 'subtitle') && (
-            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
-          )}
-        </p>
-      </div>
+        {/* 副標題 */}
+        <div className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
+          <p className={cn('inline', styles['hero-subtitle-text'])}>
+            {displaySubtitle}
+            {!testMode && (phase === 'typing-subtitle' || deletingSection === 'subtitle') && (
+              <span className={styles['typing-cursor-inline']} aria-hidden="true" />
+            )}
+          </p>
+        </div>
 
-      {/* 描述段落 */}
-      <div className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
-        <p className="inline">
-          {displayDescription}
-          {!testMode && (phase === 'typing-description' || phase === 'waiting' || deletingSection === 'description') && (
-            <span className={styles['typing-cursor-inline']} aria-hidden="true" />
-          )}
-        </p>
+        {/* 描述段落 */}
+        <div className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
+          <p className={cn('inline', styles['hero-description-text'])}>
+            {displayDescription}
+            {!testMode && (phase === 'typing-description' || phase === 'waiting' || deletingSection === 'description') && (
+              <span className={styles['typing-cursor-inline']} aria-hidden="true" />
+            )}
+          </p>
+        </div>
       </div>
 
       {/* 輪播指示器 */}

@@ -4,18 +4,20 @@
  * Carousel Container Component
  *
  * Framer Motion 自訂 Carousel，支援：
- * - 觸控滑動手勢
+ * - 觸控滑動手勢 + 3D 透視旋轉效果
  * - 鍵盤方向鍵導航
  * - 左右箭頭按鈕
  * - 位置指示器
  * - 響應式設計
  * - 無障礙支援
+ * - 速度感應切換
  */
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'motion/react'
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'motion/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
+import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
 
 export interface CarouselContainerProps {
   cards: DetailedTarotCard[]
@@ -28,6 +30,12 @@ export interface CarouselContainerProps {
   children: (card: DetailedTarotCard, index: number, isActive: boolean) => React.ReactNode
 }
 
+// Carousel 動畫常數（從 Carousel.tsx 移植）
+const DRAG_BUFFER = 0
+const VELOCITY_THRESHOLD = 500
+const GAP = 16
+const SPRING_OPTIONS = { type: 'spring' as const, stiffness: 300, damping: 30 }
+
 export function CarouselContainer({
   cards,
   selectedCardId,
@@ -39,25 +47,38 @@ export function CarouselContainer({
   children,
 }: CarouselContainerProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dragOffset, setDragOffset] = useState(0)
+  const { playSound } = useAudioEffect()
+
+  // Motion values for smooth drag animation
+  const x = useMotionValue(0)
+
+  // 計算寬度（模仿 Carousel.tsx 的邏輯）
+  const containerPadding = 32 // 外層容器 padding
+  const baseWidth = 384 // 外層容器總寬度
+  const cardWidth = baseWidth - containerPadding * 2 // 卡片實際寬度 = 320px
+  const trackItemOffset = cardWidth + GAP
 
   /**
    * 導航至下一張卡牌
    */
   const goToNext = useCallback(() => {
     if (activeIndex < cards.length - 1) {
+      // 播放切換音效
+      playSound('ui-hover', { volume: 0.3 })
       onIndexChange(activeIndex + 1)
     }
-  }, [activeIndex, cards.length, onIndexChange])
+  }, [activeIndex, cards.length, onIndexChange, playSound])
 
   /**
    * 導航至上一張卡牌
    */
   const goToPrevious = useCallback(() => {
     if (activeIndex > 0) {
+      // 播放切換音效
+      playSound('ui-hover', { volume: 0.3 })
       onIndexChange(activeIndex - 1)
     }
-  }, [activeIndex, onIndexChange])
+  }, [activeIndex, onIndexChange, playSound])
 
   /**
    * 導航至指定索引
@@ -92,21 +113,19 @@ export function CarouselContainer({
   }, [goToNext, goToPrevious, isDisabled])
 
   /**
-   * 處理拖曳結束
+   * 處理拖曳結束（使用速度感應切換，移植自 Carousel.tsx）
    */
   const handleDragEnd = useCallback(
-    (event: any, info: any) => {
-      const threshold = 50 // 拖曳閾值
+    (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+      const offset = info.offset.x
+      const velocity = info.velocity.x
 
-      if (Math.abs(info.offset.x) > threshold) {
-        if (info.offset.x > 0) {
-          goToPrevious()
-        } else {
-          goToNext()
-        }
+      // 使用速度或偏移量判斷切換方向
+      if (offset < -DRAG_BUFFER || velocity < -VELOCITY_THRESHOLD) {
+        goToNext()
+      } else if (offset > DRAG_BUFFER || velocity > VELOCITY_THRESHOLD) {
+        goToPrevious()
       }
-
-      setDragOffset(0)
     },
     [goToNext, goToPrevious]
   )
@@ -119,39 +138,70 @@ export function CarouselContainer({
       aria-label="卡牌選擇輪播"
       aria-roledescription="carousel"
     >
-      {/* Carousel 主容器 */}
-      <div className="relative overflow-hidden py-8">
-        <motion.div
-          className="flex items-center justify-center gap-4"
-          drag="x"
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.2}
-          onDragEnd={handleDragEnd}
-          animate={{ x: dragOffset }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      {/* 卡片區域容器 */}
+      <div className="relative flex justify-center">
+        {/* Carousel 主容器 - 完全模仿 Carousel.tsx 的結構 */}
+        <div
+          className="relative overflow-hidden py-8"
+          style={{
+            width: `${baseWidth}px`,
+            padding: `${containerPadding}px`
+          }}
         >
-          {/* 卡牌容器 */}
-          <div className="flex items-center justify-center min-h-[400px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeIndex}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center justify-center"
-              >
-                {children(cards[activeIndex], activeIndex, true)}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </motion.div>
+          <motion.div
+            className="flex cursor-grab active:cursor-grabbing"
+            drag="x"
+            dragConstraints={{
+              left: -(trackItemOffset * (cards.length - 1)),
+              right: 0
+            }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
+            animate={{ x: -(activeIndex * trackItemOffset) }}
+            transition={SPRING_OPTIONS}
+            style={{
+              width: cardWidth,
+              gap: `${GAP}px`,
+              perspective: 1000,
+              perspectiveOrigin: `${activeIndex * trackItemOffset + cardWidth / 2}px 50%`,
+              x
+            }}
+          >
+            {/* 卡牌陣列 - 橫向排列 with 3D rotation */}
+            {cards.map((card, index) => {
+              // 計算 3D 旋轉效果（完全照搬 Carousel.tsx）
+              const range = [
+                -(index + 1) * trackItemOffset,
+                -index * trackItemOffset,
+                -(index - 1) * trackItemOffset
+              ]
+              const outputRange = [90, 0, -90]
+              const rotateY = useTransform(x, range, outputRange, { clamp: false })
+
+              const isActive = index === activeIndex
+
+              return (
+                <motion.div
+                  key={card.id}
+                  className="shrink-0 flex items-center justify-center min-h-[400px]"
+                  style={{
+                    width: cardWidth,
+                    rotateY: rotateY,
+                  }}
+                  transition={SPRING_OPTIONS}
+                >
+                  {children(card, index, isActive)}
+                </motion.div>
+              )
+            })}
+          </motion.div>
+        </div>
 
         {/* 左箭頭按鈕 with Enhanced Accessibility */}
         <button
           onClick={goToPrevious}
           disabled={activeIndex === 0 || isDisabled}
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
+          className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black z-10"
           aria-label="上一張卡牌"
           aria-disabled={activeIndex === 0 || isDisabled}
         >
@@ -162,7 +212,7 @@ export function CarouselContainer({
         <button
           onClick={goToNext}
           disabled={activeIndex === cards.length - 1 || isDisabled}
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
+          className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black z-10"
           aria-label="下一張卡牌"
           aria-disabled={activeIndex === cards.length - 1 || isDisabled}
         >
@@ -170,7 +220,7 @@ export function CarouselContainer({
         </button>
       </div>
 
-      {/* 位置指示器 with Enhanced Accessibility */}
+      {/* 位置指示器 with Enhanced Accessibility - 移到最外層 */}
       <div className="flex justify-center items-center gap-4 mt-4">
         {/* 數字指示器 */}
         <div

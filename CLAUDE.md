@@ -56,6 +56,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **hero-section-dynamic-titles**: Homepage Hero section dynamic titles with multiple science-meets-mysticism themed headlines, Fallout aesthetic styling, JSON data storage, and text typing animation effects
 - **3d-card-tilt-effects**: 3D card tilt effects with mouse hover interactions and mobile gyroscope support for immersive card display
 - **ascii-donut-loading**: ASCII 3D spinning donut animation for loading page using mathematical torus rendering with rotation matrices and z-buffer depth handling
+- **playlist-music-player**: User-controlled playlist music system with Fallout Pip-Boy styled player interface, replacing automatic scene-based background music
 
 ## Development Guidelines
 - 以英文思考，但以繁體中文生成回應（Think in English, generate in Traditional Chinese）

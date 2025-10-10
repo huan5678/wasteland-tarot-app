@@ -25,7 +25,8 @@ import {
   getSuitDisplayName,
   getSuitDescription,
   getSuitCardCount,
-  isValidSuit,
+  isValidRouteSuit,
+  convertRouteToApiSuit,
   type BreadcrumbItem,
 } from '@/types/suits'
 import type { TarotCard } from '@/types/api'
@@ -49,13 +50,20 @@ export default function CardListPage() {
   const [cards, setCards] = useState<TarotCard[]>([])
   const [isMounted, setIsMounted] = useState(false)
 
-  // 驗證花色是否有效
-  const isValidSuitType = isValidSuit(suit)
+  // 驗證花色路由參數是否有效
+  const isValidSuitType = isValidRouteSuit(suit)
 
-  // 取得花色資訊
-  const suitName = isValidSuitType ? getSuitDisplayName(suit) : suit
-  const suitDescription = isValidSuitType ? getSuitDescription(suit) : ''
-  const suitCardCount = isValidSuitType ? getSuitCardCount(suit) : 0
+  // 取得花色資訊 (需要轉換為 API 枚舉值)
+  let apiSuit = suit
+  try {
+    apiSuit = isValidSuitType ? convertRouteToApiSuit(suit) : suit
+  } catch (err) {
+    // 轉換失敗,使用原始值
+  }
+
+  const suitName = isValidSuitType ? getSuitDisplayName(apiSuit) : suit
+  const suitDescription = isValidSuitType ? getSuitDescription(apiSuit) : ''
+  const suitCardCount = isValidSuitType ? getSuitCardCount(apiSuit) : 0
 
   // 載入卡牌資料
   useEffect(() => {

@@ -10,9 +10,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, Fingerprint } from 'lucide-react'
 import { useAuthStore } from '@/lib/authStore'
-import { useToast } from '@/components/common/Toast'
+import { useErrorStore } from '@/lib/errorStore'
 import { useOAuth } from '@/hooks/useOAuth'
 import { usePasskey } from '@/hooks/usePasskey'
+import { toast } from 'sonner'
 
 interface FormData {
   email: string // 改用 email
@@ -31,7 +32,7 @@ interface LoginFormProps {
 
 export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const router = useRouter()
-  const { showSuccess, showError } = useToast()
+  const pushError = useErrorStore(s => s.pushError)
 
   const login = useAuthStore(s => s.login)
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
@@ -125,7 +126,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
       }
 
       // Success - show toast and redirect
-      showSuccess('登入成功', `歡迎回來!`)
+      toast.success('登入成功', { description: '歡迎回來!' })
       router.push('/dashboard')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '登入失敗'
@@ -137,7 +138,11 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
         setSubmitError(errorMessage)
       }
 
-      showError('登入失敗', errorMessage)
+      pushError({
+        source: 'auth',
+        message: '登入失敗',
+        detail: errorMessage
+      })
     } finally {
       setIsSubmitting(false)
     }
@@ -149,11 +154,15 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
       const result = await signInWithGoogle()
       if (result.success) {
         // OAuth 流程會自動重導向到 /auth/callback
-        showSuccess('正在跳轉至 Google 登入...')
+        toast.info('正在跳轉至 Google 登入...')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Google 登入失敗'
-      showError('Google 登入失敗', errorMessage)
+      pushError({
+        source: 'auth',
+        message: 'Google 登入失敗',
+        detail: errorMessage
+      })
     }
   }
 
@@ -163,10 +172,14 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
     try {
       // Email-guided Passkey 登入（如果有輸入 email）
       await authenticateWithPasskey(formData.email || undefined)
-      showSuccess('Passkey 登入成功！')
+      toast.success('Passkey 登入成功！')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Passkey 登入失敗'
-      showError('Passkey 登入失敗', errorMessage)
+      pushError({
+        source: 'auth',
+        message: 'Passkey 登入失敗',
+        detail: errorMessage
+      })
     }
   }
 

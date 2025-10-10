@@ -1,30 +1,33 @@
 {
   "feature_name": "hero-section-dynamic-titles",
   "created_at": "2025-10-09T12:00:00Z",
-  "updated_at": "2025-10-09T08:42:16Z",
+  "updated_at": "2025-10-09T12:15:00Z",
   "language": "zh-TW",
-  "phase": "tasks-regenerated",
+  "phase": "implemented",
   "approvals": {
     "requirements": {
       "generated": true,
       "approved": true,
-      "updated_at": "2025-10-09T08:28:58Z",
-      "change_reason": "新增 Requirement 6: 進階視覺特效（Retro 閃爍游標 + Colour Shift Glitch 僅主標題）"
+      "updated_at": "2025-10-09T18:37:00Z",
+      "change_reason": "新增 Requirement 7: CRT 螢幕視覺特效（RGB 像素網格 + 靜態色彩分離），模擬老舊 CRT 顯示器的復古美學效果",
+      "change_summary": "Added comprehensive CRT screen effects: RGB pixel grid overlay with dual linear-gradient (3px×3px, mix-blend-mode: multiply) and static chromatic aberration (red/blue text-shadow as base layer). Includes detailed acceptance criteria for grid rendering, static color separation, effect composition, CSS variables for tuning, accessibility considerations, and graceful degradation strategies. Updated Technical Constraints and Success Criteria accordingly."
     },
     "design": {
       "generated": true,
-      "approved": false,
-      "needs_review": true,
+      "approved": true,
       "updated_at": "2025-10-09T09:15:32Z",
-      "reason": "Design extended with Advanced Visual Effects (Retro Cursor + Glitch Effect)",
-      "change_summary": "Added complete technical design for Requirement 6 visual effects: CSS-based persistent blinking cursor (530ms cycle) and RGB colour-shift glitch effect (8-15s random trigger, h1 only). Includes useGlitch hook, CSS Module implementation, testing strategy, and migration plan from current implementation."
+      "change_summary": "Complete technical design for Requirement 7 CRT effects: RGB pixel grid implementation using ::after pseudo-element with dual linear-gradient, static chromatic aberration with text-shadow, CSS variables architecture, graceful degradation strategies, and integration with existing visual effects."
     },
     "tasks": {
       "generated": true,
-      "approved": false,
-      "needs_review": true,
-      "updated_at": "2025-10-09T08:42:16Z",
-      "change_summary": "Tasks regenerated to include visual effects implementation (tasks 21-29): CSS Module creation, useGlitch hook, component integration, unit tests, E2E tests, performance validation, documentation, cross-browser testing, and acceptance testing. Total 37 tasks (20 completed, 17 pending)."
+      "approved": true,
+      "updated_at": "2025-10-09T19:00:00Z",
+      "change_summary": "Generated comprehensive implementation tasks for Requirement 7 CRT effects: 10 major tasks covering CSS variables setup, RGB grid implementation, static color separation, visual system integration, accessibility support, cross-browser testing, performance validation, JSX modifications, E2E testing, and documentation. Estimated 12-16 hours total implementation time."
+    },
+    "implementation": {
+      "completed": true,
+      "completed_at": "2025-10-09T12:15:00Z",
+      "implementation_summary": "Successfully implemented Requirement 7 CRT screen visual effects. Key achievements: (1) Created 6 CSS variables in globals.css for tunable CRT parameters, (2) Implemented RGB pixel grid overlay using ::after pseudo-element with dual linear-gradient (vertical scanlines + horizontal RGB subpixels), (3) Applied static chromatic aberration with text-shadow to main title (90% opacity), subtitle, and description (45% opacity), (4) Integrated with existing retro cursor and dynamic glitch effects, (5) Added accessibility support via prefers-reduced-motion media query (reduces grid opacity to 50%), (6) Implemented graceful degradation with @supports query for mix-blend-mode, (7) Applied CSS Module classes to JSX components, (8) Created comprehensive E2E test suite (tests/e2e/hero-crt-effects.spec.ts) with 11 test cases covering DOM structure, CSS variables, visual effects, and accessibility. Fixed CSS Modules :root selector issue by moving variables to globals.css. Server compiles successfully (200 OK)."
     }
   },
   "ready_for_implementation": false

@@ -33,13 +33,16 @@ export default function HomePage() {
           {/* Terminal Header */}
           <div className="text-center mb-12">
             <div className="border-2 border-pip-boy-green p-4 inline-block mb-8" style={{backgroundColor: 'var(--color-pip-boy-green-10)'}}>
-              <div className="flex items-center gap-4 text-xs font-mono">
-                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                <span>VAULT-TEC PIP-BOY 3000 MARK IV</span>
-                <span>|</span>
-                <span>占卜終端機啟動中</span>
-                <span>|</span>
-                <span>狀態：線上</span>
+              <div className="flex items-center gap-2 sm:gap-4 text-xs font-mono">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse flex-shrink-0"></div>
+                {/* 手機版：簡化顯示 */}
+                <span className="hidden md:inline">VAULT-TEC PIP-BOY 3000 MARK IV</span>
+                <span className="hidden sm:inline md:hidden">PIP-BOY 3000 MARK IV</span>
+                <span className="inline sm:hidden">PIP-BOY 3000</span>
+                <span className="hidden sm:inline text-pip-boy-green/50">|</span>
+                <span className="hidden sm:inline">占卜終端機啟動中</span>
+                <span className="hidden md:inline text-pip-boy-green/50">|</span>
+                <span className="hidden md:inline">狀態：線上</span>
               </div>
             </div>
 

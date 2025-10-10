@@ -61,7 +61,14 @@
       "Bash(bun run:*)",
       "Bash(ls:*)",
       "mcp__chrome-devtools__hover",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "mcp__chrome-devtools__fill",
+      "mcp__chrome-devtools__select_page",
+      "Bash(bun add:*)",
+      "Bash(node test-audio-simple.js:*)",
+      "Bash(.venv/bin/alembic upgrade head)",
+      "Bash(.venv/bin/alembic current -v)"
     ]
   },
   "enableAllProjectMcpServers": true,

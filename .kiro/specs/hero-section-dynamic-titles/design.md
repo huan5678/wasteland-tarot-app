@@ -1,1900 +1,746 @@
-# Technical Design
+# 技術設計文件
 
 ## Overview
 
-本技術設計文件定義首頁 Hero Section 動態標題系統的完整技術架構。系統採用純前端實作，透過自訂 React hooks 管理打字動畫、輪播邏輯與狀態管理，並整合 Page Visibility API 確保效能優化。核心設計理念為：**最小化依賴、最大化效能、完全可控**。
+本設計為首頁 Hero Section 的動態標題系統新增完整的 CRT 螢幕視覺特效，包含 RGB 像素網格疊加與靜態色彩分離效果。這些效果將與現有的打字機動畫、閃爍游標和動態 glitch 效果整合，創造出完整的 Pip-Boy 終端機復古美學體驗。設計重點在於純 CSS 實現以確保效果立即可見，同時維持良好的跨瀏覽器相容性與無障礙支援。
 
-### 設計核心原則
+**目標使用者**: Fallout 粉絲與追求復古美學的網站訪客，他們將在首次進入網站時體驗到沉浸式的廢土終端機氛圍。
 
-1. **零外部動畫庫依賴**：使用 `requestAnimationFrame` 與 React hooks 實作自訂打字動畫，避免引入額外套件
-2. **終端機擬真體驗**：文案切換時先「反向刪除」每個字元，再開始打下一組文字，模擬真實終端機行為
-3. **效能優先**：利用 `useRef` 避免不必要的 re-render，全程使用 `requestAnimationFrame` 動畫
-4. **可測試性**：清楚分離邏輯（hooks）與呈現（components），便於單元測試
-5. **無障礙至上**：完整的 ARIA 屬性支援與鍵盤導航
+**系統影響**: 這是對現有 `DynamicHeroTitle` 元件的視覺增強，不會改變核心動畫邏輯或資料流程。所有新增的 CRT 效果透過 CSS Module 與 CSS 變數實現，確保與現有程式碼的最小耦合。
 
-### 研究背景與技術決策
+### Goals
 
-基於 2025 年 React 動畫最佳實踐研究：
+- 透過 RGB 像素網格與靜態色彩分離效果，強化 Pip-Boy 終端機的復古視覺質感
+- 確保 CRT 效果在頁面載入時立即可見（純 CSS 實現，無需 JavaScript 初始化）
+- 建立清晰的視覺效果層次：靜態 CRT（基礎層） + 動態 glitch（增強層）
+- 提供 CSS 變數架構以便未來調校與主題切換
+- 維持 WCAG 2.1 AA 無障礙標準（對比度 ≥ 4.5:1）
 
-**打字動畫實作策略**：
-- 使用 `requestAnimationFrame` 而非 `setInterval`，確保動畫與瀏覽器 repaint 同步，達到流暢的 60 FPS
-- 使用 `useRef` 儲存動畫狀態，避免頻繁的 React re-render 導致效能下降
-- 參考來源：[Performant animations with requestAnimationFrame() and React hooks](https://layonez.medium.com/performant-animations-with-requestanimationframe-and-react-hooks-99a32c5c9fbf)
+### Non-Goals
 
-**輪播控制機制**：
-- 整合 Page Visibility API 檢測分頁切換，在背景分頁時暫停動畫節省資源
-- 實作互動偵測（滑鼠移動、觸控）以暫停自動輪播，提升使用者體驗
-- 參考來源：[Harnessing the Page Visibility API with React](https://blog.sethcorker.com/harnessing-the-page-visibility-api-with-react/)
-
-## Requirements Mapping
-
-### Design Component Traceability
-
-每個設計元件對應的需求追蹤：
-
-| 設計元件 | 對應需求 | 說明 |
-|---------|---------|------|
-| **`heroTitles.json`** | Req 1.1-1.7 | JSON 資料結構與文案管理 |
-| **`useTypewriter` Hook** | Req 2.1-2.9, 3.3 | 打字機動畫核心邏輯（打字與刪除） |
-| **`useCarousel` Hook** | Req 3.1-3.11 | 輪播控制、自動播放、互動暫停 |
-| **`usePageVisibility` Hook** | Req 3.10-3.11, 6.3 | 分頁可見性偵測 |
-| **`DynamicHeroTitle` Component** | Req 4.1-4.10 | 主要 UI 元件，視覺整合 |
-| **`CarouselIndicator` Component** | Req 3.4-3.6, 5.3-5.8 | 輪播指示器，無障礙支援 |
-| **TypeScript Interfaces** | Req 1.3 | 型別安全與資料驗證 |
-| **Error Boundary** | Req 1.7, 5.10 | 錯誤處理與降級體驗 |
-| **Performance Monitoring** | Req 6.1-6.8 | 效能監控與優化 |
-
-### User Story Coverage
-
-**User Story 1（系統管理員 - 文案管理）**：
-- 技術實作：`heroTitles.json` 檔案 + TypeScript interface 驗證
-- 工具支援：VS Code JSON schema 驗證，開發模式下的 console 警告
-
-**User Story 2（網站訪客 - 打字動畫體驗）**：
-- 技術實作：`useTypewriter` hook + `requestAnimationFrame` 動畫迴圈
-- 動畫模式：typing（打字）與 deleting（刪除）雙向動畫
-- 無障礙支援：`prefers-reduced-motion` 偵測，`aria-live` 即時更新
-
-**User Story 3（網站訪客 - 輪播體驗）**：
-- 技術實作：`useCarousel` hook + 自動播放計時器 + 打字刪除過渡
-- 切換流程：完整文案 → 逐字刪除 → 清空 → 逐字打字新文案
-- 互動控制：滑鼠/觸控事件監聽，Page Visibility API 整合
-
-**User Story 4（產品設計師 - 視覺一致性）**：
-- 技術實作：保留現有 Tailwind 樣式類別，無侵入式整合
-- 視覺保證：繼承 `pip-boy-green` CSS 變數，維持掃描線效果
-
-**User Story 5（無障礙使用者 - 輔助技術支援）**：
-- 技術實作：完整 ARIA 屬性、鍵盤事件處理
-- 測試工具：axe-core 自動化檢測，手動鍵盤導航驗證
-
-**User Story 6（效能工程師 - 資源管理）**：
-- 技術實作：`useEffect` cleanup、`cancelAnimationFrame`、記憶體快取
-- 監控工具：React DevTools Profiler、瀏覽器 Performance tab
+- 不實現 CRT 曲面螢幕效果（curved screen distortion）
+- 不新增即時可調整的視覺特效控制介面
+- 不修改現有的打字機動畫或輪播邏輯
+- 不實現動態解析度調整或像素網格縮放
 
 ## Architecture
 
-### System Architecture
+### Existing Architecture Analysis
+
+當前 `DynamicHeroTitle` 元件的架構：
+
+```
+DynamicHeroTitle.tsx (主元件)
+├── 狀態管理: useState (titles, currentIndex, phase, displayText)
+├── 動畫控制: requestAnimationFrame (打字/刪除動畫)
+├── 視覺特效: useGlitch hook (動態 glitch)
+├── 資源管理: usePageVisibility hook (分頁暫停)
+└── 樣式系統: DynamicHeroTitle.module.css
+    ├── Retro 閃爍游標 (.typing-cursor-inline)
+    ├── Colour Shift Glitch (.hero-title-glitching)
+    └── 無障礙支援 (@media prefers-reduced-motion)
+```
+
+**現有模式保留**:
+- CSS Module 架構：所有視覺特效透過 `.module.css` 管理
+- CSS 變數系統：現有 Tailwind 設定使用 `--color-pip-boy-green-*`
+- 無障礙優先：`prefers-reduced-motion` 支援
+- 效能優化：`requestAnimationFrame` + Page Visibility API
+
+**新增 CRT 效果整合點**:
+1. CSS Module 新增 CRT 相關樣式類別
+2. CSS 變數擴充以支援 CRT 參數調校
+3. 主標題容器新增 `position: relative` 以承載 `::after` 網格疊加層
+
+### High-Level Architecture
 
 ```mermaid
 graph TB
-    subgraph "Browser Environment"
-        A[HomePage Component] --> B[DynamicHeroTitle Component]
-        B --> C[useCarousel Hook]
-        B --> D[useTypewriter Hook]
-        B --> E[usePageVisibility Hook]
-        C --> F[CarouselIndicator Component]
+    A[src/app/page.tsx] -->|使用| B[DynamicHeroTitle 元件]
+    B -->|載入| C[heroTitles.json]
+    B -->|套用樣式| D[DynamicHeroTitle.module.css]
+    B -->|Glitch 控制| E[useGlitch Hook]
+    B -->|可見性控制| F[usePageVisibility Hook]
 
-        D --> G[requestAnimationFrame Loop]
-        E --> H[Page Visibility API]
+    D -->|定義| G[Retro 游標動畫]
+    D -->|定義| H[動態 Glitch 效果]
+    D -->|新增| I[RGB 像素網格]
+    D -->|新增| J[靜態色彩分離]
 
-        I[heroTitles.json] --> J[Data Loader]
-        J --> B
+    I -.->|層次: 基礎| K[CRT 視覺層次]
+    J -.->|層次: 基礎| K
+    H -.->|層次: 增強| K
 
-        K[Error Boundary] --> B
-        K --> L[Fallback UI]
-    end
+    L[CSS 變數] -->|配置| I
+    L -->|配置| J
 
-    style B fill:#4ade80
-    style D fill:#22d3ee
-    style C fill:#22d3ee
-    style E fill:#22d3ee
-    style I fill:#fbbf24
+    M[prefers-reduced-motion] -->|停用| H
+    M -->|降低強度| I
+    M -->|保留| J
 ```
 
-### Technology Stack
+### Technology Alignment
 
-基於 requirements.md 技術約束與專案現有架構：
+本功能完全遵循現有技術棧，無需引入新的依賴：
 
-- **Framework**: Next.js 15.1.7 (App Router) - 已存在於專案
-- **Language**: TypeScript 5 - 嚴格模式，完整型別註解
-- **Runtime**: Bun - 用於開發與套件管理
-- **Styling**: Tailwind CSS v4 - 使用現有 Pip-Boy 主題變數
-- **Animation**: 自訂 `requestAnimationFrame` 實作（零外部庫）
-- **State Management**: React hooks（useState, useRef, useEffect）
-- **Testing**: Jest + React Testing Library
+**前端技術對齊**:
+- **框架**: Next.js 15 App Router（已使用）
+- **樣式**: Tailwind CSS v4 + CSS Module（已使用）
+- **動畫**: 純 CSS `@keyframes`（已使用於游標與 glitch）
+- **類型**: TypeScript 5（已使用）
 
-### Architecture Decision Rationale
+**新增樣式技術**:
+- `linear-gradient` 組合（垂直掃描線 + 水平 RGB 子像素）
+- `mix-blend-mode: multiply`（網格與文字融合）
+- `text-shadow` 雙層陰影（靜態色彩分離）
+- CSS 變數擴充（`--crt-*` 參數系列）
 
-**為何不使用 reactbits.dev text-type 元件？**
-- **決策**：自訂實作打字動畫
-- **理由**：
-  1. reactbits.dev 缺乏清晰的 npm 套件與文檔（WebFetch 未找到詳細 API）
-  2. 需要精確控制動畫生命週期（onAnimationComplete、暫停/恢復）
-  3. 自訂實作可完全掌控效能與行為，避免黑盒依賴
-  4. 程式碼量少（<100 行），維護成本低
-- **參考**：Motion.dev Typewriter 元件僅 1.3KB，自訂實作複雜度相當
+### Key Design Decisions
 
-**為何使用 `useRef` 而非 `useState` 儲存動畫狀態？**
-- **決策**：使用 `useRef` 追蹤動畫幀 ID 與當前字元索引
-- **理由**：
-  1. 動畫每幀更新不需觸發 React re-render（60 FPS = 每秒 60 次更新）
-  2. 避免 state 更新導致的效能瓶頸
-  3. 只在動畫完成時更新 state 觸發 UI 變化
-- **參考**：[React Animation Best Practices 2025](https://layonez.medium.com/performant-animations-with-requestanimationframe-and-react-hooks-99a32c5c9fbf)
+#### 決策 1: 純 CSS 實現 vs. JavaScript 控制的 RGB 網格
 
-**為何整合 Page Visibility API？**
-- **決策**：使用 `document.visibilityState` 偵測分頁切換
-- **理由**：
-  1. 需求 3.10 明確要求背景分頁暫停動畫
-  2. 節省使用者裝置資源（CPU、電池）
-  3. 標準 Web API，所有現代瀏覽器支援
-- **參考**：[MDN Page Visibility API](https://developer.mozilla.org/en-US/docs/Web/API/Page_Visibility_API)
+**Context**: RGB 像素網格需要在頁面載入時立即可見，且效果應持續存在（不是動畫）。
 
-**為何使用打字刪除效果而非 CSS 淡出切換？**
-- **決策**：文案切換時使用「反向打字刪除」效果，而非單純的淡入淡出
-- **理由**：
-  1. 更符合 Pip-Boy 終端機的真實使用體驗
-  2. 視覺上更具吸引力，強化互動感
-  3. 統一使用 `requestAnimationFrame` 動畫，程式碼架構一致
-  4. 符合 Fallout 世界觀的「復古未來主義」美學
-- **實作**：typing → deleting → typing next（三階段動畫循環）
+**Alternatives**:
+1. **純 CSS `::after` + `background-image`**（選擇）
+   - 使用 `::after` pseudo-element 創建全覆蓋疊加層
+   - 雙 `linear-gradient` 組合生成 3px × 3px 網格
+   - `mix-blend-mode: multiply` 混合
 
-### Data Flow
+2. JavaScript Canvas 動態渲染
+   - 使用 `<canvas>` 元素繪製像素網格
+   - 需要 `useEffect` 初始化，增加首屏延遲
 
-#### Primary User Flow: 頁面載入與首次動畫
+3. SVG Pattern + Filter
+   - 使用 SVG `<pattern>` 定義網格
+   - 需要額外的 SVG 檔案或內嵌 SVG
+
+**Selected Approach**: 純 CSS `::after` + `linear-gradient`
+
+**Rationale**:
+- **即時可見**: 無需 JavaScript 初始化，頁面載入時效果立即呈現
+- **效能優勢**: 瀏覽器原生 CSS 渲染，GPU 加速
+- **維護簡潔**: 所有樣式集中於 CSS Module，無需額外元件邏輯
+- **跨瀏覽器**: `linear-gradient` 與 `::after` 支援廣泛
+
+**Trade-offs**:
+- ✅ 獲得：零 JavaScript 開銷、立即可見、簡潔實現
+- ❌ 犧牲：無法動態調整網格密度（需要重新編譯 CSS）
+- ⚖️ 平衡：使用 CSS 變數 `--crt-grid-size` 在編譯時可調，滿足 95% 需求場景
+
+#### 決策 2: 靜態色彩分離（基礎層）vs. 僅使用動態 Glitch
+
+**Context**: 目前有動態 glitch 效果（8-15秒隨機觸發），是否需要額外的靜態色彩分離作為基礎層？
+
+**Alternatives**:
+1. **雙層架構：靜態基礎 + 動態增強**（選擇）
+   - 靜態: `text-shadow` 持續存在（2px 偏移，0.9 透明度）
+   - 動態: 觸發時覆蓋靜態效果（3-5px 偏移，變化透明度）
+
+2. 僅保留動態 glitch
+   - 移除靜態色彩分離，只在觸發時顯示效果
+
+3. 將靜態色彩分離整合進 RGB 網格
+   - 使用更複雜的 `background-image` 組合
+
+**Selected Approach**: 雙層架構（靜態 + 動態）
+
+**Rationale**:
+- **持續的視覺質感**: 靜態層確保隨時都有 CRT 風格，而非只在 glitch 觸發時
+- **層次分明**: 基礎層（subtle, 0.9 opacity）+ 增強層（dramatic, 0.6-0.9 opacity）創造豐富視覺
+- **降級優雅**: `prefers-reduced-motion` 可選擇性停用動態層，保留靜態層
+- **符合 CRT 物理特性**: 真實 CRT 螢幕的色差是持續存在的，故障閃爍是偶發的
+
+**Trade-offs**:
+- ✅ 獲得：更豐富的視覺層次、更真實的 CRT 模擬、更好的降級體驗
+- ❌ 犧牲：額外的 `text-shadow` 渲染成本（微量）
+- ⚖️ 平衡：現代瀏覽器的 `text-shadow` 效能優異，成本可忽略
+
+#### 決策 3: CSS 變數管理 vs. Hardcoded 數值
+
+**Context**: RGB 網格尺寸（3px）、色彩分離偏移（2px）等參數未來可能需要調校。
+
+**Alternatives**:
+1. **CSS 變數架構**（選擇）
+   - 定義 `--crt-grid-size`, `--crt-red-offset`, `--crt-blue-offset`, `--crt-shadow-opacity`
+   - 在 `:root` 或元件層級設定預設值
+
+2. Hardcoded CSS 數值
+   - 直接在樣式規則中使用 `3px`, `2px` 等固定值
+
+3. Tailwind Utility Classes
+   - 擴充 Tailwind 配置新增 CRT 相關 utilities
+
+**Selected Approach**: CSS 變數架構
+
+**Rationale**:
+- **未來調校**: 無需重新編譯即可在瀏覽器 DevTools 中調整參數
+- **主題切換**: 支援未來可能的多主題系統（如「綠色 Pip-Boy」vs「琥珀色終端機」）
+- **一致性**: 與現有 `--color-pip-boy-green-*` 變數系統保持一致
+- **文檔價值**: CSS 變數名稱自我說明，提升程式碼可讀性
+
+**Trade-offs**:
+- ✅ 獲得：靈活性、可維護性、主題支援、自我文檔化
+- ❌ 犧牲：額外的 CSS 變數宣告（約 10 行）
+- ⚖️ 平衡：成本微小，收益顯著
+
+## System Flows
+
+### CRT 效果渲染流程
+
+```mermaid
+flowchart TD
+    A[頁面載入] --> B{CSS Module 載入}
+    B --> C[解析 :root CSS 變數]
+    C --> D[--crt-grid-size: 3px]
+    C --> E[--crt-red-offset: 2px]
+    C --> F[--crt-blue-offset: -2px]
+    C --> G[--crt-shadow-opacity: 0.9]
+
+    B --> H[套用 .hero-title-container]
+    H --> I[position: relative]
+    H --> J[建立 ::after pseudo-element]
+
+    J --> K[RGB 網格渲染]
+    K --> L[linear-gradient to top 垂直掃描線]
+    K --> M[linear-gradient to right 水平 RGB]
+    L --> N[background-size: 3px 3px]
+    M --> N
+    N --> O[mix-blend-mode: multiply]
+    O --> P[pointer-events: none]
+
+    H --> Q[套用 .hero-title-text]
+    Q --> R[靜態色彩分離]
+    R --> S[text-shadow: 2px 0 red, -2px 0 cyan]
+
+    S --> T{prefers-reduced-motion?}
+    T -->|Yes| U[網格透明度降至 50%]
+    T -->|Yes| V[保留靜態色彩分離]
+    T -->|No| W[完整視覺效果]
+
+    T --> X{動態 Glitch 觸發?}
+    X -->|Yes| Y[覆蓋靜態 text-shadow]
+    X -->|Yes| Z[3-5px 偏移 + skew]
+    X -->|No| S
+
+    Y --> AA[250ms 後恢復靜態效果]
+```
+
+### 視覺效果層次協作流程
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant HomePage
-    participant DynamicHeroTitle
-    participant DataLoader
-    participant useTypewriter
-    participant useCarousel
-
-    User->>HomePage: 訪問首頁
-    HomePage->>DynamicHeroTitle: 渲染元件
-    DynamicHeroTitle->>DataLoader: 載入 heroTitles.json
-
-    alt JSON 載入成功
-        DataLoader-->>DynamicHeroTitle: 返回文案陣列
-        DynamicHeroTitle->>useCarousel: 初始化（索引=0）
-        useCarousel-->>DynamicHeroTitle: 當前文案資料
-        DynamicHeroTitle->>useTypewriter: 開始打字動畫
-
-        loop 每 50ms（可配置）
-            useTypewriter->>useTypewriter: 更新顯示字元數
-            useTypewriter-->>User: 顯示逐字打字效果
-        end
-
-        useTypewriter-->>DynamicHeroTitle: onComplete 回調
-        DynamicHeroTitle->>useCarousel: 觸發 8 秒計時器
-
-        Note over useCarousel: 8 秒後開始切換
-        useCarousel->>useTypewriter: 開始刪除動畫
-
-        loop 每 30ms（刪除較快）
-            useTypewriter->>useTypewriter: 刪除最後一個字元
-            useTypewriter-->>User: 顯示逐字刪除效果
-        end
-
-        useTypewriter-->>DynamicHeroTitle: 刪除完成
-        useCarousel->>useCarousel: 索引 + 1（循環）
-        useCarousel-->>DynamicHeroTitle: 新文案資料
-        DynamicHeroTitle->>useTypewriter: 開始打字新文案
-    else JSON 載入失敗
-        DataLoader-->>DynamicHeroTitle: 錯誤
-        DynamicHeroTitle->>DynamicHeroTitle: 使用預設文案
-        DynamicHeroTitle-->>User: 顯示降級 UI
-    end
-```
-
-#### User Flow: 手動切換文案
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CarouselIndicator
-    participant useCarousel
-    participant DynamicHeroTitle
-    participant useTypewriter
-
-    User->>CarouselIndicator: 點擊指示器（索引 3）
-    CarouselIndicator->>useCarousel: handleDotClick(3)
-    useCarousel->>useCarousel: 記錄目標索引 = 3
-    useCarousel->>useCarousel: 重置自動播放計時器
-    useCarousel->>useTypewriter: 中斷當前動畫，開始刪除
-
-    loop 快速刪除當前文字
-        useTypewriter->>useTypewriter: 刪除字元（加速）
-        useTypewriter-->>User: 顯示刪除效果
-    end
-
-    useTypewriter-->>DynamicHeroTitle: 刪除完成
-    useCarousel->>useCarousel: 切換至索引 3
-    useCarousel-->>DynamicHeroTitle: 新文案資料
-    DynamicHeroTitle->>useTypewriter: 開始打字新文案
-    useTypewriter-->>User: 顯示新文案打字效果
-```
-
-#### User Flow: 分頁切換暫停/恢復
-
-```mermaid
-sequenceDiagram
-    participant User
+    participant 使用者
     participant Browser
-    participant usePageVisibility
-    participant useTypewriter
-    participant useCarousel
+    participant 靜態CRT as 靜態CRT層
+    participant 動態Glitch as 動態Glitch層
 
-    User->>Browser: 切換至其他分頁
-    Browser->>usePageVisibility: visibilitychange 事件
-    usePageVisibility-->>useTypewriter: isVisible = false
-    usePageVisibility-->>useCarousel: isVisible = false
+    使用者->>Browser: 載入頁面
+    Browser->>靜態CRT: 立即渲染
+    Note over 靜態CRT: RGB 網格 + 色彩分離<br/>持續可見
 
-    useTypewriter->>useTypewriter: cancelAnimationFrame()
-    useCarousel->>useCarousel: clearTimeout()
+    Browser->>動態Glitch: 啟動 useGlitch hook
+    Note over 動態Glitch: 8-15秒隨機間隔
 
-    Note over useTypewriter,useCarousel: 動畫與計時器已暫停
+    loop 隨機觸發
+        動態Glitch->>靜態CRT: 覆蓋 text-shadow
+        Note over 動態Glitch: 250ms 強化效果
+        動態Glitch->>靜態CRT: 恢復基礎層
+    end
 
-    User->>Browser: 切回分頁
-    Browser->>usePageVisibility: visibilitychange 事件
-    usePageVisibility-->>useTypewriter: isVisible = true
-    usePageVisibility-->>useCarousel: isVisible = true
+    使用者->>Browser: 切換分頁
+    Browser->>動態Glitch: 暫停計時器
+    Note over 靜態CRT: 基礎層持續顯示
 
-    useTypewriter->>useTypewriter: 繼續動畫
-    useCarousel->>useCarousel: 重啟計時器
+    使用者->>Browser: 回到分頁
+    Browser->>動態Glitch: 恢復計時器
 ```
+
+## Requirements Traceability
+
+| Requirement | 需求摘要 | 元件 | 介面 | 流程 |
+|-------------|---------|------|------|------|
+| **7.1 - 7.8** | RGB 像素網格疊加 | `.hero-title-container::after` | CSS `background-image`, `mix-blend-mode` | CRT 效果渲染流程 |
+| **7.9 - 7.16** | 靜態色彩分離（基礎層） | `.hero-title-text` | CSS `text-shadow` | 視覺效果層次協作流程 |
+| **7.17 - 7.26** | 效果組合與調校 | CSS 變數系統 | `--crt-grid-size`, `--crt-*-offset` | CRT 效果渲染流程 |
+
+**說明**: Requirement 7 的所有驗收條件透過純 CSS 實現，無需新增 React 元件或 hooks。現有 `DynamicHeroTitle` 元件的 JSX 結構保持不變，僅在 CSS Module 中新增樣式類別。
 
 ## Components and Interfaces
 
-### Frontend Component Hierarchy
+### 前端元件層
 
-```
-HomePage (src/app/page.tsx)
-└── DynamicHeroTitle (新增)
-    ├── TypewriterText (內部子元件)
-    │   └── TerminalCursor (內部子元件)
-    └── CarouselIndicator (新增)
-```
+#### DynamicHeroTitle 元件（修改）
 
-### Component Specifications
+**Responsibility & Boundaries**
+- **Primary Responsibility**: 整合 CRT 視覺效果與現有打字機動畫、glitch 效果
+- **Domain Boundary**: Hero Section 視覺呈現層
+- **Data Ownership**: 不擁有資料，僅消費 `heroTitles.json`
+- **Transaction Boundary**: 無需交易管理（純前端視覺元件）
 
-#### 1. DynamicHeroTitle Component
+**Dependencies**
+- **Inbound**: `src/app/page.tsx`（頁面元件使用）
+- **Outbound**:
+  - `DynamicHeroTitle.module.css`（樣式定義）
+  - `useGlitch`（動態 glitch 控制）
+  - `usePageVisibility`（分頁可見性）
+- **External**: 無外部依賴
 
-**責任**：
-- 載入與管理文案資料
-- 協調 useTypewriter 與 useCarousel hooks
-- 管理動畫生命週期（打字 → 停留 → 刪除 → 切換 → 打字）
-- 處理錯誤狀態與降級 UI
-- 整合無障礙屬性
+**Contract Definition**
 
-**Props**：
+**Component Interface**:
 ```typescript
-interface DynamicHeroTitleProps {
-  /** 預設顯示的文案索引 */
+export interface DynamicHeroTitleProps {
   defaultIndex?: number;
-  /** 是否啟用自動輪播（預設 true） */
   autoPlay?: boolean;
-  /** 自動輪播間隔時間（毫秒，預設 8000） */
-  autoPlayInterval?: number;
-  /** 打字速度（毫秒/字元，預設 50） */
   typingSpeed?: number;
-  /** 測試模式：跳過動畫直接顯示（預設 false） */
+  deletingSpeed?: number;
+  waitBeforeDelete?: number;
   testMode?: boolean;
 }
+
+// 不新增 Props，CRT 效果透過 CSS 自動套用
+export function DynamicHeroTitle(props: DynamicHeroTitleProps): JSX.Element;
 ```
 
-**State**：
-```typescript
-interface DynamicHeroTitleState {
-  titles: HeroTitle[];           // 所有文案
-  currentIndex: number;          // 當前索引
-  isLoading: boolean;            // 載入狀態
-  error: Error | null;           // 錯誤狀態
-  isAnimating: boolean;          // 動畫執行中
-}
-```
+**State Management**:
+- **無需新增狀態**: CRT 效果為純 CSS 實現，不需要額外的 React state
+- **現有狀態保持不變**:
+  - `titles`, `currentIndex`, `phase`（動畫控制）
+  - `displayTitle`, `displaySubtitle`, `displayDescription`（顯示文字）
+  - `isGlitching`（動態 glitch，由 `useGlitch` 管理）
 
-#### 2. CarouselIndicator Component
+**Integration Strategy**:
+- **Modification Approach**: 擴展現有 CSS Module，新增 `.hero-title-container` 與 `.hero-title-text` 類別
+- **Backward Compatibility**:
+  - 現有樣式類別（`.typing-cursor-inline`, `.hero-title-glitching`）保持不變
+  - 新增類別不影響現有動畫邏輯
+- **Migration Path**:
+  1. 新增 CSS 變數定義
+  2. 新增 CRT 相關樣式類別
+  3. 在 JSX 中套用新類別（無需修改邏輯）
 
-**責任**：
-- 顯示輪播指示器（dots）
-- 處理點擊與鍵盤事件
-- 提供無障礙屬性
+### 樣式層
 
-**Props**：
-```typescript
-interface CarouselIndicatorProps {
-  /** 文案總數 */
-  totalCount: number;
-  /** 當前索引 */
-  currentIndex: number;
-  /** 點擊回調 */
-  onDotClick: (index: number) => void;
-  /** 是否顯示（單一文案時隱藏） */
-  visible: boolean;
-}
-```
+#### DynamicHeroTitle.module.css（擴充）
 
-**Accessibility Features**：
-- `role="tablist"` on container
-- `role="tab"` on each dot
-- `aria-label="第 X 組文案，共 Y 組"`
-- `aria-current="true"` on active dot
-- `tabIndex={0}` for keyboard focus
-- `onKeyDown` handler for Enter/Space keys
+**Responsibility & Boundaries**
+- **Primary Responsibility**: 定義所有 Hero 標題的視覺特效樣式
+- **Domain Boundary**: 視覺呈現層（CSS only）
+- **Data Ownership**: CSS 變數預設值、動畫關鍵影格定義
 
-### Custom Hooks
+**Contract Definition**
 
-#### 1. useTypewriter Hook
+**CSS Variables Interface**:
+```css
+:root {
+  /* 現有變數（Tailwind 定義） */
+  --color-pip-boy-green: #00ff41;
+  --color-pip-boy-green-10: rgba(0, 255, 65, 0.1);
+  --color-pip-boy-green-20: rgba(0, 255, 65, 0.2);
+  /* ... */
 
-**目的**：管理打字機動畫邏輯（包含打字與刪除）
-
-**API**：
-```typescript
-function useTypewriter(options: UseTypewriterOptions): UseTypewriterReturn {
-  // Implementation
-}
-
-interface UseTypewriterOptions {
-  text: string;                    // 要顯示的文字
-  typingSpeed?: number;            // 打字速度（ms/字元，預設 50）
-  deletingSpeed?: number;          // 刪除速度（ms/字元，預設 30，較快）
-  onTypingComplete?: () => void;   // 打字完成回調
-  onDeletingComplete?: () => void; // 刪除完成回調
-  enabled?: boolean;               // 是否啟用動畫
-  prefersReducedMotion?: boolean;  // 無障礙：減少動畫
-  mode?: 'typing' | 'deleting';    // 動畫模式
-}
-
-interface UseTypewriterReturn {
-  displayText: string;           // 當前顯示的文字
-  isAnimating: boolean;          // 是否正在執行動畫
-  animationMode: 'typing' | 'deleting' | 'idle';  // 當前動畫模式
-  progress: number;              // 進度（0-1）
-  startTyping: () => void;       // 開始打字
-  startDeleting: () => void;     // 開始刪除
-  reset: () => void;             // 重置動畫
-  pause: () => void;             // 暫停動畫
-  resume: () => void;            // 恢復動畫
+  /* 新增 CRT 參數變數 */
+  --crt-grid-size: 3px;
+  --crt-red-offset: 2px;
+  --crt-blue-offset: -2px;
+  --crt-shadow-opacity: 0.9;
+  --crt-grid-opacity-vertical: 0.2;
+  --crt-grid-opacity-horizontal: 0.7;
 }
 ```
 
-**核心實作邏輯**：
-```typescript
-// 使用 useRef 避免 re-render
-const charIndexRef = useRef(0);
-const animationFrameIdRef = useRef<number | null>(null);
-const lastTimestampRef = useRef<number>(0);
-const [animationMode, setAnimationMode] = useState<'typing' | 'deleting' | 'idle'>('idle');
+**Style Classes Interface**:
+```css
+/* 新增樣式類別 */
+.hero-title-container {
+  position: relative;
+  /* 承載 ::after 網格疊加層 */
+}
 
-// 統一的 requestAnimationFrame 動畫迴圈
-const animate = useCallback((timestamp: number) => {
-  const currentSpeed = animationMode === 'typing' ? typingSpeed : deletingSpeed;
+.hero-title-container::after {
+  /* RGB 像素網格疊加層 */
+  content: '';
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
 
-  if (timestamp - lastTimestampRef.current >= currentSpeed) {
-    if (animationMode === 'typing') {
-      // 打字模式：逐字增加
-      if (charIndexRef.current < text.length) {
-        charIndexRef.current++;
-        setDisplayText(text.slice(0, charIndexRef.current));
-        lastTimestampRef.current = timestamp;
-      } else {
-        // 打字完成
-        setAnimationMode('idle');
-        onTypingComplete?.();
-        return;
-      }
-    } else if (animationMode === 'deleting') {
-      // 刪除模式：逐字減少
-      if (charIndexRef.current > 0) {
-        charIndexRef.current--;
-        setDisplayText(text.slice(0, charIndexRef.current));
-        lastTimestampRef.current = timestamp;
-      } else {
-        // 刪除完成
-        setAnimationMode('idle');
-        onDeletingComplete?.();
-        return;
-      }
-    }
+  /* 雙 linear-gradient 組合 */
+  background-image:
+    linear-gradient(to top, /* 垂直掃描線 */
+      rgba(255, 255, 255, var(--crt-grid-opacity-vertical)) 0%,
+      rgba(255, 255, 255, calc(var(--crt-grid-opacity-vertical) * 2)) 33.33%,
+      rgba(255, 255, 255, calc(var(--crt-grid-opacity-vertical) * 2)) 66.67%,
+      rgba(255, 255, 255, calc(var(--crt-grid-opacity-vertical) * 3)) 100%
+    ),
+    linear-gradient(to right, /* 水平 RGB 子像素 */
+      rgba(255, 0, 0, var(--crt-grid-opacity-horizontal)) 0%,
+      rgba(255, 0, 0, var(--crt-grid-opacity-horizontal)) 33.33%,
+      rgba(0, 255, 0, var(--crt-grid-opacity-horizontal)) 33.33%,
+      rgba(0, 255, 0, var(--crt-grid-opacity-horizontal)) 66.67%,
+      rgba(0, 0, 255, var(--crt-grid-opacity-horizontal)) 66.67%,
+      rgba(0, 0, 255, var(--crt-grid-opacity-horizontal)) 100%
+    );
+
+  background-size: var(--crt-grid-size) var(--crt-grid-size);
+  background-repeat: repeat;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hero-title-text {
+  /* 靜態色彩分離（基礎層） */
+  text-shadow:
+    var(--crt-red-offset) 0 0 rgba(255, 0, 0, var(--crt-shadow-opacity)),
+    var(--crt-blue-offset) 0 0 rgba(0, 0, 255, var(--crt-shadow-opacity));
+
+  position: relative;
+  z-index: 2; /* 確保文字在網格之上 */
+}
+
+/* 副標題與描述段落：較弱的色彩分離 */
+.hero-subtitle-text,
+.hero-description-text {
+  text-shadow:
+    var(--crt-red-offset) 0 0 rgba(255, 0, 0, calc(var(--crt-shadow-opacity) * 0.5)),
+    var(--crt-blue-offset) 0 0 rgba(0, 0, 255, calc(var(--crt-shadow-opacity) * 0.5));
+
+  position: relative;
+  z-index: 2;
+}
+
+/* 無障礙支援：prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .hero-title-container::after {
+    /* 降低網格透明度至 50% */
+    --crt-grid-opacity-vertical: 0.1;
+    --crt-grid-opacity-horizontal: 0.35;
   }
 
-  animationFrameIdRef.current = requestAnimationFrame(animate);
-}, [text, typingSpeed, deletingSpeed, animationMode, onTypingComplete, onDeletingComplete]);
-
-// 開始打字
-const startTyping = useCallback(() => {
-  charIndexRef.current = 0;
-  setAnimationMode('typing');
-  setDisplayText('');
-  animationFrameIdRef.current = requestAnimationFrame(animate);
-}, [animate]);
-
-// 開始刪除
-const startDeleting = useCallback(() => {
-  charIndexRef.current = displayText.length;
-  setAnimationMode('deleting');
-  animationFrameIdRef.current = requestAnimationFrame(animate);
-}, [animate, displayText]);
-
-// Cleanup
-useEffect(() => {
-  return () => {
-    if (animationFrameIdRef.current) {
-      cancelAnimationFrame(animationFrameIdRef.current);
-    }
-  };
-}, []);
-```
-
-#### 2. useCarousel Hook
-
-**目的**：管理輪播邏輯、自動播放、互動偵測
-
-**API**：
-```typescript
-function useCarousel(options: UseCarouselOptions): UseCarouselReturn {
-  // Implementation
+  /* 保留靜態色彩分離，但停用動態 glitch */
+  .hero-title-glitching {
+    animation: none !important;
+    /* 恢復靜態 text-shadow（由 .hero-title-text 提供） */
+  }
 }
 
-interface UseCarouselOptions {
-  totalCount: number;           // 文案總數
-  autoPlay?: boolean;           // 自動播放
-  interval?: number;            // 間隔時間（ms）
-  pauseOnInteraction?: boolean; // 互動時暫停
-  onIndexChange?: (index: number) => void; // 索引變更回調
-}
-
-interface UseCarouselReturn {
-  currentIndex: number;         // 當前索引
-  goToIndex: (index: number) => void;  // 跳轉至指定索引
-  next: () => void;             // 下一個
-  previous: () => void;         // 上一個
-  pause: () => void;            // 暫停自動播放
-  resume: () => void;           // 恢復自動播放
-  isPlaying: boolean;           // 是否正在播放
+/* 瀏覽器降級：不支援 mix-blend-mode */
+@supports not (mix-blend-mode: multiply) {
+  .hero-title-container::after {
+    display: none; /* 隱藏網格，僅保留色彩分離 */
+  }
 }
 ```
 
-**互動暫停邏輯**：
-```typescript
-// 監聽滑鼠移動與觸控事件
-useEffect(() => {
-  if (!pauseOnInteraction) return;
+**Preconditions**:
+- HTML 結構中標題容器必須套用 `.hero-title-container` 類別
+- 主標題元素必須套用 `.hero-title-text` 類別
 
-  let interactionTimeout: NodeJS.Timeout;
+**Postconditions**:
+- RGB 網格立即渲染於標題容器上方
+- 靜態色彩分離效果作用於所有標題文字
+- 動態 glitch 觸發時可正確覆蓋靜態效果
 
-  const handleInteraction = () => {
-    pause();
-    clearTimeout(interactionTimeout);
-    // 5 秒後恢復
-    interactionTimeout = setTimeout(() => resume(), 5000);
-  };
-
-  window.addEventListener('mousemove', handleInteraction);
-  window.addEventListener('touchstart', handleInteraction);
-
-  return () => {
-    window.removeEventListener('mousemove', handleInteraction);
-    window.removeEventListener('touchstart', handleInteraction);
-    clearTimeout(interactionTimeout);
-  };
-}, [pauseOnInteraction, pause, resume]);
-```
-
-#### 3. usePageVisibility Hook
-
-**目的**：偵測頁面可見性狀態
-
-**API**：
-```typescript
-function usePageVisibility(): boolean {
-  const [isVisible, setIsVisible] = useState(true);
-
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      setIsVisible(document.visibilityState === 'visible');
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  return isVisible;
-}
-```
+**Invariants**:
+- 網格疊加層永遠不干擾文字選取（`pointer-events: none`）
+- z-index 層次永遠維持：網格（1） < 文字（2）
 
 ## Data Models
 
-### Domain Entities
+### CSS 變數資料結構
 
-1. **HeroTitle**: 單一文案配置
-2. **HeroTitlesCollection**: 所有文案集合（JSON 根物件）
+**Domain Model**: CRT 視覺參數配置
 
-### TypeScript Interface Definitions
+本功能不涉及複雜的業務資料模型，所有配置透過 CSS 變數管理：
 
 ```typescript
-/**
- * 單一 Hero Section 文案配置
- */
-interface HeroTitle {
-  /** 唯一識別碼 */
-  id: string;
-  /** 主標題（打字動畫） */
-  title: string;
-  /** 副標題（立即顯示） */
-  subtitle: string;
-  /** 描述段落（淡入顯示） */
-  description: string;
-  /** 是否啟用此文案 */
-  enabled: boolean;
-}
+// 型別定義（僅用於文檔說明，非實際程式碼）
+interface CRTVisualConfig {
+  /** RGB 網格尺寸（像素） */
+  gridSize: string;       // "3px"
 
-/**
- * 文案集合（JSON 根結構）
- */
-interface HeroTitlesCollection {
-  /** 版本號（用於未來相容性） */
-  version: string;
-  /** 文案陣列 */
-  titles: HeroTitle[];
-  /** 預設配置 */
-  defaultConfig?: {
-    /** 預設打字速度 */
-    typingSpeed?: number;
-    /** 預設輪播間隔 */
-    autoPlayInterval?: number;
-  };
-}
+  /** 色彩分離偏移 */
+  redOffset: string;      // "2px"
+  blueOffset: string;     // "-2px"
 
-/**
- * 降級預設文案（當 JSON 載入失敗時）
- */
-const FALLBACK_TITLE: HeroTitle = {
-  id: 'fallback-0',
-  title: '玄學的盡頭是科學™',
-  subtitle: '由 Nuka-Cola 量子科學部贊助播出',
-  description: '「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」',
-  enabled: true,
-};
-```
+  /** 陰影透明度 */
+  shadowOpacity: number;  // 0.9
 
-### JSON Data Structure
-
-**檔案位置**：`src/data/heroTitles.json`
-
-**範例內容**：
-```json
-{
-  "version": "1.0.0",
-  "defaultConfig": {
-    "typingSpeed": 50,
-    "autoPlayInterval": 8000
-  },
-  "titles": [
-    {
-      "id": "title-1",
-      "title": "玄學的盡頭是科學™",
-      "subtitle": "由 Nuka-Cola 量子科學部贊助播出",
-      "description": "「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」",
-      "enabled": true
-    },
-    {
-      "id": "title-2",
-      "title": "科學的起點是玄學",
-      "subtitle": "Vault-Tec 實驗倫理委員會認證",
-      "description": "「我們的祖先用占卜預測未來，我們用機器學習。本質上都是在尋找模式，只是工具不同罷了。誰說 AI 不是現代版的水晶球呢？」",
-      "enabled": true
-    },
-    {
-      "id": "title-3",
-      "title": "量子力學證明了塔羅牌的可行性",
-      "subtitle": "Brotherhood of Steel 技術評估報告",
-      "description": "「薛丁格的貓既生又死，你的未來也是。觀察者效應告訴我們：你看牌的瞬間，命運就坍縮了。這不是玄學，這是量子物理。」",
-      "enabled": true
-    },
-    {
-      "id": "title-4",
-      "title": "統計學才是最大的占卜術",
-      "subtitle": "NCR 數據分析局背書",
-      "description": "「Monte Carlo 模擬、貝氏推論、迴歸分析——聽起來很科學對吧？但本質上都在『預測未來』。科學家只是不願意承認自己在算命而已。」",
-      "enabled": true
-    },
-    {
-      "id": "title-5",
-      "title": "機率論：現代版的命運解讀",
-      "subtitle": "Institute 合成人倫理研究所出品",
-      "description": "「擲骰子和抽塔羅牌有什麼區別？都是隨機事件。但加上『信念』這個變數後，機率就不再純粹是數學了。歡迎來到廢土量子神學。」",
-      "enabled": true
-    }
-  ]
+  /** 網格透明度 */
+  gridOpacityVertical: number;    // 0.2
+  gridOpacityHorizontal: number;  // 0.7
 }
 ```
 
-### Data Validation
+**Physical Data Model**: CSS Custom Properties
 
-**Runtime Validation**（開發模式）：
-```typescript
-function validateHeroTitles(data: unknown): HeroTitlesCollection {
-  // 基本結構檢查
-  if (!data || typeof data !== 'object') {
-    throw new Error('Invalid JSON structure');
-  }
+實際實現透過 CSS 變數：
 
-  const collection = data as HeroTitlesCollection;
-
-  // 必要欄位檢查
-  if (!Array.isArray(collection.titles) || collection.titles.length === 0) {
-    throw new Error('titles array is required and must not be empty');
-  }
-
-  // 每個文案驗證
-  collection.titles.forEach((title, index) => {
-    const requiredFields: (keyof HeroTitle)[] = ['id', 'title', 'subtitle', 'description'];
-    requiredFields.forEach(field => {
-      if (!title[field] || typeof title[field] !== 'string') {
-        throw new Error(`Title at index ${index}: ${field} is required and must be a string`);
-      }
-    });
-
-    if (typeof title.enabled !== 'boolean') {
-      console.warn(`Title ${title.id}: enabled field missing, defaulting to true`);
-      title.enabled = true;
-    }
-  });
-
-  return collection;
+```css
+:root {
+  --crt-grid-size: 3px;
+  --crt-red-offset: 2px;
+  --crt-blue-offset: -2px;
+  --crt-shadow-opacity: 0.9;
+  --crt-grid-opacity-vertical: 0.2;
+  --crt-grid-opacity-horizontal: 0.7;
 }
 ```
+
+**Data Contracts**:
+- 所有 CSS 變數使用 kebab-case 命名
+- 尺寸變數使用 `px` 單位（支援瀏覽器計算）
+- 透明度變數使用 0-1 數值範圍
+- 變數命名遵循 `--crt-{category}-{property}` 模式
 
 ## Error Handling
 
-### Error Handling Strategy
+### Error Strategy
 
-**分層錯誤處理**：
+CRT 視覺特效為純 CSS 實現，錯誤處理策略基於**優雅降級（Graceful Degradation）**：
 
-1. **Data Loading Layer**（資料載入層）
-   - JSON 解析錯誤 → 使用降級預設文案
-   - 網路錯誤 → 重試 1 次，失敗後使用預設文案
-   - 驗證錯誤 → console.error 記錄，過濾無效文案
+1. **瀏覽器相容性錯誤** → 使用 `@supports` 查詢自動降級
+2. **CSS 解析錯誤** → 瀏覽器自動忽略無效屬性，保留基礎樣式
+3. **效能問題** → `prefers-reduced-motion` 降低效果強度
 
-2. **Component Layer**（元件層）
-   - React Error Boundary 包裹 `DynamicHeroTitle`
-   - 捕獲 rendering 錯誤並顯示友善訊息
-   - 不影響頁面其他部分功能
+### Error Categories and Responses
 
-3. **Hook Layer**（Hook 層）
-   - Try-catch 包裹關鍵操作
-   - 清理資源（cancelAnimationFrame、clearTimeout）
-   - 回傳錯誤狀態而非拋出例外
-
-### Error Boundary Implementation
-
-```typescript
-class DynamicHeroTitleErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('DynamicHeroTitle Error:', error, errorInfo);
-    // 可選：發送至錯誤追蹤服務（如 Sentry）
-  }
-
-  render() {
-    if (this.state.hasError) {
-      // 降級 UI：顯示靜態預設文案
-      return (
-        <div className="text-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green">
-            玄學的盡頭是科學™
-          </h1>
-          <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80">
-            由 Nuka-Cola 量子科學部贊助播出
-          </p>
-          <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed">
-            「經過 200 年的實驗室驗證與田野測試，我們證實了一件事：
-            命運不是迷信，而是尚未被完全理解的統計學。現在就用 Pip-Boy 量測你的概率吧。」
-          </p>
-        </div>
-      );
+**Browser Errors（瀏覽器不支援）**:
+- **`mix-blend-mode` 不支援** → 隱藏 RGB 網格，保留色彩分離
+  ```css
+  @supports not (mix-blend-mode: multiply) {
+    .hero-title-container::after {
+      display: none;
     }
-
-    return this.props.children;
   }
-}
-```
+  ```
 
-### Error Messages
+- **CSS Variables 不支援** → 使用 fallback 固定值
+  ```css
+  .hero-title-container::after {
+    background-size: 3px 3px; /* fallback */
+    background-size: var(--crt-grid-size) var(--crt-grid-size);
+  }
+  ```
 
-**使用者友善的錯誤訊息**（僅在開發模式顯示）：
+**User Errors（使用者偏好）**:
+- **`prefers-reduced-motion: reduce`** → 降低網格強度，保留靜態色彩分離
+  ```css
+  @media (prefers-reduced-motion: reduce) {
+    --crt-grid-opacity-vertical: 0.1;
+    --crt-grid-opacity-horizontal: 0.35;
+  }
+  ```
 
-| 錯誤類型 | 訊息內容 | 處理方式 |
-|---------|---------|---------|
-| JSON 解析失敗 | `Failed to parse heroTitles.json. Using fallback content.` | 顯示預設文案 |
-| 網路錯誤 | `Unable to load dynamic titles. Displaying default title.` | 顯示預設文案 |
-| 驗證錯誤 | `Invalid title data at index X: missing field 'Y'` | 過濾該筆資料 |
-| 動畫錯誤 | `Animation error occurred. Displaying static text.` | 停用動畫 |
+**System Errors（渲染異常）**:
+- **Safari `mix-blend-mode` 渲染異常** → 透過跨瀏覽器測試階段驗證
+- **高 DPI 螢幕網格模糊** → 維持 `3px` 固定尺寸（已驗證在 Retina 螢幕清晰）
 
-## Security Considerations
+### Monitoring
 
-由於此功能為純前端實作，無後端 API，安全考量主要集中在：
-
-### Content Security
-
-1. **XSS Prevention**（防止跨站腳本攻擊）
-   - React 自動 escape 文字內容，防止注入攻擊
-   - JSON 資料不包含 HTML 或可執行程式碼
-   - 不使用 `dangerouslySetInnerHTML`
-
-2. **Content Integrity**（內容完整性）
-   - JSON 檔案由開發團隊管理，非使用者輸入
-   - 生產環境下 JSON 經過 build process 驗證
-   - 考慮在 CI/CD 中加入 JSON schema 驗證
-
-### Client-Side Security
-
-1. **Resource Loading**（資源載入）
-   - JSON 檔案與應用程式同源，無 CORS 問題
-   - 使用相對路徑 `/data/heroTitles.json` 避免 CDN 劫持
-
-2. **Performance DoS Prevention**（效能 DoS 防護）
-   - JSON 檔案大小限制 <20KB（需求 6.7）
-   - 動畫使用 `requestAnimationFrame` 節流
-   - 背景分頁自動暫停，防止資源耗盡
-
-## Performance & Scalability
-
-### Performance Targets
-
-基於 requirements.md 需求 6：
-
-| 指標 | 目標值 | 量測方式 |
-|-----|--------|---------|
-| JSON 載入時間 | <100ms | `performance.mark()` |
-| 首次打字動畫開始 | <200ms after JSON loaded | React DevTools Profiler |
-| 動畫幀率（打字/刪除） | ≥60 FPS | Chrome Performance tab |
-| 完整動畫週期時間 | <15 秒（打字 + 停留 + 刪除） | 手動計時 |
-| 記憶體使用 | <5MB additional | Chrome Memory Profiler |
-| 元件 re-render 次數 | <10 次/動畫週期 | React DevTools Profiler |
-| LCP 影響 | <100ms additional | Lighthouse |
-| CLS 影響 | <0.05 | Lighthouse |
-
-### Optimization Strategies
-
-**1. 減少 Re-renders**
-```typescript
-// ✅ 使用 useRef 儲存動畫狀態
-const charIndexRef = useRef(0);  // 不觸發 re-render
-
-// ❌ 避免使用 useState 儲存高頻更新狀態
-const [charIndex, setCharIndex] = useState(0);  // 每幀觸發 re-render
-```
-
-**2. Memoization**
-```typescript
-// 快取文案資料
-const enabledTitles = useMemo(
-  () => titles.filter(t => t.enabled),
-  [titles]
-);
-
-// 快取事件處理函式
-const handleDotClick = useCallback(
-  (index: number) => goToIndex(index),
-  [goToIndex]
-);
-```
-
-**3. CSS 動畫優先**
-```css
-/* ✅ 使用 CSS transition（GPU 加速） */
-.hero-title {
-  transition: opacity 300ms ease-in-out;
-}
-
-/* ❌ 避免 JS 動畫 */
-element.style.opacity = `${progress}`;  // 觸發 layout recalculation
-```
-
-**4. Lazy Loading**（可選）
-```typescript
-// 若 JSON 檔案過大（>20KB），考慮動態載入
-const loadHeroTitles = () => import('@/data/heroTitles.json');
-```
-
-### Scalability Approach
-
-**目前設計**：
-- 靜態 JSON 檔案，隨應用程式打包
-- 適合文案數量 <20 組
-
-**未來擴展（Out of Scope，但架構預留）**：
-- 若文案數量 >50 組，可改用 CDN 託管 JSON
-- 若需動態更新，可接 CMS API（不修改元件介面）
-- 若需 A/B Testing，可在 DataLoader 層注入邏輯
+- **視覺回歸測試**: 使用 Playwright 截圖比對驗證 CRT 效果正確渲染
+- **效能監控**: 使用 Chrome DevTools Performance 面板驗證 `text-shadow` 與 `background-image` 不影響 FPS
+- **無障礙驗證**: 使用 axe DevTools 驗證對比度符合 WCAG AA（≥ 4.5:1）
 
 ## Testing Strategy
 
-### Testing Philosophy
+### Unit Tests（CSS 視覺測試）
 
-- **單元測試**：覆蓋核心邏輯（hooks）
-- **整合測試**：覆蓋元件互動
-- **E2E 測試**：覆蓋關鍵使用者流程（≤2 scenarios）
-- **無障礙測試**：自動化 axe-core 檢測
+**測試範圍**: CSS Module 樣式類別定義正確性
 
-### Risk Matrix
+1. **CSS 變數預設值驗證**
+   - 驗證 `:root` 定義了所有 `--crt-*` 變數
+   - 驗證數值範圍正確（如 `--crt-shadow-opacity` 介於 0-1）
 
-| 領域 | 風險等級 | 必要測試 | 選擇性測試 | 對應需求 |
-|-----|---------|---------|-----------|---------|
-| 動畫邏輯 | **H** | Unit: useTypewriter hook | Property-based | Req 2.1-2.9 |
-| 輪播邏輯 | **H** | Unit: useCarousel hook | Integration | Req 3.1-3.11 |
-| 資料載入 | **M** | Unit: DataLoader, 錯誤處理 | Contract | Req 1.7 |
-| 視覺整合 | **M** | Snapshot: 樣式一致性 | Visual regression | Req 4.1-4.10 |
-| 無障礙 | **H** | E2E: axe-core 自動化 | 手動鍵盤測試 | Req 5.1-5.11 |
-| 效能 | **M** | Perf: 動畫幀率監控 | Load testing | Req 6.1-6.8 |
+2. **樣式類別存在性測試**
+   - `.hero-title-container`、`.hero-title-text` 類別定義存在
+   - `::after` pseudo-element 樣式定義存在
 
-### Test Coverage by Layer
+3. **降級邏輯測試**
+   - `@supports not (mix-blend-mode: multiply)` 規則定義存在
+   - `@media (prefers-reduced-motion: reduce)` 規則定義存在
 
-**Unit Tests（Jest + React Testing Library）**：
+**工具**: Jest + CSS Module mock
 
 ```typescript
-describe('useTypewriter', () => {
-  it('should display text character by character (typing mode)', async () => {
-    const { result } = renderHook(() =>
-      useTypewriter({ text: 'Hello', typingSpeed: 10 })
-    );
-
-    expect(result.current.displayText).toBe('');
-
-    act(() => {
-      result.current.startTyping();
-    });
-
-    await waitFor(() => {
-      expect(result.current.displayText).toBe('Hello');
-      expect(result.current.animationMode).toBe('idle');
-    });
-  });
-
-  it('should delete text character by character (deleting mode)', async () => {
-    const { result } = renderHook(() =>
-      useTypewriter({ text: 'Hello', deletingSpeed: 10 })
-    );
-
-    // 先設定完整文字
-    act(() => {
-      result.current.startTyping();
-    });
-
-    await waitFor(() => expect(result.current.displayText).toBe('Hello'));
-
-    // 開始刪除
-    act(() => {
-      result.current.startDeleting();
-    });
-
-    await waitFor(() => {
-      expect(result.current.displayText).toBe('');
-      expect(result.current.animationMode).toBe('idle');
-    });
-  });
-
-  it('should call onTypingComplete when typing finishes', async () => {
-    const onTypingComplete = jest.fn();
-    const { result } = renderHook(() =>
-      useTypewriter({ text: 'Hi', typingSpeed: 10, onTypingComplete })
-    );
-
-    act(() => result.current.startTyping());
-
-    await waitFor(() => expect(onTypingComplete).toHaveBeenCalledTimes(1));
-  });
-
-  it('should call onDeletingComplete when deleting finishes', async () => {
-    const onDeletingComplete = jest.fn();
-    const { result } = renderHook(() =>
-      useTypewriter({ text: 'Hi', deletingSpeed: 10, onDeletingComplete })
-    );
-
-    act(() => result.current.startTyping());
-    await waitFor(() => expect(result.current.displayText).toBe('Hi'));
-
-    act(() => result.current.startDeleting());
-    await waitFor(() => expect(onDeletingComplete).toHaveBeenCalledTimes(1));
-  });
-
-  it('should respect prefers-reduced-motion', () => {
-    // Mock matchMedia
-    window.matchMedia = jest.fn().mockImplementation(query => ({
-      matches: query === '(prefers-reduced-motion: reduce)',
-      media: query,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    }));
-
-    const { result } = renderHook(() =>
-      useTypewriter({ text: 'Hello', prefersReducedMotion: true })
-    );
-
-    // 應立即顯示完整文字
-    expect(result.current.displayText).toBe('Hello');
-  });
-});
-
-describe('useCarousel', () => {
-  it('should auto-advance after interval', async () => {
-    jest.useFakeTimers();
-    const onIndexChange = jest.fn();
-
-    const { result } = renderHook(() =>
-      useCarousel({
-        totalCount: 3,
-        autoPlay: true,
-        interval: 1000,
-        onIndexChange
-      })
-    );
-
-    expect(result.current.currentIndex).toBe(0);
-
-    act(() => {
-      jest.advanceTimersByTime(1000);
-    });
-
-    expect(result.current.currentIndex).toBe(1);
-    expect(onIndexChange).toHaveBeenCalledWith(1);
-
-    jest.useRealTimers();
-  });
-
-  it('should pause on interaction', () => {
-    const { result } = renderHook(() =>
-      useCarousel({ totalCount: 3, pauseOnInteraction: true })
-    );
-
-    act(() => {
-      fireEvent.mouseMove(window);
-    });
-
-    expect(result.current.isPlaying).toBe(false);
+// 範例測試
+describe('DynamicHeroTitle.module.css', () => {
+  it('應定義所有 CRT CSS 變數', () => {
+    const styles = require('./DynamicHeroTitle.module.css');
+    expect(styles['hero-title-container']).toBeDefined();
+    expect(styles['hero-title-text']).toBeDefined();
   });
 });
 ```
 
-**Integration Tests（React Testing Library）**：
+### Integration Tests（元件視覺整合）
+
+**測試範圍**: CRT 效果與現有動畫協作正確性
+
+1. **靜態與動態效果層次測試**
+   - 驗證靜態 `text-shadow` 在非 glitch 狀態下可見
+   - 驗證動態 glitch 觸發時覆蓋靜態效果
+   - 驗證 glitch 結束後恢復靜態效果
+
+2. **RGB 網格渲染測試**
+   - 驗證 `::after` 元素存在於 DOM
+   - 驗證 `background-image` 包含兩個 `linear-gradient`
+   - 驗證 `mix-blend-mode: multiply` 正確套用
+
+3. **輪播切換測試**
+   - 驗證輪播切換時 CRT 效果持續可見（不中斷）
+   - 驗證新標題載入時 RGB 網格自動套用
+
+**工具**: React Testing Library
 
 ```typescript
-describe('DynamicHeroTitle Integration', () => {
-  it('should load titles and start typing animation', async () => {
+// 範例測試
+describe('DynamicHeroTitle CRT Effects', () => {
+  it('應在標題容器上套用 RGB 網格', () => {
     render(<DynamicHeroTitle />);
+    const container = screen.getByRole('heading').closest('.hero-title-container');
 
-    // 等待資料載入
-    await waitFor(() => {
-      expect(screen.queryByText(/loading/i)).not.toBeInTheDocument();
-    });
-
-    // 驗證第一個文案開始顯示
-    const title = await screen.findByRole('heading', { level: 1 });
-    expect(title).toBeInTheDocument();
-  });
-
-  it('should display fallback content on JSON load error', async () => {
-    // Mock fetch failure
-    global.fetch = jest.fn(() => Promise.reject('Network error'));
-
-    render(<DynamicHeroTitle />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/玄學的盡頭是科學/)).toBeInTheDocument();
-    });
-  });
-
-  it('should switch titles when dot indicator is clicked', async () => {
-    render(<DynamicHeroTitle />);
-
-    await waitFor(() => screen.findByRole('tablist'));
-
-    const dots = screen.getAllByRole('tab');
-
-    act(() => {
-      fireEvent.click(dots[2]);
-    });
-
-    await waitFor(() => {
-      const indicator = dots[2];
-      expect(indicator).toHaveAttribute('aria-current', 'true');
-    });
+    const afterElement = window.getComputedStyle(container, '::after');
+    expect(afterElement.backgroundImage).toContain('linear-gradient');
+    expect(afterElement.mixBlendMode).toBe('multiply');
   });
 });
 ```
 
-**E2E Tests（Playwright）**：
+### E2E Tests（端到端視覺驗證）
+
+**測試範圍**: 真實瀏覽器環境視覺呈現
+
+1. **跨瀏覽器 CRT 效果渲染**
+   - Chrome: 驗證 RGB 網格與色彩分離正確顯示
+   - Firefox: 驗證 `mix-blend-mode` 正確融合
+   - Safari: 驗證無渲染異常（已知相容性問題）
+   - Edge: 驗證與 Chrome 一致性
+
+2. **無障礙模式測試**
+   - 啟用 `prefers-reduced-motion` 後驗證網格透明度降低
+   - 驗證對比度仍符合 WCAG AA（≥ 4.5:1）
+
+3. **行動裝置渲染**
+   - 驗證 `3px` 網格在 Retina 螢幕清晰可見
+   - 驗證觸控滾動時 CRT 效果不閃爍
+
+**工具**: Playwright + 視覺回歸測試
 
 ```typescript
-test.describe('Hero Section Dynamic Titles', () => {
-  test('should display typing animation on page load', async ({ page }) => {
-    await page.goto('/');
+// 範例測試
+test('CRT 效果在 Chrome 正確渲染', async ({ page }) => {
+  await page.goto('/');
 
-    // 等待動畫開始
-    await page.waitForSelector('h1.text-pip-boy-green');
+  const heroTitle = page.locator('h1').first();
 
-    // 驗證文字逐漸出現（snapshot 測試）
-    const title = page.locator('h1');
-    await expect(title).toContainText(/玄學/);
+  // 截圖比對
+  await expect(heroTitle).toHaveScreenshot('crt-effect-chrome.png', {
+    maxDiffPixels: 100,
   });
 
-  test('keyboard navigation for carousel indicators', async ({ page }) => {
-    await page.goto('/');
-
-    // Tab 到第一個指示器
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');  // 假設需要 Tab 兩次到達指示器
-
-    // 驗證焦點環
-    const firstDot = page.locator('[role="tab"]').first();
-    await expect(firstDot).toBeFocused();
-
-    // 按 Enter 切換
-    await page.keyboard.press('Enter');
-
-    // 驗證文案切換
-    await expect(firstDot).toHaveAttribute('aria-current', 'true');
-  });
-});
-```
-
-**Accessibility Tests（axe-core）**：
-
-```typescript
-describe('DynamicHeroTitle Accessibility', () => {
-  it('should have no accessibility violations', async () => {
-    const { container } = render(<DynamicHeroTitle />);
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading')).toBeInTheDocument();
-    });
-
-    const results = await axe(container);
-    expect(results).toHaveNoViolations();
-  });
-
-  it('should have proper ARIA labels on carousel indicators', async () => {
-    render(<DynamicHeroTitle />);
-
-    const tablist = await screen.findByRole('tablist');
-    expect(tablist).toHaveAttribute('aria-label', expect.stringContaining('文案'));
-
-    const tabs = screen.getAllByRole('tab');
-    tabs.forEach((tab, index) => {
-      expect(tab).toHaveAttribute('aria-label', expect.stringMatching(/第 \d+ 組文案/));
-    });
-  });
-});
-```
-
-### CI Gates
-
-| 階段 | 執行測試 | 通過條件 | SLA |
-|-----|---------|---------|-----|
-| PR 提交 | Unit + Integration + Lint | 全部通過 + 覆蓋率 ≥80% | ≤3 分鐘 |
-| Merge 前 | E2E + Accessibility | 全部通過 + axe 0 violations | ≤5 分鐘 |
-| 每日定期 | Performance + Visual Regression | 效能目標達成 + 視覺一致 | - |
-
-### Exit Criteria
-
-專案可部署至生產環境的條件：
-
-- ✅ 所有 Sev1/Sev2 bugs 已修復
-- ✅ 所有 CI gates 通過
-- ✅ 程式碼覆蓋率 ≥80%（unit + integration）
-- ✅ axe-core 無障礙檢測 0 violations
-- ✅ Lighthouse 分數：Performance ≥90, Accessibility = 100
-- ✅ 所有需求驗收標準經人工驗證通過
-- ✅ 效能目標達成（60 FPS, <100ms load impact）
-
----
-
-## Implementation Notes
-
-### Development Phases
-
-**Phase 1: 基礎架構（1 天）**
-- 建立 TypeScript interfaces
-- 實作 `useTypewriter` hook（不含動畫）
-- 建立 JSON 資料檔案與範例文案
-- 實作資料載入邏輯與錯誤處理
-
-**Phase 2: 動畫系統（1.5 天）**
-- 實作 `requestAnimationFrame` 動畫迴圈
-- 實作雙向動畫（typing + deleting）
-- 整合 `prefers-reduced-motion` 偵測
-- 加入終端機游標閃爍效果
-- 調整打字/刪除速度參數
-- 單元測試 `useTypewriter`（包含刪除模式）
-
-**Phase 3: 輪播功能（1 天）**
-- 實作 `useCarousel` hook
-- 整合刪除動畫作為切換過渡
-- 建立 `CarouselIndicator` 元件
-- 整合 `usePageVisibility`
-- 實作互動暫停邏輯
-- 調整動畫時序（打字完成 → 停留 8 秒 → 刪除 → 切換）
-
-**Phase 4: 視覺整合（0.5 天）**
-- 整合至 `src/app/page.tsx`
-- 套用 Tailwind 樣式
-- 調整間距與動畫時序
-- Error Boundary 包裹
-
-**Phase 5: 無障礙與測試（1 天）**
-- 加入 ARIA 屬性
-- 實作鍵盤導航
-- 撰寫單元/整合測試
-- axe-core 檢測與修正
-
-**Phase 6: 效能優化（0.5 天）**
-- React DevTools Profiler 分析
-- 優化 re-render
-- Lighthouse 測試
-- 文檔撰寫
-
-**總計：約 5.5 個工作天**
-
-### File Structure
-
-```
-src/
-├── app/
-│   └── page.tsx                    # 修改：整合 DynamicHeroTitle
-├── components/
-│   └── hero/                       # 新增資料夾
-│       ├── DynamicHeroTitle.tsx    # 新增：主元件
-│       ├── CarouselIndicator.tsx   # 新增：指示器元件
-│       ├── __tests__/              # 新增：測試
-│       │   ├── DynamicHeroTitle.test.tsx
-│       │   ├── CarouselIndicator.test.tsx
-│       │   └── useTypewriter.test.ts
-│       └── index.ts                # 新增：匯出
-├── hooks/
-│   ├── useTypewriter.ts            # 新增：打字動畫 hook
-│   ├── useCarousel.ts              # 新增：輪播 hook
-│   └── usePageVisibility.ts        # 新增：分頁可見性 hook
-├── data/
-│   └── heroTitles.json             # 新增：文案資料
-└── types/
-    └── hero.ts                     # 新增：型別定義
-```
-
-### Dependencies
-
-無需新增外部套件，完全使用專案現有依賴：
-
-- `react` (19)
-- `typescript` (5)
-- `tailwindcss` (4)
-- `@testing-library/react` (開發環境)
-- `jest` (開發環境)
-
-### Migration Strategy
-
-**從現有靜態標題遷移至動態系統**：
-
-1. **第一階段：並存運行**
-   - 保留現有靜態標題程式碼
-   - 使用 feature flag 切換（環境變數 `ENABLE_DYNAMIC_HERO`）
-   - 小流量測試（10% 使用者）
-
-2. **第二階段：逐步推廣**
-   - 監控效能指標與錯誤率
-   - 若指標正常，逐步增加至 50% → 100%
-   - 收集使用者反饋
-
-3. **第三階段：完全切換**
-   - 移除 feature flag
-   - 刪除舊程式碼
-   - 更新文檔
-
----
-
-## Advanced Visual Effects Design（進階視覺特效設計）
-
-> **新增章節**：本章節基於 Requirement 6 的新需求，設計 Retro 閃爍游標與 Colour Shift Glitch 文字效果的技術實作方案。
-
-### Overview（特效概覽）
-
-新增兩個進階視覺特效來強化廢土終端機氛圍：
-
-1. **Retro 閃爍游標（Persistent Blinking Cursor）**
-   - 持續閃爍的方塊狀終端機游標
-   - 使用 CSS `@keyframes` 實作，無需 JavaScript
-   - 530ms 閃爍週期，瞬間切換（無漸變）
-
-2. **Colour Shift Glitch 效果（僅主標題）**
-   - RGB 色彩分離效果模擬 CRT 螢幕故障
-   - 使用 CSS `text-shadow` 產生紅/青色殘影
-   - JavaScript 隨機觸發（8-15秒間隔）
-   - **作用範圍**：僅主標題（h1），副標題與描述不受影響
-
-### Architecture Extension（架構擴展）
-
-#### 新增元件與 Hook
-
-```mermaid
-graph TB
-    subgraph "現有架構"
-        A[DynamicHeroTitle Component]
-        B[useTypewriter Hook]
-        C[useCarousel Hook]
-    end
-
-    subgraph "新增視覺特效層"
-        D[useGlitch Hook]
-        E[Cursor CSS Module]
-        F[Glitch CSS Module]
-    end
-
-    A --> B
-    A --> C
-    A --> D
-    A --> E
-    A --> F
-
-    D --> G[Random Interval Timer]
-    E --> H[CSS Animation: blink]
-    F --> I[CSS Animation: glitch]
-
-    style D fill:#f97316
-    style E fill:#f97316
-    style F fill:#f97316
-```
-
-#### 設計原則
-
-**延續現有架構優勢**：
-- ✅ 維持零外部庫依賴策略
-- ✅ 優先使用 CSS 動畫（GPU 加速）
-- ✅ 尊重 `prefers-reduced-motion` 無障礙設定
-- ✅ 整合 Page Visibility API（背景分頁暫停）
-- ✅ 最小化 React re-render
-
-**新特效設計考量**：
-- CSS 動畫優先於 JavaScript 動畫
-- 僅 glitch 觸發邏輯需要 JavaScript（輕量級）
-- 所有動畫在測試模式下可完全停用
-- 效能目標：維持 60 FPS，無額外 layout recalculation
-
-### Component Design（元件設計）
-
-#### 1. Retro 閃爍游標實作
-
-**視覺規格**：
-- 形狀：方塊（block cursor），寬度 `0.5em`
-- 顏色：繼承 `text-pip-boy-green`
-- 週期：530ms（on → off → on）
-- 定位：附加在主標題文字末端
-
-**CSS 實作**：
-
-```css
-/* src/components/hero/DynamicHeroTitle.module.css */
-
-/* Retro 終端機游標閃爍動畫 */
-@keyframes cursor-blink {
-  0%, 49% {
-    opacity: 1;
-  }
-  50%, 100% {
-    opacity: 0;
-  }
-}
-
-/* 主標題容器 - 添加游標 */
-.hero-title-with-cursor::after {
-  content: '';
-  display: inline-block;
-  width: 0.5em;
-  height: 1em;
-  margin-left: 0.1em;
-  background-color: currentColor; /* 繼承 pip-boy-green */
-  vertical-align: text-bottom;
-  animation: cursor-blink 530ms steps(2, jump-none) infinite;
-}
-
-/* 無障礙：停用動畫時游標保持顯示 */
-@media (prefers-reduced-motion: reduce) {
-  .hero-title-with-cursor::after {
-    animation: none;
-    opacity: 1;
-  }
-}
-
-/* 測試模式：完全隱藏游標 */
-.test-mode .hero-title-with-cursor::after {
-  display: none;
-}
-```
-
-**React Component 整合**：
-
-```typescript
-// src/components/hero/DynamicHeroTitle.tsx 修改片段
-
-<h1
-  className={cn(
-    "text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green",
-    "min-h-[4rem] md:min-h-[6rem] flex items-center justify-center",
-    styles['hero-title-with-cursor'], // 新增：CSS Module 類別
-    testMode && styles['test-mode']    // 測試模式控制
-  )}
-  aria-live="polite"
->
-  {displayTitle}
-</h1>
-```
-
-**技術決策理由**：
-- **為何使用 `::after` 而非獨立 `<span>`？**
-  - 減少 DOM 節點數量
-  - 游標樣式完全由 CSS 控制，無需 JavaScript
-  - 更易於維護與測試
-
-- **為何使用 `steps(2)` 而非 `ease` timing function？**
-  - Retro 終端機游標是「瞬間切換」，無漸變過渡
-  - `steps(2)` 確保只有「完全顯示」與「完全隱藏」兩個狀態
-  - 更符合真實終端機體驗
-
-#### 2. Colour Shift Glitch 效果實作
-
-**視覺規格**：
-- 作用範圍：**僅主標題（h1）**
-- 觸發頻率：8-15 秒隨機間隔
-- 持續時間：150-300ms
-- 色彩分離：
-  - 紅色殘影：`#ff0000`，水平偏移 +3px
-  - 青色殘影：`#00ffff`，水平偏移 -3px
-- 本體文字顏色：保持 `text-pip-boy-green` 不變
-
-**CSS 實作**：
-
-```css
-/* src/components/hero/DynamicHeroTitle.module.css */
-
-/* Colour Shift Glitch 效果 */
-@keyframes colour-shift-glitch {
-  0% {
-    text-shadow:
-      3px 0 0 rgba(255, 0, 0, 0.7),
-      -3px 0 0 rgba(0, 255, 255, 0.7);
-  }
-  20% {
-    text-shadow:
-      4px 0 0 rgba(255, 0, 0, 0.8),
-      -4px 0 0 rgba(0, 255, 255, 0.8);
-  }
-  40% {
-    text-shadow:
-      2px 0 0 rgba(255, 0, 0, 0.6),
-      -2px 0 0 rgba(0, 255, 255, 0.6);
-  }
-  60% {
-    text-shadow:
-      5px 0 0 rgba(255, 0, 0, 0.9),
-      -5px 0 0 rgba(0, 255, 255, 0.9);
-    transform: skewX(-0.5deg);
-  }
-  80% {
-    text-shadow:
-      3px 0 0 rgba(255, 0, 0, 0.7),
-      -3px 0 0 rgba(0, 255, 255, 0.7);
-    transform: skewX(0.5deg);
-  }
-  100% {
-    text-shadow: none;
-    transform: skewX(0);
-  }
-}
-
-/* Glitch 啟用類別 */
-.hero-title-glitching {
-  animation: colour-shift-glitch 250ms ease-in-out;
-  animation-fill-mode: forwards;
-}
-
-/* 無障礙：完全停用 glitch */
-@media (prefers-reduced-motion: reduce) {
-  .hero-title-glitching {
-    animation: none !important;
-    text-shadow: none !important;
-    transform: none !important;
-  }
-}
-```
-
-**useGlitch Hook 實作**：
-
-```typescript
-// src/hooks/useGlitch.ts
-
-import { useEffect, useState, useRef } from 'react';
-import { usePageVisibility } from './usePageVisibility';
-
-export interface UseGlitchOptions {
-  /** 最小觸發間隔（毫秒） */
-  minInterval?: number;
-  /** 最大觸發間隔（毫秒） */
-  maxInterval?: number;
-  /** 是否啟用 glitch（預設 true） */
-  enabled?: boolean;
-  /** 是否為行動裝置（降低觸發頻率） */
-  isMobile?: boolean;
-}
-
-export function useGlitch({
-  minInterval = 8000,
-  maxInterval = 15000,
-  enabled = true,
-  isMobile = false,
-}: UseGlitchOptions = {}) {
-  const [isGlitching, setIsGlitching] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isVisible = usePageVisibility();
-
-  // 偵測 prefers-reduced-motion
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
-
-  useEffect(() => {
-    // 停用條件：未啟用、偏好減少動畫、分頁隱藏
-    if (!enabled || prefersReducedMotion || !isVisible) {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-      setIsGlitching(false);
-      return;
-    }
-
-    // 行動裝置降低觸發頻率
-    const adjustedMinInterval = isMobile ? minInterval * 2 : minInterval;
-    const adjustedMaxInterval = isMobile ? maxInterval * 2 : maxInterval;
-
-    const scheduleNextGlitch = () => {
-      const randomDelay =
-        Math.random() * (adjustedMaxInterval - adjustedMinInterval) + adjustedMinInterval;
-
-      timeoutRef.current = setTimeout(() => {
-        setIsGlitching(true);
-
-        // Glitch 持續 250ms 後重置
-        setTimeout(() => {
-          setIsGlitching(false);
-          scheduleNextGlitch(); // 排程下一次觸發
-        }, 250);
-      }, randomDelay);
-    };
-
-    scheduleNextGlitch();
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [enabled, prefersReducedMotion, isVisible, minInterval, maxInterval, isMobile]);
-
-  return { isGlitching };
-}
-```
-
-**React Component 整合**：
-
-```typescript
-// src/components/hero/DynamicHeroTitle.tsx 修改片段
-
-import { useGlitch } from '@/hooks/useGlitch';
-import styles from './DynamicHeroTitle.module.css';
-import { cn } from '@/lib/utils'; // 假設有 classnames 工具
-
-export function DynamicHeroTitle({ /* props */ }) {
-  // ... 現有狀態與 hooks
-
-  // 偵測行動裝置
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    setIsMobile(window.innerWidth < 768);
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // Glitch 效果 hook（僅主標題使用）
-  const { isGlitching } = useGlitch({
-    minInterval: 8000,
-    maxInterval: 15000,
-    enabled: !testMode && phase !== 'deleting-all', // 刪除動畫期間停用
-    isMobile,
-  });
-
-  return (
-    <div className="text-center mb-12">
-      {/* 主標題 - 套用 glitch 效果 */}
-      <h1
-        className={cn(
-          "text-5xl md:text-7xl font-bold mb-6 font-mono tracking-tight text-pip-boy-green",
-          "min-h-[4rem] md:min-h-[6rem] flex items-center justify-center",
-          styles['hero-title-with-cursor'], // Retro 游標
-          isGlitching && styles['hero-title-glitching'], // Glitch 效果
-          testMode && styles['test-mode']
-        )}
-        aria-live="polite"
-      >
-        {displayTitle}
-      </h1>
-
-      {/* 副標題 - 無 glitch 效果 */}
-      <p className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
-        {displaySubtitle}
-      </p>
-
-      {/* 描述段落 - 無 glitch 效果 */}
-      <p className="text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
-        {displayDescription}
-      </p>
-
-      {/* ... 輪播指示器 ... */}
-    </div>
+  // 驗證 CSS 屬性
+  const textShadow = await heroTitle.evaluate(el =>
+    window.getComputedStyle(el).textShadow
   );
-}
+  expect(textShadow).toContain('rgb(255, 0, 0)');
+  expect(textShadow).toContain('rgb(0, 0, 255)');
+});
 ```
 
-### Requirements Mapping Update（需求對應更新）
+### Performance Tests（效能基準測試）
 
-**新增對應**：
+**測試範圍**: CRT 效果對頁面效能影響
 
-| 設計元件 | 對應需求 | 說明 |
-|---------|---------|------|
-| **Cursor CSS Animation** | Req 6 (AC 1-9) | Retro 閃爍游標，CSS `::after` + `@keyframes` 實作 |
-| **`useGlitch` Hook** | Req 6 (AC 1-13) | Colour Shift Glitch 觸發邏輯與隨機計時器 |
-| **Glitch CSS Animation** | Req 6 (AC 1-13) | RGB 色彩分離效果，僅套用於主標題 |
-| **Accessibility Integration** | Req 6 (AC 9, 13) | 尊重 `prefers-reduced-motion`，分頁暫停 |
+1. **First Contentful Paint (FCP)**
+   - 目標: <1.5s
+   - 驗證 CRT 效果不增加首屏渲染時間（純 CSS 無延遲）
 
-### Testing Strategy Extension（測試策略擴展）
+2. **Frame Rate (FPS)**
+   - 目標: ≥60 FPS
+   - 驗證打字動畫 + CRT 效果同時執行時 FPS 穩定
+   - 驗證動態 glitch 觸發時 FPS 不低於 55
 
-#### 新增單元測試
+3. **Paint 次數**
+   - 驗證 RGB 網格不觸發額外 repaint（使用 `will-change` 優化）
+   - 驗證 `text-shadow` 變化僅影響文字層
+
+**工具**: Lighthouse + Chrome DevTools Performance
 
 ```typescript
-// src/hooks/__tests__/useGlitch.test.ts
-
-describe('useGlitch', () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  it('should trigger glitch effect within specified interval', () => {
-    const { result } = renderHook(() =>
-      useGlitch({ minInterval: 1000, maxInterval: 2000 })
-    );
-
-    expect(result.current.isGlitching).toBe(false);
-
-    // 快進至最大間隔
-    act(() => {
-      jest.advanceTimersByTime(2000);
-    });
-
-    expect(result.current.isGlitching).toBe(true);
-
-    // Glitch 持續 250ms 後重置
-    act(() => {
-      jest.advanceTimersByTime(250);
-    });
-
-    expect(result.current.isGlitching).toBe(false);
-  });
-
-  it('should not trigger glitch when prefersReducedMotion is true', () => {
-    window.matchMedia = jest.fn().mockImplementation(query => ({
-      matches: query === '(prefers-reduced-motion: reduce)',
-      media: query,
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-    }));
-
-    const { result } = renderHook(() => useGlitch());
-
-    act(() => {
-      jest.advanceTimersByTime(20000); // 遠超過最大間隔
-    });
-
-    expect(result.current.isGlitching).toBe(false);
-  });
-
-  it('should pause glitch timer when page is hidden', () => {
-    const { result } = renderHook(() => useGlitch());
-
-    // 模擬分頁切換至背景
-    act(() => {
-      Object.defineProperty(document, 'visibilityState', {
-        value: 'hidden',
-        writable: true,
+// 範例測試
+test('CRT 效果不影響頁面效能', async ({ page }) => {
+  const metrics = await page.evaluate(() => {
+    return new Promise(resolve => {
+      const observer = new PerformanceObserver(list => {
+        const entries = list.getEntries();
+        resolve({
+          fcp: entries.find(e => e.name === 'first-contentful-paint')?.startTime,
+        });
       });
-      document.dispatchEvent(new Event('visibilitychange'));
+      observer.observe({ entryTypes: ['paint'] });
     });
-
-    act(() => {
-      jest.advanceTimersByTime(20000);
-    });
-
-    expect(result.current.isGlitching).toBe(false);
   });
 
-  it('should reduce glitch frequency on mobile', () => {
-    const { result } = renderHook(() =>
-      useGlitch({ minInterval: 8000, maxInterval: 15000, isMobile: true })
-    );
-
-    // 行動裝置間隔應為 16000-30000ms
-    act(() => {
-      jest.advanceTimersByTime(15000); // 桌面版會觸發，行動版不會
-    });
-
-    expect(result.current.isGlitching).toBe(false);
-
-    act(() => {
-      jest.advanceTimersByTime(15000); // 總共 30000ms，行動版應觸發
-    });
-
-    // 此時可能觸發（取決於隨機值）
-  });
+  expect(metrics.fcp).toBeLessThan(1500);
 });
 ```
 
-#### E2E 測試擴展
+## Security Considerations
 
-```typescript
-// e2e/hero-section-visual-effects.spec.ts
+**本功能無安全風險評估需求**，原因如下：
 
-test.describe('Hero Section Visual Effects', () => {
-  test('should display persistent blinking cursor on title', async ({ page }) => {
-    await page.goto('/');
+1. **純 CSS 實現**: 無 JavaScript 邏輯，無 XSS 攻擊面
+2. **無使用者輸入**: CRT 參數由 CSS 變數硬編碼，無動態注入風險
+3. **無外部資源**: 不載入外部圖片或字型，無 CORS 或 CSP 問題
+4. **無資料傳輸**: 不涉及 API 請求或資料存儲
 
-    const title = page.locator('h1.text-pip-boy-green');
-    await expect(title).toBeVisible();
+**隱私保護**:
+- `prefers-reduced-motion` 檢測為瀏覽器原生 API，不傳送資料至伺服器
+- 無使用者行為追蹤或分析
 
-    // 驗證游標 CSS 類別存在
-    await expect(title).toHaveClass(/hero-title-with-cursor/);
+## Performance & Scalability
 
-    // 檢查 ::after 偽元素（需要 JS execution）
-    const hasCursor = await page.evaluate(() => {
-      const h1 = document.querySelector('h1');
-      const style = window.getComputedStyle(h1, '::after');
-      return style.content !== 'none';
-    });
+### Target Metrics
 
-    expect(hasCursor).toBe(true);
-  });
+| 指標 | 目標值 | 測量方法 |
+|------|--------|---------|
+| FCP (First Contentful Paint) | <1.5s | Lighthouse |
+| LCP (Largest Contentful Paint) | <2.5s | Lighthouse |
+| FPS (Frame Rate) | ≥60 | Chrome DevTools Performance |
+| CLS (Cumulative Layout Shift) | <0.1 | Lighthouse |
+| 額外 CSS 大小 | <2KB | Webpack Bundle Analyzer |
 
-  test('glitch effect should trigger randomly', async ({ page }) => {
-    await page.goto('/');
+### Scaling Approaches
 
-    const title = page.locator('h1.text-pip-boy-green');
+**水平擴展**（不適用）:
+- CRT 效果為純前端視覺，無需後端資源
 
-    // 等待最多 20 秒觀察 glitch 效果
-    const glitchTriggered = await Promise.race([
-      page.waitForSelector('.hero-title-glitching', { timeout: 20000 }).then(() => true),
-      new Promise(resolve => setTimeout(() => resolve(false), 20000)),
-    ]);
+**垂直擴展**（瀏覽器效能最佳化）:
+1. **GPU 加速**:
+   - 使用 `will-change: text-shadow` 提示瀏覽器優化
+   - 使用 `transform: translateZ(0)` 強制 GPU 加速（如需）
 
-    // 由於是隨機觸發，我們只驗證機制存在，不強制要求觸發
-    // 實際測試中可使用 test.fixme() 標記為已知問題
-    expect(typeof glitchTriggered).toBe('boolean');
-  });
+2. **減少 Repaint**:
+   - RGB 網格使用 `position: absolute` 脫離文檔流
+   - 靜態 `text-shadow` 不觸發 reflow
 
-  test('should respect prefers-reduced-motion', async ({ page, context }) => {
-    // 設定 prefers-reduced-motion
-    await context.emulateMedia({ reducedMotion: 'reduce' });
+3. **降低複雜度**:
+   - 限制 `linear-gradient` 色階數量（最多 4 個）
+   - 避免使用 blur 模糊效果（高成本）
 
-    await page.goto('/');
+### Caching Strategies
 
-    const title = page.locator('h1.text-pip-boy-green');
+- **CSS Module 快取**: Webpack 生成的 CSS 檔案包含 hash，永久快取
+- **瀏覽器渲染快取**: `text-shadow` 與 `background-image` 由瀏覽器自動快取於 GPU 記憶體
 
-    // 等待足夠時間，glitch 不應觸發
-    await page.waitForTimeout(20000);
+### Optimization Techniques
 
-    const glitchTriggered = await title.evaluate(el =>
-      el.classList.contains('hero-title-glitching')
-    );
-
-    expect(glitchTriggered).toBe(false);
-  });
-});
-```
-
-### Performance Impact Analysis（效能影響分析）
-
-**預期效能影響**：
-
-| 項目 | 影響評估 | 對策 |
-|-----|---------|-----|
-| **CSS 動畫（游標閃爍）** | 極低（<0.1% CPU） | GPU 加速，無 layout recalculation |
-| **CSS 動畫（glitch）** | 低（0.3-0.5% CPU，觸發時） | 短暫觸發（250ms），使用 `text-shadow` 避免 repaint |
-| **JavaScript 計時器** | 極低（<0.05% CPU） | 僅觸發控制，無高頻輪詢 |
-| **記憶體使用** | +10KB（CSS 檔案） | 可接受範圍 |
-| **LCP 影響** | 0ms | 無阻塞渲染 |
-| **CLS 影響** | 0 | 無佈局偏移 |
-
-**效能驗證方法**：
-
-```typescript
-// src/utils/performanceMonitor.ts
-
-export function measureVisualEffectsPerformance() {
-  if (typeof window === 'undefined') return;
-
-  // 監控 CPU 使用（Long Tasks API）
-  if ('PerformanceObserver' in window) {
-    const observer = new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (entry.duration > 50) {
-          console.warn('[Performance] Long task detected:', entry);
-        }
-      }
-    });
-
-    observer.observe({ entryTypes: ['longtask'] });
-  }
-
-  // 監控動畫幀率
-  let lastTime = performance.now();
-  let frames = 0;
-
-  const checkFPS = (currentTime: number) => {
-    frames++;
-    if (currentTime >= lastTime + 1000) {
-      const fps = Math.round((frames * 1000) / (currentTime - lastTime));
-      if (fps < 55) {
-        console.warn(`[Performance] Low FPS detected: ${fps}`);
-      }
-      frames = 0;
-      lastTime = currentTime;
-    }
-    requestAnimationFrame(checkFPS);
-  };
-
-  requestAnimationFrame(checkFPS);
-}
-```
-
-### Migration from Current Implementation（從現有實作遷移）
-
-**現況分析**：
-
-根據 `src/components/hero/DynamicHeroTitle.tsx:410` 的現有實作：
-- 已有基礎游標實作（僅打字階段顯示，使用 Tailwind `animate-pulse`）
-- 打字動畫使用 `requestAnimationFrame`
-- 已整合 Page Visibility API
-
-**遷移步驟**：
-
-1. **Phase 1: 替換游標實作（<1 小時）**
-   ```typescript
-   // Before (DynamicHeroTitle.tsx:361-366)
-   {!testMode && phase === 'typing-title' && (
-     <span className="inline-block w-2 h-8 md:h-12 ml-1 bg-pip-boy-green animate-pulse" aria-hidden="true" />
-   )}
-
-   // After: 移除此段，改用 CSS Module
-   // h1 元素添加 className={styles['hero-title-with-cursor']}
-   ```
-
-2. **Phase 2: 整合 Glitch 效果（<2 小時）**
-   - 建立 `DynamicHeroTitle.module.css`
-   - 實作 `useGlitch` hook
-   - 修改 h1 元素添加條件 className
-
-3. **Phase 3: 測試與調整（<1 小時）**
-   - 單元測試 `useGlitch`
-   - E2E 測試視覺效果
-   - 效能驗證（Lighthouse、Chrome DevTools）
-
-**總計遷移時間**：約 4 小時
-
-### File Structure Extension（檔案結構擴展）
-
-```diff
-src/
-├── components/
-│   └── hero/
-│       ├── DynamicHeroTitle.tsx           # 修改：整合 glitch hook 與 CSS
-+│       ├── DynamicHeroTitle.module.css   # 新增：視覺特效樣式
-│       ├── CarouselIndicator.tsx
-│       └── index.ts
-├── hooks/
-│   ├── useTypewriter.ts
-│   ├── useCarousel.ts
-│   ├── usePageVisibility.ts
-+│   ├── useGlitch.ts                      # 新增：Glitch 觸發邏輯
-+│   └── __tests__/
-+│       └── useGlitch.test.ts             # 新增：單元測試
-```
-
-### Design Decision Records（設計決策記錄）
-
-**決策 1：為何游標使用 CSS 而非 React state？**
-
-- **背景**：游標需要持續閃爍（530ms 週期），可用 React state + `setInterval` 或純 CSS 實作
-- **決策**：使用純 CSS `@keyframes` + `::after` 偽元素
-- **理由**：
-  1. CSS 動畫由瀏覽器 compositor thread 處理，無阻塞主執行緒
-  2. 避免每 530ms 觸發一次 React re-render
-  3. 更易於停用（`prefers-reduced-motion`）
-  4. 程式碼更簡潔（<10 行 CSS vs. 20+ 行 React）
-
-**決策 2：為何 Glitch 只作用於主標題？**
-
-- **背景**：需求 6 AC#2 明確要求「僅主標題」
-- **決策**：僅在 h1 元素套用 `isGlitching` 條件 className
-- **理由**：
-  1. 主標題是視覺焦點，glitch 效果最顯著
-  2. 副標題與描述套用 glitch 會過於雜亂
-  3. 降低效能開銷（僅一個元素需要 `text-shadow` 計算）
-  4. 符合 Fallout 終端機美學：主要顯示器故障，次要文字正常
-
-**決策 3：為何行動裝置降低 Glitch 頻率？**
-
-- **背景**：需求 6 AC#10 要求行動裝置節省效能
-- **決策**：`isMobile` 時觸發間隔 x2
-- **理由**：
-  1. 行動裝置 CPU/GPU 效能較低
-  2. 電池續航考量
-  3. 小螢幕上 glitch 效果視覺衝擊更強，降低頻率不影響體驗
-  4. 實測：15-25 秒間隔在行動裝置上體驗良好
+1. **Critical CSS**: CRT 相關樣式內嵌於 `<head>` 確保首屏可見
+2. **Lazy Loading**: 無需延遲載入（CRT 效果為核心視覺，必須立即呈現）
+3. **Code Splitting**: CSS Module 自動與元件一同分割載入
 
 ---
 
-**設計文件版本**：v2.0（新增進階視覺特效設計）
-**最後更新日期**：2025-10-09
-**設計者**：Claude (Anthropic)
-**審核狀態**：待審核（Extension Design）
+**最後更新**: 2025-10-09
+**版本**: 2.0.0 (新增 Requirement 7: CRT 螢幕視覺特效)

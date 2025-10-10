@@ -357,3 +357,43 @@ export async function generateReveal(
 
   return buffer;
 }
+
+/**
+ * 生成 UI 懸停音效
+ * 使用極短、柔和的高頻音提供微妙的音訊反饋
+ * 需求: 為 UI 互動提供輕微的音效反饋，不干擾用戶體驗
+ *
+ * @param audioContext - AudioContext 實例
+ * @param destination - 音訊目標節點
+ * @param options - 音效選項
+ * @returns AudioBuffer
+ */
+export async function generateUIHover(
+  audioContext: AudioContext,
+  destination: AudioNode,
+  options: SoundGeneratorOptions = {}
+): Promise<AudioBuffer> {
+  if (!audioContext) {
+    throw new Error('AudioContext is required');
+  }
+
+  const frequency = Math.max(0, options.frequency || 1200); // 較高頻率，更柔和
+  const duration = Math.max(0.01, options.duration || 0.05); // 極短持續時間
+  const volume = Math.min(1, Math.max(0, options.volume || 0.2)); // 低音量
+
+  const sampleRate = audioContext.sampleRate;
+  const length = sampleRate * duration;
+  const buffer = audioContext.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // 生成柔和的 sine wave with 極快 envelope
+  for (let i = 0; i < length; i++) {
+    const t = i / sampleRate;
+    // 極快衰減的 envelope (decay rate = 50)
+    const envelope = Math.exp(-t * 50);
+    // Pure sine wave 產生乾淨、柔和的音色
+    data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+
+  return buffer;
+}

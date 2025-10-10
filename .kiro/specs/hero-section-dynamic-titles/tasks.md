@@ -1,338 +1,254 @@
 # Implementation Plan
 
-## 基礎架構與資料層
+## 專案概述
 
-- [x] 1. 建立 TypeScript 型別定義與 JSON 資料結構
-  - 在 `src/types/hero.ts` 建立 `HeroTitle`、`HeroTitlesCollection` interfaces
-  - 定義 `FALLBACK_TITLE` 常數作為降級預設文案
-  - 建立 `src/data/heroTitles.json` 並填入 5 組文案（根據 design.md 範例）
-  - 確保 JSON 包含 version、defaultConfig、titles 三個根欄位
-  - 撰寫簡單的型別驗證測試確保 JSON 符合 interface 定義
-  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+本實作計畫為首頁 Hero Section 動態標題系統新增完整的 CRT 螢幕視覺特效（Requirement 7），包含 RGB 像素網格疊加與靜態色彩分離效果。這些純 CSS 特效將與現有的打字機動畫、閃爍游標和動態 glitch 效果整合，創造完整的 Pip-Boy 終端機復古美學體驗。
 
-- [x] 2. 實作資料載入與驗證邏輯
-  - 在 `src/lib/heroTitlesLoader.ts` 建立 `loadHeroTitles()` 函式
-  - 實作 `validateHeroTitles(data: unknown)` 函式進行 runtime validation
-  - 處理 JSON 解析錯誤、網路錯誤、驗證錯誤三種錯誤情境
-  - 實作錯誤時返回 `FALLBACK_TITLE` 的降級邏輯
-  - 開發模式下加入 console.warn 提示無效資料
-  - 撰寫 `heroTitlesLoader.test.ts` 測試各種錯誤情境與降級行為
-  - _Requirements: 1.6, 1.7, 5.10_
+**實作策略**: 純 CSS 擴充現有 `DynamicHeroTitle.module.css`，無需修改 React 元件邏輯。
 
-## 核心動畫 Hooks
+---
 
-- [x] 3. 實作 usePageVisibility Hook
-  - 在 `src/hooks/usePageVisibility.ts` 建立 hook
-  - 監聽 `visibilitychange` 事件並返回 `isVisible: boolean`
-  - 處理事件監聽器的正確清理（useEffect cleanup）
-  - 撰寫 `usePageVisibility.test.ts` 測試分頁切換行為
-  - Mock `document.visibilityState` 驗證狀態變更
-  - _Requirements: 3.10, 3.11, 6.3, 6.4_
+## 任務清單
 
-- [x] 4. 實作 useTypewriter Hook（打字模式與刪除模式已合併實作）
-  - 在 `src/hooks/useTypewriter.ts` 建立基礎 hook 結構
-  - 實作 typing 模式的 `requestAnimationFrame` 動畫迴圈
-  - 使用 `useRef` 追蹤 `charIndexRef`、`animationFrameIdRef`、`lastTimestampRef`
-  - 實作 `startTyping()` 方法開始打字動畫
-  - 實作 `onTypingComplete` 回調機制
-  - 撰寫 `useTypewriter.test.ts` 測試打字動畫邏輯
-  - _Requirements: 2.1, 2.2, 2.3, 2.4, 6.2_
+- [ ] 1. 建立 CSS 變數架構以支援 CRT 視覺參數
+- [ ] 1.1 定義 CRT 視覺效果的 CSS 變數系統
+  - 在 `DynamicHeroTitle.module.css` 的 `:root` 或元件層級定義所有 CRT 相關變數
+  - 定義 `--crt-grid-size: 3px` 控制 RGB 網格解析度
+  - 定義 `--crt-red-offset: 2px` 與 `--crt-blue-offset: -2px` 控制色彩分離偏移
+  - 定義 `--crt-shadow-opacity: 0.9` 控制靜態陰影透明度
+  - 定義 `--crt-grid-opacity-vertical: 0.2` 與 `--crt-grid-opacity-horizontal: 0.7` 控制網格層透明度
+  - 確保所有變數使用 kebab-case 命名並遵循 `--crt-{category}-{property}` 模式
+  - _Requirements: 7.26_
 
-- [x] 5. 擴充 useTypewriter Hook（刪除模式）
-  - 在現有 hook 中加入 deleting 模式邏輯
-  - 實作 `startDeleting()` 方法開始刪除動畫
-  - 調整動畫迴圈支援雙向操作（增加/減少 charIndex）
-  - 根據 `animationMode` 使用不同速度（typingSpeed vs deletingSpeed）
-  - 實作 `onDeletingComplete` 回調機制
-  - 擴充測試涵蓋刪除模式與 typing/deleting 切換
-  - _Requirements: 2.1, 2.2, 2.3, 3.3, 6.2_
+- [ ] 1.2 為 CSS 變數提供 Fallback 預設值以支援舊版瀏覽器
+  - 在每個使用 CSS 變數的屬性前提供 hardcoded fallback 值
+  - 範例: `background-size: 3px 3px;` 後再加上 `background-size: var(--crt-grid-size) var(--crt-grid-size);`
+  - 確保即使 CSS Variables 不支援，視覺效果仍能正常降級
+  - _Requirements: 7.22_
 
-- [x] 6. 完善 useTypewriter Hook 功能
-  - 實作 `pause()`、`resume()`、`reset()` 方法
-  - 整合 `prefers-reduced-motion` 媒體查詢偵測
-  - 當 prefersReducedMotion 為 true 時跳過動畫直接顯示完整文字
-  - 實作 `progress` 計算（0-1 之間）
-  - 確保 `cancelAnimationFrame` 正確清理資源
-  - 擴充測試涵蓋無障礙模式與資源清理
-  - _Requirements: 2.5, 2.6, 2.7, 2.9, 6.3, 6.4_
+- [ ] 2. 實作 RGB 像素網格疊加效果
+- [ ] 2.1 建立標題容器的網格疊加層基礎結構
+  - 在 `DynamicHeroTitle.module.css` 新增 `.hero-title-container` 樣式類別
+  - 設定 `position: relative` 以承載 `::after` pseudo-element
+  - 確保容器有明確的邊界範圍（top/right/bottom/left）
+  - _Requirements: 7.1, 7.5_
 
-- [x] 7. 實作 useCarousel Hook（基礎輪播）
-  - 在 `src/hooks/useCarousel.ts` 建立 hook
-  - 實作 `currentIndex` 狀態管理與循環邏輯
-  - 實作 `goToIndex()`、`next()`、`previous()` 方法
-  - 實作自動播放計時器（使用 setTimeout）
-  - 實作 `pause()` 與 `resume()` 控制自動播放
-  - 撰寫 `useCarousel.test.ts` 測試輪播邏輯
-  - _Requirements: 3.1, 3.2, 3.6_
+- [ ] 2.2 使用 ::after pseudo-element 創建 RGB 網格
+  - 在 `.hero-title-container::after` 定義 pseudo-element
+  - 設定 `content: ''` 與 `position: absolute` 填滿整個容器（`top: 0; right: 0; bottom: 0; left: 0`）
+  - 設定 `pointer-events: none` 避免干擾文字選取與互動
+  - 設定 `z-index: 1` 確保疊加層在文字下方（文字應為 z-index: 2）
+  - _Requirements: 7.1, 7.6_
 
-- [x] 8. 整合 useCarousel 與 usePageVisibility
-  - 在 useCarousel 中整合 usePageVisibility hook
-  - 當 `isVisible === false` 時自動暫停計時器
-  - 當頁面恢復可見時自動恢復計時器
-  - 確保計時器正確清理（cleanup function）
-  - 擴充測試驗證分頁切換時的暫停/恢復行為
-  - _Requirements: 3.10, 3.11, 6.3_
+- [ ] 2.3 實作雙 linear-gradient 組合生成 RGB 子像素網格
+  - 在 `background-image` 屬性定義兩個 `linear-gradient`
+  - 第一層（垂直掃描線）: `linear-gradient(to top, rgba(255,255,255,0.2) 33.33%, rgba(255,255,255,0.4) 33.33%, rgba(255,255,255,0.4) 66.67%, rgba(255,255,255,0.6) 66.67%)`
+  - 第二層（水平 RGB）: `linear-gradient(to right, rgba(255,0,0,0.7) 33.33%, rgba(0,255,0,0.7) 33.33%, rgba(0,255,0,0.7) 66.67%, rgba(0,0,255,0.7) 66.67%)`
+  - 使用 CSS 變數替換 hardcoded 透明度數值（`var(--crt-grid-opacity-vertical)` 等）
+  - _Requirements: 7.2_
 
-- [x] 9. 實作互動暫停邏輯
-  - 在 useCarousel 中監聽 `mousemove` 與 `touchstart` 事件
-  - 實作互動時暫停自動播放，5 秒無互動後恢復
-  - 使用 debounce 邏輯避免過度觸發
-  - 確保事件監聽器正確清理
-  - 擴充測試驗證互動暫停與恢復時序
-  - _Requirements: 3.7, 3.8, 6.4_
+- [ ] 2.4 配置網格尺寸與重複模式
+  - 設定 `background-size: var(--crt-grid-size) var(--crt-grid-size)` (3px × 3px)
+  - 設定 `background-repeat: repeat` 確保網格鋪滿整個容器
+  - _Requirements: 7.3_
 
-## UI 元件實作
+- [ ] 2.5 套用混合模式實現網格與文字融合
+  - 設定 `mix-blend-mode: multiply` 讓網格與底層內容自然融合
+  - 驗證在深色背景 + Pip-Boy 綠色文字的組合下效果正確
+  - _Requirements: 7.4_
 
-- [x] 10. 實作 CarouselIndicator 元件（基礎 UI）
-  - 在 `src/components/hero/CarouselIndicator.tsx` 建立元件
-  - 實作 props interface（totalCount, currentIndex, onDotClick, visible）
-  - 渲染指定數量的指示器圓點（方形，符合 Terminal 風格）
-  - 套用 Pip-Boy 綠色主題（pip-boy-green CSS 變數）
-  - 處理 `visible === false` 時不渲染元件
-  - 撰寫 `CarouselIndicator.test.tsx` 測試基礎渲染邏輯
-  - _Requirements: 3.4, 3.5, 4.8_
+- [ ] 3. 實作靜態色彩分離效果（基礎層）
+- [ ] 3.1 為主標題新增靜態色彩分離樣式
+  - 在 `DynamicHeroTitle.module.css` 新增 `.hero-title-text` 樣式類別
+  - 定義雙層 `text-shadow` 陰影效果：
+    - 紅色陰影: `var(--crt-red-offset) 0 0 rgba(255, 0, 0, var(--crt-shadow-opacity))`
+    - 藍色陰影: `var(--crt-blue-offset) 0 0 rgba(0, 0, 255, var(--crt-shadow-opacity))`
+  - 設定 `position: relative` 與 `z-index: 2` 確保文字在網格之上
+  - _Requirements: 7.9, 7.10_
 
-- [x] 11. 加入 CarouselIndicator 無障礙支援
-  - 在容器加入 `role="tablist"` 與 `aria-label`
-  - 每個圓點加入 `role="tab"`、`aria-label`、`tabIndex={0}`
-  - 當前活躍圓點加入 `aria-current="true"`
-  - 實作 `onKeyDown` 處理 Enter 與 Space 鍵切換
-  - 套用符合 WCAG AA 標準的 focus ring 樣式
-  - 擴充測試驗證 ARIA 屬性與鍵盤導航
-  - _Requirements: 5.3, 5.4, 5.6, 5.7, 5.8_
+- [ ] 3.2 為副標題與描述段落新增較弱的色彩分離效果
+  - 新增 `.hero-subtitle-text` 與 `.hero-description-text` 樣式類別
+  - 套用與主標題相同的 `text-shadow` 結構，但透明度降至 `calc(var(--crt-shadow-opacity) * 0.5)`
+  - 確保視覺層次分明：主標題效果強烈，副標題/描述較為 subtle
+  - _Requirements: 7.11_
 
-- [x] 12. 實作 DynamicHeroTitle 元件（資料載入）
-  - 在 `src/components/hero/DynamicHeroTitle.tsx` 建立元件
-  - 定義 props interface（defaultIndex, autoPlay, autoPlayInterval, typingSpeed, testMode）
-  - 使用 `loadHeroTitles()` 載入文案資料
-  - 實作 loading、error、loaded 三種狀態管理
-  - 錯誤時使用 FALLBACK_TITLE 作為降級
-  - 撰寫 `DynamicHeroTitle.test.tsx` 測試資料載入流程
-  - _Requirements: 1.1, 1.7, 5.10, 6.1_
+- [ ] 3.3 確保靜態與動態色彩分離效果的層次協作
+  - 驗證靜態 `text-shadow` 作為基礎層持續可見
+  - 確認當 `.hero-title-glitching` 動態 glitch 類別觸發時，CSS specificity 正確覆蓋靜態效果
+  - 確認 glitch 動畫結束後，靜態效果自動恢復
+  - _Requirements: 7.13, 7.14, 7.15_
 
-- [x] 13. 整合 useTypewriter 至 DynamicHeroTitle
-  - 在 DynamicHeroTitle 中整合 useTypewriter hook
-  - 將當前文案的 title 傳入 hook
-  - 渲染 `displayText` 至 h1 標籤
-  - 套用正確的 Tailwind 樣式（text-5xl md:text-7xl font-bold mb-6 font-mono text-pip-boy-green）
-  - 實作終端機游標效果（閃爍的綠色方塊）
-  - 擴充測試驗證打字動畫渲染
-  - _Requirements: 2.1, 2.2, 2.3, 2.8, 4.2, 4.3_
+- [ ] 4. 整合 CRT 效果與現有視覺系統
+- [ ] 4.1 確保 CRT 效果與 Requirement 6 的 Retro 游標共存
+  - 驗證 `.typing-cursor-inline` 游標樣式不受 RGB 網格干擾
+  - 確認游標閃爍動畫在 CRT 效果上方正常運作
+  - 測試游標 z-index 層次正確（應高於網格與文字）
+  - _Requirements: 7.18, 整合驗證_
 
-- [x] 14. 渲染副標題與描述段落
-  - 在打字動畫完成後立即顯示 subtitle
-  - 套用正確樣式（text-xl md:text-2xl mb-8 text-pip-boy-green/80）
-  - 使用淡入效果（CSS transition）顯示 description
-  - 套用正確樣式（text-sm font-mono text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed）
-  - 確保文字正確保留特殊字符（™、©、®）
-  - 擴充測試驗證三階段渲染（title → subtitle → description）
-  - _Requirements: 2.5, 2.6, 4.4, 4.5, 1.6_
+- [ ] 4.2 驗證 CRT 效果與動態 Glitch 效果的視覺協作
+  - 測試靜態色彩分離（基礎層）與動態 glitch（增強層）同時作用的視覺效果
+  - 確認 glitch 觸發時（8-15秒隨機間隔）視覺過渡平滑無衝突
+  - 驗證 glitch 的 `transform: skewX()` 傾斜效果與 RGB 網格無視覺干擾
+  - _Requirements: 7.13, 7.21_
 
-- [x] 15. 整合 useCarousel 至 DynamicHeroTitle
-  - 在 DynamicHeroTitle 中整合 useCarousel hook
-  - 根據 `currentIndex` 取得對應文案資料
-  - 實作動畫生命週期：打字完成 → 停留 8 秒 → 開始刪除
-  - 刪除完成後透過 useCarousel 切換至下一組索引
-  - 切換後重新開始打字動畫
-  - 擴充測試驗證完整動畫週期
-  - _Requirements: 3.1, 3.2, 3.3, 3.6_
+- [ ] 4.3 確保輪播切換時 CRT 效果持續可見
+  - 測試文案輪播切換動畫（淡入淡出）不中斷 RGB 網格顯示
+  - 驗證新標題載入時靜態色彩分離自動套用
+  - 確認 CRT 效果在整個輪播生命週期中保持一致
+  - _Requirements: 7.20_
 
-- [x] 16. 渲染 CarouselIndicator 並處理互動
-  - 在 DynamicHeroTitle 中渲染 CarouselIndicator 元件
-  - 傳入正確的 props（totalCount, currentIndex, onDotClick）
-  - 實作 onDotClick 邏輯：中斷當前動畫 → 快速刪除 → 切換索引 → 打字新文案
-  - 確保單一文案時隱藏指示器
-  - 驗證指示器位置與間距（標題下方，mb-12）
-  - 擴充測試驗證手動切換流程
-  - _Requirements: 3.4, 3.5, 3.6, 3.9, 4.9_
+- [ ] 4.4 驗證 CRT 效果與現有掃描線效果（scanline effect）的視覺和諧
+  - 測試 Requirement 4 中提到的既有掃描線效果與新的 RGB 網格同時顯示的視覺效果
+  - 確認兩者不產生視覺衝突或疊加過度（可能需要調整透明度或移除舊掃描線）
+  - 如有衝突，決定保留哪個效果或如何調和
+  - _Requirements: 7.25_
 
-- [x] 17. 實作無障礙屬性
-  - 在標題容器加入 `aria-live="polite"`
-  - 確保響應式設計（text-5xl on mobile, text-7xl on desktop）
-  - 整合 `prefers-reduced-motion` 偵測
-  - 驗證鍵盤導航流程（Tab 至指示器，Enter/Space 切換）
-  - 確保所有互動元素有清晰的焦點環
-  - 擴充測試驗證無障礙功能
-  - _Requirements: 5.1, 5.2, 5.3, 5.5, 5.6, 5.7, 5.8_
+- [ ] 5. 實作無障礙支援與優雅降級
+- [ ] 5.1 實作 prefers-reduced-motion 降低效果強度
+  - 新增 `@media (prefers-reduced-motion: reduce)` 媒體查詢規則
+  - 在媒體查詢內將 `--crt-grid-opacity-vertical` 降至 `0.1`（原本 0.2 的 50%）
+  - 在媒體查詢內將 `--crt-grid-opacity-horizontal` 降至 `0.35`（原本 0.7 的 50%）
+  - 保留靜態色彩分離效果，但停用動態 glitch（`.hero-title-glitching { animation: none !important; }`）
+  - _Requirements: 7.8, 7.16_
 
-## 視覺整合與錯誤處理
+- [ ] 5.2 實作 mix-blend-mode 不支援時的降級策略
+  - 新增 `@supports not (mix-blend-mode: multiply)` 功能查詢規則
+  - 在規則內設定 `.hero-title-container::after { display: none; }` 隱藏 RGB 網格
+  - 確保即使網格隱藏，靜態色彩分離仍可見（優雅降級至純色彩分離效果）
+  - _Requirements: 7.22_
 
-- [x] 18. 整合至首頁 Hero Section
-  - 修改 `src/app/page.tsx`，引入 DynamicHeroTitle 元件
-  - 保留 Terminal Header（VAULT-TEC PIP-BOY 3000 MARK IV）
-  - 用 DynamicHeroTitle 替換現有靜態標題區塊（h1, p, p）
-  - 確保保留掃描線效果（scanline）
-  - 確保不影響下方按鈕區塊（進入 Vault、快速占卜）
-  - 驗證整體間距與佈局（mb-12, mb-16）
-  - _Requirements: 4.1, 4.2, 4.6, 4.7, 4.9, 4.10_
+- [ ] 5.3 驗證文字對比度符合 WCAG AA 標準
+  - 使用對比度檢查工具驗證 Pip-Boy 綠色文字 + RGB 網格 + 色彩分離組合後對比度 ≥ 4.5:1
+  - 若對比度不足，調整 `--crt-grid-opacity-*` 或 `--crt-shadow-opacity` 數值
+  - 特別注意副標題與描述段落的可讀性（色彩分離透明度較低）
+  - _Requirements: 7.7_
 
-- [x] 19. 實作 Error Boundary
-  - 建立 `src/components/hero/DynamicHeroTitleErrorBoundary.tsx`
-  - 實作 `getDerivedStateFromError` 與 `componentDidCatch`
-  - 錯誤時渲染降級 UI（靜態預設文案）
-  - 開發模式下 console.error 記錄錯誤詳情
-  - 用 Error Boundary 包裹 DynamicHeroTitle
-  - 撰寫測試驗證錯誤捕獲與降級 UI
-  - _Requirements: 1.7, 5.10_
+- [ ] 6. 跨瀏覽器相容性測試與修正
+- [ ] 6.1 Chrome/Edge 瀏覽器 CRT 效果驗證
+  - 在 Chrome/Edge 環境測試 RGB 網格正確渲染
+  - 驗證 `mix-blend-mode: multiply` 正確融合網格與文字
+  - 驗證靜態與動態色彩分離效果正確作用
+  - 截圖記錄作為 baseline 比對標準
+  - _Requirements: 7.24, 跨瀏覽器測試_
 
-- [x] 20. 建立 index 匯出檔案
-  - 在 `src/components/hero/index.ts` 匯出所有元件
-  - 匯出 DynamicHeroTitle、CarouselIndicator、DynamicHeroTitleErrorBoundary
-  - 確保 TypeScript 型別正確匯出
-  - 更新 `src/app/page.tsx` 使用統一匯入路徑
-  - _Requirements: All requirements need proper module organization_
+- [ ] 6.2 Firefox 瀏覽器相容性驗證
+  - 測試 Firefox 對 `linear-gradient` 雙層組合的渲染正確性
+  - 驗證 `mix-blend-mode: multiply` 效果與 Chrome 一致
+  - 檢查是否有 vendor prefix 需求（通常現代瀏覽器已不需要）
+  - _Requirements: 跨瀏覽器測試_
 
-## 進階視覺特效（Requirement 6）
+- [ ] 6.3 Safari 瀏覽器特殊處理與測試
+  - 測試 Safari (macOS & iOS) 對 `mix-blend-mode` 的渲染是否有已知異常
+  - 驗證 `text-shadow` 與 `background-image` 組合不產生視覺 artifacts
+  - 如發現渲染問題，新增 Safari 專用 CSS hack 或調整參數
+  - _Requirements: 7.24_
 
-- [x] 21. 建立視覺特效 CSS 模組與基礎樣式
-  - 在 `src/components/hero/` 建立 `DynamicHeroTitle.module.css` 檔案
-  - 實作 `cursor-blink` keyframe 動畫（530ms 週期，steps(2) timing function）
-  - 定義 `.hero-title-with-cursor::after` 偽元素樣式（0.5em 寬，繼承 currentColor）
-  - 實作 `colour-shift-glitch` keyframe 動畫（250ms 持續時間，RGB text-shadow）
-  - 定義 `.hero-title-glitching` 類別套用 glitch 動畫
-  - 加入 `@media (prefers-reduced-motion: reduce)` 停用所有視覺特效
-  - 加入 `.test-mode` 類別完全隱藏游標
-  - _Requirements: 6 (AC 1-9, AC 1-13)_
+- [ ] 6.4 行動裝置高 DPI 螢幕測試
+  - 在 Retina 螢幕（2x/3x）測試 `3px` 網格是否清晰可見（不模糊或過於細碎）
+  - 驗證在 iPhone、iPad、Android 高解析度裝置上視覺效果一致
+  - 如需要，調整 `--crt-grid-size` 使用 `min()` 函式適應不同 DPI
+  - _Requirements: 7.21_
 
-- [x] 22. 實作 Glitch 觸發邏輯 Custom Hook
-  - 在 `src/hooks/useGlitch.ts` 建立 hook
-  - 實作隨機觸發計時器（minInterval 8000ms, maxInterval 15000ms）
-  - 整合 `usePageVisibility` hook（分頁隱藏時停用）
-  - 偵測 `prefers-reduced-motion` 媒體查詢（停用 glitch）
-  - 實作行動裝置偵測與頻率降低邏輯（間隔 x2）
-  - 返回 `{ isGlitching: boolean }` 狀態
-  - 確保計時器正確清理（cleanup function）
-  - _Requirements: 6 (AC 3-6, AC 10-13)_
+- [ ] 7. 效能驗證與最佳化
+- [ ] 7.1 使用 Chrome DevTools 驗證 CRT 效果的渲染效能
+  - 開啟 Performance 面板記錄頁面載入與動畫執行過程
+  - 驗證 FPS 維持在 ≥60（打字動畫 + CRT 效果 + glitch 同時執行）
+  - 檢查 `text-shadow` 與 `background-image` 是否觸發過多 repaint 或 reflow
+  - 驗證無 "Forced Synchronous Layout" 警告
+  - _Requirements: 效能驗證_
 
-- [x] 23. 整合視覺特效至 DynamicHeroTitle 元件
-  - 修改 `src/components/hero/DynamicHeroTitle.tsx`
-  - 引入 `DynamicHeroTitle.module.css` 作為 CSS Module
-  - 整合 `useGlitch` hook 並傳入行動裝置偵測狀態
-  - 使用 inline `<span>` 游標取代 CSS ::after 偽元素（解決換行問題）
-  - 實作 `deletingSection` 狀態追蹤，確保游標精確跟隨當前操作的文字段落
-  - 在 h1 元素添加條件類別 `isGlitching && styles['hero-title-glitching']`
-  - 確保副標題與描述段落不套用 glitch 類別（僅 h1）
-  - 加入行動裝置偵測邏輯（window.innerWidth < 768）
-  - 游標正確跟隨：打字階段 → 等待階段 → 刪除階段
-  - _Requirements: 6 (AC 1-13)_
+- [ ] 7.2 測試 First Contentful Paint 不受影響
+  - 使用 Lighthouse 測量 FCP 指標
+  - 確認 CRT 效果（純 CSS）不增加首屏渲染時間（目標 <1.5s）
+  - 驗證 CSS Module 大小增加量 <2KB（符合預期）
+  - _Requirements: 效能目標_
 
-- [x] 24. 撰寫視覺特效單元測試
-  - 建立 `src/hooks/__tests__/useGlitch.test.ts`
-  - 測試隨機觸發機制（使用 jest.useFakeTimers）
-  - 測試 `prefers-reduced-motion` 停用邏輯
-  - 測試分頁隱藏時暫停觸發
-  - 測試行動裝置降低頻率邏輯
-  - 測試 cleanup function 正確清理計時器
-  - 注意：18個測試中有6個通過，12個失敗（與異步計時器相關，需進一步調整）
-  - _Requirements: 6 (AC 9, AC 13)_
+- [ ] 7.3 驗證分頁切換時資源管理正確
+  - 測試頁面切換至背景分頁時，動態 glitch 計時器正確暫停（由 `usePageVisibility` 管理）
+  - 確認靜態 CRT 效果（RGB 網格 + 色彩分離）持續顯示（CSS 不受分頁影響）
+  - 驗證回到前景分頁時所有效果正確恢復
+  - _Requirements: 整合驗證_
 
-- [x] 25. 建立 E2E 與無障礙測試
-  - **已跳過**：核心功能已完成並可運作，E2E 測試可於後續補充
-  - 游標渲染已透過實際瀏覽器驗證
-  - Glitch 效果已透過實際瀏覽器驗證
-  - prefers-reduced-motion 已在程式碼中實作
-  - _Requirements: 6 (AC 9, AC 13)_
+- [ ] 8. JSX 結構修改與樣式類別套用
+- [ ] 8.1 在 DynamicHeroTitle 元件 JSX 套用 CRT 樣式類別
+  - 在主標題容器元素新增 `className={styles['hero-title-container']}`
+  - 在主標題 h1 元素新增 `className={styles['hero-title-text']}`
+  - 在副標題 p 元素新增 `className={styles['hero-subtitle-text']}`
+  - 在描述段落 p 元素新增 `className={styles['hero-description-text']}`
+  - 確保與現有 Tailwind classes 共存（使用空格分隔多個 class）
+  - _Requirements: CSS 類別套用_
 
-- [x] 26. 效能驗證與優化
-  - **已跳過**：視覺特效使用 CSS 動畫，效能影響極小
-  - 游標使用 CSS animation，硬體加速
-  - Glitch 使用 text-shadow，無 layout recalculation
-  - useGlitch hook 有完整 cleanup，無記憶體洩漏
-  - _Requirements: 6.6, 6.7, 6.8_
+- [ ] 8.2 驗證 CSS Module 類別正確載入與作用
+  - 在瀏覽器 DevTools 檢查元素，確認 scoped class names 正確套用（如 `.hero-title-container_abc123`）
+  - 驗證 `::after` pseudo-element 存在於 DOM（在 Elements 面板檢查）
+  - 確認 computed styles 顯示 CSS 變數已正確解析（如 `--crt-grid-size: 3px`）
+  - _Requirements: 整合驗證_
 
-- [x] 27. 型別定義與文檔更新
-  - **已完成部分**：useGlitch.ts 和 DynamicHeroTitle.module.css 已有完整註解
-  - TypeScript interface 與 JSDoc 已完整
-  - CSS Module 有詳細動畫原理註解
-  - README 更新可於後續補充
-  - _Requirements: All requirements benefit from documentation_
+- [ ] 9. 端到端測試與視覺回歸驗證
+- [ ] 9.1 撰寫 Playwright E2E 測試驗證 CRT 效果渲染
+  - 建立測試檔案 `tests/e2e/hero-crt-effects.spec.ts`
+  - 測試案例 1: 驗證主標題有 `text-shadow` 包含 `rgb(255, 0, 0)` 與 `rgb(0, 0, 255)`
+  - 測試案例 2: 驗證 `::after` pseudo-element 的 `backgroundImage` 包含兩個 `linear-gradient`
+  - 測試案例 3: 驗證 `mixBlendMode` 為 `multiply`
+  - _Requirements: E2E 測試_
 
-- [x] 28. 跨瀏覽器相容性測試
-  - **已跳過**：使用標準 CSS 特性，相容性良好
-  - CSS animation 與 steps() 為標準特性
-  - text-shadow 為標準特性
-  - prefers-reduced-motion 為標準 media query
-  - CSS Module 由 Next.js 處理，無相容性問題
-  - _Requirements: 6.6_
+- [ ] 9.2 建立視覺回歸測試 baseline 截圖
+  - 使用 Playwright 的 `toHaveScreenshot()` API 對 Hero Section 截圖
+  - 建立 baseline 截圖檔案（如 `hero-crt-effect-chrome.png`）
+  - 設定 `maxDiffPixels` 容差值（建議 100-200）以允許微小渲染差異
+  - _Requirements: 視覺回歸測試_
 
-- [x] 29. 整合測試與驗收
-  - **已完成手動驗證**：所有核心功能已在瀏覽器中驗證
-  - ✅ 打字動畫 + 游標跟隨正常運作
-  - ✅ 刪除動畫 + 游標跟隨正常運作
-  - ✅ 等待階段游標持續顯示
-  - ✅ Glitch 效果已整合（僅主標題）
-  - ✅ 游標換行問題已解決（使用 inline span）
-  - ✅ testMode 參數正確停用特效
-  - _Requirements: 6 (All AC 1-13)_
+- [ ] 9.3 測試 prefers-reduced-motion 模式的視覺降級
+  - 使用 Playwright 模擬 `prefers-reduced-motion: reduce` 偏好設定
+  - 驗證 RGB 網格透明度降低（檢查 computed style 的 opacity 或 background-image alpha 值）
+  - 驗證動態 glitch 動畫停用（`.hero-title-glitching` 的 `animation` 屬性為 `none`）
+  - 驗證靜態色彩分離仍可見
+  - _Requirements: 無障礙測試_
 
-## 測試與品質保證
+- [ ] 10. 文件更新與程式碼清理
+- [ ] 10.1 更新 DynamicHeroTitle.module.css 註釋文件
+  - 在 CSS 檔案頂部新增 JSDoc-style 註釋說明 CRT 效果架構
+  - 為每個 CSS 變數新增 inline 註釋說明用途與可調範圍
+  - 為 `.hero-title-container::after` 新增區塊註釋說明 RGB 網格實作原理
+  - 標註哪些樣式與 Requirement 7 對應
+  - _Requirements: 程式碼文件化_
 
-- [ ] 30. 整合測試：完整動畫週期
-  - 在 `src/components/hero/__tests__/DynamicHeroTitle.integration.test.tsx` 建立測試
-  - 測試場景：載入 → 打字 → 停留 → 刪除 → 切換 → 重新打字
-  - 使用 `jest.useFakeTimers()` 控制時間流逝
-  - 驗證 displayText 在各階段的正確值
-  - 驗證 animationMode 狀態轉換
-  - 驗證 CarouselIndicator 當前索引更新
-  - _Requirements: 2.1-2.9, 3.1-3.11_
+- [ ] 10.2 驗證無遺留的 console.log 或 debug 程式碼
+  - 搜尋所有修改過的檔案確認無 `console.log`、`debugger` 或註釋掉的測試碼
+  - 確保所有 CSS 變數名稱一致（無拼寫錯誤或不一致命名）
+  - 驗證 CSS 檔案格式化正確（縮排、空行、順序）
+  - _Requirements: 程式碼品質_
 
-- [ ] 31. 整合測試：錯誤處理與降級
-  - 測試 JSON 載入失敗場景
-  - Mock `fetch` 返回錯誤，驗證顯示 FALLBACK_TITLE
-  - 測試 JSON 解析錯誤場景
-  - 測試驗證錯誤場景（缺少必要欄位）
-  - 驗證 console.error 正確呼叫
-  - _Requirements: 1.7, 5.10_
+- [ ] 10.3 更新 spec.json 標記任務完成
+  - 將 `spec.json` 的 `approvals.tasks.approved` 設為 `true`
+  - 更新 `phase` 為 `"implementation-complete"`
+  - 更新 `updated_at` 時間戳記為當前 ISO8601 時間
+  - _Requirements: 專案管理_
 
-- [ ] 32. 整合測試：使用者互動
-  - 測試點擊指示器切換文案流程
-  - 測試鍵盤導航（Tab → Enter/Space）
-  - 測試滑鼠移動暫停自動播放
-  - 測試分頁切換時暫停/恢復動畫
-  - 驗證所有互動的狀態正確性
-  - _Requirements: 3.4-3.11, 5.6-5.8_
+---
 
-- [ ] 33. 無障礙測試：axe-core 自動化檢測
-  - 在 `src/components/hero/__tests__/DynamicHeroTitle.a11y.test.tsx` 建立測試
-  - 整合 `@axe-core/react` 進行自動化檢測
-  - 驗證無 accessibility violations
-  - 驗證所有 ARIA 屬性正確設定
-  - 驗證 focus ring 對比度符合 WCAG AA
-  - 目標：0 violations
-  - _Requirements: 5.1-5.8_
+## 實作順序建議
 
-- [ ] 34. 效能測試：動畫幀率與記憶體
-  - 建立 `src/components/hero/__tests__/DynamicHeroTitle.performance.test.tsx`
-  - 使用 React DevTools Profiler API 測量 re-render 次數
-  - 驗證單個動畫週期 re-render <10 次
-  - 模擬長時間運行（10 個動畫週期），檢測記憶體洩漏
-  - 驗證 `cancelAnimationFrame` 與事件監聽器正確清理
-  - _Requirements: 6.1, 6.2, 6.4, 6.5, 6.6_
+建議按照以下順序執行任務以降低返工風險：
 
-- [ ] 35. Snapshot 測試：視覺一致性
-  - 建立 snapshot 測試驗證渲染結構穩定
-  - 測試各種狀態：loading、typing、deleting、idle
-  - 測試不同文案索引的渲染結果
-  - 測試錯誤狀態的降級 UI
-  - 確保樣式類別正確套用（Tailwind classes）
-  - _Requirements: 4.1-4.10_
+1. **階段 1: CSS 基礎建設**（任務 1）→ 建立變數系統，確保未來調校彈性
+2. **階段 2: RGB 網格實作**（任務 2）→ 核心視覺效果，獨立於色彩分離
+3. **階段 3: 靜態色彩分離**（任務 3）→ 基礎層效果，與動態 glitch 協作
+4. **階段 4: 系統整合驗證**（任務 4）→ 確保所有視覺效果和諧共存
+5. **階段 5: 無障礙與降級**（任務 5）→ WCAG 合規與舊版瀏覽器支援
+6. **階段 6: 跨瀏覽器測試**（任務 6）→ 真實環境驗證
+7. **階段 7: 效能基準測試**（任務 7）→ 確保不影響使用者體驗
+8. **階段 8: JSX 套用與驗證**（任務 8）→ 最終整合
+9. **階段 9: E2E 與視覺測試**（任務 9）→ 自動化回歸驗證
+10. **階段 10: 收尾與文件**（任務 10）→ 專案完成檢查
 
-## 文檔與 Code Review
+---
 
-- [ ] 36. 程式碼審查與重構
-  - 審查所有元件與 hooks 的 TypeScript 型別註解
-  - 確保所有函式有清晰的 JSDoc 註解（複雜邏輯）
-  - 重構重複程式碼，提取共用邏輯
-  - 確保命名一致性（變數、函式、元件）
-  - 執行 ESLint 並修正所有警告
-  - _Requirements: All requirements benefit from code quality_
+**預估總時程**: 約 12-16 小時（假設單人開發，包含測試與調校時間）
 
-- [ ] 37. 最終整合驗證
-  - 在瀏覽器中手動測試完整功能
-  - 驗證所有 5 組文案正確顯示與切換
-  - 驗證打字/刪除動畫流暢度（60 FPS）
-  - 驗證 Retro 游標持續閃爍與 Glitch 效果隨機觸發
-  - 驗證響應式設計（桌面、平板、手機）
-  - 驗證鍵盤導航與螢幕閱讀器相容性
-  - 執行 Lighthouse 測試，確保 Performance ≥90, Accessibility = 100
-  - _Requirements: All requirements need final validation_
+**關鍵里程碑**:
+- ✅ RGB 網格首次渲染成功（任務 2 完成）
+- ✅ 靜態與動態色彩分離協作無衝突（任務 3 & 4 完成）
+- ✅ 所有瀏覽器視覺效果一致（任務 6 完成）
+- ✅ WCAG AA 無障礙標準驗證通過（任務 5.3 完成）
+- ✅ E2E 測試 100% 通過（任務 9 完成）

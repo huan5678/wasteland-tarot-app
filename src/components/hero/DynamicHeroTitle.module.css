@@ -4,8 +4,25 @@
  * 包含：
  * 1. Retro 閃爍游標動畫（530ms 週期）
  * 2. Colour Shift Glitch 效果（RGB 色彩分離）
- * 3. 無障礙支援（prefers-reduced-motion）
- * 4. 測試模式支援
+ * 3. CRT 螢幕視覺特效（RGB 像素網格 + 靜態色彩分離）
+ * 4. 無障礙支援（prefers-reduced-motion）
+ * 5. 測試模式支援
+ */
+
+/* ============================================
+   CRT 視覺效果 CSS 變數
+   ============================================ */
+
+/**
+ * CRT 螢幕效果 CSS 變數已定義於 globals.css 的 :root 區塊
+ * - 所有變數遵循 --crt-{category}-{property} 命名模式
+ * - 變數清單：
+ *   - --crt-grid-size: 3px（網格像素大小）
+ *   - --crt-red-offset: 2px（紅色陰影向右偏移）
+ *   - --crt-blue-offset: -2px（藍色陰影向左偏移）
+ *   - --crt-shadow-opacity: 0.9（靜態色彩分離陰影透明度）
+ *   - --crt-grid-opacity-vertical: 0.2（垂直掃描線透明度）
+ *   - --crt-grid-opacity-horizontal: 0.7（水平 RGB 子像素透明度）
  */
 
 /* ============================================
@@ -133,6 +150,224 @@
     animation: none !important;
     text-shadow: none !important;
     transform: none !important;
+  }
+}
+
+/* ============================================
+   CRT 螢幕視覺特效 - RGB 像素網格
+   ============================================ */
+
+/**
+ * Hero 標題容器
+ * - position: relative 用於承載 ::after 網格疊加層
+ * - 方括號樣式的 border（左右封閉，上下中間留空）[ 內容 ]
+ * - Requirement 7.1, 7.5
+ */
+.hero-title-container {
+  position: relative;
+  padding: 2.5rem 2rem;
+
+  /* 方括號風格的 border */
+  /* 上下邊框中間留空，左右邊框完整封閉 */
+  background-image:
+    /* 上邊框左側 */
+    linear-gradient(90deg, var(--color-pip-boy-green), var(--color-pip-boy-green)),
+    /* 上邊框右側 */
+    linear-gradient(90deg, var(--color-pip-boy-green), var(--color-pip-boy-green)),
+    /* 下邊框左側 */
+    linear-gradient(90deg, var(--color-pip-boy-green), var(--color-pip-boy-green)),
+    /* 下邊框右側 */
+    linear-gradient(90deg, var(--color-pip-boy-green), var(--color-pip-boy-green)),
+    /* 左邊框（完整封閉） */
+    linear-gradient(0deg, var(--color-pip-boy-green), var(--color-pip-boy-green)),
+    /* 右邊框（完整封閉） */
+    linear-gradient(0deg, var(--color-pip-boy-green), var(--color-pip-boy-green));
+
+  background-size:
+    5% 4px,         /* 上邊框左側（縮短至 5%，中間留空 90%，寬度 4px） */
+    5% 4px,         /* 上邊框右側（縮短至 5%，中間留空 90%，寬度 4px） */
+    5% 4px,         /* 下邊框左側（縮短至 5%，中間留空 90%，寬度 4px） */
+    5% 4px,         /* 下邊框右側（縮短至 5%，中間留空 90%，寬度 4px） */
+    4px 100%,       /* 左邊框（完整，寬度 4px） */
+    4px 100%;       /* 右邊框（完整，寬度 4px） */
+
+  background-position:
+    0 0,                        /* 上邊框左側（左對齊） */
+    right 0 top 0,              /* 上邊框右側（右對齊） */
+    0 bottom,                   /* 下邊框左側（左下角） */
+    right 0 bottom 0,           /* 下邊框右側（右下角） */
+    0 0,                        /* 左邊框 */
+    right 0 top 0;              /* 右邊框 */
+
+  background-repeat: no-repeat;
+
+  /* 微光效果 */
+  box-shadow:
+    inset 0 0 20px rgba(0, 255, 136, 0.05),
+    0 0 15px rgba(0, 255, 136, 0.1);
+}
+
+/**
+ * RGB 像素網格疊加層（使用 ::after pseudo-element）
+ * - 雙 linear-gradient 組合：垂直掃描線 + 水平 RGB 子像素
+ * - mix-blend-mode: multiply 實現網格與文字自然融合
+ * - pointer-events: none 確保不干擾文字選取
+ * - z-index: 1 確保在文字下方
+ * - Requirement 7.1, 7.2, 7.3, 7.4, 7.6
+ */
+.hero-title-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  /* Fallback for browsers without CSS Variables support - v8: 掃描線幾乎不可見 */
+  background-size: 3px 3px;
+  background-size: var(--crt-grid-size) var(--crt-grid-size);
+
+  background-repeat: repeat;
+  background-image:
+    /* 垂直掃描線（白色漸層，模擬 CRT 水平掃描） - v13: 降至 1-2% */
+    linear-gradient(
+      to top,
+      rgba(255, 255, 255, 0.01) 0%,
+      rgba(255, 255, 255, 0.01) 33.33%,
+      rgba(255, 255, 255, 0.015) 33.33%,
+      rgba(255, 255, 255, 0.015) 66.67%,
+      rgba(255, 255, 255, 0.02) 66.67%,
+      rgba(255, 255, 255, 0.02) 100%
+    ),
+    /* 水平 RGB 子像素（模擬 CRT 三色磷光體排列） - v13: 降至 0.75-1.25% */
+    linear-gradient(
+      to right,
+      rgba(255, 0, 0, 0.0075) 0%,
+      rgba(255, 0, 0, 0.0075) 33.33%,
+      rgba(0, 255, 0, 0.0125) 33.33%,
+      rgba(0, 255, 0, 0.0125) 66.67%,
+      rgba(0, 0, 255, 0.0075) 66.67%,
+      rgba(0, 0, 255, 0.0075) 100%
+    );
+
+  /* 混合模式：讓網格與文字自然融合 */
+  mix-blend-mode: multiply;
+
+  /* 確保不干擾文字選取與互動 */
+  pointer-events: none;
+
+  /* z-index 層次：網格（1） < 文字（2） */
+  z-index: 1;
+}
+
+/* ============================================
+   CRT 螢幕視覺特效 - 靜態色彩分離
+   ============================================ */
+
+/**
+ * 主標題靜態色彩分離（基礎層）
+ * - 雙層 text-shadow：紅色向右 + 藍色向左
+ * - 作為持續存在的基礎效果，動態 glitch 為增強層
+ * - z-index: 2 確保在 RGB 網格之上
+ * - Requirement 7.9, 7.10
+ */
+.hero-title-text {
+  position: relative;
+  z-index: 2;
+
+  /* Fallback values for browsers without CSS Variables - v7: 平衡光暈與對比度 */
+  text-shadow:
+    /* 色彩分離層（紅/藍） */
+    1.5px 0 0 rgba(255, 0, 0, 0.3),
+    -1.5px 0 0 rgba(0, 0, 255, 0.3),
+    /* 溫和綠色光暈（保留 CRT 美學但不影響對比） */
+    0 0 8px rgba(0, 255, 136, 0.4),
+    0 0 15px rgba(0, 255, 136, 0.3),
+    0 0 25px rgba(0, 255, 136, 0.2);
+
+  /* CSS 變數版本（支援動態調整） */
+  text-shadow:
+    var(--crt-red-offset) 0 0 rgba(255, 0, 0, var(--crt-shadow-opacity)),
+    var(--crt-blue-offset) 0 0 rgba(0, 0, 255, var(--crt-shadow-opacity)),
+    0 0 8px var(--crt-text-glow-strong),
+    0 0 15px var(--crt-text-glow),
+    0 0 25px var(--crt-text-glow);
+}
+
+/**
+ * 副標題與描述段落：簡化效果以提升可讀性
+ * - v10: 移除色彩分離效果，僅保留綠色光暈提升對比度
+ * - 更清晰的文字邊緣，更好的辨識度
+ * - Requirement 7.11
+ */
+.hero-subtitle-text,
+.hero-description-text {
+  position: relative;
+  z-index: 2;
+
+  /* v12: 模擬真實 CRT 終端機效果（參考 RobCo 終端機） */
+  text-shadow:
+    /* 輕微的綠色光暈，模擬 CRT 螢光體發光 */
+    0 0 3px rgba(0, 255, 136, 0.4),
+    0 0 6px rgba(0, 255, 136, 0.2);
+}
+
+/* ============================================
+   無障礙支援與優雅降級
+   ============================================ */
+
+/**
+ * prefers-reduced-motion: 降低 CRT 效果強度
+ * - 將 RGB 網格透明度降至 50%
+ * - 保留靜態色彩分離（基礎層）
+ * - 停用動態 glitch（增強層）
+ * - Requirement 7.8, 7.16
+ */
+@media (prefers-reduced-motion: reduce) {
+  .hero-title-container::after {
+    /* 降低網格透明度至原本的 50% - v8: 根據新的 v8 基準值調整 */
+    background-image:
+      linear-gradient(
+        to top,
+        rgba(255, 255, 255, 0.01) 0%,
+        rgba(255, 255, 255, 0.01) 33.33%,
+        rgba(255, 255, 255, 0.015) 33.33%,
+        rgba(255, 255, 255, 0.015) 66.67%,
+        rgba(255, 255, 255, 0.02) 66.67%,
+        rgba(255, 255, 255, 0.02) 100%
+      ),
+      linear-gradient(
+        to right,
+        rgba(255, 0, 0, 0.0075) 0%,
+        rgba(255, 0, 0, 0.0075) 33.33%,
+        rgba(0, 255, 0, 0.0125) 33.33%,
+        rgba(0, 255, 0, 0.0125) 66.67%,
+        rgba(0, 0, 255, 0.0075) 66.67%,
+        rgba(0, 0, 255, 0.0075) 100%
+      );
+  }
+
+  .hero-title-with-cursor::after {
+    animation: none;
+    opacity: 1;
+  }
+
+  .hero-title-glitching {
+    animation: none !important;
+    text-shadow: none !important;
+    transform: none !important;
+  }
+}
+
+/**
+ * mix-blend-mode 不支援時的降級策略
+ * - 隱藏 RGB 網格，僅保留靜態色彩分離
+ * - 確保優雅降級至純色彩分離效果
+ * - Requirement 7.22
+ */
+@supports not (mix-blend-mode: multiply) {
+  .hero-title-container::after {
+    display: none;
   }
 }
 

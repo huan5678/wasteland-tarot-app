@@ -124,15 +124,17 @@ export const DEFAULT_VOICE_CONFIGS: Record<CharacterVoice, Omit<VoiceConfig, 'ch
 } as const;
 
 /**
- * 場景音樂映射
+ * 場景音樂映射 (已棄用 - 使用 MusicGenerator.SCENE_TO_MUSIC_MODE)
  * 需求 3.1-3.2: 場景音樂配置
+ *
+ * @deprecated 請使用 MusicGenerator.SCENE_TO_MUSIC_MODE 和 ProceduralMusicEngine
  */
 export const SCENE_MUSIC_MAP: Record<string, string> = {
-  '/': 'wasteland-ambient',
-  '/readings/new': 'divination-theme',
-  '/dashboard': 'vault-theme',
-  '/profile': 'vault-theme',
-  '/cards': 'wasteland-ambient',
+  '/': 'synthwave',
+  '/readings/new': 'divination',
+  '/dashboard': 'lofi',
+  '/profile': 'lofi',
+  '/cards': 'ambient',
 } as const;
 
 /**
@@ -169,7 +171,7 @@ export interface SoundGeneratorConfig {
   id: string;
   type: 'sfx' | 'music' | 'voice';
   priority: 'critical' | 'normal' | 'low';
-  generator: 'button-click' | 'card-flip' | 'pip-boy-beep' | 'terminal-type' | 'vault-door' | 'shuffle' | 'reveal';
+  generator: 'button-click' | 'card-flip' | 'pip-boy-beep' | 'terminal-type' | 'vault-door' | 'shuffle' | 'reveal' | 'ui-hover';
   params: {
     frequency?: number;
     duration?: number;
@@ -263,6 +265,18 @@ export const SOUND_CONFIGS: Record<string, SoundGeneratorConfig> = {
       endFrequency: 40,
       duration: 2.0,
       volume: 0.7,
+    },
+  },
+  'ui-hover': {
+    id: 'ui-hover',
+    type: 'sfx',
+    priority: 'low',
+    generator: 'ui-hover',
+    params: {
+      frequency: 1200,
+      duration: 0.05,
+      volume: 0.2,
+      waveType: 'sine',
     },
   },
 } as const;

@@ -31,6 +31,10 @@ export const useAudioStore = create<AudioState>()(
       currentTrack: null,
       speechProgress: 0,
 
+      // 音樂播放器專用狀態 (Task 1)
+      currentMusicMode: null,
+      musicPlayerInitialized: false,
+
       // 設定
       isAudioEnabled: true,
       isSilentMode: false,
@@ -58,14 +62,22 @@ export const useAudioStore = create<AudioState>()(
           },
         })),
 
+      toggleMute: (type: AudioType) =>
+        set((state) => ({
+          muted: {
+            ...state.muted,
+            [type]: !state.muted[type],
+          },
+        })),
+
       setCurrentTrack: (trackId: string | null) =>
-        set({
+        set((state) => ({
           currentTrack: trackId,
           isPlaying: {
-            ...get().isPlaying,
+            ...state.isPlaying,
             music: trackId !== null,
           },
-        }),
+        })),
 
       setSpeechProgress: (progress: number) =>
         set({ speechProgress: progress }),
@@ -95,16 +107,37 @@ export const useAudioStore = create<AudioState>()(
           memoryUsage: usage,
           activeSoundsCount: count,
         }),
+
+      // 音樂播放器 Actions (Task 1)
+      // Requirements 1.1, 1.2, 2.1, 6.1
+      setCurrentMusicMode: (mode: string | null) =>
+        set({ currentMusicMode: mode }),
+
+      setMusicPlayerInitialized: (initialized: boolean) =>
+        set({ musicPlayerInitialized: initialized }),
+
+      setIsPlaying: (type: 'music' | 'voice', playing: boolean) =>
+        set((state) => ({
+          isPlaying: {
+            ...state.isPlaying,
+            [type]: playing,
+          },
+          // 當音樂播放狀態變更時，如果 type 是 'music' 則同步更新音樂播放器狀態
+          // Requirements 2.1: 同步更新音樂播放器狀態
+          ...(type === 'music' && !playing ? { currentMusicMode: null } : {}),
+        })),
     }),
     {
       name: STORAGE_KEY,
       // 只持久化特定欄位
+      // Task 1: 新增 currentMusicMode 到持久化欄位
       partialize: (state) => ({
         volumes: state.volumes,
         muted: state.muted,
         selectedVoice: state.selectedVoice,
         isAudioEnabled: state.isAudioEnabled,
         isSilentMode: state.isSilentMode,
+        currentMusicMode: state.currentMusicMode, // 持久化當前音樂模式
       }),
     }
   )

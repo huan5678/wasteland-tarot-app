@@ -200,7 +200,81 @@
 
 13. WHERE 在輪播切換動畫進行中 THE 系統 SHALL 暫時停用 glitch 效果避免視覺衝突
 
-### Requirement 7: 效能與資源管理
+### Requirement 7: CRT 螢幕視覺特效（RGB 像素網格與靜態色彩分離）
+
+**User Story 1:** 作為 Fallout 粉絲，我希望標題區域能呈現老舊 CRT 顯示器的 RGB 像素網格效果，讓我感受到真實的 Pip-Boy 終端機視覺質感。
+
+**User Story 2:** 作為追求復古美學的使用者，我希望文字能有輕微的靜態色彩分離效果（chromatic aberration），模擬廢土中不穩定的 CRT 螢幕顯示，作為動態 glitch 效果的基礎層。
+
+#### Acceptance Criteria - RGB 像素網格疊加
+
+1. WHERE 在 Hero Section 標題容器上 THE 系統 SHALL 使用 `::after` pseudo-element 創建全覆蓋的像素網格疊加層
+
+2. WHEN 像素網格渲染 THEN 系統 SHALL 使用兩組 linear-gradient 組合：
+   - 垂直方向：白色透明度梯度模擬掃描線效果
+     - `linear-gradient(to top, rgba(255,255,255,0.2) 33.33%, rgba(255,255,255,0.4) 33.33%, rgba(255,255,255,0.4) 66.67%, rgba(255,255,255,0.6) 66.67%)`
+   - 水平方向：RGB 三色梯度模擬子像素排列
+     - `linear-gradient(to right, rgba(255,0,0,0.7) 33.33%, rgba(0,255,0,0.7) 33.33%, rgba(0,255,0,0.7) 66.67%, rgba(0,0,255,0.7) 66.67%)`
+
+3. IF 網格背景大小 THEN 系統 SHALL 設定為 `3px × 3px` 並使用 `background-repeat` 鋪滿整個容器
+
+4. WHERE 混合模式 THE 系統 SHALL 使用 `mix-blend-mode: multiply` 讓網格與底層文字自然融合
+
+5. WHEN 網格疊加層顯示 THEN 系統 SHALL 確保 pseudo-element 使用 `position: absolute` 並覆蓋整個標題容器（`top: 0; right: 0; bottom: 0; left: 0`）
+
+6. IF 網格疊加層 THEN 系統 SHALL 設定 `pointer-events: none` 避免干擾文字選取與互動
+
+7. WHEN 網格效果套用 THEN 系統 SHALL 確保文字可讀性維持在 WCAG AA 標準（對比度 ≥ 4.5:1）
+
+8. IF 使用者偏好設定要求減少動畫（prefers-reduced-motion） THEN 系統 SHALL 保留靜態網格但將所有透明度降至原本的 50%
+
+#### Acceptance Criteria - 靜態色彩分離效果（基礎層）
+
+1. WHERE 在主標題（h1）文字上 THE 系統 SHALL 套用持續存在的 `text-shadow` 色彩分離效果作為基礎層
+
+2. WHEN 靜態色彩分離顯示 THEN 系統 SHALL 使用兩層陰影：
+   - 紅色陰影：`2px 0 rgba(255, 0, 0, 0.9)`（向右偏移 2px）
+   - 藍色陰影：`-2px 0 rgba(0, 0, 255, 0.9)`（向左偏移 2px）
+
+3. IF 副標題與描述段落 THEN 系統 SHALL 套用較弱的色彩分離效果（紅藍陰影透明度降至 0.4-0.5）
+
+4. WHERE 在不同視口尺寸 THE 色彩分離偏移量 SHALL 維持固定值（2px）確保效果一致
+
+5. WHEN 靜態色彩分離與 Requirement 6 的動態 glitch 效果同時存在 THEN 靜態色彩分離 SHALL 作為基礎層，動態 glitch 作為增強層
+
+6. IF 動態 glitch 效果觸發時 THEN 系統 SHALL 暫時覆蓋（override）靜態色彩分離的 text-shadow 值
+
+7. WHEN glitch 效果結束後 THEN 系統 SHALL 恢復原本的靜態色彩分離效果
+
+8. IF 使用者偏好設定要求減少動畫（prefers-reduced-motion） THEN 系統 SHALL 保留靜態色彩分離但停用動態 glitch
+
+#### Acceptance Criteria - 效果組合與調校
+
+1. WHEN RGB 網格與色彩分離同時套用 THEN 系統 SHALL 確保兩者視覺效果和諧不衝突
+
+2. WHERE 在深色背景上 THE 文字顏色 SHALL 保持 Pip-Boy 綠色（`#00ff41` 或 `text-pip-boy-green`）確保與紅藍陰影形成對比
+
+3. IF 標題文字使用 Source Code Pro 或其他 monospace 字型 THEN 系統 SHALL 確保 CRT 效果（網格 + 色彩分離）正確渲染
+
+4. WHEN 輪播切換至新文案 THEN RGB 網格與靜態色彩分離 SHALL 持續作用於新標題（不中斷）
+
+5. WHERE 在行動裝置上 THE RGB 網格解析度 SHALL 維持 `3px × 3px` 避免在高 DPI 螢幕上過於細碎或模糊
+
+6. IF 瀏覽器不支援 `mix-blend-mode: multiply` THEN 系統 SHALL 優雅降級至純色彩分離效果（隱藏 RGB 網格）
+
+7. WHEN 使用者首次載入頁面 THEN CRT 效果 SHALL 立即可見（純 CSS 實現，無需等待 JavaScript 初始化）
+
+8. WHERE 在 Safari 瀏覽器 THE 系統 SHALL 測試確保 `mix-blend-mode` 與 `text-shadow` 組合不產生渲染異常
+
+9. IF RGB 網格疊加層與 Requirement 4 現有的掃描線效果（scanline effect）同時存在 THEN 系統 SHALL 確保兩者不產生視覺衝突或疊加過度
+
+10. WHEN CRT 效果全部套用 THEN 系統 SHALL 使用 CSS 變數（CSS variables）管理關鍵參數以便未來調校：
+    - `--crt-grid-size: 3px`
+    - `--crt-red-offset: 2px`
+    - `--crt-blue-offset: -2px`
+    - `--crt-shadow-opacity: 0.9`
+
+### Requirement 8: 效能與資源管理
 
 **User Story:** 作為效能工程師，我希望動態標題系統在執行動畫與輪播時不會影響整體頁面效能或造成不必要的資源消耗。
 
@@ -240,13 +314,25 @@
 - **Cursor Animation**: CSS `@keyframes` with `step-end` timing function
   - Blinking cycle: 530ms (on → off → on)
   - Implementation: `::after` pseudo-element with `opacity` toggle
-- **Glitch Effect**: CSS `text-shadow` for RGB color separation
+- **Dynamic Glitch Effect**: CSS `text-shadow` for RGB color separation (animated)
   - Red shadow: `#ff0000` with +2-4px horizontal offset
   - Cyan shadow: `#00ffff` with -2-4px horizontal offset
   - Optional enhancement: `transform: skewX()` for distortion
   - Trigger: JavaScript interval with 8-15s random delay
+- **Static CRT Effects**: Pure CSS implementation for immediate rendering
+  - **RGB Pixel Grid**: `::after` pseudo-element with dual `linear-gradient`
+    - Vertical scanlines: White opacity gradient (0.2 → 0.4 → 0.6)
+    - Horizontal subpixels: RGB color gradient (R 0.7 → G 0.7 → B 0.7)
+    - Grid size: 3px × 3px with `background-repeat`
+    - Blend mode: `mix-blend-mode: multiply`
+  - **Static Chromatic Aberration**: Permanent `text-shadow` as base layer
+    - Red shadow: `2px 0 rgba(255,0,0,0.9)` (right offset)
+    - Blue shadow: `-2px 0 rgba(0,0,255,0.9)` (left offset)
+    - Subtitle/description: Reduced opacity (0.4-0.5)
+- **CSS Variables**: Configurable parameters for easy tuning
+  - `--crt-grid-size`, `--crt-red-offset`, `--crt-blue-offset`, `--crt-shadow-opacity`
 - **Animation Timing**: CSS `animation-timing-function: steps(2)` for instant transitions
-- **Accessibility**: Respect `prefers-reduced-motion` media query
+- **Accessibility**: Respect `prefers-reduced-motion` media query (static effects remain with reduced intensity)
 
 ### Performance Targets
 - **Initial Load Impact**: <100ms additional load time
@@ -261,13 +347,17 @@
 1. ✅ 至少建立 5 組圍繞「玄學與科學」主題的創意文案
 2. ✅ 打字動畫流暢執行於所有主流瀏覽器（Chrome, Firefox, Safari, Edge）
 3. ✅ 自動輪播功能正常運作且不影響頁面效能
-4. ✅ 通過 WCAG 2.1 AA 無障礙標準檢測
+4. ✅ 通過 WCAG 2.1 AA 無障礙標準檢測（包含 CRT 效果的對比度驗證）
 5. ✅ 響應式設計在桌面、平板、手機上均正常顯示
 6. ✅ 元件載入時間不影響 Core Web Vitals（LCP <2.5s, CLS <0.1）
 7. ✅ Retro 閃爍游標在所有瀏覽器上流暢運作（530ms 週期，無卡頓）
-8. ✅ Colour Shift Glitch 效果在桌面與行動裝置上正確觸發且不影響效能
-9. ✅ 視覺特效尊重 `prefers-reduced-motion` 無障礙設定
-10. ✅ 游標與 glitch 動畫在頁面背景時正確暫停以節省資源
+8. ✅ 動態 Colour Shift Glitch 效果在桌面與行動裝置上正確觸發且不影響效能
+9. ✅ 靜態 CRT 效果（RGB 像素網格 + 色彩分離）在頁面載入時立即可見（無 JavaScript 依賴）
+10. ✅ RGB 像素網格在 Chrome/Firefox/Safari/Edge 上正確渲染且使用 `mix-blend-mode: multiply` 融合
+11. ✅ 靜態與動態色彩分離效果（基礎層 + 增強層）正確協作且無視覺衝突
+12. ✅ 視覺特效尊重 `prefers-reduced-motion` 無障礙設定（靜態效果降低強度，動態效果停用）
+13. ✅ 游標與 glitch 動畫在頁面背景時正確暫停以節省資源
+14. ✅ CRT 效果參數使用 CSS 變數定義，便於未來調校與主題切換
 
 ## Out of Scope
 

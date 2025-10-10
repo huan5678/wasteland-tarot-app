@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Spade, UserPlus, ArrowLeft } from 'lucide-react'
+import { Spade, UserPlus, ArrowLeft, Check, FileText } from 'lucide-react'
 import { enhancedWastelandCards } from '@/data/enhancedCards'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
 import { QuickReadingStorage } from '@/lib/quickReadingStorage'
@@ -364,11 +364,26 @@ export default function QuickReadingPage() {
               </p>
 
               <ul className="space-y-2 mb-6 text-sm font-mono text-pip-boy-green/80">
-                <li>✓ <span className="text-pip-boy-green font-bold">無限次抽卡</span>，探索完整塔羅智慧</li>
-                <li>✓ 個人化 AI 解讀（Karma & Faction 系統）</li>
-                <li>✓ 占卜記錄保存與歷史追蹤</li>
-                <li>✓ 多種牌陣選擇（三卡、Celtic Cross）</li>
-                <li>✓ 角色語音解讀（Pip-Boy, Mr. Handy, Scribe）</li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <span><span className="text-pip-boy-green font-bold">無限次抽卡</span>，探索完整塔羅智慧</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <span>個人化 AI 解讀（Karma & Faction 系統）</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <span>占卜記錄保存與歷史追蹤</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <span>多種牌陣選擇（三卡、Celtic Cross）</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <span>角色語音解讀（Pip-Boy, Mr. Handy, Scribe）</span>
+                </li>
               </ul>
 
               <div className="flex flex-col sm:flex-row gap-4">
@@ -393,9 +408,9 @@ export default function QuickReadingPage() {
             className="mt-8 border border-pip-boy-green p-4"
             style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
           >
-            <p className="text-xs text-text-muted font-mono text-center">
-              📝 註冊 Vault 帳號後，你可以：儲存占卜歷史 | 使用高級牌陣 | 獲得 AI 詳細解讀 |
-              追蹤 Karma 變化
+            <p className="text-xs text-text-muted font-mono text-center flex items-center justify-center gap-2">
+              <FileText className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+              <span>註冊 Vault 帳號後，你可以：儲存占卜歷史 | 使用高級牌陣 | 獲得 AI 詳細解讀 | 追蹤 Karma 變化</span>
             </p>
           </div>
         </div>

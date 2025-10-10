@@ -204,10 +204,9 @@ export function TarotCard({
     setCardState(isSelected ? 'selected' : isSelectable ? 'selectable' : 'hovered')
     if ((isRevealed || isSelectable) && !isTouchDevice) {
       triggerHaptic('light')
-      // 播放懸停音效（低優先級）
-      playSound('ui-hover', { volume: 0.3 })
+      // 移除 hover 音效 - 只在按左右鍵切換時播放
     }
-  }, [isRevealed, isSelectable, isSelected, isTouchDevice, triggerHaptic, playSound])
+  }, [isRevealed, isSelectable, isSelected, isTouchDevice, triggerHaptic])
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false)

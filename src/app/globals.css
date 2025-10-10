@@ -1084,3 +1084,142 @@
     color: var(--color-text-high-contrast);
   }
 }
+
+/* === PIP-BOY SLIDER STYLING === */
+/**
+ * Custom slider styles for VolumeControl component
+ * Fallout Pip-Boy aesthetic with green glow effects
+ *
+ * Uses shadcn/ui Slider component with Radix UI primitives
+ * Targets: [data-radix-*] attributes for proper specificity
+ */
+
+/* Slider container */
+.pip-boy-slider {
+  position: relative;
+  display: flex;
+  width: 100%;
+  touch-action: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+/* Slider track - Background rail */
+.pip-boy-slider [data-radix-slider-track] {
+  position: relative;
+  height: 6px;
+  width: 100%;
+  flex-grow: 1;
+  overflow: hidden;
+  border-radius: 9999px;
+  background-color: var(--color-wasteland-darker);
+  border: 1px solid var(--color-pip-boy-green-deep);
+  transition: var(--scrollbar-transition);
+}
+
+/* Slider range - Filled portion */
+.pip-boy-slider [data-radix-slider-range] {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--color-pip-boy-green-dark),
+    var(--color-pip-boy-green)
+  );
+  box-shadow: 0 0 8px var(--color-glow-green);
+  transition: var(--scrollbar-transition);
+}
+
+/* Slider thumb - Draggable handle */
+.pip-boy-slider [data-radix-slider-thumb] {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background-color: var(--color-pip-boy-green);
+  border: 2px solid var(--color-pip-boy-green-bright);
+  border-radius: 9999px;
+  box-shadow: 0 0 10px var(--color-glow-green);
+  transition: var(--scrollbar-transition);
+  cursor: grab;
+}
+
+/* Thumb - Focus state */
+.pip-boy-slider [data-radix-slider-thumb]:focus {
+  outline: none;
+  box-shadow:
+    0 0 15px var(--color-glow-green),
+    0 0 0 3px var(--color-border-focus-ring);
+  border-color: var(--color-border-focus);
+}
+
+/* Thumb - Hover state */
+.pip-boy-slider [data-radix-slider-thumb]:hover {
+  background-color: var(--color-pip-boy-green-bright);
+  box-shadow: 0 0 15px var(--color-glow-green);
+  transform: scale(1.1);
+}
+
+/* Thumb - Active/dragging state */
+.pip-boy-slider [data-radix-slider-thumb]:active {
+  cursor: grabbing;
+  background-color: var(--color-pip-boy-green-bright);
+  box-shadow: 0 0 20px var(--color-glow-green);
+  transform: scale(1.15);
+}
+
+/* Disabled state - Entire slider */
+.pip-boy-slider[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pip-boy-slider[data-disabled] [data-radix-slider-track] {
+  background-color: var(--color-wasteland-medium);
+  border-color: var(--color-pip-boy-green-faded);
+}
+
+.pip-boy-slider[data-disabled] [data-radix-slider-range] {
+  background: var(--color-pip-boy-green-faded);
+  box-shadow: none;
+}
+
+.pip-boy-slider[data-disabled] [data-radix-slider-thumb] {
+  background-color: var(--color-pip-boy-green-faded);
+  border-color: var(--color-pip-boy-green-deep);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* Accessibility: Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .pip-boy-slider [data-radix-slider-thumb],
+  .pip-boy-slider [data-radix-slider-range],
+  .pip-boy-slider [data-radix-slider-track] {
+    transition: none;
+  }
+
+  .pip-boy-slider [data-radix-slider-thumb]:hover,
+  .pip-boy-slider [data-radix-slider-thumb]:active {
+    transform: none;
+  }
+}
+
+/* Accessibility: High contrast mode */
+@media (forced-colors: active) {
+  .pip-boy-slider [data-radix-slider-track] {
+    background-color: Canvas;
+    border-color: ButtonText;
+  }
+
+  .pip-boy-slider [data-radix-slider-range] {
+    background: LinkText;
+    box-shadow: none;
+  }
+
+  .pip-boy-slider [data-radix-slider-thumb] {
+    background-color: ButtonText;
+    border-color: ButtonText;
+    box-shadow: none;
+  }
+}
+/* End of Pip-Boy Slider Styling */

@@ -1,65 +1,146 @@
 {
   "version": "1.0.0",
+  "lastUpdated": "2025-10-10T00:00:00.000Z",
   "sounds": [
     {
       "id": "button-click",
       "type": "sfx",
       "url": "/sounds/sfx/button-click.mp3",
       "priority": "critical",
-      "size": 15360,
-      "description": "按鈕點擊音效"
+      "size": 0,
+      "description": "Pip-Boy 按鈕點擊音效 (Web Audio API 生成)"
     },
     {
       "id": "card-flip",
       "type": "sfx",
       "url": "/sounds/sfx/card-flip.mp3",
       "priority": "critical",
-      "size": 22400,
-      "description": "卡牌翻轉音效"
+      "size": 0,
+      "description": "塔羅牌翻轉音效 (Web Audio API 生成)"
+    },
+    {
+      "id": "card-shuffle",
+      "type": "sfx",
+      "url": "/sounds/sfx/card-shuffle.mp3",
+      "priority": "normal",
+      "size": 0,
+      "description": "塔羅牌洗牌音效 (Web Audio API 生成)"
+    },
+    {
+      "id": "card-reveal",
+      "type": "sfx",
+      "url": "/sounds/sfx/card-reveal.mp3",
+      "priority": "normal",
+      "size": 0,
+      "description": "塔羅牌揭示音效 (Web Audio API 生成)"
     },
     {
       "id": "vault-door",
       "type": "sfx",
       "url": "/sounds/sfx/vault-door.mp3",
       "priority": "normal",
-      "size": 51200,
-      "description": "避難所大門開啟音效"
+      "size": 0,
+      "description": "Vault 門開啟音效 (Web Audio API 生成)"
     },
     {
       "id": "pip-boy-beep",
       "type": "sfx",
       "url": "/sounds/sfx/pip-boy-beep.mp3",
-      "priority": "critical",
-      "size": 10240,
-      "description": "Pip-Boy 嗶嗶聲"
+      "priority": "normal",
+      "size": 0,
+      "description": "Pip-Boy 提示音 (Web Audio API 生成)"
     },
     {
       "id": "terminal-type",
       "type": "sfx",
       "url": "/sounds/sfx/terminal-type.mp3",
+      "priority": "low",
+      "size": 0,
+      "description": "終端機打字音效 (Web Audio API 生成)"
+    },
+    {
+      "id": "geiger-low",
+      "type": "sfx",
+      "url": "/sounds/sfx/geiger-low.mp3",
+      "priority": "low",
+      "size": 0,
+      "description": "蓋革計數器 - 低輻射"
+    },
+    {
+      "id": "geiger-med",
+      "type": "sfx",
+      "url": "/sounds/sfx/geiger-med.mp3",
+      "priority": "low",
+      "size": 0,
+      "description": "蓋革計數器 - 中輻射"
+    },
+    {
+      "id": "geiger-high",
+      "type": "sfx",
+      "url": "/sounds/sfx/geiger-high.mp3",
+      "priority": "low",
+      "size": 0,
+      "description": "蓋革計數器 - 高輻射"
+    },
+    {
+      "id": "ui-hover",
+      "type": "sfx",
+      "url": "/sounds/sfx/ui-hover.mp3",
+      "priority": "low",
+      "size": 0,
+      "description": "UI 懸停音效"
+    },
+    {
+      "id": "ui-select",
+      "type": "sfx",
+      "url": "/sounds/sfx/ui-select.mp3",
       "priority": "normal",
-      "size": 8192,
-      "description": "終端機打字音效"
+      "size": 0,
+      "description": "UI 選擇音效"
     }
   ],
   "music": [
     {
       "id": "wasteland-ambient",
       "url": "/sounds/music/wasteland-ambient.mp3",
-      "scene": "/",
-      "size": 2048000,
-      "duration": 120,
+      "scene": "home",
+      "size": 0,
+      "duration": 180,
       "loop": true,
-      "description": "廢土環境氛圍音樂（首頁）"
+      "description": "廢土環境音樂 - 主頁背景音 (程序式生成)"
     },
     {
       "id": "divination-theme",
       "url": "/sounds/music/divination-theme.mp3",
-      "scene": "/reading",
-      "size": 1536000,
-      "duration": 90,
+      "scene": "reading",
+      "size": 0,
+      "duration": 240,
       "loop": true,
-      "description": "占卜主題音樂（塔羅牌解讀頁面）"
+      "description": "占卜主題音樂 - 深沉神秘 (程序式生成)"
+    },
+    {
+      "id": "vault-theme",
+      "url": "/sounds/music/vault-theme.mp3",
+      "scene": "dashboard",
+      "size": 0,
+      "duration": 200,
+      "loop": true,
+      "description": "Vault 主題音樂 - 控制面板音樂 (程序式生成)"
+    },
+    {
+      "id": "synthwave-ambient",
+      "url": "/sounds/music/synthwave-ambient.mp3",
+      "scene": "general",
+      "size": 0,
+      "duration": 300,
+      "loop": true,
+      "description": "Synthwave Lofi 環境音樂 (程序式生成)"
     }
+  ],
+  "notes": [
+    "本專案使用 Web Audio API 即時生成音效，不依賴外部音檔",
+    "manifest.json 為可選配置，如果載入失敗將使用 constants.ts 中的 SOUND_CONFIGS",
+    "所有音效和音樂都是程序式生成，size 欄位為 0 表示無檔案大小",
+    "實際音效由 SoundGenerator.ts 即時合成，提供更小的記憶體佔用和更快的載入速度"
   ]
 }

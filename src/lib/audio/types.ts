@@ -169,6 +169,11 @@ export interface AudioState {
   currentTrack: string | null;
   speechProgress: number;
 
+  // 音樂播放器專用狀態 (Task 1)
+  // Requirements 1.1, 1.2, 2.1, 6.1
+  currentMusicMode: string | null; // 當前播放的音樂模式 (synthwave, divination, lofi, ambient)
+  musicPlayerInitialized: boolean; // 音樂播放器初始化狀態
+
   // 設定
   isAudioEnabled: boolean;
   isSilentMode: boolean;
@@ -182,6 +187,7 @@ export interface AudioState {
   // Actions
   setVolume: (type: AudioType, volume: number) => void;
   setMute: (type: AudioType, muted: boolean) => void;
+  toggleMute: (type: AudioType) => void;
   setCurrentTrack: (trackId: string | null) => void;
   setSpeechProgress: (progress: number) => void;
   setAudioEnabled: (enabled: boolean) => void;
@@ -189,4 +195,9 @@ export interface AudioState {
   setSelectedVoice: (voice: CharacterVoice) => void;
   setPrefersReducedMotion: (prefers: boolean) => void;
   updateMetrics: (usage: number, count: number) => void;
+
+  // 音樂播放器 Actions (Task 1)
+  setCurrentMusicMode: (mode: string | null) => void;
+  setMusicPlayerInitialized: (initialized: boolean) => void;
+  setIsPlaying: (type: 'music' | 'voice', playing: boolean) => void;
 }

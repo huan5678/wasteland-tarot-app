@@ -28,6 +28,17 @@ export class AudioEngine {
   private batteryManager: any = null;
   private isLowBattery: boolean = false;
   private isIOSDevice: boolean = false;
+  private fpsMonitorId: number | null = null;
+  private lastFrameTime: number = 0;
+  private frameCount: number = 0;
+  private currentFPS: number = 60;
+  private memoryCheckInterval: number | null = null;
+  private lastMemoryUsage: number = 0;
+  private memoryIncreaseCount: number = 0;
+  private isLowQualityMode: boolean = false;
+  private visibilityChangeListener: (() => void) | null = null;
+  private playbackStateBeforeBackground: Map<string, boolean> = new Map();
+  private isSilentMode: boolean = false;
 
   private constructor() {
     this.isMobile = this.detectMobile();
@@ -35,6 +46,8 @@ export class AudioEngine {
     if (this.isMobile) {
       this.optimizeForMobile();
     }
+    this.setupVisibilityControl();
+    this.detectSilentMode();
   }
 
   /**
@@ -247,6 +260,74 @@ export class AudioEngine {
   }
 
   /**
+   * 預載關鍵音效
+   * 需求 5.1, 5.6: 優先載入 critical 音效
+   * 任務 38: 實作音效預載優先級管理
+   */
+  async preloadCriticalSounds(): Promise<void> {
+    try {
+      const { getCriticalSounds } = await import('./manifest');
+      const criticalSounds = await getCriticalSounds();
+
+      logger.info(`[AudioEngine] Preloading ${criticalSounds.length} critical sounds`);
+
+      // 並行載入關鍵音效，最多 3 個同時載入
+      const CRITICAL_CONCURRENCY = 3;
+      for (let i = 0; i < criticalSounds.length; i += CRITICAL_CONCURRENCY) {
+        const batch = criticalSounds.slice(i, i + CRITICAL_CONCURRENCY);
+        await Promise.allSettled(
+          batch.map((sound) => this.loadSound(sound))
+        );
+      }
+
+      logger.info('[AudioEngine] Critical sounds preloaded successfully');
+    } catch (error) {
+      logger.error('[AudioEngine] Failed to preload critical sounds', error);
+    }
+  }
+
+  /**
+   * 延遲載入非關鍵音效
+   * 需求 5.4: 在瀏覽器閒置時載入非關鍵音效
+   * 任務 39: 實作延遲載入非關鍵音效
+   */
+  lazyLoadNonCriticalSounds(): void {
+    // 使用 requestIdleCallback 在瀏覽器閒置時載入
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(async () => {
+        try {
+          const { getNonCriticalSounds } = await import('./manifest');
+          const nonCriticalSounds = await getNonCriticalSounds();
+
+          logger.info(`[AudioEngine] Lazy loading ${nonCriticalSounds.length} non-critical sounds`);
+
+          // 慢速載入，避免影響效能
+          for (const sound of nonCriticalSounds) {
+            await this.loadSound(sound);
+            // 每個音效載入後暫停一下，讓出主執行緒
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          logger.info('[AudioEngine] Non-critical sounds loaded successfully');
+        } catch (error) {
+          logger.error('[AudioEngine] Failed to lazy load non-critical sounds', error);
+        }
+      }, { timeout: 5000 });
+    } else {
+      // 降級：使用 setTimeout
+      setTimeout(async () => {
+        try {
+          const { getNonCriticalSounds } = await import('./manifest');
+          const nonCriticalSounds = await getNonCriticalSounds();
+          await this.preloadSounds(nonCriticalSounds);
+        } catch (error) {
+          logger.error('[AudioEngine] Failed to lazy load non-critical sounds (fallback)', error);
+        }
+      }, 3000);
+    }
+  }
+
+  /**
    * 載入單個音效
    * 需求 3.1-3.9: 使用 Web Audio API 即時生成音效，替代載入外部音檔
    * 需求 5.2: 生成完成後快取至記憶體
@@ -329,6 +410,8 @@ export class AudioEngine {
           return SoundGenerator.generateTerminalType(audioContext, destination, config.params);
         case 'vault-door':
           return SoundGenerator.generateVaultDoor(audioContext, destination, config.params);
+        case 'ui-hover':
+          return SoundGenerator.generateUIHover(audioContext, destination, config.params);
         default:
           logger.warn(`[AudioEngine] Unknown generator '${config.generator}', using button-click as fallback`);
           return SoundGenerator.generateButtonClick(audioContext, destination);
@@ -587,5 +670,383 @@ export class AudioEngine {
    */
   isInitialized(): boolean {
     return this.isUnlocked;
+  }
+
+  /**
+   * 開始 FPS 監控
+   * 需求 9.3: 當 FPS 低於 30 時觸發降級
+   * 任務 40: 實作 FPS 監控和自動降級
+   */
+  startFPSMonitoring(): void {
+    if (this.fpsMonitorId !== null) return; // 已經在監控中
+
+    this.lastFrameTime = performance.now();
+    this.frameCount = 0;
+
+    const monitorFrame = () => {
+      const now = performance.now();
+      this.frameCount++;
+
+      // 每秒計算一次 FPS
+      if (now >= this.lastFrameTime + 1000) {
+        this.currentFPS = Math.round((this.frameCount * 1000) / (now - this.lastFrameTime));
+        this.frameCount = 0;
+        this.lastFrameTime = now;
+
+        // 檢查是否需要降級
+        if (this.currentFPS < 30 && !this.isLowQualityMode) {
+          logger.warn(`[AudioEngine] Low FPS detected (${this.currentFPS}), degrading audio quality`);
+          this.degradeAudioQuality();
+        } else if (this.currentFPS >= 50 && this.isLowQualityMode) {
+          logger.info(`[AudioEngine] FPS recovered (${this.currentFPS}), restoring audio quality`);
+          this.restoreAudioQuality();
+        }
+      }
+
+      this.fpsMonitorId = requestAnimationFrame(monitorFrame);
+    };
+
+    this.fpsMonitorId = requestAnimationFrame(monitorFrame);
+    logger.info('[AudioEngine] FPS monitoring started');
+  }
+
+  /**
+   * 停止 FPS 監控
+   */
+  stopFPSMonitoring(): void {
+    if (this.fpsMonitorId !== null) {
+      cancelAnimationFrame(this.fpsMonitorId);
+      this.fpsMonitorId = null;
+      logger.info('[AudioEngine] FPS monitoring stopped');
+    }
+  }
+
+  /**
+   * 降級音訊品質
+   * 需求 9.3: 降級策略 - 降低音效品質、關閉效果處理、減少並發數
+   */
+  private degradeAudioQuality(): void {
+    this.isLowQualityMode = true;
+
+    // 降低並發播放數
+    const maxConcurrent = this.isMobile ? 2 : 4;
+
+    // 停止非關鍵音效
+    const criticalSoundIds = Array.from(this.audioBuffers.entries())
+      .filter(([_, cached]) => cached.priority === 'critical')
+      .map(([id]) => id);
+
+    this.activeSourceNodes.forEach((_, soundId) => {
+      if (!criticalSoundIds.includes(soundId)) {
+        this.stop(soundId);
+      }
+    });
+
+    // 降低音效音量
+    const sfxGain = this.gainNodes.get('sfx');
+    if (sfxGain) {
+      sfxGain.gain.value = Math.min(sfxGain.gain.value, 0.5);
+    }
+
+    logger.info('[AudioEngine] Audio quality degraded due to low FPS');
+  }
+
+  /**
+   * 恢復音訊品質
+   */
+  private restoreAudioQuality(): void {
+    this.isLowQualityMode = false;
+    logger.info('[AudioEngine] Audio quality restored');
+  }
+
+  /**
+   * 獲取當前 FPS
+   */
+  getCurrentFPS(): number {
+    return this.currentFPS;
+  }
+
+  /**
+   * 開始記憶體洩漏偵測
+   * 需求 9.5: 偵測記憶體持續增長並重新初始化 AudioContext
+   * 任務 41: 實作記憶體洩漏偵測和恢復
+   */
+  startMemoryLeakDetection(): void {
+    if (this.memoryCheckInterval !== null) return; // 已經在偵測中
+
+    // 每 10 秒檢查一次記憶體
+    this.memoryCheckInterval = window.setInterval(() => {
+      const currentMemory = this.getMemoryUsage();
+
+      // 檢查記憶體是否持續增長
+      if (currentMemory > this.lastMemoryUsage) {
+        this.memoryIncreaseCount++;
+
+        // 如果連續 3 次檢查記憶體都在增長，視為洩漏徵兆
+        if (this.memoryIncreaseCount >= 3) {
+          const memoryMB = currentMemory / 1024 / 1024;
+          logger.warn(`[AudioEngine] Potential memory leak detected (${memoryMB.toFixed(2)}MB)`);
+
+          // 如果記憶體超過 80MB，執行恢復
+          if (memoryMB > 80) {
+            logger.error('[AudioEngine] Memory usage exceeded 80MB, reinitializing AudioContext');
+            this.recoverFromMemoryLeak();
+          }
+        }
+      } else {
+        // 記憶體沒有增長，重置計數器
+        this.memoryIncreaseCount = 0;
+      }
+
+      this.lastMemoryUsage = currentMemory;
+    }, 10000); // 每 10 秒檢查一次
+
+    logger.info('[AudioEngine] Memory leak detection started');
+  }
+
+  /**
+   * 停止記憶體洩漏偵測
+   */
+  stopMemoryLeakDetection(): void {
+    if (this.memoryCheckInterval !== null) {
+      clearInterval(this.memoryCheckInterval);
+      this.memoryCheckInterval = null;
+      logger.info('[AudioEngine] Memory leak detection stopped');
+    }
+  }
+
+  /**
+   * 從記憶體洩漏中恢復
+   * 需求 9.5: 重新初始化 AudioContext
+   */
+  private async recoverFromMemoryLeak(): Promise<void> {
+    try {
+      logger.info('[AudioEngine] Starting memory leak recovery');
+
+      // 保存當前狀態
+      const volumes = new Map<AudioType, number>();
+      this.gainNodes.forEach((node, type) => {
+        volumes.set(type, node.gain.value);
+      });
+
+      // 停止所有音效
+      this.stopAll();
+
+      // 清除所有快取
+      this.clearCache('all');
+
+      // 關閉舊的 AudioContext
+      if (this.audioContext) {
+        await this.audioContext.close();
+        this.audioContext = null;
+      }
+
+      // 重新初始化
+      this.isUnlocked = false;
+      await this.initialize();
+
+      // 恢復音量設定
+      volumes.forEach((volume, type) => {
+        this.setVolume(type, volume);
+      });
+
+      // 重新載入關鍵音效
+      await this.preloadCriticalSounds();
+
+      // 重置記憶體監控計數器
+      this.memoryIncreaseCount = 0;
+      this.lastMemoryUsage = 0;
+
+      logger.info('[AudioEngine] Memory leak recovery completed');
+    } catch (error) {
+      logger.error('[AudioEngine] Failed to recover from memory leak', error);
+    }
+  }
+
+  /**
+   * 獲取詳細的效能指標
+   */
+  getPerformanceMetrics(): {
+    fps: number;
+    memoryMB: number;
+    activeSounds: number;
+    cachedSounds: number;
+    isLowQuality: boolean;
+    isLowBattery: boolean;
+  } {
+    return {
+      fps: this.currentFPS,
+      memoryMB: this.getMemoryUsage() / 1024 / 1024,
+      activeSounds: this.getActiveSoundsCount(),
+      cachedSounds: this.audioBuffers.size,
+      isLowQuality: this.isLowQualityMode,
+      isLowBattery: this.isLowBattery,
+    };
+  }
+
+  /**
+   * 設定頁面可見性控制
+   * 需求 6.3, 6.4: 當應用程式進入背景時暫停音訊，回到前景時恢復
+   * 任務 36: 實作背景/前景狀態管理
+   */
+  private setupVisibilityControl(): void {
+    if (typeof document === 'undefined') return;
+
+    this.visibilityChangeListener = () => {
+      if (document.hidden) {
+        // 應用程式進入背景
+        this.handleAppBackground();
+      } else {
+        // 應用程式回到前景
+        this.handleAppForeground();
+      }
+    };
+
+    document.addEventListener('visibilitychange', this.visibilityChangeListener);
+    logger.info('[AudioEngine] Visibility control setup completed');
+  }
+
+  /**
+   * 處理應用程式進入背景
+   * 需求 6.3: WHEN 應用程式進入背景 THEN 暫停所有音訊播放
+   */
+  private handleAppBackground(): void {
+    logger.info('[AudioEngine] App went to background, pausing audio');
+
+    // 保存當前播放狀態
+    this.playbackStateBeforeBackground.clear();
+    this.activeSourceNodes.forEach((_, soundId) => {
+      this.playbackStateBeforeBackground.set(soundId, true);
+    });
+
+    // 暫停 AudioContext
+    if (this.audioContext && this.audioContext.state === 'running') {
+      this.audioContext.suspend();
+    }
+
+    // 停止所有活動音效（但保存狀態）
+    // 注意：不呼叫 stopAll()，因為那會清除 activeSourceNodes
+  }
+
+  /**
+   * 處理應用程式回到前景
+   * 需求 6.4: WHEN 應用程式回到前景 THEN 恢復之前的播放狀態
+   */
+  private handleAppForeground(): void {
+    logger.info('[AudioEngine] App returned to foreground, resuming audio');
+
+    // 恢復 AudioContext
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      this.audioContext.resume();
+    }
+
+    // 注意：由於 AudioBufferSourceNode 一旦停止就無法重新啟動
+    // 我們只能恢復 AudioContext 的運行狀態
+    // 實際的音效播放需要由上層應用決定是否重新播放
+  }
+
+  /**
+   * 清理可見性監聽器
+   */
+  private cleanupVisibilityControl(): void {
+    if (this.visibilityChangeListener && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityChangeListener);
+      this.visibilityChangeListener = null;
+    }
+  }
+
+  /**
+   * 偵測裝置靜音模式
+   * 需求 6.2: IF 裝置處於靜音模式 THEN 偵測並在 UI 顯示靜音提示
+   * 任務 37: 實作靜音模式偵測（行動裝置）
+   */
+  private detectSilentMode(): void {
+    if (!this.isMobile || typeof window === 'undefined') return;
+
+    // iOS 靜音模式偵測：嘗試播放極短的音訊並測量持續時間
+    // 如果裝置靜音，播放會被抑制，持續時間會明顯不同
+    setTimeout(async () => {
+      if (!this.audioContext) return;
+
+      try {
+        const audioContext = this.audioContext;
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+
+        gainNode.gain.value = 0.001; // 極小音量
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+
+        const startTime = audioContext.currentTime;
+        oscillator.start(startTime);
+        oscillator.stop(startTime + 0.01); // 10ms 後停止
+
+        // 監聽播放完成
+        oscillator.onended = () => {
+          const actualDuration = audioContext.currentTime - startTime;
+          // 如果實際持續時間與預期差異很大，可能是靜音模式
+          if (actualDuration < 0.005) {
+            this.isSilentMode = true;
+            logger.warn('[AudioEngine] Silent mode detected on device');
+          }
+        };
+      } catch (error) {
+        logger.error('[AudioEngine] Failed to detect silent mode', error);
+      }
+    }, 2000); // 延遲 2 秒後偵測，確保 AudioContext 已初始化
+  }
+
+  /**
+   * 檢查裝置是否處於靜音模式
+   */
+  isSilentModeDetected(): boolean {
+    return this.isSilentMode;
+  }
+
+  /**
+   * 取得裝置資訊
+   * 任務 34: 實作行動裝置偵測和優化邏輯
+   */
+  getDeviceInfo(): {
+    isMobile: boolean;
+    isIOS: boolean;
+    isLowBattery: boolean;
+    isSilentMode: boolean;
+    batteryLevel: number | null;
+  } {
+    return {
+      isMobile: this.isMobile,
+      isIOS: this.isIOSDevice,
+      isLowBattery: this.isLowBattery,
+      isSilentMode: this.isSilentMode,
+      batteryLevel: this.batteryManager?.level ?? null,
+    };
+  }
+
+  /**
+   * 銷毀 AudioEngine（清理資源）
+   */
+  async destroy(): Promise<void> {
+    logger.info('[AudioEngine] Destroying AudioEngine');
+
+    // 停止監控
+    this.stopFPSMonitoring();
+    this.stopMemoryLeakDetection();
+    this.cleanupVisibilityControl();
+
+    // 停止所有音效
+    this.stopAll();
+
+    // 清除快取
+    this.clearCache('all');
+
+    // 關閉 AudioContext
+    if (this.audioContext) {
+      await this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    this.isUnlocked = false;
+    logger.info('[AudioEngine] AudioEngine destroyed');
   }
 }

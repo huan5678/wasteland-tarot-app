@@ -151,3 +151,102 @@ export function isValidSuit(suit: string): boolean {
 export function getAllSuits(): SuitMetadata[] {
   return Object.values(SUIT_CONFIG)
 }
+
+// ============================================================================
+// Route <-> API Suit Mapping
+// ============================================================================
+
+/**
+ * 路由簡短名稱類型 (用於 URL)
+ * URL-friendly short names for routing
+ */
+export type RouteSuitName = 'major' | 'bottles' | 'weapons' | 'caps' | 'rods'
+
+/**
+ * 路由名稱到 API 枚舉值的映射
+ * Maps URL-friendly short names to backend API enum values
+ *
+ * Frontend Route      Backend API Enum
+ * ---------------     ----------------------
+ * /cards/major    ->  major_arcana
+ * /cards/bottles  ->  nuka_cola_bottles
+ * /cards/weapons  ->  combat_weapons
+ * /cards/caps     ->  bottle_caps
+ * /cards/rods     ->  radiation_rods
+ */
+const ROUTE_TO_API_SUIT: Record<RouteSuitName, SuitType> = {
+  major: SuitType.MAJOR_ARCANA,
+  bottles: SuitType.NUKA_COLA_BOTTLES,
+  weapons: SuitType.COMBAT_WEAPONS,
+  caps: SuitType.BOTTLE_CAPS,
+  rods: SuitType.RADIATION_RODS,
+}
+
+/**
+ * API 枚舉值到路由名稱的反向映射
+ * Reverse mapping from API enum values to URL-friendly names
+ */
+const API_TO_ROUTE_SUIT: Record<SuitType, RouteSuitName> = {
+  [SuitType.MAJOR_ARCANA]: 'major',
+  [SuitType.NUKA_COLA_BOTTLES]: 'bottles',
+  [SuitType.COMBAT_WEAPONS]: 'weapons',
+  [SuitType.BOTTLE_CAPS]: 'caps',
+  [SuitType.RADIATION_RODS]: 'rods',
+}
+
+/**
+ * 將路由參數轉換為 API 枚舉值
+ * Converts route parameter to backend API enum value
+ *
+ * @param routeSuit - 路由參數 (例: 'major', 'bottles')
+ * @returns API 枚舉值 (例: 'major_arcana', 'nuka_cola_bottles')
+ * @throws Error if invalid route suit name
+ *
+ * @example
+ * convertRouteToApiSuit('major') // => 'major_arcana'
+ * convertRouteToApiSuit('bottles') // => 'nuka_cola_bottles'
+ */
+export function convertRouteToApiSuit(routeSuit: string): SuitType {
+  // 檢查是否已經是 API 枚舉值 (向後相容)
+  if (isValidSuit(routeSuit)) {
+    return routeSuit as SuitType
+  }
+
+  // 轉換路由名稱為 API 枚舉值
+  const apiSuit = ROUTE_TO_API_SUIT[routeSuit as RouteSuitName]
+  if (!apiSuit) {
+    throw new Error(`Invalid route suit name: ${routeSuit}. Expected one of: major, bottles, weapons, caps, rods`)
+  }
+
+  return apiSuit
+}
+
+/**
+ * 將 API 枚舉值轉換為路由參數
+ * Converts backend API enum value to route parameter
+ *
+ * @param apiSuit - API 枚舉值 (例: 'major_arcana')
+ * @returns 路由參數 (例: 'major')
+ *
+ * @example
+ * convertApiToRouteSuit('major_arcana') // => 'major'
+ * convertApiToRouteSuit('nuka_cola_bottles') // => 'bottles'
+ */
+export function convertApiToRouteSuit(apiSuit: SuitType): RouteSuitName {
+  return API_TO_ROUTE_SUIT[apiSuit]
+}
+
+/**
+ * 驗證路由參數是否有效
+ * Validates if route suit parameter is valid
+ *
+ * @param routeSuit - 路由參數
+ * @returns 是否為有效的路由花色名稱
+ *
+ * @example
+ * isValidRouteSuit('major') // => true
+ * isValidRouteSuit('invalid') // => false
+ */
+export function isValidRouteSuit(routeSuit: string): boolean {
+  return routeSuit in ROUTE_TO_API_SUIT || isValidSuit(routeSuit)
+}

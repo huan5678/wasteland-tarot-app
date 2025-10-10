@@ -1,45 +1,99 @@
 'use client'
-import React from 'react'
-import { useErrorStore } from '@/lib/errorStore'
-import { XCircle, WifiOff, RefreshCw } from 'lucide-react'
 
+import React, { useEffect } from 'react'
+import { Toaster, toast } from 'sonner'
+import { useErrorStore } from '@/lib/errorStore'
+import { WifiOff, XCircle, RefreshCw } from 'lucide-react'
+
+/**
+ * GlobalErrorDisplay - 使用 Sonner toast 顯示全域錯誤
+ *
+ * 特點:
+ * - 使用 Shadcn Sonner 的優雅 toast 通知
+ * - 自動監聽 errorStore 並顯示錯誤
+ * - 支援離線狀態提示
+ * - 支援重試功能
+ * - 位於右下角顯示
+ */
 export function GlobalErrorDisplay() {
   const errors = useErrorStore(s => s.errors)
-  const dismiss = useErrorStore(s => s.dismissError)
   const online = useErrorStore(s => s.networkOnline)
+  const dismiss = useErrorStore(s => s.dismissError)
 
-  if (errors.length === 0 && online) return null
+  // 監聽網路狀態變化
+  useEffect(() => {
+    if (!online) {
+      toast.warning('離線模式', {
+        description: '偵測到網路中斷，請檢查連線。',
+        icon: <WifiOff className="w-4 h-4 text-[#ffdd00]" />,
+        duration: Infinity, // 保持顯示直到網路恢復
+        id: 'network-offline',
+        classNames: {
+          toast: 'border-2 border-[#ffdd00] bg-[#443300] backdrop-blur-sm',
+          title: 'text-[#ffff33] font-mono font-bold',
+          description: 'text-[#ffff33]/80 font-mono text-xs',
+          closeButton: 'text-[#ffdd00]/60 hover:text-[#ffdd00]',
+        }
+      })
+    } else {
+      // 網路恢復時關閉離線通知
+      toast.dismiss('network-offline')
+    }
+  }, [online])
+
+  // 監聽錯誤變化並顯示 toast
+  useEffect(() => {
+    if (errors.length === 0) return
+
+    // 只顯示最新的錯誤
+    const latestError = errors[errors.length - 1]
+
+    toast.error(latestError.message, {
+      id: latestError.id,
+      description: latestError.statusCode ? `狀態碼: ${latestError.statusCode}` : undefined,
+      icon: <XCircle className="w-4 h-4 text-[#ff6666]" />,
+      duration: 5000,
+      action: latestError.retry ? {
+        label: (
+          <div className="flex items-center gap-1">
+            <RefreshCw className="w-3 h-3 text-white" />
+            <span>重試</span>
+          </div>
+        ),
+        onClick: async () => {
+          if (latestError.retry) {
+            await latestError.retry()
+            dismiss(latestError.id)
+          }
+        }
+      } : undefined,
+      onDismiss: () => dismiss(latestError.id),
+      classNames: {
+        toast: 'border-2 border-[#cc3333] bg-[#441111] backdrop-blur-sm',
+        title: 'text-[#ff6666] font-mono font-bold',
+        description: 'text-[#ff6666]/70 font-mono text-xs',
+        actionButton: 'bg-[#ff4444] text-white font-mono hover:bg-[#cc3333]',
+        closeButton: 'text-[#ff6666]/60 hover:text-[#ff6666]',
+      }
+    })
+  }, [errors, dismiss])
 
   return (
-    <div className="fixed bottom-4 left-4 z-50 space-y-2 max-w-sm">
-      {!online && (
-        <div className="border-2 border-yellow-400 bg-yellow-900/30 p-3 text-yellow-200 font-mono text-xs">
-          <div className="flex items-start gap-2">
-            <WifiOff className="w-4 h-4" />
-            <div className="flex-1">
-              <div className="font-bold">離線模式</div>
-              <div>偵測到網路中斷，請檢查連線。</div>
-            </div>
-          </div>
-        </div>
-      )}
-      {errors.slice(-3).map(err => (
-        <div key={err.id} className="border-2 border-red-400 bg-red-900/30 p-3 text-red-200 font-mono text-xs">
-          <div className="flex items-start gap-2">
-            <XCircle className="w-4 h-4" />
-            <div className="flex-1 min-w-0">
-              <div className="font-bold truncate">{err.message}</div>
-              {err.statusCode && <div className="opacity-70">狀態: {err.statusCode}</div>}
-              {err.retry && (
-                <button onClick={() => err.retry && err.retry()} className="mt-1 flex items-center gap-1 text-red-100 hover:text-white">
-                  <RefreshCw className="w-3 h-3" />重試
-                </button>
-              )}
-            </div>
-            <button onClick={() => dismiss(err.id)} className="opacity-70 hover:opacity-100">×</button>
-          </div>
-        </div>
-      ))}
-    </div>
+    <Toaster
+      position="bottom-right"
+      expand={false}
+      richColors={false}
+      closeButton
+      toastOptions={{
+        unstyled: true,
+        classNames: {
+          toast: 'font-mono p-4 rounded-none shadow-lg flex items-start gap-3',
+          title: 'font-mono font-bold text-base',
+          description: 'font-mono text-xs mt-1',
+          actionButton: 'font-mono px-3 py-1.5 rounded-none transition-colors',
+          closeButton: 'transition-colors',
+        },
+      }}
+    />
   )
 }
