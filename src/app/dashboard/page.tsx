@@ -5,6 +5,7 @@ import { useAuthStore } from '@/lib/authStore'
 import { readingsAPI, cardsAPI } from '@/lib/api'
 import { Spade, Library, UserCircle, ScrollText, Star } from 'lucide-react'
 import { StudyCardsRecommendation } from '@/components/recommendations/StudyCardsRecommendation'
+import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
 
 interface Reading {
   id: string
@@ -220,6 +221,11 @@ export default function DashboardPage() {
 
         {/* Study Cards Recommendation */}
         <StudyCardsRecommendation className="mb-8" />
+
+        {/* Incomplete Sessions */}
+        <div className="mb-8">
+          <IncompleteSessionsList />
+        </div>
 
         {/* Recent Readings */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
