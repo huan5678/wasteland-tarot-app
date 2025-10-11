@@ -2,11 +2,12 @@
  * StatisticsCard Component Tests
  * Tests for Doto font integration
  * Requirements: 3.3, 3.4
+ *
+ * Note: 使用 PixelIcon 名稱字串代替 lucide-react 元件
  */
 
 import { render, screen } from '@testing-library/react';
 import { StatisticsCard } from '../StatisticsCard';
-import { Activity } from 'lucide-react';
 
 describe('StatisticsCard with Doto Font', () => {
   it('should apply numeric class to numeric value by default', () => {
@@ -14,7 +15,7 @@ describe('StatisticsCard with Doto Font', () => {
       <StatisticsCard
         title="Total Users"
         value={1234}
-        icon={Activity}
+        icon="activity"
       />
     );
 
@@ -27,7 +28,7 @@ describe('StatisticsCard with Doto Font', () => {
       <StatisticsCard
         title="Total Users"
         value={1234}
-        icon={Activity}
+        icon="activity"
         trend={{
           value: 12.5,
           label: 'from last month',
@@ -46,7 +47,7 @@ describe('StatisticsCard with Doto Font', () => {
       <StatisticsCard
         title="Total Users"
         value={1234}
-        icon={Activity}
+        icon="activity"
         useNumericFont={false}
       />
     );
@@ -60,7 +61,7 @@ describe('StatisticsCard with Doto Font', () => {
       <StatisticsCard
         title="Status"
         value="42 active"
-        icon={Activity}
+        icon="activity"
       />
     );
 

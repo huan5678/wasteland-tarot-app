@@ -1,46 +1,55 @@
 /**
  * AutoSaveIndicator - Visual feedback for auto-save status
+ * Phase 6: Enhanced with animations and color variants
  */
 
 'use client'
 
 import { useSessionStore } from '@/lib/sessionStore'
-import { Save, Cloud, CloudOff, AlertCircle, Check } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
+import type { IconName, IconAnimation, IconColorVariant } from '@/components/ui/icons'
 
 export function AutoSaveIndicator() {
   const { autoSaveStatus, lastSavedAt, isOnline } = useSessionStore()
 
-  const getStatusInfo = () => {
+  const getStatusInfo = (): {
+    iconName: IconName;
+    text: string;
+    variant: IconColorVariant;
+    animation?: IconAnimation;
+  } => {
     switch (autoSaveStatus) {
       case 'saving':
         return {
-          icon: Save,
+          iconName: 'save',
           text: '儲存中...',
-          className: 'text-yellow-400 animate-pulse',
+          variant: 'warning',
+          animation: 'pulse',
         }
       case 'saved':
         return {
-          icon: Check,
+          iconName: 'check',
           text: '已儲存',
-          className: 'text-green-400',
+          variant: 'success',
         }
       case 'error':
         return {
-          icon: AlertCircle,
+          iconName: 'alert',
           text: '儲存失敗',
-          className: 'text-red-400',
+          variant: 'error',
+          animation: 'wiggle',
         }
       case 'offline':
         return {
-          icon: CloudOff,
+          iconName: 'cloud-off',
           text: '離線模式',
-          className: 'text-orange-400',
+          variant: 'secondary',
         }
       default:
         return {
-          icon: Cloud,
+          iconName: 'cloud',
           text: '自動儲存',
-          className: 'text-pip-boy-green/70',
+          variant: 'muted',
         }
     }
   }
@@ -62,13 +71,21 @@ export function AutoSaveIndicator() {
     }
   }
 
-  const { icon: Icon, text, className } = getStatusInfo()
+  const { iconName, text, variant, animation } = getStatusInfo()
 
   return (
     <div className="flex items-center gap-2 text-sm">
-      <div className={`flex items-center gap-1.5 ${className}`}>
-        <Icon className="w-4 h-4" />
-        <span>{text}</span>
+      <div className="flex items-center gap-1.5">
+        <PixelIcon
+          name={iconName}
+          sizePreset="xs"
+          variant={variant}
+          animation={animation}
+          decorative
+        />
+        <span className={variant !== 'muted' ? `text-${variant}` : 'text-pip-boy-green/70'}>
+          {text}
+        </span>
       </div>
 
       {lastSavedAt && autoSaveStatus === 'saved' && (

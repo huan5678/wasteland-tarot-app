@@ -1,18 +1,8 @@
 'use client'
 
 import React from 'react'
-import {
-  Zap,
-  Eye,
-  EyeOff,
-  Target,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Sparkles,
-  MousePointer,
-  Smartphone
-} from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
+import type { IconName, IconColorVariant, IconAnimation } from '@/components/ui/icons'
 
 export type CardState =
   | 'idle'
@@ -36,99 +26,99 @@ export interface CardStateIndicatorsProps {
 
 const stateConfig = {
   idle: {
-    icon: null,
-    color: 'text-gray-400',
+    iconName: null as IconName | null,
+    variant: 'muted' as const,
     bgColor: 'bg-gray-400/10',
     label: '待機',
     priority: 0
   },
   hoverable: {
-    icon: MousePointer,
-    color: 'text-pip-boy-green/60',
+    iconName: 'cursor' as IconName,
+    variant: 'primary' as const,
     bgColor: 'bg-pip-boy-green/10',
     label: '可互動',
     priority: 1
   },
   hovered: {
-    icon: Target,
-    color: 'text-pip-boy-green',
+    iconName: 'target' as IconName,
+    variant: 'primary' as const,
     bgColor: 'bg-pip-boy-green/20',
     label: '游標懸停',
     priority: 2,
-    animate: 'animate-pulse'
+    animate: 'pulse' as const
   },
   selectable: {
-    icon: Smartphone,
-    color: 'text-blue-400',
+    iconName: 'device-mobile' as IconName,
+    variant: 'info' as const,
     bgColor: 'bg-blue-400/20',
     label: '可選擇',
     priority: 2,
-    animate: 'animate-bounce'
+    animate: 'bounce' as const
   },
   selected: {
-    icon: CheckCircle,
-    color: 'text-pip-boy-green',
+    iconName: 'checkbox-on' as IconName,
+    variant: 'success' as const,
     bgColor: 'bg-pip-boy-green/30',
     label: '已選擇',
     priority: 5,
-    animate: 'animate-card-selection'
+    animate: 'pulse' as const
   },
   revealing: {
-    icon: Eye,
-    color: 'text-warning-yellow',
+    iconName: 'eye' as IconName,
+    variant: 'warning' as const,
     bgColor: 'bg-warning-yellow/20',
     label: '翻牌中',
     priority: 4,
-    animate: 'animate-spin'
+    animate: 'spin' as const
   },
   revealed: {
-    icon: EyeOff,
-    color: 'text-pip-boy-green',
+    iconName: 'eye-closed' as IconName,
+    variant: 'success' as const,
     bgColor: 'bg-pip-boy-green/20',
     label: '已顯示',
     priority: 3
   },
   animating: {
-    icon: Sparkles,
-    color: 'text-radiation-orange',
+    iconName: 'sparkles' as IconName,
+    variant: 'secondary' as const,
     bgColor: 'bg-radiation-orange/20',
     label: '動畫中',
     priority: 6,
-    animate: 'animate-card-shimmer'
+    animate: 'float' as const
   },
   loading: {
-    icon: Clock,
-    color: 'text-gray-500',
+    iconName: 'clock' as IconName,
+    variant: 'muted' as const,
     bgColor: 'bg-gray-500/20',
     label: '載入中',
     priority: 7,
-    animate: 'animate-pulse'
+    animate: 'pulse' as const
   },
   error: {
-    icon: AlertCircle,
-    color: 'text-error',
+    iconName: 'alert' as IconName,
+    variant: 'error' as const,
     bgColor: 'bg-error/20',
     label: '錯誤',
     priority: 8,
-    animate: 'animate-bounce'
+    animate: 'wiggle' as const
   }
 }
 
 const sizeConfig = {
   small: {
-    iconSize: 'w-3 h-3',
+    sizePreset: 'xs' as const,
     padding: 'p-1',
     textSize: 'text-[8px]',
     indicatorSize: 'w-2 h-2'
   },
   medium: {
-    iconSize: 'w-4 h-4',
+    sizePreset: 'xs' as const,
     padding: 'p-1.5',
     textSize: 'text-[10px]',
     indicatorSize: 'w-2.5 h-2.5'
   },
   large: {
-    iconSize: 'w-5 h-5',
+    sizePreset: 'sm' as const,
     padding: 'p-2',
     textSize: 'text-xs',
     indicatorSize: 'w-3 h-3'
@@ -154,28 +144,31 @@ export function CardStateIndicators({
   const sizeProps = sizeConfig[size]
   const positionClass = positionConfig[position]
 
-  if (!config.icon || state === 'idle') {
+  if (!config.iconName || state === 'idle') {
     return null
   }
-
-  const IconComponent = config.icon
 
   return (
     <div
       className={`
         absolute ${positionClass} z-20
-        ${config.bgColor} ${config.color}
+        ${config.bgColor}
         ${sizeProps.padding} rounded-full
         flex items-center gap-1
         transition-all duration-200 ease-out
-        ${animate && config.animate ? config.animate : ''}
         backdrop-blur-sm border border-current/20
         shadow-sm
       `}
       role="status"
       aria-label={`卡片狀態: ${config.label}`}
     >
-      <IconComponent className={sizeProps.iconSize} />
+      <PixelIcon
+        name={config.iconName}
+        sizePreset={sizeProps.sizePreset}
+        variant={config.variant}
+        animation={animate && config.animate ? config.animate : undefined}
+        decorative
+      />
 
       {showLabels && (
         <span className={`${sizeProps.textSize} font-medium whitespace-nowrap`}>

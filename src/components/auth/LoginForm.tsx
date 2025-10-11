@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, Fingerprint } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useAuthStore } from '@/lib/authStore'
 import { useErrorStore } from '@/lib/errorStore'
 import { useOAuth } from '@/hooks/useOAuth'
@@ -214,7 +214,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               aria-live="polite"
               className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center"
             >
-              <AlertTriangle className="w-4 h-4 mr-2" />{submitError}
+              <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" animation="wiggle" className="mr-2" aria-label="錯誤" />{submitError}
             </div>
           )}
 
@@ -251,7 +251,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
             />
             {errors.email && (
               <p className="mt-1 text-red-400 text-xs flex items-center">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.email}
+                <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" className="mr-1" decorative />{errors.email}
               </p>
             )}
           </div>
@@ -275,8 +275,8 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               disabled={isFormDisabled}
             />
             {errors.password && (
-              <p className="mt-1 text-red-400 text-xs">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.password}
+              <p className="mt-1 text-red-400 text-xs flex items-center">
+                <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" className="mr-1" decorative />{errors.password}
               </p>
             )}
           </div>
@@ -330,7 +330,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           {/* OAuth Error Display */}
           {oauthError && (
             <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2" />{oauthError}
+              <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" animation="wiggle" className="mr-2" aria-label="錯誤" />{oauthError}
             </div>
           )}
 
@@ -342,7 +342,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               disabled={passkeyLoading || isFormDisabled}
               className="w-full mt-4 py-3 bg-black border-2 border-amber-500 text-amber-500 font-bold text-sm hover:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              <Fingerprint className="w-5 h-5" />
+              <PixelIcon name="shield" sizePreset="sm" variant="warning" aria-label="生物辨識" />
               {passkeyLoading ? '生物辨識驗證中...' : '使用 Passkey 登入'}
             </button>
           )}
@@ -350,7 +350,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           {/* Passkey Error Display */}
           {passkeyError && (
             <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2" />{passkeyError}
+              <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" animation="wiggle" className="mr-2" aria-label="錯誤" />{passkeyError}
             </div>
           )}
 

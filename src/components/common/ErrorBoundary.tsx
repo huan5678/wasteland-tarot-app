@@ -1,7 +1,7 @@
 'use client'
 
 import React, { Component, ReactNode } from 'react'
-import { AlertTriangle, RotateCcw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   children: ReactNode
@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="min-h-screen flex items-center justify-center px-4">
           <div className="max-w-md w-full">
             <div className="border-2 border-red-400 bg-red-900/20 p-6 text-center">
-              <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <PixelIcon name="alert-triangle" sizePreset="xl" variant="error" animation="wiggle" className="mx-auto mb-4" decorative />
 
               <h1 className="text-xl font-bold text-red-400 mb-2">
                 系統故障偵測
@@ -67,7 +67,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   onClick={this.handleReset}
                   className="w-full py-2 bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors flex items-center justify-center"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2" />
+                  <PixelIcon name="reload" sizePreset="xs" className="mr-2 inline" decorative />
                   重新啟動 Pip-Boy
                 </button>
 

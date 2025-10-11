@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react'
 import { Toaster, toast } from 'sonner'
 import { useErrorStore } from '@/lib/errorStore'
-import { WifiOff, XCircle, RefreshCw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 /**
  * GlobalErrorDisplay - 使用 Sonner toast 顯示全域錯誤
@@ -25,7 +25,7 @@ export function GlobalErrorDisplay() {
     if (!online) {
       toast.warning('離線模式', {
         description: '偵測到網路中斷，請檢查連線。',
-        icon: <WifiOff className="w-4 h-4 text-[#ffdd00]" />,
+        icon: <PixelIcon name="wifi-off" sizePreset="xs" variant="warning" animation="pulse" decorative />,
         duration: Infinity, // 保持顯示直到網路恢復
         id: 'network-offline',
         classNames: {
@@ -51,12 +51,12 @@ export function GlobalErrorDisplay() {
     toast.error(latestError.message, {
       id: latestError.id,
       description: latestError.statusCode ? `狀態碼: ${latestError.statusCode}` : undefined,
-      icon: <XCircle className="w-4 h-4 text-[#ff6666]" />,
+      icon: <PixelIcon name="close" sizePreset="xs" variant="error" animation="wiggle" decorative />,
       duration: 5000,
       action: latestError.retry ? {
         label: (
           <div className="flex items-center gap-1">
-            <RefreshCw className="w-3 h-3 text-white" />
+            <PixelIcon name="reload" sizePreset="xs" className="text-white" decorative />
             <span>重試</span>
           </div>
         ),

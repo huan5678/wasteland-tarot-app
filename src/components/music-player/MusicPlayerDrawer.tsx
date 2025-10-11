@@ -13,7 +13,7 @@ import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistManager } from '@/hooks/useMusicPlayer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { Music, Play, Pause, Maximize2, Minimize2, List, Turntable } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 
 // Import all child components (will be created in following tasks)
 import { PlaybackControls } from './PlaybackControls';
@@ -124,7 +124,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
           className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-pip-boy-green text-black rounded-full border-2 border-pip-boy-green-dark shadow-[0_0_20px_rgba(0,255,136,0.5)] hover:shadow-[0_0_30px_rgba(0,255,136,0.7)] transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
           aria-label="開啟音樂播放器"
         >
-          <Turntable className="w-6 h-6" aria-hidden="true" />
+          <PixelIcon name="music" sizePreset="sm" variant="primary" animation={isPlaying ? 'pulse' : undefined} aria-label="音樂" />
           {isPlaying && (
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-pip-boy-green"
@@ -160,7 +160,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
           >
             {/* Current Mode Name */}
             <div className="flex items-center gap-4">
-              <Music className="w-5 h-5" />
+              <PixelIcon name="music" sizePreset="sm" variant="primary" decorative />
               <div>
                 <div className="text-sm font-bold">
                   {currentMode || '未播放'}
@@ -177,7 +177,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label={isPlaying ? '暫停' : '播放'}
             >
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              {isPlaying ? <PixelIcon name="pause" sizePreset="sm" variant="primary" aria-label="暫停" /> : <PixelIcon name="play" sizePreset="sm" variant="primary" aria-label="播放" />}
             </button>
 
             {/* Expand Button */}
@@ -186,7 +186,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label="展開播放器"
             >
-              <Maximize2 className="w-5 h-5" />
+              <PixelIcon name="maximize-2" sizePreset="sm" variant="primary" aria-label="展開" />
             </button>
           </motion.div>
         ) : (
@@ -211,14 +211,14 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                   className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="最小化播放器"
                 >
-                  <Minimize2 className="w-3.5 h-3.5" />
+                  <PixelIcon name="minimize-2" sizePreset="xs" variant="primary" aria-label="最小化" />
                 </button>
                 <button
                   onClick={openSheet}
                   className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="開啟播放清單"
                 >
-                  <List className="w-3.5 h-3.5" />
+                  <PixelIcon name="list" sizePreset="xs" variant="primary" aria-label="播放清單" />
                 </button>
               </div>
             </div>

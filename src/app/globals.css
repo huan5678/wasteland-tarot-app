@@ -42,6 +42,68 @@
   font-display: swap;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* === TAILWIND CSS V4 THEME CONFIGURATION === */
 /**
  * Theme variables defined here automatically generate utility classes.
@@ -140,6 +202,68 @@
   --color-tarot-gold: #fbbf24;
   --color-tarot-gold-dark: #f59e0b;
   --color-tarot-mystical: #663399;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* === FALLOUT COLOR SYSTEM === */
@@ -411,6 +535,68 @@
   --crt-text-glow-strong: rgba(0, 255, 136, 0.2); /* 強光暈（降至 20%） */
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* === SCROLLBAR ACCESSIBILITY OVERRIDES === */
 /**
  * Accessibility-first media query overrides
@@ -431,6 +617,68 @@
   }
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* High Contrast Mode Support - Use system colors */
 /* Windows High Contrast Mode, forced colors for accessibility */
 @media (forced-colors: active) {
@@ -441,6 +689,68 @@
     --scrollbar-thumb-color-active: ActiveText; /* System active text */
     --scrollbar-glow: transparent;             /* Remove decorative glows */
     --scrollbar-glow-enhanced: transparent;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -458,6 +768,68 @@
   /* 確保所有文字元素繼承字體 */
   h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select, label {
     font-family: inherit; /* 繼承 body 的字體設定 */
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -974,6 +1346,68 @@
   /* End of Custom Scrollbar Styling */
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* === DOTO FONT STYLES === */
 /**
  * Font utility classes for Doto font
@@ -985,11 +1419,135 @@
   font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* 數字專用樣式類別（向後相容） */
 .numeric {
   font-family: inherit;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.05em;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* 統計數據大號顯示 - 響應式 */
@@ -1001,6 +1559,68 @@
   font-variant-numeric: tabular-nums;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 @media (min-width: 768px) {
   .stat-number {
     font-size: 1.875rem;
@@ -1008,10 +1628,134 @@
   }
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 @media (min-width: 1024px) {
   .stat-number {
     font-size: 2.25rem;
     line-height: 2.5rem;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1023,10 +1767,134 @@
   font-variant-numeric: tabular-nums;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 @media (min-width: 768px) {
   .counter {
     font-size: 0.875rem;
     line-height: 1.25rem;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1035,14 +1903,200 @@
   font-family: ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* 響應式行高配置（符合需求 8.5） */
 .leading-relaxed-mobile {
   line-height: 1.6;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 @media (min-width: 768px) {
   .leading-relaxed-mobile {
     line-height: 1.5;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1054,6 +2108,68 @@
   .stat-number,
   .counter {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1071,11 +2187,135 @@
   font-family: inherit;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .heading-2 {
   font-size: clamp(1.75rem, 4vw, 3rem);
   line-height: 1.2;
   font-weight: 700;
   font-family: inherit;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 .heading-3 {
@@ -1085,11 +2325,135 @@
   font-family: inherit;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .heading-4 {
   font-size: clamp(1.25rem, 3vw, 2rem);
   line-height: 1.3;
   font-weight: 600;
   font-family: inherit;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 .heading-5 {
@@ -1099,11 +2463,135 @@
   font-family: inherit;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .heading-6 {
   font-size: clamp(1rem, 2vw, 1.5rem);
   line-height: 1.4;
   font-weight: 600;
   font-family: inherit;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* Body text variants */
@@ -1113,10 +2601,134 @@
   font-family: inherit;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .body-base {
   font-size: 1rem;
   line-height: 1.6;
   font-family: inherit;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 .body-sm {
@@ -1125,10 +2737,134 @@
   font-family: inherit;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .body-xs {
   font-size: 0.75rem;
   line-height: 1.6;
   font-family: inherit;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* Responsive typography adjustments for mobile */
@@ -1137,6 +2873,68 @@
   .heading-2,
   .heading-3 {
     letter-spacing: normal;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1153,6 +2951,68 @@
   .body-sm,
   .body-xs {
     color: var(--color-text-high-contrast);
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1175,6 +3035,68 @@
   cursor: pointer;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Slider track - Background rail */
 .pip-boy-slider [data-radix-slider-track] {
   position: relative;
@@ -1186,6 +3108,68 @@
   background-color: var(--color-wasteland-darker);
   border: 1px solid var(--color-pip-boy-green-deep);
   transition: var(--scrollbar-transition);
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* Slider range - Filled portion */
@@ -1201,6 +3185,68 @@
   transition: var(--scrollbar-transition);
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Slider thumb - Draggable handle */
 .pip-boy-slider [data-radix-slider-thumb] {
   display: block;
@@ -1214,6 +3260,68 @@
   cursor: grab;
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Thumb - Focus state */
 .pip-boy-slider [data-radix-slider-thumb]:focus {
   outline: none;
@@ -1223,11 +3331,135 @@
   border-color: var(--color-border-focus);
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Thumb - Hover state */
 .pip-boy-slider [data-radix-slider-thumb]:hover {
   background-color: var(--color-pip-boy-green-bright);
   box-shadow: 0 0 15px var(--color-glow-green);
   transform: scale(1.1);
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* Thumb - Active/dragging state */
@@ -1238,10 +3470,134 @@
   transform: scale(1.15);
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 /* Disabled state - Entire slider */
 .pip-boy-slider[data-disabled] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 .pip-boy-slider[data-disabled] [data-radix-slider-track] {
@@ -1249,9 +3605,133 @@
   border-color: var(--color-pip-boy-green-faded);
 }
 
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
+}
+
 .pip-boy-slider[data-disabled] [data-radix-slider-range] {
   background: var(--color-pip-boy-green-faded);
   box-shadow: none;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 .pip-boy-slider[data-disabled] [data-radix-slider-thumb] {
@@ -1259,6 +3739,68 @@
   border-color: var(--color-pip-boy-green-deep);
   box-shadow: none;
   cursor: not-allowed;
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
+  }
 }
 
 /* Accessibility: Reduced motion support */
@@ -1272,6 +3814,68 @@
   .pip-boy-slider [data-radix-slider-thumb]:hover,
   .pip-boy-slider [data-radix-slider-thumb]:active {
     transform: none;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 
@@ -1291,6 +3895,68 @@
     background-color: ButtonText;
     border-color: ButtonText;
     box-shadow: none;
+  }
+}
+
+
+/* === ICON ANIMATIONS === */
+/**
+ * Phase 6: Visual Polish - Custom Icon Animations
+ *
+ * 自訂圖示動畫效果，配合 Wasteland Tarot 的 Fallout 美學
+ */
+
+/* Fade In/Out Animation - 淡入淡出效果 */
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.animate-fade-in-out {
+  animation: fade-in-out 2s ease-in-out infinite;
+}
+
+/* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
+@keyframes wiggle {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-5deg);
+  }
+  75% {
+    transform: rotate(5deg);
+  }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out infinite;
+}
+
+/* Float Animation - 懸浮效果（適合提示） */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: float 2s ease-in-out infinite;
+}
+
+/* Reduced Motion Support - 為動畫障礙使用者提供支援 */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-out,
+  .animate-wiggle,
+  .animate-float {
+    animation: none;
   }
 }
 /* End of Pip-Boy Slider Styling */

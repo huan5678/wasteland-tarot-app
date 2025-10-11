@@ -4,16 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { VolumeControl } from '@/components/audio/VolumeControl'
-import {
-  BarChart3,
-  Spade,
-  Library,
-  UserCircle,
-  Lock,
-  FileText,
-  DoorOpen,
-  Dices
-} from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 export function Header() {
   const user = useAuthStore(s => s.user)
@@ -62,14 +53,14 @@ export function Header() {
 
   const navLinks = user
     ? [
-        { href: '/dashboard', label: '控制台', icon: BarChart3, badge: false },
-        { href: '/readings', label: '占卜記錄', icon: Spade, badge: false },
-        { href: '/cards', label: '卡牌圖書館', icon: Library, badge: false },
-        { href: '/bingo', label: '賓果簽到', icon: Dices, badge: showBingoBadge },
-        { href: '/profile', label: '個人檔案', icon: UserCircle, badge: false },
+        { href: '/dashboard', label: '控制台', icon: 'bar-chart-3', ariaLabel: '控制台', badge: false },
+        { href: '/readings', label: '占卜記錄', icon: 'spade', ariaLabel: '占卜記錄', badge: false },
+        { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館', badge: false },
+        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
+        { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案', badge: false },
       ]
     : [
-        { href: '/auth', label: '啟動終端機', icon: DoorOpen, badge: false },
+        { href: '/auth', label: '啟動終端機', icon: 'door-open', ariaLabel: '啟動終端機', badge: false },
       ]
 
   const isActive = (href: string) => pathname === href
@@ -137,7 +128,12 @@ export function Header() {
                   }
                 `}
               >
-                <link.icon className="w-5 h-5 md:w-4 md:h-4" />
+                <PixelIcon
+                  name={link.icon}
+                  sizePreset="xs"
+                  variant="primary"
+                  aria-label={link.ariaLabel}
+                />
                 <span className="hidden sm:inline">{link.label}</span>
                 {/* 未領取提示紅點 */}
                 {link.badge && (
@@ -158,7 +154,12 @@ export function Header() {
                          hover:bg-red-500/10 text-red-400 hover:text-red-500
                          transition-all duration-200"
               >
-                <DoorOpen className="w-5 h-5 md:w-4 md:h-4" />
+                <PixelIcon
+                  name="door-open"
+                  sizePreset="xs"
+                  variant="error"
+                  aria-label="登出"
+                />
                 <span className="hidden sm:inline">登出</span>
               </button>
             )}

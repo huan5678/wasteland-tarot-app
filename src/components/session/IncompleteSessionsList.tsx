@@ -7,7 +7,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSessionStore } from '@/lib/sessionStore'
-import { Play, Trash2, Clock } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import type { SessionMetadata } from '@/types/session'
 
 export function IncompleteSessionsList() {
@@ -77,7 +77,7 @@ export function IncompleteSessionsList() {
   if (incompleteSessions.length === 0) {
     return (
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-8 text-center">
-        <Clock className="w-12 h-12 mx-auto mb-3 text-pip-boy-green opacity-50" />
+        <PixelIcon name="clock" sizePreset="lg" variant="muted" className="mx-auto mb-3 opacity-50" decorative />
         <p className="text-pip-boy-green/70">
           目前沒有未完成的占卜會話
         </p>
@@ -140,7 +140,7 @@ function SessionCard({
           </p>
 
           <div className="flex items-center gap-2 text-xs text-pip-boy-green/70">
-            <Clock className="w-3 h-3" />
+            <PixelIcon name="clock" sizePreset="xs" variant="muted" decorative />
             <span>建立於 {new Date(session.created_at).toLocaleDateString('zh-TW')}</span>
           </div>
         </div>
@@ -151,7 +151,7 @@ function SessionCard({
             className="flex items-center gap-1.5 px-3 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
             title="恢復會話"
           >
-            <Play className="w-4 h-4" />
+            <PixelIcon name="play" sizePreset="xs" variant="success" decorative />
             <span>恢復</span>
           </button>
 
@@ -160,7 +160,7 @@ function SessionCard({
             className="p-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
             title="刪除會話"
           >
-            <Trash2 className="w-4 h-4" />
+            <PixelIcon name="trash" sizePreset="xs" variant="error" decorative />
           </button>
         </div>
       </div>

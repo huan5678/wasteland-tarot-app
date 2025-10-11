@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Shuffle, Repeat, Repeat1 } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect';
 import type { RepeatMode } from '@/lib/audio/playlistTypes';
 
@@ -122,7 +122,7 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           className="flex items-center justify-center w-10 h-10 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
           aria-label="上一首"
         >
-          <SkipBack className="w-5 h-5" aria-hidden="true" />
+          <PixelIcon name="skip-back" sizePreset="sm" variant="primary" aria-label="上一首" />
         </button>
 
         {/* Play/Pause Button */}
@@ -132,9 +132,9 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           aria-label={isPlaying ? '暫停' : '播放'}
         >
           {isPlaying ? (
-            <Pause className="w-6 h-6" aria-hidden="true" />
+            <PixelIcon name="pause" sizePreset="sm" variant="primary" aria-label="暫停" />
           ) : (
-            <Play className="w-6 h-6" aria-hidden="true" />
+            <PixelIcon name="play" sizePreset="sm" variant="primary" aria-label="播放" />
           )}
         </button>
 
@@ -144,7 +144,7 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           className="flex items-center justify-center w-10 h-10 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
           aria-label="下一首"
         >
-          <SkipForward className="w-5 h-5" aria-hidden="true" />
+          <PixelIcon name="skip-forward" sizePreset="sm" variant="primary" aria-label="下一首" />
         </button>
       </div>
 
@@ -159,13 +159,18 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           onClick={handleToggleShuffle}
           className={`flex items-center justify-center w-8 h-8 rounded transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker ${
             shuffleEnabled
-              ? 'text-pip-boy-green border-2 border-pip-boy-green bg-pip-boy-green/20'
-              : 'text-pip-boy-green/50 hover:text-pip-boy-green'
+              ? 'border-2 border-pip-boy-green bg-pip-boy-green/20'
+              : 'hover:text-pip-boy-green'
           }`}
           aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
           aria-pressed={shuffleEnabled}
         >
-          <Shuffle className="w-5 h-5" aria-hidden="true" />
+          <PixelIcon
+            name="shuffle"
+            sizePreset="sm"
+            variant={shuffleEnabled ? 'primary' : 'muted'}
+            aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
+          />
         </button>
 
         {/* Repeat Button */}
@@ -173,8 +178,8 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           onClick={handleToggleRepeat}
           className={`flex items-center justify-center w-8 h-8 rounded transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker ${
             repeatMode !== 'off'
-              ? 'text-pip-boy-green border-2 border-pip-boy-green bg-pip-boy-green/20'
-              : 'text-pip-boy-green/50 hover:text-pip-boy-green'
+              ? 'border-2 border-pip-boy-green bg-pip-boy-green/20'
+              : 'hover:text-pip-boy-green'
           }`}
           aria-label={
             repeatMode === 'off'
@@ -185,11 +190,18 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           }
           aria-pressed={repeatMode !== 'off'}
         >
-          {repeatMode === 'one' ? (
-            <Repeat1 className="w-5 h-5" aria-hidden="true" />
-          ) : (
-            <Repeat className="w-5 h-5" aria-hidden="true" />
-          )}
+          <PixelIcon
+            name="repeat"
+            sizePreset="sm"
+            variant={repeatMode !== 'off' ? 'primary' : 'muted'}
+            aria-label={
+              repeatMode === 'off'
+                ? '啟用循環播放'
+                : repeatMode === 'one'
+                ? '單曲循環'
+                : '列表循環'
+            }
+          />
         </button>
       </div>
 
