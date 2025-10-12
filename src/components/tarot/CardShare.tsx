@@ -7,12 +7,6 @@
 
 import React, { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Share2, Copy, Download, Link2, MessageCircle, Mail,
-  Facebook, Twitter, Instagram, QrCode, Image as ImageIcon,
-  FileText, CheckCircle, ExternalLink, Smartphone,
-  Globe, Users, Heart, Star, Send
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DetailedTarotCard } from './CardDetailModal'
 
@@ -323,7 +317,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
       <div className="p-4 border-b border-pip-boy-green/20 bg-pip-boy-green/5">
         <div className="flex items-center justify-between">
           <h3 className="text-pip-boy-green font-bold flex items-center gap-2">
-            <Share2 className="w-5 h-5" />
+            <PixelIcon name="share" size={24} decorative />
             Share {card.name}
           </h3>
           {onClose && (

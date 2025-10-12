@@ -33,7 +33,7 @@ export const ADSR_PRESETS: Record<string, ADSRConfig> = {
     release: 0.2,
   },
   bass_sustained: {
-    attack: 0.02,
+    attack: 0.08, // 增加到 80ms 避免點擊聲 (原 0.02)
     decay: 0.2,
     sustain: 0.7,
     release: 0.3,
@@ -55,13 +55,13 @@ export const ADSR_PRESETS: Record<string, ADSRConfig> = {
 
   // Lead 音色
   lead_bright: {
-    attack: 0.01,
+    attack: 0.05, // 增加到 50ms 避免點擊聲 (原 0.01)
     decay: 0.15,
     sustain: 0.5,
     release: 0.2,
   },
   lead_punchy: {
-    attack: 0.002,
+    attack: 0.03, // 增加到 30ms 避免點擊聲，保留打擊感 (原 0.002)
     decay: 0.05,
     sustain: 0.3,
     release: 0.1,
@@ -131,17 +131,22 @@ export class ADSREnvelope {
     const { attack, decay, sustain, release } = this.config;
     const actualSustainValue = sustainValue ?? peakValue * sustain;
 
-    // 需求 10.10: 使用 AudioParam.linearRampToValueAtTime() 實現平滑過渡
+    // 改用指數型曲線，更自然且避免音量疊加削波
     // 清除現有的自動化排程
     param.cancelScheduledValues(startTime);
 
-    // Attack: 從 0 上升到 peakValue
-    param.setValueAtTime(0, startTime);
-    param.linearRampToValueAtTime(peakValue, startTime + attack);
+    // 確保值不為 0 (exponentialRampToValueAtTime 不接受 0)
+    const minValue = 0.001;
+    const safePeakValue = Math.max(minValue, peakValue);
+    const safeSustainValue = Math.max(minValue, actualSustainValue);
 
-    // Decay: 從 peakValue 下降到 sustainValue
-    param.linearRampToValueAtTime(
-      actualSustainValue,
+    // Attack: 從極小值指數上升到 peakValue
+    param.setValueAtTime(minValue, startTime);
+    param.exponentialRampToValueAtTime(safePeakValue, startTime + attack);
+
+    // Decay: 從 peakValue 指數下降到 sustainValue
+    param.exponentialRampToValueAtTime(
+      safeSustainValue,
       startTime + attack + decay
     );
 
@@ -158,11 +163,12 @@ export class ADSREnvelope {
    */
   triggerRelease(param: AudioParam, releaseTime: number): void {
     const { release } = this.config;
+    const minValue = 0.001;
 
-    // 從當前值平滑下降到 0
+    // 改用指數衰減，更自然的 Release 效果
     param.cancelScheduledValues(releaseTime);
-    param.setValueAtTime(param.value, releaseTime);
-    param.linearRampToValueAtTime(0, releaseTime + release);
+    param.setValueAtTime(Math.max(minValue, param.value), releaseTime);
+    param.exponentialRampToValueAtTime(minValue, releaseTime + release);
   }
 
   /**

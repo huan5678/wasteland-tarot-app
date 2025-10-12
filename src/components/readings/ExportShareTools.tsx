@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
-import { Download, Share2, Copy, FileText, Image, Link, QrCode, Mail, MessageCircle, X } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   selectedReadingIds?: string[]
@@ -169,7 +169,7 @@ ${reading.interpretation || '無解讀內容'}
             onClick={onClose}
             className="text-pip-boy-green/70 hover:text-pip-boy-green"
           >
-            <X className="w-5 h-5" />
+            < PixelIcon name="x" className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -186,7 +186,7 @@ ${reading.interpretation || '無解讀內容'}
         {/* Export Section */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
           <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
-            <Download className="w-5 h-5" />
+            < PixelIcon name="download" className="w-5 h-5" />
             匯出資料
           </h4>
 
@@ -203,7 +203,7 @@ ${reading.interpretation || '無解讀內容'}
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                   }`}
                 >
-                  <FileText className="w-5 h-5 mx-auto mb-1" />
+                  < PixelIcon name="file-text" className="w-5 h-5 mx-auto mb-1" />
                   JSON
                   <div className="text-xs opacity-70">完整資料</div>
                 </button>
@@ -215,7 +215,7 @@ ${reading.interpretation || '無解讀內容'}
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                   }`}
                 >
-                  <FileText className="w-5 h-5 mx-auto mb-1" />
+                  < PixelIcon name="file-text" className="w-5 h-5 mx-auto mb-1" />
                   CSV
                   <div className="text-xs opacity-70">表格格式</div>
                 </button>
@@ -237,7 +237,7 @@ ${reading.interpretation || '無解讀內容'}
                 </>
               ) : (
                 <>
-                  <Download className="w-4 h-4" />
+                  < PixelIcon name="download" className="w-4 h-4" />
                   匯出 {exportFormat.toUpperCase()} 檔案
                 </>
               )}
@@ -252,7 +252,7 @@ ${reading.interpretation || '無解讀內容'}
         {/* Share Section */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
           <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
-            <Share2 className="w-5 h-5" />
+            < PixelIcon name="share-2" className="w-5 h-5" />
             分享占卜
           </h4>
 
@@ -270,7 +270,7 @@ ${reading.interpretation || '無解讀內容'}
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                     }`}
                   >
-                    <Copy className="w-4 h-4 mx-auto mb-1" />
+                    < PixelIcon name="copy" className="w-4 h-4 mx-auto mb-1" />
                     文字
                   </button>
                   <button
@@ -281,7 +281,7 @@ ${reading.interpretation || '無解讀內容'}
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                     }`}
                   >
-                    <Link className="w-4 h-4 mx-auto mb-1" />
+                    < PixelIcon name="link" className="w-4 h-4 mx-auto mb-1" />
                     連結
                   </button>
                   <button
@@ -292,7 +292,7 @@ ${reading.interpretation || '無解讀內容'}
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                     }`}
                   >
-                    <Image className="w-4 h-4 mx-auto mb-1" />
+                    < PixelIcon name="image" className="w-4 h-4 mx-auto mb-1" />
                     圖片
                   </button>
                 </div>
@@ -304,7 +304,7 @@ ${reading.interpretation || '無解讀內容'}
                 className="w-full px-4 py-3 border-2 border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green
                          font-bold hover:bg-pip-boy-green/20 flex items-center justify-center gap-2"
               >
-                <Copy className="w-4 h-4" />
+                < PixelIcon name="copy" className="w-4 h-4" />
                 複製到剪貼簿
               </button>
 
@@ -336,7 +336,7 @@ ${reading.interpretation || '無解讀內容'}
             </div>
           ) : (
             <div className="text-center py-8">
-              <Share2 className="w-12 h-12 mx-auto mb-3 text-pip-boy-green/40" />
+              < PixelIcon name="share-2" className="w-12 h-12 mx-auto mb-3 text-pip-boy-green/40" />
               <div className="text-sm text-pip-boy-green/70 mb-2">
                 請選擇單一占卜記錄來分享
               </div>
@@ -351,7 +351,7 @@ ${reading.interpretation || '無解讀內容'}
       {/* Import Section */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
         <h4 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          <FileText className="w-5 h-5" />
+          < PixelIcon name="file-text" className="w-5 h-5" />
           匯入資料
         </h4>
 

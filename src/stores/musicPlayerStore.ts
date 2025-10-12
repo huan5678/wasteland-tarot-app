@@ -226,10 +226,12 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
        * Requirements 2.2: 繼續播放音樂
        */
       resume: () => {
-        const { currentMode } = get();
+        const { currentMode, playMode } = get();
 
+        // 如果沒有 currentMode，使用預設模式 'synthwave'
         if (!currentMode) {
-          logger.warn('[musicPlayerStore] No mode to resume');
+          logger.info('[musicPlayerStore] No mode to resume, using default mode: synthwave');
+          playMode('synthwave');
           return;
         }
 
@@ -573,10 +575,13 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
       name: 'wasteland-tarot-music-player', // localStorage key
       // Requirements 6.1: 持久化狀態至 localStorage
       partialize: (state) => ({
+        currentMode: state.currentMode,
+        isPlaying: state.isPlaying,
         repeatMode: state.repeatMode,
         shuffleEnabled: state.shuffleEnabled,
         currentPlaylist: state.currentPlaylist,
         currentModeIndex: state.currentModeIndex,
+        isDrawerMinimized: state.isDrawerMinimized,
       }),
     }
   )

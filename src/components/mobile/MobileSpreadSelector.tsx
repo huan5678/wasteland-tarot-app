@@ -2,14 +2,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import { animated, useSpring, useTransition } from '@react-spring/web'
-import {
-  Search, Filter, Star, Clock, TrendingUp, Heart, DollarSign,
-  Users, Brain, Calendar, Zap, ChevronRight, ChevronDown,
-  Info, Play, Bookmark, Share2
-} from 'lucide-react'
 import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
 import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance'
 import { MobileCard, MobileGrid, MobileBottomSheet } from '@/components/layout/ResponsiveContainer'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface SpreadConfig {
   id: string
@@ -36,12 +32,12 @@ interface MobileSpreadSelectorProps {
 }
 
 const spreadCategories = [
-  { id: 'all', label: '全部', icon: <Star className="w-4 h-4" /> },
-  { id: 'daily', label: '每日', icon: <Calendar className="w-4 h-4" /> },
-  { id: 'love', label: '愛情', icon: <Heart className="w-4 h-4" /> },
-  { id: 'career', label: '事業', icon: <DollarSign className="w-4 h-4" /> },
-  { id: 'spiritual', label: '靈性', icon: <Zap className="w-4 h-4" /> },
-  { id: 'general', label: '綜合', icon: <Users className="w-4 h-4" /> }
+  { id: 'all', label: '全部', icon: <PixelIcon iconName="star" size={16} decorative /> },
+  { id: 'daily', label: '每日', icon: <PixelIcon iconName="calendar" size={16} decorative /> },
+  { id: 'love', label: '愛情', icon: <PixelIcon iconName="heart" size={16} decorative /> },
+  { id: 'career', label: '事業', icon: <PixelIcon iconName="coin" size={16} decorative /> },
+  { id: 'spiritual', label: '靈性', icon: <PixelIcon iconName="zap" size={16} decorative /> },
+  { id: 'general', label: '綜合', icon: <PixelIcon iconName="users" size={16} decorative /> }
 ]
 
 const difficultyColors = {
@@ -208,7 +204,7 @@ export function MobileSpreadSelector({
               </div>
             )}
             {spread.isFavorite && (
-              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+              <PixelIcon iconName="star" size={16} className="text-yellow-400" decorative />
             )}
           </div>
         </div>
@@ -247,7 +243,7 @@ export function MobileSpreadSelector({
                        rounded-lg text-sm font-bold hover:bg-pip-boy-green/90
                        transition-colors active:scale-95"
             >
-              <Play className="w-4 h-4" />
+              <PixelIcon iconName="play" size={16} decorative />
               開始占卜
             </button>
 
@@ -260,7 +256,7 @@ export function MobileSpreadSelector({
               className="p-2 border border-pip-boy-green/50 text-pip-boy-green
                        rounded-lg hover:bg-pip-boy-green/10 transition-colors"
             >
-              <Info className="w-4 h-4" />
+              <PixelIcon iconName="info" size={16} aria-label="查看牌陣詳情" />
             </button>
           </div>
         </div>
@@ -273,7 +269,9 @@ export function MobileSpreadSelector({
       {/* Search Bar */}
       <animated.div style={searchSpring} className="mb-6">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pip-boy-green/60 w-5 h-5" />
+          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-pip-boy-green/60">
+            <PixelIcon iconName="search" size={20} decorative />
+          </div>
           <input
             type="text"
             placeholder="搜尋牌陣..."
@@ -288,8 +286,9 @@ export function MobileSpreadSelector({
             onClick={() => setShowFilters(true)}
             className="absolute right-3 top-1/2 transform -translate-y-1/2
                      text-pip-boy-green/60 hover:text-pip-boy-green transition-colors"
+            aria-label="開啟篩選選項"
           >
-            <Filter className="w-5 h-5" />
+            <PixelIcon iconName="filter" size={20} />
           </button>
         </div>
       </animated.div>
@@ -386,7 +385,9 @@ export function MobileSpreadSelector({
       {/* Empty State */}
       {filteredSpreads.length === 0 && (
         <div className="text-center py-12">
-          <Search className="w-16 h-16 text-pip-boy-green/30 mx-auto mb-4" />
+          <div className="flex justify-center mb-4">
+            <PixelIcon iconName="search" size={64} className="text-pip-boy-green/30" decorative />
+          </div>
           <p className="text-pip-boy-green/60">
             沒有找到符合條件的牌陣
           </p>
@@ -494,11 +495,11 @@ export function MobileSpreadSelector({
               </div>
 
               <div className="flex gap-2">
-                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg">
-                  <Bookmark className="w-5 h-5" />
+                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg" aria-label="加入書籤">
+                  <PixelIcon iconName="bookmark" size={20} />
                 </button>
-                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg">
-                  <Share2 className="w-5 h-5" />
+                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg" aria-label="分享牌陣">
+                  <PixelIcon iconName="share" size={20} />
                 </button>
               </div>
             </div>
@@ -540,7 +541,7 @@ export function MobileSpreadSelector({
                          rounded-lg font-bold hover:bg-pip-boy-green/90
                          transition-colors flex items-center justify-center gap-2"
               >
-                <Play className="w-5 h-5" />
+                <PixelIcon iconName="play" size={20} decorative />
                 開始占卜
               </button>
             </div>

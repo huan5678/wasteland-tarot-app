@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "remixicon/fonts/remixicon.css";
 import { ZustandAuthInitializer } from "@/components/providers/ZustandAuthProvider";
 import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
 import { Header } from "@/components/layout/Header";
@@ -14,10 +15,14 @@ import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
 import { MusicPlayerInitializer } from '@/components/system/MusicPlayerInitializer';
 import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
 import { FontLoadMonitor } from '@/components/system/FontLoadMonitor';
+import { DailyCardBackProvider } from '@/components/providers/DailyCardBackProvider';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
 export const metadata: Metadata = {
+  // 修復 metadataBase 警告 - 設定基礎 URL 用於生成絕對路徑
+  // 開發環境使用 localhost，生產環境需要設定 NEXT_PUBLIC_SITE_URL
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: "廢土塔羅 - Pip-Boy 占卜終端機",
   description: "由 Vault-Tec 驅動的後末世塔羅占卜。透過神秘的卡牌占卜探索你在廢土中的命運。",
   keywords: ["塔羅", "輻射", "pip-boy", "廢土", "占卜", "卡牌", "Vault-Tec"],
@@ -56,7 +61,11 @@ export default function RootLayout({
         使用 className 驅動的字體整合策略，所有子元件透過 inherit 繼承字體設定
         參考: .kiro/specs/cubic-11-font-integration/design.md
       */}
-      <body className={cn("font-cubic", "text-pip-boy-green", "antialiased")} style={{backgroundColor: 'var(--color-wasteland-darker)'}}>
+      <body
+        className={cn("font-cubic", "text-pip-boy-green", "antialiased")}
+        style={{backgroundColor: 'var(--color-wasteland-darker)'}}
+        suppressHydrationWarning
+      >
         <DynamicBackground />
         <ErrorBoundary>
           <ZustandAuthInitializer>
@@ -68,18 +77,21 @@ export default function RootLayout({
               {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
               {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
               <TiltConfigProvider>
-                <GlobalErrorDisplay />
-                {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
-                <MusicPlayerInitializer />
-                <div className="min-h-screen flex flex-col relative z-10">
-                  <ClientLayout>
-                    <Header />
-                    <main className="flex-1">{children}</main>
-                    <Footer />
-                  </ClientLayout>
-                </div>
-                {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
-                <MusicPlayerDrawer />
+                {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
+                <DailyCardBackProvider>
+                  <GlobalErrorDisplay />
+                  {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
+                  <MusicPlayerInitializer />
+                  <div className="min-h-screen flex flex-col relative z-10">
+                    <ClientLayout>
+                      <Header />
+                      <main className="flex-1">{children}</main>
+                      <Footer />
+                    </ClientLayout>
+                  </div>
+                  {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
+                  <MusicPlayerDrawer />
+                </DailyCardBackProvider>
               </TiltConfigProvider>
             </AnalyticsProvider>
           </ZustandAuthInitializer>

@@ -16,19 +16,13 @@ export function ZustandAuthInitializer({ children }: { children: React.ReactNode
   useEffect(() => {
     if (!mounted) return
 
-    console.log('[ZustandAuthInitializer] Calling initialize() with progress tracking')
     initialize((newProgress) => {
       setProgress(newProgress)
     })
   }, [initialize, mounted])
 
-  useEffect(() => {
-    console.log('[ZustandAuthInitializer] isInitialized:', isInitialized)
-  }, [isInitialized])
-
   // Prevent hydration mismatch by always showing loading on initial render
   if (!mounted || !isInitialized) {
-    console.log('[ZustandAuthInitializer] Rendering AsciiDonutLoading with progress:', progress)
     return (
       <AsciiDonutLoading
         message="INITIALIZING VAULT RESIDENT STATUS..."
@@ -37,6 +31,5 @@ export function ZustandAuthInitializer({ children }: { children: React.ReactNode
     )
   }
 
-  console.log('[ZustandAuthInitializer] Rendering children')
   return <>{children}</>
 }

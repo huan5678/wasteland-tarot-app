@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useAuthStore } from '@/lib/authStore'
-import { Target, Spade, Zap, BarChart3, Theater } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { DynamicHeroTitle, DynamicHeroTitleErrorBoundary } from '@/components/hero'
 
 export default function HomePage() {
@@ -69,7 +69,7 @@ export default function HomePage() {
               }}
             >
               <div className="text-center">
-                <Target className="w-12 h-12 mb-4 mx-auto group-hover:animate-pulse text-pip-boy-green" />
+                <PixelIcon name="target" size={48} className="mb-4 mx-auto group-hover:animate-pulse text-pip-boy-green" aria-label={user ? '進入控制台' : '進入 Vault'} />
                 <h3 className="text-xl font-bold text-pip-boy-green mb-2">
                   {user ? '進入控制台' : '進入 Vault'}
                 </h3>
@@ -94,7 +94,7 @@ export default function HomePage() {
               }}
             >
               <div className="text-center">
-                <Spade className="w-12 h-12 mb-4 mx-auto group-hover:animate-bounce text-pip-boy-green" />
+                <PixelIcon name="card-stack" size={48} className="mb-4 mx-auto group-hover:animate-bounce text-pip-boy-green" aria-label={user ? '新占卜' : '快速占卜'} />
                 <h3 className="text-xl font-bold text-pip-boy-green mb-2">
                   {user ? '新占卜' : '快速占卜'}
                 </h3>
@@ -126,7 +126,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <Zap className="w-10 h-10 mb-4 mx-auto text-pip-boy-green" />
+              <PixelIcon name="zap" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">
                 量子占卜
               </h3>
@@ -136,7 +136,7 @@ export default function HomePage() {
             </div>
 
             <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <BarChart3 className="w-10 h-10 mb-4 mx-auto text-pip-boy-green" />
+              <PixelIcon name="chart-bar" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">
                 占卜分析
               </h3>
@@ -146,7 +146,7 @@ export default function HomePage() {
             </div>
 
             <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <Theater className="w-10 h-10 mb-4 mx-auto text-pip-boy-green" />
+              <PixelIcon name="test-tube" remixVariant="fill" sizePreset="lg" variant="primary" className="mb-4 mx-auto" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">
                 廢土主題
               </h3>

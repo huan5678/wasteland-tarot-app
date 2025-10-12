@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Spade, UserPlus, ArrowLeft, Check, FileText } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { enhancedWastelandCards } from '@/data/enhancedCards'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
 import { QuickReadingStorage } from '@/lib/quickReadingStorage'
@@ -26,9 +26,9 @@ const CardDetailModal = dynamic(
   { ssr: false }
 )
 
-// Dynamic import TarotCard to reduce initial bundle size
-const TarotCard = dynamic(
-  () => import('@/components/tarot/TarotCard').then((mod) => ({ default: mod.TarotCard })),
+// Dynamic import TarotCardWithDailyBack to reduce initial bundle size
+const TarotCardWithDailyBack = dynamic(
+  () => import('@/components/tarot/TarotCardWithDailyBack').then((mod) => ({ default: mod.TarotCardWithDailyBack })),
   { ssr: false }
 )
 
@@ -210,7 +210,7 @@ export default function QuickReadingPage() {
     return (
       <div className="min-h-screen text-pip-boy-green flex items-center justify-center">
         <div className="text-center">
-          <Spade className="w-12 h-12 mx-auto mb-4 text-pip-boy-green animate-pulse" />
+          <PixelIcon name="card-stack" size={48} className="mx-auto mb-4 text-pip-boy-green animate-pulse" decorative />
           <p className="text-sm text-pip-boy-green animate-pulse">
             正在初始化廢土塔羅系統...
           </p>
@@ -254,7 +254,7 @@ export default function QuickReadingPage() {
                 className="text-pip-boy-green hover:text-cyan-400 transition-colors"
                 aria-label="返回首頁"
               >
-                <ArrowLeft className="w-6 h-6" />
+                <PixelIcon name="arrow-left" size={24} aria-label="返回首頁" />
               </button>
               <div className="text-xs">
                 <div className="flex items-center gap-2">
@@ -269,7 +269,7 @@ export default function QuickReadingPage() {
               onClick={handleRegister}
               className="flex items-center gap-2 text-xs text-pip-boy-green hover:text-cyan-400 transition-colors px-3 py-1 border border-pip-boy-green"
             >
-              <UserPlus className="w-4 h-4" />
+              <PixelIcon name="user-plus" size={16} aria-label="註冊 Vault 帳號" />
               註冊 Vault 帳號
             </button>
           </div>
@@ -281,7 +281,7 @@ export default function QuickReadingPage() {
           style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
         >
           <div className="text-center mb-8">
-            <Spade className="w-16 h-16 mx-auto mb-4 text-pip-boy-green" />
+            <PixelIcon name="card-stack" size={64} className="mx-auto mb-4 text-pip-boy-green" decorative />
             <h1 className="text-3xl font-bold text-pip-boy-green mb-2">
               快速占卜
             </h1>
@@ -302,13 +302,12 @@ export default function QuickReadingPage() {
               isDisabled={false}
             >
               {(card, index, isActive) => (
-                <TarotCard
+                <TarotCardWithDailyBack
                   card={card}
                   isRevealed={card.id.toString() === selectedCardId}
                   position="upright"
                   size="large"
                   flipStyle="kokonut"
-                  cardBackUrl="/assets/cards/card-backs/01.png"
                   onClick={() => {
                     if (!selectedCardId) {
                       // 卡背狀態，點擊翻牌
@@ -333,13 +332,12 @@ export default function QuickReadingPage() {
           ) : (
             /* 已選卡時僅顯示單張卡片 */
             <div className="flex justify-center py-8">
-              <TarotCard
+              <TarotCardWithDailyBack
                 card={selectedCard!}
                 isRevealed={true}
                 position="upright"
                 size="large"
                 flipStyle="kokonut"
-                cardBackUrl="/assets/cards/card-backs/01.png"
                 onClick={() => handleCardClick(selectedCard!)}
                 isSelectable={false}
                 isSelected={true}
@@ -353,7 +351,7 @@ export default function QuickReadingPage() {
           {selectedCardId && (
             <div className="mt-8 border-2 border-pip-boy-green p-6 animate-pulse-border">
               <div className="flex items-center gap-3 mb-4">
-                <Spade className="w-8 h-8 text-pip-boy-green animate-pulse" />
+                <PixelIcon name="card-stack" size={32} className="text-pip-boy-green animate-pulse" decorative />
                 <h3 className="text-xl text-pip-boy-green">
                   這是你的專屬命運展示 - 僅此一次
                 </h3>
@@ -365,23 +363,23 @@ export default function QuickReadingPage() {
 
               <ul className="space-y-2 mb-6 text-sm text-pip-boy-green/80">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <PixelIcon name="check" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
                   <span><span className="text-pip-boy-green font-bold">無限次抽卡</span>，探索完整塔羅智慧</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <PixelIcon name="check" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
                   <span>個人化 AI 解讀（Karma & Faction 系統）</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <PixelIcon name="check" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
                   <span>占卜記錄保存與歷史追蹤</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <PixelIcon name="check" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
                   <span>多種牌陣選擇（三卡、Celtic Cross）</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+                  <PixelIcon name="check" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
                   <span>角色語音解讀（Pip-Boy, Mr. Handy, Scribe）</span>
                 </li>
               </ul>
@@ -409,7 +407,7 @@ export default function QuickReadingPage() {
             style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
           >
             <p className="text-xs text-text-muted text-center flex items-center justify-center gap-2">
-              <FileText className="w-4 h-4 text-pip-boy-green flex-shrink-0" />
+              <PixelIcon name="file-text" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
               <span>註冊 Vault 帳號後，你可以：儲存占卜歷史 | 使用高級牌陣 | 獲得 AI 詳細解讀 | 追蹤 Karma 變化</span>
             </p>
           </div>

@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 import { useReadingsStore, ReadingCategory } from '@/lib/readingsStore'
-import { Plus, Edit2, Trash2, Save, X, Palette, Hash, Info } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   onClose?: () => void
@@ -107,7 +107,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              < PixelIcon name="plus" className="w-4 h-4" />
               新增類別
             </button>
           )}
@@ -116,7 +116,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               onClick={onClose}
               className="text-pip-boy-green/70 hover:text-pip-boy-green"
             >
-              <X className="w-5 h-5" />
+              < PixelIcon name="x" className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -194,7 +194,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                 onClick={() => setShowColorPicker(!showColorPicker)}
                 className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60 flex items-center gap-1"
               >
-                <Palette className="w-3 h-3" />
+                < PixelIcon name="palette" className="w-3 h-3" />
                 選擇顏色
               </button>
             </div>
@@ -247,7 +247,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               className="px-3 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
-              <X className="w-4 h-4" />
+              < PixelIcon name="x" className="w-4 h-4" />
               取消
             </button>
             <button
@@ -256,7 +256,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               className="px-3 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                        hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
+              < PixelIcon name="save" className="w-4 h-4" />
               保存
             </button>
           </div>
@@ -273,7 +273,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
           >
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 border border-pip-boy-green/30 flex items-center justify-center text-pip-boy-green/60">
-                <X className="w-4 h-4" />
+                < PixelIcon name="x" className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-pip-boy-green/70 text-sm">無類別</div>
@@ -327,7 +327,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                       className="p-1 text-pip-boy-green/60 hover:text-pip-boy-green"
                       title="編輯類別"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      < PixelIcon name="edit-2" className="w-4 h-4" />
                     </button>
                     {/* Don't allow deleting default categories */}
                     {!['personal', 'relationship', 'career', 'spiritual', 'daily'].includes(category.id) && (
@@ -336,7 +336,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                         className="p-1 text-pip-boy-green/60 hover:text-red-400"
                         title="刪除類別"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        < PixelIcon name="trash-2" className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -348,7 +348,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
         {categories.length === 0 && (
           <div className="text-center py-8 border-2 border-pip-boy-green/30">
-            <Hash className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
+            < PixelIcon name="hash" className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
             <div className="text-sm text-pip-boy-green/70">尚無類別</div>
             <button
               onClick={startCreate}
@@ -363,7 +363,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
       {/* Help Text */}
       {!selectedReadingId && (
         <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-start gap-2">
-          <Info className="w-4 h-4 text-pip-boy-green/60 mt-0.5" />
+          < PixelIcon name="info" className="w-4 h-4 text-pip-boy-green/60 mt-0.5" />
           <div className="text-pip-boy-green/70 text-xs">
             類別可以幫助你整理不同主題的占卜記錄。預設類別無法刪除，但可以編輯名稱和描述。
           </div>

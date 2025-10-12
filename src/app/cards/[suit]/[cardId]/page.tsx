@@ -23,7 +23,11 @@ import { PipBoyButton, PipBoyCard, LoadingSpinner, ErrorDisplay } from '@/compon
 import {
   getSuitDisplayName,
   isValidSuit,
+  isValidRouteSuit,
+  convertRouteToApiSuit,
+  convertApiToRouteSuit,
   type BreadcrumbItem,
+  SuitType,
 } from '@/types/suits'
 import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/utils/cardImages'
 import type { TarotCard } from '@/types/api'
@@ -36,8 +40,18 @@ export default function CardDetailPage() {
   const params = useParams()
 
   // 取得路由參數
-  const suit = params.suit as string
+  const routeSuit = params.suit as string
   const cardId = params.cardId as string
+
+  // 驗證路由參數並轉換為 API 枚舉值
+  const isValidSuitType = isValidRouteSuit(routeSuit)
+  let apiSuit = routeSuit
+  try {
+    apiSuit = isValidSuitType ? convertRouteToApiSuit(routeSuit) : routeSuit
+  } catch (err) {
+    // 轉換失敗，使用原始值
+  }
+  const suitName = isValidSuitType ? getSuitDisplayName(apiSuit) : routeSuit
 
   // Zustand store
   const { fetchCardById, isLoading, error, clearError } = useCardsStore()
@@ -47,16 +61,14 @@ export default function CardDetailPage() {
   const [imageError, setImageError] = useState(false)
   const [isMounted, setIsMounted] = useState(false)
 
-  // 相鄰卡牌
-  const { previousCard, nextCard, isLoading: adjacentLoading } = useAdjacentCards(suit, cardId)
-
-  // 驗證花色是否有效
-  const isValidSuitType = isValidSuit(suit)
-  const suitName = isValidSuitType ? getSuitDisplayName(suit) : suit
+  // 相鄰卡牌（傳入簡短路由名稱）
+  const { previousCard, nextCard, isLoading: adjacentLoading } = useAdjacentCards(routeSuit, cardId)
 
   // 載入卡牌資料
   useEffect(() => {
     setIsMounted(true)
+    // 重要：當 cardId 改變時，立即清空舊卡牌避免閃現錯誤頁面
+    setCard(null)
 
     const loadCard = async () => {
       try {
@@ -70,10 +82,10 @@ export default function CardDetailPage() {
     loadCard()
   }, [cardId, fetchCardById])
 
-  // 麵包屑導航項目
+  // 麵包屑導航項目（使用簡短路由名稱）
   const breadcrumbItems: BreadcrumbItem[] = [
     { label: '塔羅牌圖書館', href: '/cards' },
-    { label: suitName, href: `/cards/${suit}` },
+    { label: suitName, href: `/cards/${routeSuit}` },
     { label: card?.name || '載入中...' },
   ]
 
@@ -88,8 +100,8 @@ export default function CardDetailPage() {
     setImageError(true)
   }
 
-  // 載入狀態
-  if (isLoading && !isMounted) {
+  // 載入狀態：顯示載入畫面直到卡牌資料載入完成
+  if ((isLoading || !card) && !error) {
     return (
       <div className="min-h-screen bg-wasteland-dark flex items-center justify-center">
         <LoadingSpinner size="lg" />
@@ -97,7 +109,7 @@ export default function CardDetailPage() {
     )
   }
 
-  // 錯誤狀態
+  // 錯誤狀態：API 請求失敗
   if (error && !card) {
     return (
       <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
@@ -115,8 +127,8 @@ export default function CardDetailPage() {
     )
   }
 
-  // 卡牌不存在
-  if (!isLoading && !card) {
+  // 卡牌不存在：API 回應 null（不應該發生）
+  if (!card) {
     return (
       <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
@@ -125,18 +137,13 @@ export default function CardDetailPage() {
             <ErrorDisplay
               error={new Error('找不到卡牌')}
               message={`找不到 ID 為 ${cardId} 的卡牌`}
-              onRetry={() => router.push(`/cards/${suit}`)}
+              onRetry={() => router.push(`/cards/${routeSuit}`)}
               retryLabel="返回卡牌列表"
             />
           </div>
         </div>
       </div>
     )
-  }
-
-  // 顯示卡牌詳細資訊
-  if (!card) {
-    return null
   }
 
   const imageUrl = imageError ? getFallbackImageUrl() : getCardImageUrl(card)
@@ -183,7 +190,7 @@ export default function CardDetailPage() {
               <div className="flex items-center justify-between gap-4">
                 {/* 上一張按鈕 */}
                 {previousCard ? (
-                  <Link href={`/cards/${suit}/${previousCard.id}`} className="flex-1">
+                  <Link href={`/cards/${routeSuit}/${previousCard.id}`} className="flex-1">
                     <PipBoyButton variant="secondary" className="w-full">
                       ← 上一張
                     </PipBoyButton>
@@ -195,7 +202,7 @@ export default function CardDetailPage() {
                 )}
 
                 {/* 返回按鈕 */}
-                <Link href={`/cards/${suit}`} className="flex-1">
+                <Link href={`/cards/${routeSuit}`} className="flex-1">
                   <PipBoyButton variant="secondary" className="w-full">
                     返回列表
                   </PipBoyButton>
@@ -203,7 +210,7 @@ export default function CardDetailPage() {
 
                 {/* 下一張按鈕 */}
                 {nextCard ? (
-                  <Link href={`/cards/${suit}/${nextCard.id}`} className="flex-1">
+                  <Link href={`/cards/${routeSuit}/${nextCard.id}`} className="flex-1">
                     <PipBoyButton variant="secondary" className="w-full">
                       下一張 →
                     </PipBoyButton>
@@ -233,11 +240,6 @@ export default function CardDetailPage() {
                 <span>{suitName}</span>
                 {card.number !== null && card.number !== undefined && (
                   <span>#{String(card.number).padStart(2, '0')}</span>
-                )}
-                {card.is_major_arcana && (
-                  <span className="px-2 py-0.5 bg-pip-boy-green/20 border border-pip-boy-green/50">
-                    大阿爾克那
-                  </span>
                 )}
               </div>
             </div>

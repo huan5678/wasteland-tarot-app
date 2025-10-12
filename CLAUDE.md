@@ -123,9 +123,10 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ### 快速摘要
 
-**圖示套件**: pixelarticons (486 個像素風格圖示)
+**圖示套件**: RemixIcon 4.7.0 (2800+ 圖示)
+**實作方式**: CSS class name (`ri-{name}-{style}`)
 **基準尺寸**: 24×24px (支援 16-96px)
-**授權**: MIT License
+**授權**: Apache License 2.0
 **Phase 6 新功能**: 動畫效果、語意化顏色、尺寸預設 🎨
 **重要**: 絕對不要使用 lucide-react，只使用 PixelIcon
 
@@ -234,9 +235,10 @@ sizePreset="xxl"  // 96px - 巨大圖示、展示
 ### 整合策略
 - **🚫 絕對禁止**: 不要使用 `lucide-react`，該套件已完全移除
 - **✅ 統一元件**: 全站只使用 `<PixelIcon>`，無例外
-- **📖 圖示預覽**: 訪問 `/icon-showcase` 查看所有動畫、顏色和尺寸組合 (336種組合)
+- **📖 圖示搜尋**: 訪問 [remixicon.com](https://remixicon.com/) 查看所有 2800+ 圖示
+- **📖 測試頁面**: 訪問 `/test-icons` 查看所有動畫、顏色和尺寸組合
 - **♿ 無障礙優先**: 互動式圖示必須提供 `aria-label`，裝飾性圖示使用 `decorative` prop
-- **⚡ 效能優化**: 內建快取機制，關鍵圖示已預載 (< 10KB bundle)
+- **⚡ 效能優化**: 純 CSS icon font，無需 JavaScript bundle
 - **🎬 動畫性能**: 支援 `prefers-reduced-motion`，自動為需要的用戶停用動畫
 - **🎨 語意化優先**: 使用 `variant` 和 `sizePreset` 取代硬編碼的 className 和 size
 

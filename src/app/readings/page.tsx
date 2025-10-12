@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/authStore'
 import { useReadingsStore } from '@/lib/readingsStore'
-import { Lock, List, BarChart3, BookOpen, Settings } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { ReadingHistory } from '@/components/readings/ReadingHistory'
 import { ReadingDetailModal } from '@/components/readings/ReadingDetailModal'
 import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard'
@@ -30,7 +30,7 @@ export default function ReadingsPage() {
     return (
       <div className="min-h-screen bg-wasteland-dark flex items-center justify-center p-4">
         <div className="text-center">
-          <Lock className="w-16 h-16 mb-4 mx-auto text-pip-boy-green" />
+          <PixelIcon name="lock" size={64} className="mb-4 mx-auto text-pip-boy-green" decorative />
           <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
             ACCESS DENIED
           </h1>
@@ -60,10 +60,10 @@ export default function ReadingsPage() {
   }
 
   const tabs = [
-    { id: 'history', label: '占卜記錄', icon: List },
-    { id: 'stats', label: '數據統計', icon: BarChart3 },
-    { id: 'templates', label: '占卜模板', icon: BookOpen },
-    { id: 'manage', label: '管理設定', icon: Settings },
+    { id: 'history', label: '占卜記錄', icon: 'list' },
+    { id: 'stats', label: '數據統計', icon: 'chart-bar' },
+    { id: 'templates', label: '占卜模板', icon: 'book-open' },
+    { id: 'manage', label: '管理設定', icon: 'settings' },
   ] as const
 
   const renderTabContent = () => {
@@ -113,7 +113,6 @@ export default function ReadingsPage() {
           {/* Tab Navigation */}
           <div className="flex gap-1">
             {tabs.map(tab => {
-              const Icon = tab.icon
               const isActive = activeTab === tab.id
               return (
                 <button
@@ -124,8 +123,9 @@ export default function ReadingsPage() {
                       ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                   }`}
+                  aria-label={tab.label}
                 >
-                  <Icon className="w-4 h-4" />
+                  <PixelIcon name={tab.icon as any} size={16} decorative />
                   {tab.label}
                 </button>
               )

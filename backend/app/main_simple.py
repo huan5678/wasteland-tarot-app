@@ -10,6 +10,7 @@ from app.config import settings
 
 # Import only basic working modules
 from app.api import cards  # Basic cards API
+from app.api.v1 import music_router  # Music system API
 from app.db.database import init_db
 
 
@@ -47,6 +48,7 @@ app.add_middleware(
 
 # Include only basic API routers that work
 app.include_router(cards.router, prefix=settings.api_v1_str)
+app.include_router(music_router.router, prefix=f"{settings.api_v1_str}")
 
 # Add health check and basic endpoints
 @app.get("/")

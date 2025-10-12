@@ -40,45 +40,90 @@ async def get_current_user(
     db: AsyncSession = Depends(get_db)
 ) -> Dict[str, Any]:
     """
-    Get current authenticated user from JWT token.
+    Get current authenticated user from Supabase Auth JWT token.
 
-    This is a placeholder implementation. In production, implement:
-    1. JWT token validation
-    2. User lookup from database
-    3. Proper error handling
-    4. Token refresh logic
+    驗證 Supabase JWT token 並回傳使用者資訊。
+
+    Args:
+        credentials: HTTP Bearer token
+        db: Database session
+
+    Returns:
+        Dict containing user info (id, email, etc.)
+
+    Raises:
+        HTTPException: 401 if token is invalid or missing
     """
-    # Placeholder implementation for development
-    # In production, validate JWT token and get user from database
-
     if not credentials:
-        # Return demo user for development
-        return {
-            "id": "demo-user-123",
-            "username": "VaultDweller76",
-            "email": "dweller@vault76.com",
-            "karma_alignment": "good",
-            "faction_preference": "vault_dweller",
-            "is_active": True,
-            "is_premium": False
-        }
+        # Development mode: return demo user
+        if settings.environment == "development":
+            logger.warning("No credentials provided, returning demo user for development")
+            return {
+                "id": "demo-user-123",
+                "username": "VaultDweller76",
+                "email": "dweller@vault76.com",
+                "karma_alignment": "good",
+                "faction_preference": "vault_dweller",
+                "is_active": True,
+                "is_premium": False
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Missing authentication credentials"
+            )
 
     try:
-        # In production, implement JWT token validation here
-        # For now, return demo user
+        token = credentials.credentials
+
+        # In test environment, accept mock JWT tokens
+        if settings.environment == "test":
+            import jwt
+            try:
+                # Decode mock JWT without verification in test env
+                payload = jwt.decode(token, options={"verify_signature": False})
+                return {
+                    "id": payload.get("sub"),
+                    "email": payload.get("email"),
+                    "username": None,
+                    "is_active": True,
+                    "is_premium": False,
+                }
+            except Exception:
+                # If not a valid JWT, still try Supabase Auth
+                pass
+
+        # Validate token with Supabase Auth
+        from app.core.supabase import get_supabase_client
+
+        supabase = get_supabase_client()
+
+        # Verify JWT token and get user
+        user_response = supabase.auth.get_user(token)
+
+        if not user_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication credentials"
+            )
+
+        # Return user info
         return {
-            "id": "demo-user-123",
-            "username": "VaultDweller76",
-            "email": "dweller@vault76.com",
-            "karma_alignment": "good",
-            "faction_preference": "vault_dweller",
+            "id": user_response.user.id,
+            "email": user_response.user.email,
+            "username": user_response.user.user_metadata.get("username"),
             "is_active": True,
-            "is_premium": False
+            "is_premium": False,  # TODO: Check from user_ai_quotas or subscription table
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Token validation error: {str(e)}")
-        raise InvalidTokenError("expired")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token validation failed"
+        )
 
 
 async def get_current_active_user(

@@ -58,9 +58,10 @@ interface CardsStore {
    * 根據花色獲取卡牌列表
    * @param suit - 花色路由參數 (major, bottles, weapons, caps, rods) 或 API 枚舉值
    * @param page - 頁碼 (預設: 1)
+   * @param signal - AbortSignal 用於取消請求 (可選)
    * @returns 卡牌列表
    */
-  fetchCardsBySuit: (suit: string, page?: number) => Promise<TarotCard[]>
+  fetchCardsBySuit: (suit: string, page?: number, signal?: AbortSignal) => Promise<TarotCard[]>
 
   /**
    * 根據 ID 獲取單張卡牌詳情
@@ -105,6 +106,7 @@ const createAuthHeaders = (): HeadersInit => {
 
 /**
  * 通用 API 請求函數
+ * 支援 AbortSignal 來取消請求，修復 React 18 Strict Mode 雙重執行問題
  */
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
@@ -120,11 +122,29 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: '未知錯誤' }))
-      throw new Error(errorData.detail || `HTTP ${response.status}`)
+      const errorMessage = errorData.detail || `HTTP ${response.status}: ${response.statusText}`
+      console.error(`[cardsStore] API Error at ${endpoint}:`, {
+        status: response.status,
+        statusText: response.statusText,
+        errorData,
+        url
+      })
+      throw new Error(errorMessage)
     }
 
     return response.json()
   } catch (err: any) {
+    // 如果請求被取消，仍需拋出以便上層處理
+    if (err.name === 'AbortError') {
+      throw err
+    }
+
+    // 網路錯誤或其他錯誤
+    if (!err.message || err.message === 'Failed to fetch') {
+      console.error(`[cardsStore] Network Error at ${endpoint}:`, err)
+      throw new Error('網路連線失敗，請檢查後端服務是否運行')
+    }
+
     throw err
   }
 }
@@ -144,14 +164,16 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
 
   /**
    * 根據花色獲取卡牌列表
+   * 支援 AbortSignal 來取消請求，避免 React 18 Strict Mode 的雙重執行問題
    */
-  fetchCardsBySuit: async (suit: string, page: number = 1): Promise<TarotCard[]> => {
+  fetchCardsBySuit: async (suit: string, page: number = 1, signal?: AbortSignal): Promise<TarotCard[]> => {
     // 將路由參數轉換為 API 枚舉值
     let apiSuit: string
     try {
       apiSuit = convertRouteToApiSuit(suit)
     } catch (err) {
       const error = new Error(`無效的花色參數: ${suit}`)
+      console.error('[cardsStore] Invalid suit parameter:', suit)
       set({ error, isLoading: false })
       throw error
     }
@@ -161,16 +183,27 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
     // 檢查快取
     const cachedCards = get().cache.get(cacheKey)
     if (cachedCards) {
+      console.log(`[cardsStore] Using cached cards for ${cacheKey}`)
       return cachedCards
     }
 
+    console.log(`[cardsStore] Fetching cards for suit: ${suit} (API: ${apiSuit}), page: ${page}`)
     set({ isLoading: true, error: null })
 
     try {
-      // 使用轉換後的 API 枚舉值呼叫後端
+      // 使用轉換後的 API 枚舉值呼叫後端，並傳入 AbortSignal
       const response = await apiRequest<CardsAPIResponse>(
-        `/api/v1/cards/suits/${apiSuit}?page=${page}`
+        `/api/v1/cards/suits/${apiSuit}?page=${page}`,
+        signal ? { signal } : {}
       )
+
+      // 檢查請求是否已被取消
+      if (signal?.aborted) {
+        console.log(`[cardsStore] Request aborted for ${cacheKey}`)
+        return []
+      }
+
+      console.log(`[cardsStore] Successfully fetched ${response.cards.length} cards for ${cacheKey}`)
 
       // 更新快取
       const newCache = new Map(get().cache)
@@ -193,6 +226,13 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
 
       return response.cards
     } catch (err: any) {
+      // 如果請求被取消，不更新 error 狀態
+      if (err.name === 'AbortError') {
+        console.log(`[cardsStore] Request aborted (caught in fetchCardsBySuit)`)
+        return []
+      }
+
+      console.error('[cardsStore] Error in fetchCardsBySuit:', err)
       const error = err instanceof Error ? err : new Error('載入卡牌失敗')
       set({
         error,

@@ -15,13 +15,12 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PipBoyCard } from '@/components/ui/pipboy'
-import { SuitIcon } from '@/components/icons/SuitIcon'
+import { PixelIcon } from '@/components/ui/icons/PixelIcon'
 import type { TarotCard } from '@/types/api'
 import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/utils/cardImages'
-import { getSuitDisplayName } from '@/types/suits'
+import { getSuitDisplayName, convertApiToRouteSuit, SuitType } from '@/types/suits'
 import { use3DTilt } from '@/hooks/tilt/use3DTilt'
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
 
@@ -111,6 +110,9 @@ export function CardThumbnail({
   // 取得花色顯示名稱
   const suitName = getSuitDisplayName(card.suit)
 
+  // 將 API 枚舉值轉換為簡短路由名稱（SEO 友善）
+  const routeSuit = convertApiToRouteSuit(card.suit as SuitType)
+
   // 處理圖片載入錯誤
   const handleImageError = () => {
     console.warn(`[CardThumbnail] Image load failed for card: ${card.id}`)
@@ -133,7 +135,7 @@ export function CardThumbnail({
   return (
     <Link
       ref={tiltRef}
-      href={`/cards/${card.suit}/${card.id}`}
+      href={`/cards/${routeSuit}/${card.id}`}
       className={cn(
         'block group focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm',
         className
@@ -162,11 +164,11 @@ export function CardThumbnail({
           {/* 載入中骨架屏 */}
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
-              <SuitIcon
-                Icon={ImageIcon}
-                size="md"
+              <PixelIcon
+                name="image"
+                size={32}
                 className="text-pip-boy-green/50"
-                ariaHidden
+                decorative
               />
             </div>
           )}
@@ -269,11 +271,11 @@ export function CardThumbnailSkeleton() {
       <div className="animate-pulse">
         {/* 圖片骨架 */}
         <div className="aspect-[2/3] bg-pip-boy-green/10 flex items-center justify-center">
-          <SuitIcon
-            Icon={ImageIcon}
-            size="md"
+          <PixelIcon
+            name="image"
+            size={32}
             className="text-pip-boy-green/30"
-            ariaHidden
+            decorative
           />
         </div>
 
@@ -309,9 +311,12 @@ export function CardThumbnailList({ card, className }: CardThumbnailListProps) {
   const imageAlt = getCardImageAlt(card)
   const suitName = getSuitDisplayName(card.suit)
 
+  // 將 API 枚舉值轉換為簡短路由名稱（SEO 友善）
+  const routeSuit = convertApiToRouteSuit(card.suit as SuitType)
+
   return (
     <Link
-      href={`/cards/${card.suit}/${card.id}`}
+      href={`/cards/${routeSuit}/${card.id}`}
       className={cn(
         'flex items-center gap-3 p-2',
         'border-2 border-pip-boy-green/30 bg-black/80',

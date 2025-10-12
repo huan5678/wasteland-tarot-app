@@ -3,8 +3,7 @@
  * 花色型別定義與配置常數
  */
 
-import type { LucideIcon } from 'lucide-react'
-import { Sparkles, Wine, Swords, Coins, Zap } from 'lucide-react'
+import type { IconName } from '@/components/ui/icons'
 
 /**
  * 花色類型枚舉
@@ -27,9 +26,9 @@ export interface SuitMetadata {
   name_en: string
   description: string
   card_count: number
-  /** lucide-react 圖示元件 */
-  Icon: LucideIcon
-  /** @deprecated 使用 Icon 替代 - emoji 圖示字串(向後相容) */
+  /** PixelIcon icon name */
+  iconName: IconName
+  /** @deprecated 使用 iconName 替代 - emoji 圖示字串(向後相容) */
   icon?: string
 }
 
@@ -44,7 +43,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Major Arcana',
     description: '代表生命中的重大主題與轉折點',
     card_count: 22,
-    Icon: Sparkles, // 🌟 → Sparkles: 代表閃耀、重要性和魔法元素
+    iconName: 'sparkles', // 🌟 → Sparkles: 代表閃耀、重要性和魔法元素
     icon: '🌟', // 向後相容
   },
   [SuitType.NUKA_COLA_BOTTLES]: {
@@ -53,7 +52,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Nuka-Cola Bottles (Cups)',
     description: '代表情感、關係與內在體驗',
     card_count: 14,
-    Icon: Wine, // 🥤 → Wine: 代表液體容器,符合「杯」的象徵意義
+    iconName: 'glass', // 🥤 → Glass: 代表液體容器,符合「杯」的象徵意義
     icon: '🥤', // 向後相容
   },
   [SuitType.COMBAT_WEAPONS]: {
@@ -62,7 +61,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Combat Weapons (Swords)',
     description: '代表衝突、挑戰與智慧行動',
     card_count: 14,
-    Icon: Swords, // ⚔️ → Swords: 直接對應,武器和衝突的象徵
+    iconName: 'sword', // ⚔️ → Sword: 直接對應,武器和衝突的象徵
     icon: '⚔️', // 向後相容
   },
   [SuitType.BOTTLE_CAPS]: {
@@ -71,7 +70,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Bottle Caps (Pentacles)',
     description: '代表物質、資源與實際成就',
     card_count: 14,
-    Icon: Coins, // 💰 → Coins: 直接對應,貨幣和物質財富
+    iconName: 'coin', // 💰 → Coin: 直接對應,貨幣和物質財富
     icon: '💰', // 向後相容
   },
   [SuitType.RADIATION_RODS]: {
@@ -80,7 +79,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Radiation Rods (Wands)',
     description: '代表能量、創造力與靈性追求',
     card_count: 14,
-    Icon: Zap, // ☢️ → Zap: 代表能量、電力和危險輻射
+    iconName: 'zap', // ☢️ → Zap: 代表能量、電力和危險輻射
     icon: '☢️', // 向後相容
   },
 }

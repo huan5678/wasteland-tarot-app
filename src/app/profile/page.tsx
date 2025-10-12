@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/authStore'
-import { Edit, UserCircle, Save, Settings, BarChart3, AlertTriangle, Lock, Spade, Library, ScrollText, ClipboardList, LogOut, Trash2 } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface UserProfile {
   username: string
@@ -131,7 +131,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-wasteland-dark flex items-center justify-center p-4">
         <div className="text-center">
-          <Lock className="w-16 h-16 mb-4 mx-auto text-pip-boy-green" />
+          <PixelIcon name="lock" size={64} className="mb-4 mx-auto text-pip-boy-green" decorative />
           <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
             存取被拒
           </h1>
@@ -179,7 +179,7 @@ export default function ProfilePage() {
                 onClick={handleEdit}
                 className="px-4 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors"
               >
-                <Edit className="w-4 h-4 mr-2" />編輯檔案
+                <PixelIcon name="edit" size={16} className="mr-2 inline" aria-label="編輯檔案" />編輯檔案
               </button>
             )}
           </div>
@@ -199,7 +199,7 @@ export default function ProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <UserCircle className="w-16 h-16 text-pip-boy-green" />
+                    <PixelIcon name="user" size={64} className="text-pip-boy-green" decorative />
                   )}
                 </div>
 
@@ -254,19 +254,19 @@ export default function ProfilePage() {
                   href="/readings/new"
                   className="block text-center py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
                 >
-                  <Spade className="w-4 h-4 mr-2 inline" />新占卜
+                  <PixelIcon name="card-stack" size={16} className="mr-2 inline" decorative />新占卜
                 </Link>
                 <Link
                   href="/cards"
                   className="block text-center py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
                 >
-                  <Library className="w-4 h-4 mr-2 inline" />卡牌圖書館
+                  <PixelIcon name="books" size={16} className="mr-2 inline" decorative />卡牌圖書館
                 </Link>
                 <Link
                   href="/readings"
                   className="block text-center py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
                 >
-                  <ScrollText className="w-4 h-4 mr-2 inline" />占卜歷史
+                  <PixelIcon name="scroll" size={16} className="mr-2 inline" decorative />占卜歷史
                 </Link>
               </div>
             </div>
@@ -277,7 +277,7 @@ export default function ProfilePage() {
             {/* Personal Information */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
               <h3 className="text-xl font-bold text-pip-boy-green mb-4">
-                <ClipboardList className="w-5 h-5 mr-2 inline" />個人資訊
+                <PixelIcon name="clipboard" size={24} className="mr-2 inline" decorative />個人資訊
               </h3>
 
               {isEditing ? (
@@ -346,7 +346,7 @@ export default function ProfilePage() {
                       disabled={isSaving}
                       className="flex-1 py-2 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 disabled:opacity-50 transition-colors"
                     >
-                      {isSaving ? '儲存中...' : <><Save className="w-4 h-4 mr-2" />儲存變更</>}
+                      {isSaving ? '儲存中...' : <><PixelIcon name="save" size={16} className="mr-2 inline" decorative />儲存變更</>}
                     </button>
                     <button
                       onClick={handleCancel}
@@ -409,7 +409,7 @@ export default function ProfilePage() {
             {/* Preferences */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
               <h3 className="text-xl font-bold text-pip-boy-green mb-4">
-                <Settings className="w-5 h-5 mr-2" />通知偏好設定
+                <PixelIcon name="settings" size={24} className="mr-2 inline" decorative />通知偏好設定
               </h3>
 
               <div className="space-y-3">
@@ -451,7 +451,7 @@ export default function ProfilePage() {
             {/* Statistics */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
               <h3 className="text-xl font-bold text-pip-boy-green mb-4">
-                <BarChart3 className="w-5 h-5 mr-2" />占卜統計
+                <PixelIcon name="chart-bar" size={24} className="mr-2 inline" decorative />占卜統計
               </h3>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -484,7 +484,7 @@ export default function ProfilePage() {
             {/* Danger Zone */}
             <div className="border-2 border-red-400/30 bg-red-900/10 p-6">
               <h3 className="text-xl font-bold text-red-400 mb-4">
-                <AlertTriangle className="w-5 h-5 mr-2" />危險區域
+                <PixelIcon name="alert-triangle" size={24} className="mr-2 inline" decorative />危險區域
               </h3>
 
               <div className="space-y-4">
@@ -496,7 +496,7 @@ export default function ProfilePage() {
                     onClick={logout}
                     className="px-4 py-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
                   >
-                    <LogOut className="w-4 h-4 mr-2 inline" />登出
+                    <PixelIcon name="logout" size={16} className="mr-2 inline" aria-label="登出" />登出
                   </button>
                 </div>
 
@@ -508,7 +508,7 @@ export default function ProfilePage() {
                     className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 transition-colors"
                     onClick={() => alert('Account deletion not implemented in this demo')}
                   >
-                    <Trash2 className="w-4 h-4 mr-2 inline" />刪除帳戶
+                    <PixelIcon name="trash" size={16} className="mr-2 inline" aria-label="刪除帳戶" />刪除帳戶
                   </button>
                 </div>
               </div>

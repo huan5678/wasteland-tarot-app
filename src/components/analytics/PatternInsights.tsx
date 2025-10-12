@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Brain, TrendingUp, Calendar, Clock } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 
 interface Pattern {
   id: string;
@@ -33,14 +33,14 @@ export function PatternInsights({
   readingPatterns,
   className = '',
 }: PatternInsightsProps) {
-  const getPatternIcon = (type: string) => {
+  const getPatternIcon = (type: string): string => {
     switch (type) {
       case 'question_theme':
-        return Brain;
+        return 'brain';
       case 'card_combination':
-        return TrendingUp;
+        return 'trending-up';
       default:
-        return Brain;
+        return 'brain';
     }
   };
 
@@ -70,7 +70,7 @@ export function PatternInsights({
       {readingPatterns && (
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="flex items-start gap-3">
-            <Calendar className="w-5 h-5 text-primary mt-1" />
+            <PixelIcon name="calendar" size={24} className="text-primary mt-1" decorative />
             <div>
               <p className="text-sm font-medium">Most Active Day</p>
               <p className="text-lg font-semibold">{readingPatterns.most_active_day}</p>
@@ -78,7 +78,7 @@ export function PatternInsights({
           </div>
 
           <div className="flex items-start gap-3">
-            <Clock className="w-5 h-5 text-primary mt-1" />
+            <PixelIcon name="clock" size={24} className="text-primary mt-1" decorative />
             <div>
               <p className="text-sm font-medium">Peak Hour</p>
               <p className="text-lg font-semibold">{readingPatterns.most_active_hour}:00</p>
@@ -86,7 +86,7 @@ export function PatternInsights({
           </div>
 
           <div className="flex items-start gap-3">
-            <TrendingUp className="w-5 h-5 text-primary mt-1" />
+            <PixelIcon name="trending-up" size={24} className="text-primary mt-1" decorative />
             <div>
               <p className="text-sm font-medium">Weekly Average</p>
               <p className="text-lg font-semibold">
@@ -96,7 +96,7 @@ export function PatternInsights({
           </div>
 
           <div className="flex items-start gap-3">
-            <Brain className="w-5 h-5 text-primary mt-1" />
+            <PixelIcon name="brain" size={24} className="text-primary mt-1" decorative />
             <div>
               <p className="text-sm font-medium">Longest Streak</p>
               <p className="text-lg font-semibold">{readingPatterns.streak_days} days</p>
@@ -111,13 +111,13 @@ export function PatternInsights({
           <h4 className="text-sm font-semibold mb-3">Discovered Patterns</h4>
           <div className="space-y-3">
             {patterns.map((pattern) => {
-              const Icon = getPatternIcon(pattern.pattern_type);
+              const iconName = getPatternIcon(pattern.pattern_type);
               return (
                 <div
                   key={pattern.id}
                   className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg"
                 >
-                  <Icon className="w-5 h-5 text-primary mt-0.5" />
+                  <PixelIcon name={iconName as any} size={24} className="text-primary mt-0.5" decorative />
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-sm font-medium">

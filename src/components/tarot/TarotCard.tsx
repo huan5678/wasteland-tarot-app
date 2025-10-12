@@ -6,12 +6,13 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Star, Zap } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useTouchInteractions, useDeviceCapabilities } from '@/hooks/useTouchInteractions'
 import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
 import { use3DTilt } from '@/hooks/tilt/use3DTilt'
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
+import { CardBackPixelEffect } from '@/components/cards/CardBackPixelEffect'
 
 interface TarotCard {
   id: number
@@ -315,13 +316,21 @@ export function TarotCard({
               border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
               flex items-center justify-center bg-black overflow-hidden
               ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
-              transition-all duration-300
+              transition-all duration-300 relative
             `}>
               <img
                 src={cardBackUrl}
                 alt="Wasteland Tarot Card Back"
                 className="w-full h-full object-cover"
               />
+              {/* Pixel hover effect for card back */}
+              {!isRevealed && (
+                <CardBackPixelEffect
+                  isHovered={isHovered}
+                  gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
+                  speed={35}
+                />
+              )}
             </div>
             {/* Front */}
             <div className={`
@@ -340,7 +349,7 @@ export function TarotCard({
                 `}>
                   <div className="w-2 h-2 bg-pip-boy-green/70 rounded-full animate-pulse"></div>
                   {isSelected && (
-                    <Zap className="w-3 h-3 text-pip-boy-green animate-pulse" />
+                    <PixelIcon name="zap" size={12} className="text-pip-boy-green animate-pulse" aria-hidden="true" />
                   )}
                 </div>
               )}
@@ -443,7 +452,7 @@ export function TarotCard({
             rounded-lg border-2 ${isSelected ? 'border-gold-400 animate-pulse' : 'border-gold-400/70'}
             flex items-center justify-center
             ${isHovered ? 'shadow-lg shadow-gold-400/20' : ''}
-            transition-all duration-300
+            transition-all duration-300 relative overflow-hidden
           `}
           style={{
             backfaceVisibility: 'hidden',
@@ -451,10 +460,17 @@ export function TarotCard({
             transition: isFlipping ? 'none' : 'transform 0.6s ease-out'
           }}
         >
-          <div className="text-center text-gold-400">
-            <Star className="w-8 h-8 mb-2 mx-auto" />
-            <div className="text-xs font-serif">TAROT</div>
+          <div className="text-center text-gold-400 relative z-10">
+            <PixelIcon name="sparkles" size={32} className="mb-2 mx-auto" aria-hidden="true" />
+            <div className="text-xs">TAROT</div>
           </div>
+          {/* Pixel hover effect for card back */}
+          <CardBackPixelEffect
+            isHovered={isHovered}
+            colors="#fbbf24,#f59e0b,#d97706,#b45309" // Gold variants for default style
+            gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
+            speed={35}
+          />
         </div>
       )}
 
@@ -482,7 +498,7 @@ export function TarotCard({
             `}>
               <div className="w-2 h-2 bg-blue-400/70 rounded-full animate-pulse"></div>
               {isSelected && (
-                <Zap className="w-3 h-3 text-blue-400 animate-pulse" />
+                <PixelIcon name="zap" size={12} className="text-blue-400 animate-pulse" aria-hidden="true" />
               )}
             </div>
           )}
@@ -499,7 +515,7 @@ export function TarotCard({
                 className="w-full h-full bg-gray-200 flex items-center justify-center"
               >
                 <div className="text-center text-gray-500">
-                  <Spade className="w-6 h-6 mb-2 mx-auto" />
+                  <PixelIcon name="image" size={24} className="mb-2 mx-auto" aria-hidden="true" />
                   <div className="text-xs">圖片載入失敗</div>
                 </div>
               </div>

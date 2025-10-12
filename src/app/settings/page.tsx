@@ -3,24 +3,14 @@
 import React, { useState } from 'react'
 import { usePreferences } from '@/hooks/usePreferences'
 import { Card } from '@/components/ui/card'
-import {
-  Settings,
-  Palette,
-  Volume2,
-  BookOpen,
-  Shield,
-  Bell,
-  Eye,
-  Sparkles,
-  RotateCcw
-} from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
+// Old lucide imports:
+
 
 export default function SettingsPage() {
   const {
     preferences,
     loading,
-    updateVisualSettings,
-    updateAccessibilitySettings,
     resetPreferences,
     applyRecommendedSettings
   } = usePreferences()
@@ -50,7 +40,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
-          <Settings className="w-8 h-8 text-pip-boy-green" />
+          <PixelIcon name="settings" size={32} className="text-pip-boy-green" decorative />
           <h1 className="text-3xl font-bold">設定</h1>
         </div>
         <p className="text-wasteland-tan/70">
@@ -70,7 +60,7 @@ export default function SettingsPage() {
             flex items-center gap-3
           "
         >
-          <Sparkles className="w-5 h-5 text-pip-boy-green" />
+          <PixelIcon name="sparkles" size={24} className="text-pip-boy-green" decorative />
           <div className="text-left">
             <p className="font-semibold text-sm">套用推薦設定</p>
             <p className="text-xs text-wasteland-tan/60">基於你的使用習慣</p>
@@ -87,7 +77,7 @@ export default function SettingsPage() {
             flex items-center gap-3
           "
         >
-          <RotateCcw className="w-5 h-5 text-wasteland-tan" />
+          <PixelIcon name="reload" size={24} className="text-wasteland-tan" decorative />
           <div className="text-left">
             <p className="font-semibold text-sm">重設預設值</p>
             <p className="text-xs text-wasteland-tan/60">恢復原廠設定</p>
@@ -108,7 +98,7 @@ export default function SettingsPage() {
             }
           `}
         >
-          <Palette className="w-4 h-4 inline mr-2" />
+          <PixelIcon name="palette" size={16} className="inline mr-2" decorative />
           視覺設定
         </button>
 
@@ -123,7 +113,7 @@ export default function SettingsPage() {
             }
           `}
         >
-          <Eye className="w-4 h-4 inline mr-2" />
+          <PixelIcon name="eye" size={16} className="inline mr-2" decorative />
           無障礙
         </button>
       </div>
@@ -134,7 +124,7 @@ export default function SettingsPage() {
           {/* Theme */}
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Palette className="w-5 h-5" />
+              <PixelIcon name="palette" size={24} decorative />
               主題
             </h3>
 
@@ -236,7 +226,7 @@ export default function SettingsPage() {
         <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <Eye className="w-5 h-5" />
+              <PixelIcon name="eye" size={24} decorative />
               無障礙設定
             </h3>
 

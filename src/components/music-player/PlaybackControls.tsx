@@ -119,32 +119,32 @@ export const PlaybackControls = React.memo(function PlaybackControls({
         {/* Previous Button */}
         <button
           onClick={handlePrevious}
-          className="flex items-center justify-center w-10 h-10 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
+          className="flex items-center justify-center w-10 h-10 text-pip-boy-green bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
           aria-label="上一首"
         >
-          <PixelIcon name="skip-back" sizePreset="sm" variant="primary" aria-label="上一首" />
+          <PixelIcon name="skip-back" sizePreset="sm" aria-label="上一首" />
         </button>
 
         {/* Play/Pause Button */}
         <button
           onClick={handlePlayPause}
-          className="flex items-center justify-center w-14 h-14 bg-pip-boy-green/20 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all shadow-[0_0_10px_rgba(0,255,136,0.3)] hover:shadow-[0_0_20px_rgba(0,255,136,0.5)] focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
+          className="flex items-center justify-center w-14 h-14 text-pip-boy-green bg-pip-boy-green/20 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all shadow-[0_0_10px_rgba(0,255,136,0.3)] hover:shadow-[0_0_20px_rgba(0,255,136,0.5)] focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
           aria-label={isPlaying ? '暫停' : '播放'}
         >
           {isPlaying ? (
-            <PixelIcon name="pause" sizePreset="sm" variant="primary" aria-label="暫停" />
+            <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" />
           ) : (
-            <PixelIcon name="play" sizePreset="sm" variant="primary" aria-label="播放" />
+            <PixelIcon name="play" sizePreset="sm" aria-label="播放" />
           )}
         </button>
 
         {/* Next Button */}
         <button
           onClick={handleNext}
-          className="flex items-center justify-center w-10 h-10 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
+          className="flex items-center justify-center w-10 h-10 text-pip-boy-green bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-full hover:bg-pip-boy-green hover:text-black transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker"
           aria-label="下一首"
         >
-          <PixelIcon name="skip-forward" sizePreset="sm" variant="primary" aria-label="下一首" />
+          <PixelIcon name="skip-forward" sizePreset="sm" aria-label="下一首" />
         </button>
       </div>
 

@@ -7,7 +7,7 @@
 'use client';
 
 import React from 'react';
-import { X } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { motion, AnimatePresence } from 'motion/react';
 import type { ShortcutMapping } from '@/hooks/useKeyboardShortcuts';
 import { cn } from '@/lib/utils';
@@ -138,7 +138,7 @@ export function ShortcutHelp({
                 className="p-2 rounded transition-colors hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green"
                 aria-label="關閉"
               >
-                <X className="w-5 h-5" />
+                <PixelIcon name="close" sizePreset="sm" decorative />
               </button>
             </div>
 

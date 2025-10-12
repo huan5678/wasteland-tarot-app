@@ -9,7 +9,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, RefreshCw, AlertTriangle } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { MusicPlayerError, MusicPlayerErrorType } from '@/lib/audio/errorHandler';
 import { logger } from '@/lib/logger';
 
@@ -143,7 +143,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
             <div className="relative flex items-start gap-3">
               {/* Icon */}
               <div className="flex-shrink-0">
-                <AlertTriangle className="h-5 w-5 text-pip-boy-green" aria-hidden="true" />
+                <PixelIcon name="alert-triangle" sizePreset="sm" variant="warning" decorative />
               </div>
 
               {/* Text Content */}
@@ -168,7 +168,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                         className="flex items-center gap-1.5 rounded border border-pip-boy-green bg-pip-boy-green/10 px-3 py-1.5 text-xs font-medium text-pip-boy-green transition-all hover:bg-pip-boy-green hover:text-black active:scale-95"
                         aria-label="重試"
                       >
-                        <RefreshCw className="h-3 w-3" aria-hidden="true" />
+                        <PixelIcon name="refresh" sizePreset="xs" aria-label="重試圖示" />
                         <span>重試</span>
                       </button>
                     )}
@@ -182,7 +182,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                 className="flex-shrink-0 rounded p-1 text-pip-boy-green/60 transition-colors hover:bg-pip-boy-green/10 hover:text-pip-boy-green"
                 aria-label="關閉錯誤提示"
               >
-                <X className="h-4 w-4" aria-hidden="true" />
+                <PixelIcon name="close" sizePreset="xs" decorative />
               </button>
             </div>
 

@@ -6,11 +6,11 @@
 'use client'
 
 import React, { useState, useCallback } from 'react'
-import { TarotCard } from './TarotCard'
+import { TarotCardWithDailyBack } from './TarotCardWithDailyBack'
 import { CardDetailModal, DetailedTarotCard } from './CardDetailModal'
 import { mockTarotCards } from '@/test/mocks/data'
 import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
-import { AlertTriangle, Star } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface TarotCardWithPosition {
   id: number
@@ -175,7 +175,7 @@ export function CardDraw({
         aria-disabled={selectedPositions.includes(index)}
       >
         {drawnCards[index] ? (
-          <TarotCard
+          <TarotCardWithDailyBack
             card={drawnCards[index]}
             isRevealed={true}
             position={drawnCards[index].position}
@@ -235,7 +235,7 @@ export function CardDraw({
                   transform: revealed ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.9)'
                 }}
               >
-                <TarotCard
+                <TarotCardWithDailyBack
                   card={card}
                   isRevealed={revealed}
                   position={card.position}

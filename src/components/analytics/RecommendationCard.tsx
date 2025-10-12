@@ -8,7 +8,7 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Sparkles, ThumbsUp, X } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 
 interface Recommendation {
   id: string;
@@ -96,7 +96,7 @@ export function RecommendationCard({
     <Card className={`p-4 ${className}`}>
       <div className="flex items-start gap-3">
         <div className="p-2 bg-primary/10 rounded-lg">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <PixelIcon name="sparkles" size={24} className="text-primary" decorative />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -109,7 +109,7 @@ export function RecommendationCard({
               onClick={() => onAccept(recommendation.id)}
               className="flex items-center gap-1"
             >
-              <ThumbsUp className="w-3 h-3" />
+              <PixelIcon name="thumbs-up" size={16} decorative />
               Accept
             </Button>
             <Button
@@ -118,7 +118,7 @@ export function RecommendationCard({
               onClick={() => onReject(recommendation.id)}
               className="flex items-center gap-1"
             >
-              <X className="w-3 h-3" />
+              <PixelIcon name="close" size={16} decorative />
               Dismiss
             </Button>
           </div>

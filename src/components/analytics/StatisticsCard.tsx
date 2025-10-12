@@ -5,12 +5,13 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { LucideIcon } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
+import type { IconName } from '@/components/ui/icons';
 
 interface StatisticsCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  iconName: IconName;
   trend?: {
     value: number;
     label: string;
@@ -24,7 +25,7 @@ interface StatisticsCardProps {
 export function StatisticsCard({
   title,
   value,
-  icon: Icon,
+  iconName,
   trend,
   description,
   className = '',
@@ -58,7 +59,7 @@ export function StatisticsCard({
         </div>
 
         <div className="p-3 bg-primary/10 rounded-lg">
-          <Icon className="w-6 h-6 text-primary" />
+          <PixelIcon name={iconName} size={24} className="text-primary" decorative />
         </div>
       </div>
     </Card>

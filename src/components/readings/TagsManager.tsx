@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useMemo, useCallback } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
-import { Tag, Plus, X, Hash, TrendingUp, Search } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   selectedTags?: string[]
@@ -106,7 +106,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
           <h3 className="text-lg font-bold text-pip-boy-green">標籤分析</h3>
           {onClose && (
             <button onClick={onClose} className="text-pip-boy-green/70 hover:text-pip-boy-green">
-              <X className="w-5 h-5" />
+              <PixelIcon name="x" className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -136,14 +136,14 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
         {/* Popular Tags */}
         <div className="space-y-3">
           <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" />
+            <PixelIcon name="trending-up" className="w-4 h-4" />
             熱門標籤
           </h4>
           <div className="space-y-2">
             {popularTags.map(tag => (
               <div key={tag.name} className="border border-pip-boy-green/30 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Tag className="w-4 h-4 text-pip-boy-green/60" />
+                  <PixelIcon name="tag" className="w-4 h-4 text-pip-boy-green/60" />
                   <span className="text-pip-boy-green">{tag.name}</span>
                 </div>
                 <div className="text-right">
@@ -161,11 +161,11 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h4 className="font-bold text-pip-boy-green flex items-center gap-2">
-              <Hash className="w-4 h-4" />
+              <PixelIcon name="hash" className="w-4 h-4" />
               所有標籤
             </h4>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
+              <PixelIcon name="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
               <input
                 type="text"
                 placeholder="搜尋標籤..."
@@ -181,7 +181,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
             {filteredTags.map(tag => (
               <div key={tag.name} className="border border-pip-boy-green/30 p-2 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-2">
-                  <Tag className="w-3 h-3 text-pip-boy-green/60" />
+                  <PixelIcon name="tag" className="w-3 h-3 text-pip-boy-green/60" />
                   <span className="text-pip-boy-green">{tag.name}</span>
                 </div>
                 <span className="text-pip-boy-green/70">{tag.count}</span>
@@ -201,7 +201,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
         <h3 className="text-lg font-bold text-pip-boy-green">選擇標籤</h3>
         {onClose && (
           <button onClick={onClose} className="text-pip-boy-green/70 hover:text-pip-boy-green">
-            <X className="w-5 h-5" />
+            <PixelIcon name="x" className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -217,13 +217,13 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                 className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm
                          flex items-center gap-2"
               >
-                <Tag className="w-3 h-3" />
+                <PixelIcon name="tag" className="w-3 h-3" />
                 {tag}
                 <button
                   onClick={() => removeTag(tag)}
                   className="text-pip-boy-green/70 hover:text-pip-boy-green"
                 >
-                  <X className="w-3 h-3" />
+                  <PixelIcon name="x" className="w-3 h-3" />
                 </button>
               </div>
             ))}
@@ -251,7 +251,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
             className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                      hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            <PixelIcon name="plus" className="w-4 h-4" />
             新增
           </button>
         </div>
@@ -261,7 +261,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       <div className="space-y-2">
         <label className="block text-pip-boy-green text-sm font-bold">選擇現有標籤</label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
+          <PixelIcon name="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
           <input
             type="text"
             placeholder="搜尋標籤..."
@@ -290,7 +290,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                     }`}
                 >
-                  <Tag className="w-3 h-3" />
+                  <PixelIcon name="tag" className="w-3 h-3" />
                   {tag.name}
                   <span className="text-xs opacity-60">({tag.count})</span>
                 </button>
@@ -321,7 +321,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                       }`}
                   >
-                    <Tag className="w-3 h-3" />
+                    <PixelIcon name="tag" className="w-3 h-3" />
                     {tag.name}
                     <span className="text-xs opacity-60">({tag.count})</span>
                   </button>
@@ -335,7 +335,7 @@ export function TagsManager({ selectedTags = [], onTagsChange, onClose, mode = '
       {/* Empty State */}
       {filteredTags.length === 0 && (
         <div className="text-center py-8 border-2 border-pip-boy-green/30">
-          <Hash className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
+          <PixelIcon name="hash" className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
           <div className="text-sm text-pip-boy-green/70">
             {searchQuery ? '沒有找到相關標籤' : '尚無可用標籤'}
           </div>

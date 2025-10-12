@@ -225,6 +225,9 @@ export class ProceduralMusicEngine {
   private isPlaying: boolean = false;
   private startTime: number = 0;
 
+  // Master GainNode - 用於即時音量控制
+  private masterGain: GainNode;
+
   // 合成器實例
   private bassManager: VoiceManager<BassSynthesizer>;
   private padManager: VoiceManager<PadSynthesizer>;
@@ -236,6 +239,9 @@ export class ProceduralMusicEngine {
   // Task 2: Crossfade 管理器
   private crossfadeManager: CrossfadeManager;
   private isCrossfading: boolean = false;
+
+  // 追蹤音樂循環的 timeout ID，用於清理
+  private loopTimeoutId: number | null = null;
 
   constructor(
     audioContext: AudioContext,
@@ -257,6 +263,11 @@ export class ProceduralMusicEngine {
       crossfadeDuration: config.crossfadeDuration ?? 2000, // Task 2: 預設 2000ms
     };
 
+    // 建立 Master GainNode 用於即時音量控制
+    this.masterGain = audioContext.createGain();
+    this.masterGain.gain.setValueAtTime(this.config.volume, audioContext.currentTime);
+    this.masterGain.connect(destination);
+
     // 載入和弦進行
     this.currentProgression = this.loadChordProgression(this.config.chordProgression!);
 
@@ -264,17 +275,18 @@ export class ProceduralMusicEngine {
     this.crossfadeManager = new CrossfadeManager(audioContext);
 
     // 建立 Voice Manager (多音管理)
+    // 注意：合成器現在連接到 masterGain 而不是直接連接到 destination
     this.bassManager = new VoiceManager(() =>
-      new BassSynthesizer(audioContext, destination, BASS_PRESETS.synthwave_classic)
+      new BassSynthesizer(audioContext, this.masterGain, BASS_PRESETS.synthwave_classic)
     );
     this.padManager = new VoiceManager(() =>
-      new PadSynthesizer(audioContext, destination, PAD_PRESETS.synthwave)
+      new PadSynthesizer(audioContext, this.masterGain, PAD_PRESETS.synthwave)
     );
     this.leadManager = new VoiceManager(() =>
-      new LeadSynthesizer(audioContext, destination, LEAD_PRESETS.synthwave)
+      new LeadSynthesizer(audioContext, this.masterGain, LEAD_PRESETS.synthwave)
     );
 
-    logger.info('[ProceduralMusicEngine] Initialized', this.config);
+    logger.info('[ProceduralMusicEngine] Initialized with Master GainNode', this.config);
   }
 
   /**
@@ -299,8 +311,26 @@ export class ProceduralMusicEngine {
       return;
     }
 
+    // 清理任何殘留的 timeout，確保乾淨的啟動
+    if (this.loopTimeoutId !== null) {
+      clearTimeout(this.loopTimeoutId);
+      this.loopTimeoutId = null;
+      logger.info('[ProceduralMusicEngine] Cleared residual loop timeout before start');
+    }
+
     this.isPlaying = true;
     this.startTime = this.audioContext.currentTime;
+
+    // DEBUG: 詳細日誌
+    console.log('[ProceduralMusicEngine] Starting playback', {
+      mode: this.config.mode,
+      bpm: this.config.bpm,
+      volume: this.config.volume,
+      audioContextState: this.audioContext.state,
+      audioContextTime: this.audioContext.currentTime,
+      progression: this.currentProgression.name,
+      chordCount: this.currentProgression.chords.length,
+    });
 
     // 開始和弦循環
     this.scheduleChordLoop();
@@ -319,9 +349,24 @@ export class ProceduralMusicEngine {
     const beatDuration = 60 / this.config.bpm; // 一拍的時長 (秒)
     let currentTime = this.audioContext.currentTime;
 
+    // DEBUG: 排程循環開始
+    console.log('[ProceduralMusicEngine] Scheduling chord loop', {
+      chordCount: chords.length,
+      beatDuration,
+      startTime: currentTime,
+    });
+
     // 循環播放和弦進行
     for (const chord of chords) {
       const chordDuration = chord.duration * 4 * beatDuration; // 小節數轉換為秒
+
+      // DEBUG: 排程和弦
+      console.log('[ProceduralMusicEngine] Scheduling chord', {
+        root: chord.root,
+        type: chord.type,
+        duration: chordDuration,
+        startTime: currentTime,
+      });
 
       // 播放和弦
       this.playChord(chord, currentTime, chordDuration);
@@ -343,13 +388,17 @@ export class ProceduralMusicEngine {
       0
     );
 
-    setTimeout(() => {
+    console.log('[ProceduralMusicEngine] Loop scheduled, next loop in', loopDuration, 'seconds');
+
+    // 儲存 timeout ID 以便後續清理
+    this.loopTimeoutId = setTimeout(() => {
       this.scheduleChordLoop();
-    }, loopDuration * 1000);
+    }, loopDuration * 1000) as unknown as number;
   }
 
   /**
    * 播放和弦 (Pad)
+   * 簡化版：每小節只播放一次短促和弦，避免連續音色
    */
   private playChord(
     chord: ChordDefinition,
@@ -358,14 +407,20 @@ export class ProceduralMusicEngine {
   ): void {
     const frequencies = generateTriadFrequencies(chord.root, chord.type);
     const pad = this.padManager.getVoice();
+    const beatDuration = 60 / this.config.bpm;
 
-    const velocity = this.config.volume * 0.6; // Pad 音量較小
-    pad.playChord(frequencies, startTime, duration, velocity);
+    // 簡化 Pad：只在每小節開始播放一次短促和弦
+    // 而不是持續整個小節（避免 12 個振盪器長時間疊加）
+    const chordDuration = beatDuration * 0.5; // 只持續半拍
+    const velocity = this.config.volume * 0.03; // 再降低 (原 0.05)
+
+    pad.playChord(frequencies, startTime, chordDuration, velocity);
   }
 
   /**
    * 播放 Bass Line
    * 需求 10.3: Bass 聲部使用 Sawtooth/Square + Lowpass Filter
+   * 簡化版：四四拍節奏，短促音符，避免重疊
    */
   private playBassLine(
     chord: ChordDefinition,
@@ -378,24 +433,23 @@ export class ProceduralMusicEngine {
     const bassFreq = midiToFrequency(chord.root - 12);
     const beatDuration = 60 / this.config.bpm;
 
-    // 根據複雜度決定 Bass 模式
-    if (this.config.complexity === 'rich') {
-      // 複雜模式: 八分音符 Bass Line
-      const noteCount = Math.floor(duration / (beatDuration * 0.5));
-      for (let i = 0; i < noteCount; i++) {
-        const noteStart = startTime + i * beatDuration * 0.5;
-        const noteDuration = beatDuration * 0.4; // 略短於八分音符
-        bass.playNote(bassFreq, noteStart, noteDuration, this.config.volume * 0.8);
-      }
-    } else {
-      // 簡單/標準模式: 全音符 Bass
-      bass.playNote(bassFreq, startTime, duration, this.config.volume * 0.7);
+    // 簡化 Bass 模式：四四拍，短促打擊（模仿 sample.html 的 Kick）
+    // 每一拍播放一次（16分音符中的 1, 5, 9, 13）
+    const beatsPerChord = Math.floor(duration / beatDuration);
+
+    for (let i = 0; i < beatsPerChord; i++) {
+      const noteStart = startTime + i * beatDuration;
+      const noteDuration = beatDuration * 0.15; // 極短（15%），模仿 Kick drum
+      const velocity = this.config.volume * 0.08; // 進一步降低 (原 0.12)
+
+      bass.playNote(bassFreq, noteStart, noteDuration, velocity);
     }
   }
 
   /**
    * 播放旋律 (Lead)
    * 需求 10.5: Lead 使用 Pulse/Triangle Wave + LFO
+   * 簡化版：稀疏旋律，只在重拍播放，避免音符重疊
    */
   private playMelody(
     chord: ChordDefinition,
@@ -405,21 +459,24 @@ export class ProceduralMusicEngine {
     const lead = this.leadManager.getVoice();
     const beatDuration = 60 / this.config.bpm;
 
-    // 簡單旋律生成: 在和弦音上移動
+    // 簡化旋律生成：只在偶數拍播放（2和4拍，模仿 Snare 位置）
     const scale = this.getScaleNotes(chord.root, chord.type);
-    const noteCount = Math.floor(duration / beatDuration);
+    const beatsPerChord = Math.floor(duration / beatDuration);
 
-    for (let i = 0; i < noteCount; i++) {
-      // 隨機選擇音階音符 (偏向和弦音)
-      const noteIndex = Math.random() < 0.6 ? i % 3 : Math.floor(Math.random() * scale.length);
-      const midiNote = scale[noteIndex] + 12; // 高八度
-      const freq = midiToFrequency(midiNote);
+    for (let i = 0; i < beatsPerChord; i++) {
+      // 只在偶數拍播放（降低密度 50%）
+      if (i % 2 !== 0) {
+        // 選擇和弦音（不再隨機，使用固定模式）
+        const noteIndex = Math.floor(i / 2) % 3; // 輪流使用三和弦的三個音
+        const midiNote = scale[noteIndex] + 12; // 高八度
+        const freq = midiToFrequency(midiNote);
 
-      const noteStart = startTime + i * beatDuration;
-      const noteDuration = beatDuration * 0.7;
-      const velocity = this.config.volume * 0.5;
+        const noteStart = startTime + i * beatDuration;
+        const noteDuration = beatDuration * 0.3; // 更短（30%），確保無重疊
+        const velocity = this.config.volume * 0.06; // 進一步降低 (原 0.08)
 
-      lead.playNote(freq, noteStart, noteDuration, velocity);
+        lead.playNote(freq, noteStart, noteDuration, velocity);
+      }
     }
   }
 
@@ -438,6 +495,13 @@ export class ProceduralMusicEngine {
     if (!this.isPlaying) return;
 
     this.isPlaying = false;
+
+    // 清理音樂循環 timeout，防止重疊
+    if (this.loopTimeoutId !== null) {
+      clearTimeout(this.loopTimeoutId);
+      this.loopTimeoutId = null;
+      logger.info('[ProceduralMusicEngine] Cleared loop timeout');
+    }
 
     // 停止所有合成器
     this.bassManager.stopAll();
@@ -476,15 +540,15 @@ export class ProceduralMusicEngine {
         lead: this.leadManager,
       };
 
-      // 建立新的 Voice Managers
+      // 建立新的 Voice Managers，連接到 masterGain
       this.bassManager = new VoiceManager(() =>
-        new BassSynthesizer(this.audioContext, this.destination, BASS_PRESETS.synthwave_classic)
+        new BassSynthesizer(this.audioContext, this.masterGain, BASS_PRESETS.synthwave_classic)
       );
       this.padManager = new VoiceManager(() =>
-        new PadSynthesizer(this.audioContext, this.destination, PAD_PRESETS.synthwave)
+        new PadSynthesizer(this.audioContext, this.masterGain, PAD_PRESETS.synthwave)
       );
       this.leadManager = new VoiceManager(() =>
-        new LeadSynthesizer(this.audioContext, this.destination, LEAD_PRESETS.synthwave)
+        new LeadSynthesizer(this.audioContext, this.masterGain, LEAD_PRESETS.synthwave)
       );
 
       const newVoices = {
@@ -509,6 +573,13 @@ export class ProceduralMusicEngine {
       logger.info(`[ProceduralMusicEngine] Crossfade complete`);
     } else if (wasPlaying) {
       // 不使用 crossfade，直接切換
+      // 清理舊的循環 timeout，防止重疊
+      if (this.loopTimeoutId !== null) {
+        clearTimeout(this.loopTimeoutId);
+        this.loopTimeoutId = null;
+        logger.info('[ProceduralMusicEngine] Cleared old loop timeout before mode switch');
+      }
+
       this.stop();
       this.start();
       logger.info(`[ProceduralMusicEngine] Mode switched without crossfade`);
@@ -520,10 +591,18 @@ export class ProceduralMusicEngine {
   /**
    * 設定音量
    * @param volume - 音量值 (0-1)
+   * 使用 Master GainNode 即時更新音量，影響所有正在播放和未來排程的音符
    */
   setVolume(volume: number): void {
     this.config.volume = Math.max(0, Math.min(1, volume));
-    logger.info(`[ProceduralMusicEngine] Volume set to ${this.config.volume}`);
+
+    // 即時更新 Master GainNode 的音量，使用平滑過渡避免爆音
+    const now = this.audioContext.currentTime;
+    this.masterGain.gain.cancelScheduledValues(now);
+    this.masterGain.gain.setValueAtTime(this.masterGain.gain.value, now);
+    this.masterGain.gain.linearRampToValueAtTime(this.config.volume, now + 0.05); // 50ms 平滑過渡
+
+    logger.info(`[ProceduralMusicEngine] Volume set to ${this.config.volume} (applied to Master GainNode)`);
   }
 
   /**
@@ -586,6 +665,12 @@ export class ProceduralMusicEngine {
     this.padManager.cleanup();
     this.leadManager.cleanup();
     this.crossfadeManager.cleanup(); // Task 2: 清理 crossfade 資源
+
+    // 清理 Master GainNode
+    if (this.masterGain) {
+      this.masterGain.disconnect();
+    }
+
     logger.info('[ProceduralMusicEngine] Disposed');
   }
 }

@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useCallback, useMemo } from 'react'
 import { useReadingsStore, SearchFilters } from '@/lib/readingsStore'
-import { Search, Filter, Calendar, Tag, Star, Archive, Hash, X, ChevronDown, RotateCcw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   onSearchResults: (results: any[]) => void
@@ -94,7 +94,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
       <div className="relative">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
+            < PixelIcon name="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-pip-boy-green/60" />
             <input
               type="text"
               placeholder="搜尋問題、解讀內容、筆記..."
@@ -108,7 +108,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                 onClick={() => setQuery('')}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-pip-boy-green/60 hover:text-pip-boy-green"
               >
-                <X className="w-4 h-4" />
+                < PixelIcon name="x" className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -122,7 +122,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                 : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
               }`}
           >
-            <Filter className="w-4 h-4" />
+            < PixelIcon name="filter" className="w-4 h-4" />
             篩選
             {activeFilterCount > 0 && (
               <span className="px-1.5 py-0.5 bg-pip-boy-green text-wasteland-dark text-xs rounded">
@@ -139,7 +139,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
               className="px-3 py-3 border-2 border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60 hover:text-pip-boy-green
                        text-sm flex items-center gap-2"
             >
-              <RotateCcw className="w-4 h-4" />
+              < PixelIcon name="rotate-ccw" className="w-4 h-4" />
               清除
             </button>
           )}
@@ -203,7 +203,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                     : '選擇日期範圍'
                   }
                 </span>
-                <Calendar className="w-4 h-4" />
+                < PixelIcon name="calendar" className="w-4 h-4" />
               </button>
 
               {showDatePicker && (
@@ -278,9 +278,9 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                         : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                       }`}
                   >
-                    <Tag className="w-3 h-3" />
+                    < PixelIcon name="tag" className="w-3 h-3" />
                     {tag}
-                    {isSelected && <X className="w-3 h-3" />}
+                    {isSelected && < PixelIcon name="x" className="w-3 h-3" />}
                   </button>
                 )
               })}
@@ -311,7 +311,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                 }`}
             >
-              <Star className="w-4 h-4" />
+              < PixelIcon name="star" className="w-4 h-4" />
               最愛
             </button>
 
@@ -323,7 +323,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                 }`}
             >
-              <Archive className="w-4 h-4" />
+              < PixelIcon name="archive" className="w-4 h-4" />
               已封存
             </button>
 
@@ -335,7 +335,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                   : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                 }`}
             >
-              <Hash className="w-4 h-4" />
+              < PixelIcon name="hash" className="w-4 h-4" />
               有筆記
             </button>
           </div>

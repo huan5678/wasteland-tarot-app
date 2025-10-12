@@ -42,7 +42,7 @@ export const LEAD_PRESETS: Record<string, LeadSynthConfig> = {
   bright: {
     waveform: 'square',
     filterCutoff: 2000,
-    filterResonance: 5.0,
+    filterResonance: 2.5, // 降低共振避免音量峰值 (原 5.0)
     ampEnvelope: ADSR_PRESETS.lead_bright,
     filterEnvelope: {
       attack: 0.015,
@@ -63,7 +63,7 @@ export const LEAD_PRESETS: Record<string, LeadSynthConfig> = {
   synthwave: {
     waveform: 'sawtooth',
     filterCutoff: 1800,
-    filterResonance: 7.0,
+    filterResonance: 2.5, // 降低共振避免 1800Hz 附近音量峰值 (原 7.0)
     ampEnvelope: {
       attack: 0.02,
       decay: 0.18,
@@ -89,7 +89,7 @@ export const LEAD_PRESETS: Record<string, LeadSynthConfig> = {
   punchy: {
     waveform: 'square',
     filterCutoff: 2500,
-    filterResonance: 6.0,
+    filterResonance: 2.8, // 降低共振但保留打擊感 (原 6.0)
     ampEnvelope: ADSR_PRESETS.lead_punchy,
     filterEnvelope: {
       attack: 0.002,
@@ -104,7 +104,7 @@ export const LEAD_PRESETS: Record<string, LeadSynthConfig> = {
   smooth: {
     waveform: 'triangle',
     filterCutoff: 1500,
-    filterResonance: 3.0,
+    filterResonance: 1.5, // 降低共振保持柔和音色 (原 3.0)
     ampEnvelope: {
       attack: 0.05,
       decay: 0.2,
@@ -131,7 +131,7 @@ export const LEAD_PRESETS: Record<string, LeadSynthConfig> = {
   lofi: {
     waveform: 'triangle',
     filterCutoff: 1200,
-    filterResonance: 2.5,
+    filterResonance: 1.5, // 降低共振保留溫暖感 (原 2.5)
     ampEnvelope: {
       attack: 0.03,
       decay: 0.15,

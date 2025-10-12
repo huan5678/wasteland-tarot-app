@@ -11,6 +11,7 @@
 
 import React from 'react'
 import { cn } from '@/lib/utils'
+import { PixelIcon } from '@/components/ui/icons/PixelIcon'
 
 export interface LoadingSpinnerProps {
   /**
@@ -61,20 +62,18 @@ export function LoadingSpinner({
     >
       {/* 輻射符號旋轉動畫 */}
       <div
-        className={cn(
-          'relative animate-spin',
-          'text-pip-boy-green',
-          // 大小樣式
-          size === 'sm' && 'text-2xl',
-          size === 'md' && 'text-4xl',
-          size === 'lg' && 'text-6xl'
-        )}
+        className="animate-spin"
         style={{
           filter: 'drop-shadow(0 0 10px rgba(51, 255, 51, 0.7))',
           animationDuration: '2s',
         }}
       >
-        ☢️
+        <PixelIcon
+          name="loader-3-line"
+          size={size === 'sm' ? 32 : size === 'md' ? 48 : 64}
+          className="text-pip-boy-green"
+          decorative
+        />
       </div>
 
       {/* 載入文字 */}

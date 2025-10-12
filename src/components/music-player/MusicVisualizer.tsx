@@ -8,7 +8,7 @@
 
 import React, { useRef, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { Music2 } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 
 /**
  * MusicVisualizer Props
@@ -170,7 +170,7 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
           transition={{ duration: 0.5 }}
         >
           <div className="text-center">
-            <Music2 className="w-12 h-12 mx-auto mb-2" />
+            <PixelIcon name="music" sizePreset="lg" className="mx-auto mb-2" decorative />
             <div>點擊播放以查看視覺化</div>
           </div>
         </motion.div>

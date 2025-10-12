@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { Lightbulb, Sparkles } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useSpreadRecommendation } from '@/hooks/useRecommendations'
 
 interface SpreadRecommendationHintProps {
@@ -35,8 +35,8 @@ export function SpreadRecommendationHint({
     : 'border-yellow-500/50 bg-yellow-950/20'
 
   const confidenceIcon = recommendation.confidence > 0.8
-    ? <Sparkles className="w-4 h-4 text-emerald-500" />
-    : <Lightbulb className="w-4 h-4 text-pip-boy-green" />
+    ? <PixelIcon name="sparkles" size={16} className="text-emerald-500" decorative />
+    : <PixelIcon name="bulb" size={16} className="text-pip-boy-green" decorative />
 
   return (
     <div

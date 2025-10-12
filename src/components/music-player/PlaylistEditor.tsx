@@ -10,7 +10,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Save, X } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { usePlaylistStore } from '@/stores/playlistStore';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -48,11 +48,11 @@ export interface PlaylistEditorProps {
 // Music Mode Metadata
 // ============================================================================
 
-const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; icon: string; description: string }> = {
-  synthwave: { label: 'Synthwave', icon: '🎹', description: '80 年代電子合成器風格' },
-  divination: { label: '占卜', icon: '🔮', description: '神秘氛圍音樂' },
-  lofi: { label: 'Lo-fi', icon: '🎧', description: 'Lo-fi 節奏音樂' },
-  ambient: { label: 'Ambient', icon: '🌊', description: '環境氛圍音樂' },
+const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; iconName: string; description: string }> = {
+  synthwave: { label: 'Synthwave', iconName: 'music', description: '80 年代電子合成器風格' },
+  divination: { label: '占卜', iconName: 'sparkling-2', description: '神秘氛圍音樂' },
+  lofi: { label: 'Lo-fi', iconName: 'headphone', description: 'Lo-fi 節奏音樂' },
+  ambient: { label: 'Ambient', iconName: 'disc', description: '環境氛圍音樂' },
 };
 
 // ============================================================================
@@ -319,7 +319,7 @@ export function PlaylistEditor({
                     disabled={isSubmitting}
                     className="sr-only"
                   />
-                  <span className="text-2xl">{metadata.icon}</span>
+                  <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-pip-boy-green">
                       {metadata.label}
@@ -369,7 +369,7 @@ export function PlaylistEditor({
             )}
             data-testid="save-playlist-button"
           >
-            <Save className="w-4 h-4" />
+            <PixelIcon name="save" sizePreset="xs" decorative />
             {isSubmitting ? '儲存中...' : mode === 'create' ? '建立' : '儲存'}
           </button>
 
@@ -387,7 +387,7 @@ export function PlaylistEditor({
             )}
             data-testid="cancel-button"
           >
-            <X className="w-4 h-4" />
+            <PixelIcon name="close" sizePreset="xs" decorative />
             取消
           </button>
         </div>

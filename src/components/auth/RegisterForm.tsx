@@ -8,7 +8,7 @@
 import React, { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useOAuth } from '@/hooks/useOAuth'
 import { authAPI } from '@/lib/api'
 import { toast } from 'sonner'
@@ -175,7 +175,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           {/* Error Display */}
           {submitError && (
             <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2" />{submitError}
+              <PixelIcon name="alert-triangle" size={16} className="mr-2" aria-label="錯誤" />{submitError}
             </div>
           )}
 
@@ -198,7 +198,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             />
             {errors.email && (
               <p className="mt-1 text-red-400 text-xs flex items-center">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.email}
+                <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.email}
               </p>
             )}
           </div>
@@ -222,7 +222,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             />
             {errors.name && (
               <p className="mt-1 text-red-400 text-xs flex items-center">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.name}
+                <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.name}
               </p>
             )}
           </div>
@@ -247,7 +247,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             />
             {errors.password && (
               <p className="mt-1 text-red-400 text-xs flex items-center">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.password}
+                <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.password}
               </p>
             )}
           </div>
@@ -272,7 +272,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-red-400 text-xs flex items-center">
-                <AlertTriangle className="w-3 h-3 mr-1" />{errors.confirmPassword}
+                <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.confirmPassword}
               </p>
             )}
           </div>
@@ -312,7 +312,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           {/* OAuth Error Display */}
           {oauthError && (
             <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
-              <AlertTriangle className="w-4 h-4 mr-2" />{oauthError}
+              <PixelIcon name="alert-triangle" size={16} className="mr-2" aria-label="錯誤" />{oauthError}
             </div>
           )}
 

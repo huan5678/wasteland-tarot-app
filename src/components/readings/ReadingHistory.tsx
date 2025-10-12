@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState, useCallback } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
-import { Star, Save, Spade } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props { onSelect?: (id: string) => void }
 
@@ -90,15 +90,15 @@ export function ReadingHistory({ onSelect }: Props) {
           <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={()=>{ onSelect?.(r.id); import('@/lib/actionTracker').then(m=>m.track('reading:view_detail',{id:r.id})) }}>
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
-                <div className="text-2xl">{r.spread_type === 'single' ? <Spade className="w-5 h-5" /> : <div className="flex gap-0.5"><Spade className="w-4 h-4" /><Spade className="w-4 h-4" /><Spade className="w-4 h-4" /></div>}</div>
+                <div className="text-2xl">{r.spread_type === 'single' ? < PixelIcon name="spade" className="w-5 h-5" /> : <div className="flex gap-0.5">< PixelIcon name="spade" className="w-4 h-4" />< PixelIcon name="spade" className="w-4 h-4" />< PixelIcon name="spade" className="w-4 h-4" /></div>}</div>
                 <div>
                   <div className="text-sm font-bold text-pip-boy-green">{r.spread_type === 'single' ? '單張卡牌' : '三張卡牌'}</div>
                   <div className="text-xs text-pip-boy-green/60">{formatDate((r as any).created_at || (r as any).date)}</div>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={(e)=>{e.stopPropagation(); toggleFavorite(r.id).then(()=>import('@/lib/actionTracker').then(m=>m.track('reading:toggle_favorite',{id:r.id,value:!r.is_favorite})))}} className={"text-xs "+(r.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/40 hover:text-yellow-400') }><Star className="w-4 h-4" /></button>
-                <button onClick={(e)=>{e.stopPropagation(); const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`reading-${r.id}.json`; a.click(); }} className="text-pip-boy-green/60 hover:text-pip-boy-green"><Save className="w-4 h-4" /></button>
+                <button onClick={(e)=>{e.stopPropagation(); toggleFavorite(r.id).then(()=>import('@/lib/actionTracker').then(m=>m.track('reading:toggle_favorite',{id:r.id,value:!r.is_favorite})))}} className={"text-xs "+(r.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/40 hover:text-yellow-400') }>< PixelIcon name="star" className="w-4 h-4" /></button>
+                <button onClick={(e)=>{e.stopPropagation(); const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`reading-${r.id}.json`; a.click(); }} className="text-pip-boy-green/60 hover:text-pip-boy-green">< PixelIcon name="save" className="w-4 h-4" /></button>
               </div>
             </div>
             <div className="mt-2 text-xs text-pip-boy-green/70 line-clamp-2">{r.interpretation}</div>
@@ -106,7 +106,7 @@ export function ReadingHistory({ onSelect }: Props) {
         ))}
         {filtered.length === 0 && (
           <div className="text-center py-12 border-2 border-pip-boy-green/30">
-            <Spade className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            < PixelIcon name="spade" className="w-10 h-10 mx-auto mb-3 opacity-50" />
             <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
           </div>
         )}

@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Volume1 } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
 import { useAudioStore } from '@/lib/audio/audioStore';
@@ -20,12 +20,12 @@ export function VolumeControl() {
   const masterVolume = Math.round((volumes.sfx + volumes.music + volumes.voice) / 3 * 100);
   const isMuted = muted.sfx && muted.music && muted.voice;
 
-  // 根據音量選擇圖示
-  const VolumeIcon = isMuted
-    ? VolumeX
+  // 根據音量選擇圖示名稱
+  const volumeIconName = isMuted
+    ? 'volume-x'
     : masterVolume < 50
-      ? Volume1
-      : Volume2;
+      ? 'volume-1'
+      : 'volume-2';
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -42,7 +42,7 @@ export function VolumeControl() {
           "
           aria-label="音量控制"
         >
-          <VolumeIcon className="w-5 h-5" />
+          <PixelIcon name={volumeIconName as any} size={24} decorative />
           {isMuted && (
             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
           )}
@@ -109,9 +109,9 @@ export function VolumeControl() {
                   aria-label="切換音效靜音"
                 >
                   {muted.sfx ? (
-                    <VolumeX className="w-4 h-4" />
+                    <PixelIcon name="volume-x" size={16} decorative />
                   ) : (
-                    <Volume2 className="w-4 h-4" />
+                    <PixelIcon name="volume-2" size={16} decorative />
                   )}
                 </button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">
@@ -142,9 +142,9 @@ export function VolumeControl() {
                   aria-label="切換音樂靜音"
                 >
                   {muted.music ? (
-                    <VolumeX className="w-4 h-4" />
+                    <PixelIcon name="volume-x" size={16} decorative />
                   ) : (
-                    <Volume2 className="w-4 h-4" />
+                    <PixelIcon name="volume-2" size={16} decorative />
                   )}
                 </button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">
@@ -175,9 +175,9 @@ export function VolumeControl() {
                   aria-label="切換語音靜音"
                 >
                   {muted.voice ? (
-                    <VolumeX className="w-4 h-4" />
+                    <PixelIcon name="volume-x" size={16} decorative />
                   ) : (
-                    <Volume2 className="w-4 h-4" />
+                    <PixelIcon name="volume-2" size={16} decorative />
                   )}
                 </button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">

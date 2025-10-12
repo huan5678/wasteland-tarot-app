@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/lib/authStore'
 import { readingsAPI, cardsAPI } from '@/lib/api'
-import { Spade, Library, UserCircle, ScrollText, Star } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { StudyCardsRecommendation } from '@/components/recommendations/StudyCardsRecommendation'
 import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
 
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                      p-6 transition-all duration-200 group cursor-pointer"
           >
             <div className="text-center">
-              <Spade className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
+              <PixelIcon name="spade" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">新占卜</h3>
               <p className="text-pip-boy-green/70 text-sm">
                 開始一場全新的塔羅占卜會議
@@ -196,7 +196,7 @@ export default function DashboardPage() {
                      p-6 transition-all duration-200 group cursor-pointer"
           >
             <div className="text-center">
-              <Library className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
+              <PixelIcon name="library" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">卡牌圖書館</h3>
               <p className="text-pip-boy-green/70 text-sm">
                 瀏覽所有可用的塔羅牌
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                      p-6 transition-all duration-200 group cursor-pointer"
           >
             <div className="text-center">
-              <UserCircle className="w-10 h-10 mb-3 mx-auto text-pip-boy-green" />
+              <PixelIcon name="user-circle" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">個人檔案</h3>
               <p className="text-pip-boy-green/70 text-sm">
                 管理你的 Vault Dweller 設定
@@ -231,7 +231,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
-              <ScrollText className="w-5 h-5 mr-2" />最近占卜
+              <PixelIcon name="scroll-text" size={20} className="mr-2" decorative />最近占卜
             </h2>
 
             <div className="space-y-4">
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                     <div className="flex gap-2 mb-3">
                       {reading.cards.slice(0, 3).map((card, index) => (
                         <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
-                          <Spade className="w-3 h-3" />
+                          <PixelIcon name="spade" size={16} decorative />
                         </div>
                       ))}
                     </div>
@@ -269,7 +269,7 @@ export default function DashboardPage() {
                 ))
               ) : (
                 <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 text-center">
-                  <Spade className="w-10 h-10 mb-3 mx-auto text-pip-boy-green opacity-50" />
+                  <PixelIcon name="spade" size={32} className="mb-3 mx-auto text-pip-boy-green opacity-50" decorative />
                   <p className="text-pip-boy-green/70 text-sm">
                     尚無占卜記錄。開始你的第一次占卜會議！
                   </p>
@@ -298,7 +298,7 @@ export default function DashboardPage() {
           {/* Favorite Card & System Status */}
           <div>
             <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
-              <Star className="w-5 h-5 mr-2" />Dweller 狀態
+              <PixelIcon name="star" size={20} className="mr-2" decorative />Dweller 狀態
             </h2>
 
             {/* Favorite Card - Temporarily simplified to fix React errors */}
@@ -307,7 +307,7 @@ export default function DashboardPage() {
                 <h3 className="text-sm font-bold text-pip-boy-green mb-3">最常抽到的牌</h3>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-24 border-2 border-pip-boy-green/50 bg-pip-boy-green/10 rounded flex items-center justify-center">
-                    <Spade className="w-6 h-6" />
+                    <PixelIcon name="spade" size={24} decorative />
                   </div>
                   <div>
                     <p className="text-pip-boy-green text-sm font-bold">

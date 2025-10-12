@@ -7,14 +7,10 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Brain, FlaskConical, Target, Trophy, RotateCcw, Play,
-  Pause, CheckCircle, XCircle, ArrowRight, ArrowLeft,
-  Clock, Zap, Heart, Sword, Coins, Star, Eye, EyeOff,
-  Shuffle, SkipForward, Repeat, Award, TrendingUp
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DetailedTarotCard } from './CardDetailModal'
+import { PixelIcon } from '@/components/ui/icons'
+import type { IconName } from '@/types/icons'
 
 export interface StudyQuestion {
   id: string
@@ -328,13 +324,13 @@ export function StudyMode({
   }
 
   // Get suit icon
-  const getSuitIcon = (suit: string) => {
+  const getSuitIcon = (suit: string): IconName => {
     switch (suit) {
-      case 'RADIATION_RODS': return Zap
-      case 'NUKA_COLA_BOTTLES': return Heart
-      case 'COMBAT_WEAPONS': return Sword
-      case 'BOTTLE_CAPS': return Coins
-      default: return Star
+      case 'RADIATION_RODS': return 'zap'
+      case 'NUKA_COLA_BOTTLES': return 'heart'
+      case 'COMBAT_WEAPONS': return 'sword'
+      case 'BOTTLE_CAPS': return 'coin'
+      default: return 'star'
     }
   }
 
@@ -354,7 +350,7 @@ export function StudyMode({
             transition={{ delay: 0.3 }}
             className="mx-auto w-20 h-20 bg-pip-boy-green/20 rounded-full flex items-center justify-center"
           >
-            <Trophy className="w-10 h-10 text-pip-boy-green" />
+            <PixelIcon name="trophy" size={40} className="text-pip-boy-green" decorative />
           </motion.div>
 
           <div>
@@ -388,7 +384,7 @@ export function StudyMode({
               whileTap={{ scale: 0.95 }}
               className="px-6 py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
             >
-              <Repeat className="w-4 h-4" />
+              <PixelIcon iconName="reload" size={16} decorative />
               Study Again
             </motion.button>
             
@@ -416,7 +412,7 @@ export function StudyMode({
         <div className="text-center space-y-6">
           <div>
             <h3 className="text-xl font-bold text-pip-boy-green mb-2 flex items-center justify-center gap-2">
-              <FlaskConical className="w-6 h-6" />
+              <PixelIcon iconName="flask" size={24} decorative />
               Card Study Mode
             </h3>
             <p className="text-pip-boy-green/70 text-sm">
@@ -433,7 +429,7 @@ export function StudyMode({
             >
               <div className="flex flex-col items-center space-y-3">
                 <div className="w-12 h-12 bg-pip-boy-green/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Eye className="w-6 h-6 text-pip-boy-green" />
+                  <PixelIcon iconName="eye" size={24} className="text-pip-boy-green" decorative />
                 </div>
                 <div>
                   <h4 className="font-bold text-pip-boy-green">Flashcard Mode</h4>
@@ -450,7 +446,7 @@ export function StudyMode({
             >
               <div className="flex flex-col items-center space-y-3">
                 <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Brain className="w-6 h-6 text-blue-400" />
+                  <PixelIcon iconName="brain" size={24} className="text-blue-400" decorative />
                 </div>
                 <div>
                   <h4 className="font-bold text-blue-400">Quiz Mode</h4>
@@ -470,8 +466,8 @@ export function StudyMode({
 
   // Flashcard Mode Render
   if (studyMode === 'flashcard') {
-    const SuitIcon = getSuitIcon(currentCard.suit)
-    
+    const suitIconName = getSuitIcon(currentCard.suit)
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -481,12 +477,12 @@ export function StudyMode({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <SuitIcon className="w-5 h-5 text-pip-boy-green" />
+            <PixelIcon iconName={suitIconName} size={20} className="text-pip-boy-green" decorative />
             <span className="font-bold text-pip-boy-green">Flashcard Mode</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-pip-boy-green/70">
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+              <PixelIcon name="clock" size={16} decorative />
               {formatTime(timeSpent)}
             </div>
             <div><span className="numeric tabular-nums">{currentCardIndex + 1}</span> / <span className="numeric tabular-nums">{studyCards.length}</span></div>
@@ -514,7 +510,7 @@ export function StudyMode({
                 >
                   <h3 className="text-2xl font-bold text-pip-boy-green">{currentCard.name}</h3>
                   <p className="text-pip-boy-green/70">Click to reveal meaning</p>
-                  <EyeOff className="w-12 h-12 text-pip-boy-green/40 mx-auto" />
+                  <PixelIcon iconName="eye-closed" size={48} className="text-pip-boy-green/40 mx-auto" decorative />
                 </motion.div>
               ) : (
                 <motion.div
@@ -558,8 +554,9 @@ export function StudyMode({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className="p-2 bg-pip-boy-green/10 border border-pip-boy-green/30 rounded text-pip-boy-green hover:bg-pip-boy-green/20 transition-colors"
+            aria-label="Previous card"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <PixelIcon iconName="arrow-left" size={20} />
           </motion.button>
 
           <div className="flex gap-3">
@@ -569,17 +566,17 @@ export function StudyMode({
               whileTap={{ scale: 0.95 }}
               className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
             >
-              <RotateCcw className="w-4 h-4" />
+              <PixelIcon iconName="reload" size={16} decorative />
               {showAnswer ? 'Hide' : 'Reveal'}
             </motion.button>
-            
+
             <motion.button
               onClick={() => startSession('quiz')}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-4 py-2 border border-blue-400/40 text-blue-400 rounded hover:bg-blue-500/10 transition-colors flex items-center gap-2"
             >
-              <Brain className="w-4 h-4" />
+              <PixelIcon iconName="brain" size={16} decorative />
               Quiz Mode
             </motion.button>
           </div>
@@ -589,8 +586,9 @@ export function StudyMode({
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             className="p-2 bg-pip-boy-green/10 border border-pip-boy-green/30 rounded text-pip-boy-green hover:bg-pip-boy-green/20 transition-colors"
+            aria-label="Next card"
           >
-            <ArrowRight className="w-5 h-5" />
+            <PixelIcon iconName="arrow-right" size={20} />
           </motion.button>
         </div>
       </motion.div>
@@ -608,17 +606,17 @@ export function StudyMode({
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Brain className="w-5 h-5 text-blue-400" />
+            <PixelIcon name="brain" size={24} className="text-blue-400" decorative />
             <span className="font-bold text-blue-400">Quiz Mode</span>
           </div>
           <div className="flex items-center gap-4 text-sm text-pip-boy-green/70">
             <div className="flex items-center gap-1">
-              <Clock className="w-4 h-4" />
+              <PixelIcon name="clock" size={16} decorative />
               {formatTime(timeSpent)}
             </div>
             <div><span className="numeric tabular-nums">{currentQuestionIndex + 1}</span> / <span className="numeric tabular-nums">{allQuestions.length}</span></div>
             <div className="flex items-center gap-1">
-              <Trophy className="w-4 h-4 text-yellow-400" />
+              <PixelIcon name="trophy" size={16} className="text-yellow-400" decorative />
               {score}
             </div>
           </div>
@@ -703,9 +701,9 @@ export function StudyMode({
                 )}
               >
                 {answerFeedback.isCorrect ? (
-                  <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <PixelIcon iconName="check-circle" size={20} className="text-green-400 flex-shrink-0 mt-0.5" decorative />
                 ) : (
-                  <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                  <PixelIcon iconName="close-circle" size={20} className="text-red-400 flex-shrink-0 mt-0.5" decorative />
                 )}
                 <div>
                   <p className={cn(
@@ -732,7 +730,7 @@ export function StudyMode({
               whileTap={{ scale: 0.95 }}
               className="px-4 py-2 border border-pip-boy-green/40 text-pip-boy-green/70 rounded hover:bg-pip-boy-green/10 transition-colors flex items-center gap-2"
             >
-              <Eye className="w-4 h-4" />
+              <PixelIcon iconName="eye" size={16} decorative />
               Flashcards
             </motion.button>
 
@@ -744,7 +742,7 @@ export function StudyMode({
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-2 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                <Target className="w-4 h-4" />
+                <PixelIcon iconName="target" size={16} decorative />
                 Submit Answer
               </motion.button>
             ) : (
@@ -755,7 +753,7 @@ export function StudyMode({
                 className="px-6 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
               >
                 {currentQuestionIndex < allQuestions.length - 1 ? 'Next Question' : 'Finish Quiz'}
-                <ArrowRight className="w-4 h-4" />
+                <PixelIcon iconName="arrow-right" size={16} decorative />
               </motion.button>
             )}
           </div>

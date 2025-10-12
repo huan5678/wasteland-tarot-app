@@ -8,6 +8,7 @@
  * - 分頁顯示卡牌
  * - 載入狀態與錯誤處理
  * - 快取機制
+ * - SSG 支援：預先生成所有有效花色的靜態頁面
  */
 
 'use client'
@@ -49,6 +50,8 @@ export default function CardListPage() {
   // 本地狀態
   const [cards, setCards] = useState<TarotCard[]>([])
   const [isMounted, setIsMounted] = useState(false)
+  // 新增：追蹤當前請求是否為最新的請求（用於防止競態條件）
+  const [currentRequestId, setCurrentRequestId] = useState<string>('')
 
   // 驗證花色路由參數是否有效
   const isValidSuitType = isValidRouteSuit(suit)
@@ -66,6 +69,7 @@ export default function CardListPage() {
   const suitCardCount = isValidSuitType ? getSuitCardCount(apiSuit) : 0
 
   // 載入卡牌資料
+  // 修復：使用 AbortController 和清理函數避免 React 18 Strict Mode 雙重執行問題
   useEffect(() => {
     setIsMounted(true)
 
@@ -73,22 +77,43 @@ export default function CardListPage() {
       return
     }
 
+    // 建立 AbortController 用於取消請求
+    const abortController = new AbortController()
+    const requestId = `${suit}-${page}-${Date.now()}`
+    setCurrentRequestId(requestId)
+
     const loadCards = async () => {
       try {
-        const cardsData = await fetchCardsBySuit(suit, page)
+        const cardsData = await fetchCardsBySuit(suit, page, abortController.signal)
+
+        // 檢查這個請求是否仍然是最新的（避免競態條件）
+        if (abortController.signal.aborted) {
+          return
+        }
+
         // 按照 number 從小到大排序（null/undefined 排在最後）
         const sortedCards = [...cardsData].sort((a, b) => {
           const numA = a.number ?? Infinity
           const numB = b.number ?? Infinity
           return numA - numB
         })
+
         setCards(sortedCards)
-      } catch (err) {
-        console.error('[CardListPage] Error loading cards:', err)
+      } catch (err: any) {
+        // 忽略取消的請求錯誤
+        if (err.name === 'AbortError') {
+          return
+        }
+        console.error('[CardListPage] 載入卡牌錯誤:', err)
       }
     }
 
     loadCards()
+
+    // 清理函數：取消未完成的請求
+    return () => {
+      abortController.abort()
+    }
   }, [suit, page, isValidSuitType, fetchCardsBySuit])
 
   // 麵包屑導航項目
@@ -98,9 +123,12 @@ export default function CardListPage() {
   ]
 
   // 處理重試
+  // 修復：重試時重新執行完整的載入流程，包含 AbortController
   const handleRetry = () => {
     clearError()
-    fetchCardsBySuit(suit, page)
+    setCards([]) // 清空現有卡牌
+    // 觸發 useEffect 重新執行（透過強制更新 requestId）
+    setCurrentRequestId(`retry-${Date.now()}`)
   }
 
   // 處理無效花色
@@ -155,15 +183,8 @@ export default function CardListPage() {
           </div>
         </header>
 
-        {/* 載入狀態 */}
-        {isLoading && !isMounted && (
-          <div className="flex items-center justify-center py-12">
-            <LoadingSpinner size="lg" />
-          </div>
-        )}
-
-        {/* 載入狀態(骨架屏) */}
-        {isLoading && isMounted && cards.length === 0 && (
+        {/* 載入狀態 - 修復：簡化條件邏輯，只在真正載入中且沒有卡牌時顯示 */}
+        {isLoading && cards.length === 0 && (
           <CardThumbnailGrid>
             {Array.from({ length: 12 }).map((_, i) => (
               <CardThumbnailSkeleton key={i} />

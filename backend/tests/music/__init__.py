@@ -1,0 +1,1 @@
+"""Music player tests package."""

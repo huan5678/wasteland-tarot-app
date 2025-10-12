@@ -10,18 +10,32 @@ import { DEFAULT_VOLUMES, STORAGE_KEY } from './constants';
 
 export const useAudioStore = create<AudioState>()(
   persist(
-    (set, get) => ({
-      // 音量狀態
-      volumes: {
-        sfx: DEFAULT_VOLUMES.sfx,
-        music: DEFAULT_VOLUMES.music,
-        voice: DEFAULT_VOLUMES.voice,
-      },
-      muted: {
-        sfx: false,
-        music: false,
-        voice: false,
-      },
+    (set, get) => {
+      console.log('[audioStore] Initializing store with default state:', {
+        volumes: {
+          sfx: DEFAULT_VOLUMES.sfx,
+          music: DEFAULT_VOLUMES.music,
+          voice: DEFAULT_VOLUMES.voice,
+        },
+        muted: {
+          sfx: false,
+          music: false,
+          voice: false,
+        },
+      });
+
+      return {
+        // 音量狀態
+        volumes: {
+          sfx: DEFAULT_VOLUMES.sfx,
+          music: DEFAULT_VOLUMES.music,
+          voice: DEFAULT_VOLUMES.voice,
+        },
+        muted: {
+          sfx: false,
+          music: false,
+          voice: false,
+        },
 
       // 播放狀態
       isPlaying: {
@@ -46,29 +60,53 @@ export const useAudioStore = create<AudioState>()(
       activeSoundsCount: 0,
 
       // Actions
-      setVolume: (type: AudioType, volume: number) =>
+      setVolume: (type: AudioType, volume: number) => {
+        const clampedVolume = Math.max(0, Math.min(1, volume));
+        console.log('[audioStore] setVolume called:', {
+          type,
+          volume,
+          clampedVolume,
+          stack: new Error().stack?.split('\n').slice(1, 4).join('\n'),
+        });
         set((state) => ({
           volumes: {
             ...state.volumes,
-            [type]: Math.max(0, Math.min(1, volume)),
+            [type]: clampedVolume,
           },
-        })),
+        }));
+      },
 
-      setMute: (type: AudioType, muted: boolean) =>
+      setMute: (type: AudioType, muted: boolean) => {
+        console.log('[audioStore] setMute called:', {
+          type,
+          muted,
+          stack: new Error().stack?.split('\n').slice(1, 4).join('\n'),
+        });
         set((state) => ({
           muted: {
             ...state.muted,
             [type]: muted,
           },
-        })),
+        }));
+      },
 
-      toggleMute: (type: AudioType) =>
+      toggleMute: (type: AudioType) => {
+        const currentState = get();
+        const before = currentState.muted[type];
+        const after = !before;
+        console.log('[audioStore] toggleMute called:', {
+          type,
+          before,
+          after,
+          stack: new Error().stack?.split('\n').slice(1, 4).join('\n'),
+        });
         set((state) => ({
           muted: {
             ...state.muted,
             [type]: !state.muted[type],
           },
-        })),
+        }));
+      },
 
       setCurrentTrack: (trackId: string | null) =>
         set((state) => ({
@@ -126,7 +164,8 @@ export const useAudioStore = create<AudioState>()(
           // Requirements 2.1: 同步更新音樂播放器狀態
           ...(type === 'music' && !playing ? { currentMusicMode: null } : {}),
         })),
-    }),
+      };
+    },
     {
       name: STORAGE_KEY,
       // 只持久化特定欄位
@@ -139,6 +178,47 @@ export const useAudioStore = create<AudioState>()(
         isSilentMode: state.isSilentMode,
         currentMusicMode: state.currentMusicMode, // 持久化當前音樂模式
       }),
+      // 🔧 修復：強制合併策略，確保未定義的欄位使用預設值
+      // 解決 SSR/CSR 水合不一致導致的 muted 狀態異常
+      merge: (persistedState: any, currentState: AudioState) => {
+        console.log('[audioStore] merge called:', {
+          persistedState,
+          currentState: {
+            volumes: currentState.volumes,
+            muted: currentState.muted,
+          },
+        });
+
+        // 如果沒有持久化狀態，直接使用當前狀態（預設值）
+        if (!persistedState) {
+          console.log('[audioStore] No persisted state, using current state');
+          return currentState;
+        }
+
+        const mergedState = {
+          ...currentState,
+          ...persistedState,
+          // 強制確保 muted 欄位的預設值
+          muted: {
+            sfx: persistedState.muted?.sfx ?? false,
+            music: persistedState.muted?.music ?? false,
+            voice: persistedState.muted?.voice ?? false,
+          },
+          // 強制確保 volumes 欄位的預設值
+          volumes: {
+            sfx: persistedState.volumes?.sfx ?? DEFAULT_VOLUMES.sfx,
+            music: persistedState.volumes?.music ?? DEFAULT_VOLUMES.music,
+            voice: persistedState.volumes?.voice ?? DEFAULT_VOLUMES.voice,
+          },
+        };
+
+        console.log('[audioStore] Merged state:', {
+          volumes: mergedState.volumes,
+          muted: mergedState.muted,
+        });
+
+        return mergedState;
+      },
     }
   )
 );

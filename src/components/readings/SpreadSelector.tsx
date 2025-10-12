@@ -26,8 +26,8 @@ export function SpreadSelector({ value, onChange }: Props) {
         onChange={e => { const v = e.target.value; onChange(v); import('@/lib/actionTracker').then(m=>m.track('spread:select',{spread:v})) }}
         className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm"
       >
-        <option value="single_wasteland">單張占卜 (內建)</option>
-        <option value="vault_tec_spread">三張占卜 (內建)</option>
+        <option value="single_wasteland">單張廢土指引 (內建)</option>
+        <option value="vault_tec_spread">避難所科技三牌陣 (內建)</option>
         {sortedTemplates.map(t => (
           // avoid duplicating internal ones
           (t.spread_type === 'single_wasteland' || t.spread_type === 'vault_tec_spread') ? null : (

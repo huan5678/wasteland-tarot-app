@@ -13,11 +13,11 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Layers } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PipBoyCard } from '@/components/ui/pipboy'
 import { SuitIcon } from '@/components/icons/SuitIcon'
-import { SuitType, SUIT_CONFIG, type SuitMetadata } from '@/types/suits'
+import { PixelIcon } from '@/components/ui/icons/PixelIcon'
+import { SuitType, SUIT_CONFIG, type SuitMetadata, convertApiToRouteSuit } from '@/types/suits'
 
 export interface SuitCardProps {
   /**
@@ -43,6 +43,9 @@ export function SuitCard({ suit, className }: SuitCardProps) {
   // 從配置中取得花色元資料
   const metadata: SuitMetadata = SUIT_CONFIG[suit]
 
+  // 將 API 枚舉值轉換為簡短路由名稱（SEO 友善）
+  const routeSuit = convertApiToRouteSuit(suit)
+
   // 處理鍵盤事件(Enter 或 Space 觸發點擊)
   const handleKeyDown = (event: React.KeyboardEvent<HTMLAnchorElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
@@ -53,7 +56,7 @@ export function SuitCard({ suit, className }: SuitCardProps) {
 
   return (
     <Link
-      href={`/cards/${suit}`}
+      href={`/cards/${routeSuit}`}
       className={cn(
         'block focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm',
         className
@@ -71,7 +74,7 @@ export function SuitCard({ suit, className }: SuitCardProps) {
         <div className="flex items-center justify-center mb-4">
           <div className="transition-transform duration-300 group-hover:scale-110">
             <SuitIcon
-              Icon={metadata.Icon}
+              iconName={metadata.iconName}
               size="lg"
               ariaHidden
             />
@@ -98,10 +101,11 @@ export function SuitCard({ suit, className }: SuitCardProps) {
 
         {/* 卡牌數量指示器 */}
         <div className="flex items-center justify-center gap-2 mt-auto pt-4 border-t border-pip-boy-green/30">
-          <SuitIcon
-            Icon={Layers}
-            size="sm"
-            ariaHidden
+          <PixelIcon
+            name="stack-line"
+            size={20}
+            className="text-pip-boy-green"
+            decorative
           />
           <span className="text-sm md:text-base font-semibold text-pip-boy-green">
             {metadata.card_count} 張卡牌

@@ -196,15 +196,8 @@ export function AsciiDonutLoading({
    * Animation loop
    */
   useEffect(() => {
-    console.log('[AsciiDonutLoading] useEffect triggered', {
-      useFallback,
-      forceFallback,
-      useWebGL,
-    });
-
     // Skip animation if fallback mode
     if (useFallback || forceFallback) {
-      console.log('[AsciiDonutLoading] Using fallback mode');
       if (preRef.current) {
         preRef.current.textContent = STATIC_DONUT;
       }
@@ -213,7 +206,6 @@ export function AsciiDonutLoading({
 
     // WebGL rendering path
     if (useWebGL) {
-      console.log('[AsciiDonutLoading] Initializing WebGL renderer...');
       try {
         // Initialize WebGL renderer
         const finalConfig = config
@@ -267,7 +259,6 @@ export function AsciiDonutLoading({
 
             // Performance degradation detection
             if (fps < 20) {
-              console.warn('[AsciiDonutLoading] WebGL performance degraded, switching to fallback');
               setUseFallback(true);
               return;
             }
@@ -292,7 +283,7 @@ export function AsciiDonutLoading({
           rotationControllerRef.current = null;
         };
       } catch (err) {
-        console.error('[AsciiDonutLoading] WebGL initialization failed, falling back to CPU renderer:', err);
+        // WebGL initialization failed, fall back to CPU renderer
         setUseFallback(true);
         // Don't continue to CPU path - let the component re-render with useFallback=true
       }
@@ -348,7 +339,6 @@ export function AsciiDonutLoading({
 
           // Performance degradation
           if (fps < 15) {
-            console.warn('[AsciiDonutLoading] Low FPS detected, switching to static fallback');
             setUseFallback(true);
             return;
           }
@@ -380,6 +370,7 @@ export function AsciiDonutLoading({
       className="fixed inset-0 flex flex-col items-center justify-center bg-black z-50"
       role="status"
       aria-live="polite"
+      suppressHydrationWarning
     >
       {/* WebGL Canvas Container (for useWebGL mode) */}
       {useWebGL && !useFallback && !forceFallback && (
@@ -388,6 +379,7 @@ export function AsciiDonutLoading({
           className="flex items-center justify-center w-full"
           style={{ minHeight: '288px' }}
           aria-label="Loading animation"
+          suppressHydrationWarning
         >
           {/* Canvas will be inserted here by WebGL renderer */}
         </div>
@@ -399,34 +391,36 @@ export function AsciiDonutLoading({
           ref={preRef}
           className="text-pip-boy-green whitespace-pre text-xs sm:text-sm leading-tight"
           aria-label="Loading animation"
+          suppressHydrationWarning
         >
           {/* Content updated by animation loop or static fallback */}
         </pre>
       )}
 
       {/* Progress Bar */}
-      <div className="w-full max-w-md px-4 mt-6">
-        <div className="relative h-1.5 bg-pip-boy-green/20 rounded-full overflow-hidden">
+      <div className="w-full max-w-md px-4 mt-6" suppressHydrationWarning>
+        <div className="relative h-1.5 bg-pip-boy-green/20 rounded-full overflow-hidden" suppressHydrationWarning>
           {/* Progress Fill */}
           <div
             className="absolute top-0 left-0 h-full bg-pip-boy-green rounded-full transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
+            suppressHydrationWarning
           />
         </div>
         {/* Progress Percentage */}
-        <p className="text-pip-boy-green/60 text-xs text-center mt-2">
+        <p className="text-pip-boy-green/60 text-xs text-center mt-2" suppressHydrationWarning>
           {Math.round(progress)}%
         </p>
       </div>
 
       {/* Loading Message */}
-      <p className="text-pip-boy-green/80 text-sm mt-4">
+      <p className="text-pip-boy-green/80 text-sm mt-4" suppressHydrationWarning>
         {message}
       </p>
 
       {/* Fallout-style Flavor Text (dev mode only) */}
       {process.env.NODE_ENV !== 'production' && currentFPS > 0 && (
-        <p className="text-pip-boy-green/50 text-xs mt-2">
+        <p className="text-pip-boy-green/50 text-xs mt-2" suppressHydrationWarning>
           [ {flavorText} ]
         </p>
       )}

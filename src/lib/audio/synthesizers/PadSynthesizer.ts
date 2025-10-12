@@ -54,7 +54,7 @@ export const PAD_PRESETS: Record<string, PadSynthConfig> = {
     detuneAmount: 7,
     waveform: 'sawtooth',
     filterCutoff: 2500,
-    filterResonance: 1.5,
+    filterResonance: 1.0, // 降低共振保持平滑音色 (原 1.5)
     ampEnvelope: {
       attack: 0.6,
       decay: 0.3,
@@ -86,7 +86,7 @@ export const PAD_PRESETS: Record<string, PadSynthConfig> = {
     detuneAmount: 6,
     waveform: 'sawtooth',
     filterCutoff: 4000,
-    filterResonance: 2.0,
+    filterResonance: 1.2, // 降低共振避免高頻峰值 (原 2.0)
     ampEnvelope: {
       attack: 0.4,
       decay: 0.2,

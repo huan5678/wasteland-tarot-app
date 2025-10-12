@@ -7,7 +7,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { Volume2, VolumeX, Volume1 } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import { Slider } from '@/components/ui/slider';
 import { useAudioStore } from '@/lib/audio/audioStore';
 import { motion } from 'motion/react';
@@ -30,23 +30,56 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
   const setVolume = useAudioStore((state) => state.setVolume);
   const toggleMute = useAudioStore((state) => state.toggleMute);
 
+  // ========== Debug: Log initial state ==========
+  React.useEffect(() => {
+    console.log('[VolumeControl] Component mounted with state:', {
+      volume,
+      isMuted,
+      displayVolume: isMuted ? 0 : volume,
+    });
+  }, []);
+
+  // ========== Debug: Log state changes ==========
+  React.useEffect(() => {
+    console.log('[VolumeControl] State changed:', {
+      volume,
+      isMuted,
+      displayVolume: isMuted ? 0 : volume,
+    });
+  }, [volume, isMuted]);
+
   // ========== Handlers ==========
+  const setMute = useAudioStore((state) => state.setMute);
+
   const handleVolumeChange = useCallback(
     (value: number[]) => {
       const newVolume = value[0] / 100; // Slider 回傳 0-100，轉換為 0-1
+      console.log('[VolumeControl] handleVolumeChange called:', {
+        sliderValue: value[0],
+        newVolume,
+        isMuted,
+      });
+
+      // 如果用戶調整音量且音量大於 0，自動解除靜音
+      if (newVolume > 0 && isMuted) {
+        console.log('[VolumeControl] Auto-unmuting due to volume increase');
+        setMute('music', false);
+      }
+
       setVolume('music', newVolume);
     },
-    [setVolume]
+    [setVolume, setMute, isMuted]
   );
 
   const handleToggleMute = useCallback(() => {
+    console.log('[VolumeControl] handleToggleMute called');
     toggleMute('music');
   }, [toggleMute]);
 
   // ========== Compute Volume Icon ==========
   const displayVolume = isMuted ? 0 : volume;
-  const VolumeIcon =
-    displayVolume === 0 ? VolumeX : displayVolume < 0.5 ? Volume1 : Volume2;
+  const volumeIconName =
+    displayVolume === 0 ? 'volume-x' : displayVolume < 0.5 ? 'volume-1' : 'volume';
 
   // ========== Render ==========
   return (
@@ -62,7 +95,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
         aria-label={isMuted ? '取消靜音' : '靜音'}
         aria-pressed={isMuted}
       >
-        <VolumeIcon className="w-5 h-5" aria-hidden="true" />
+        <PixelIcon name={volumeIconName} sizePreset="sm" aria-label={isMuted ? '取消靜音' : '靜音'} />
       </button>
 
       {/* Volume Slider */}
@@ -91,15 +124,6 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
             {Math.round(volume * 100)}%
           </motion.div>
         )}
-      </div>
-
-      {/* Volume Percentage Display */}
-      <div
-        className="min-w-[3rem] text-right text-sm text-pip-boy-green/80"
-        aria-live="polite"
-        aria-atomic="true"
-      >
-        {Math.round(displayVolume * 100)}%
       </div>
     </div>
   );

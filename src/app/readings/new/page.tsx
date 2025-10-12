@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { CardDraw } from '@/components/tarot/CardDraw'
-import { Zap, Target, Bot, Save, Edit3, Spade, RotateCcw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { readingsAPI } from '@/lib/api'
 import { SpreadSelector } from '@/components/readings/SpreadSelector'
 import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview'
@@ -413,8 +413,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         {/* Step 1: Question Setup */}
         {step === 'setup' && (
           <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-            <h2 className="text-xl font-bold text-pip-boy-green mb-4">
-              <Edit3 className="w-5 h-5 mr-2 inline" />制定你的問題
+            <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
+              <PixelIcon name="edit" size={20} className="mr-2" decorative />制定你的問題
             </h2>
 
             <form onSubmit={handleQuestionSubmit} className="space-y-6">
@@ -431,8 +431,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                   rows={4}
                   required
                 />
-                <p className="text-pip-boy-green/60 text-xs mt-2">
-                  <Zap className="w-4 h-4 mr-1 inline" />提示：請具體說明你真正需要指引的事項
+                <p className="text-pip-boy-green/60 text-xs mt-2 flex items-center">
+                  <PixelIcon name="zap" size={16} className="mr-1" decorative />提示：請具體說明你真正需要指引的事項
                 </p>
               </div>
 
@@ -445,9 +445,9 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
               <button
                 type="submit"
-                className="w-full py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors"
+                className="w-full py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors flex items-center justify-center"
               >
-                <Target className="w-4 h-4 mr-2" />進行卡牌抽取
+                <PixelIcon name="target" size={16} className="mr-2" decorative />進行卡牌抽取
               </button>
             </form>
           </div>
@@ -456,8 +456,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         {/* Step 2: Card Drawing */}
         {step === 'drawing' && (
           <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-            <h2 className="text-xl font-bold text-pip-boy-green mb-4 text-center">
-              <Spade className="w-5 h-5 mr-2 inline" />抽取你的卡牌
+            <h2 className="text-xl font-bold text-pip-boy-green mb-4 text-center flex items-center justify-center">
+              <PixelIcon name="card-stack" size={20} className="mr-2" decorative />抽取你的卡牌
             </h2>
 
             <div className="text-center mb-6">
@@ -484,8 +484,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
             {/* Cards Display */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-              <h3 className="text-xl font-bold text-pip-boy-green mb-4 text-center">
-                <Spade className="w-5 h-5 mr-2 inline" />你的卡牌
+              <h3 className="text-xl font-bold text-pip-boy-green mb-4 text-center flex items-center justify-center">
+                <PixelIcon name="card-stack" size={20} className="mr-2" decorative />你的卡牌
               </h3>
 
               <div className="flex justify-center gap-4 mb-6">
@@ -495,7 +495,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                       {/* The TarotCard component would be rendered here */}
                       <div className="w-32 h-48 border-2 border-pip-boy-green bg-pip-boy-green/10 rounded flex items-center justify-center">
                         <div className="text-center text-pip-boy-green">
-                          <Spade className="w-8 h-8 mb-2 text-pip-boy-green" />
+                          <PixelIcon name="card-stack" size={32} className="mb-2 mx-auto" decorative />
                           <div className="text-xs font-bold">{card.name}</div>
                           <div className="text-xs">{card.position}</div>
                         </div>
@@ -503,7 +503,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                     </div>
                     {spreadType === 'three_card' && (
                       <p className="text-pip-boy-green/70 text-xs">
-                        {index === 0 ? '過去' : index === 1 ? '現在' : '未來'}
+                        {index === 0 ? '戰前狀況' : index === 1 ? '當前廢土' : '重建希望'}
                       </p>
                     )}
                   </div>
@@ -513,8 +513,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
             {/* Interpretation */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-              <h3 className="text-xl font-bold text-pip-boy-green mb-4">
-                <Bot className="w-4 h-4 mr-2" />Pip-Boy 解讀
+              <h3 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
+                <PixelIcon name="android" size={16} className="mr-2" decorative />Pip-Boy 解讀
               </h3>
 
               {isGeneratingInterpretation ? (
@@ -539,15 +539,15 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                 <button
                   onClick={handleSaveReading}
                   disabled={isSaving}
-                  className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  <Save className="w-4 h-4 mr-2" />{isSaving ? '保存中...' : '儲存至 Vault'}
+                  <PixelIcon name="save" size={16} className="mr-2" decorative />{isSaving ? '保存中...' : '儲存至 Vault'}
                 </button>
                 <button
                   onClick={handleNewReading}
-                  className="flex-1 py-3 border-2 border-pip-boy-green text-pip-boy-green font-bold text-lg hover:bg-pip-boy-green/10 transition-colors"
+                  className="flex-1 py-3 border-2 border-pip-boy-green text-pip-boy-green font-bold text-lg hover:bg-pip-boy-green/10 transition-colors flex items-center justify-center"
                 >
-                  <RotateCcw className="w-4 h-4 mr-2 inline" />新占卜
+                  <PixelIcon name="reload" size={16} className="mr-2" decorative />新占卜
                 </button>
               </div>
             )}

@@ -9,17 +9,6 @@
 // 主要元件
 export { PixelIcon, default as PixelIconDefault } from './PixelIcon';
 
-// 圖示映射系統
-export {
-  ICON_MAPPING,
-  getIconPath,
-  getFallbackIcon,
-  iconExists,
-  batchIconExists,
-  getSupportedLucideIcons,
-  getMappedPixelIcons,
-} from './iconMapping';
-
 // 圖示工具函式（Phase 6: Visual Polish）
 export {
   SIZE_PRESETS,
@@ -45,9 +34,6 @@ export {
   getIconCount,
   getIconCountByCategory,
 } from './iconMetadata';
-
-// 圖示快取管理器
-export { iconRegistry } from '../../../lib/iconRegistry';
 
 // 型別定義
 export type {

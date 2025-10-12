@@ -3,12 +3,13 @@
 /**
  * AudioInitializer - 音訊系統初始化組件
  * 需求 6.1: 整合音訊系統至應用程式
+ *
+ * 注意：背景音樂功能已移除，改由使用者透過 MusicPlayerDrawer 手動控制
  */
 
 import React from 'react';
 import { useAudioInitialization } from '@/hooks/audio/useAudioInitialization';
 import { useVisibilityControl } from '@/hooks/audio/useVisibilityControl';
-import { useBackgroundMusic } from '@/hooks/audio/useBackgroundMusic';
 import { usePrefersReducedMotion } from '@/hooks/audio/usePrefersReducedMotion';
 
 export function AudioInitializer() {
@@ -23,8 +24,8 @@ export function AudioInitializer() {
   // 背景/前景狀態管理
   useVisibilityControl();
 
-  // 自動背景音樂
-  useBackgroundMusic();
+  // 移除自動背景音樂 - 改由 MusicPlayerDrawer 手動控制
+  // useBackgroundMusic();
 
   // prefers-reduced-motion 偵測
   usePrefersReducedMotion();

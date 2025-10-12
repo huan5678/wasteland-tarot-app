@@ -59,9 +59,12 @@ export const WastelandBackground: React.FC<WastelandBackgroundProps> = ({
   }, [animationIntensity]);
 
   return (
-    <div className={`wasteland-background ${getVariantClasses()} ${getAnimationClasses()} ${className}`}>
+    <div
+      className={`wasteland-background ${getVariantClasses()} ${getAnimationClasses()} ${className}`}
+      suppressHydrationWarning
+    >
       {/* 輻射粒子層 */}
-      <div className="radiation-particles">
+      <div className="radiation-particles" suppressHydrationWarning>
         {particles.map((particle) => (
           <div
             key={particle.key}
@@ -72,21 +75,22 @@ export const WastelandBackground: React.FC<WastelandBackgroundProps> = ({
               '--x-start': `${particle.xStart}%`,
               '--y-start': `${particle.yStart}%`,
             } as React.CSSProperties}
+            suppressHydrationWarning
           />
         ))}
       </div>
 
       {/* 廢土網格紋理 */}
-      <div className="wasteland-grid" />
+      <div className="wasteland-grid" suppressHydrationWarning />
 
       {/* Pip-Boy 掃描線效果 */}
-      <div className="scan-lines" />
+      <div className="scan-lines" suppressHydrationWarning />
 
       {/* 電子螢幕漸層 */}
-      <div className="screen-gradient" />
+      <div className="screen-gradient" suppressHydrationWarning />
 
       {/* 輻射干擾效果 */}
-      <div className="radiation-interference" />
+      <div className="radiation-interference" suppressHydrationWarning />
     </div>
   );
 };

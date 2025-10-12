@@ -1,0 +1,53 @@
+{
+  "feature": "pixel-icon-replacement",
+  "title": "Pixel 風格圖示系統替換 - HackerNoon Pixel Icon Library",
+  "description": "將網站現有的 pixelarticons 圖示系統更換為 @hackernoon/pixel-icon-library (1440+ 圖示)，提供更豐富的圖示選擇和更好的視覺品質，進一步強化 Fallout 復古像素美學",
+  "language": "zh-TW",
+  "phase": "implementation-in-progress",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "version": "2.0"
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true,
+      "version": "2.0"
+    }
+  },
+  "implementation": {
+    "phase1_preparation": {
+      "status": "completed",
+      "completed_at": "2025-10-11T22:45:00Z",
+      "tasks_completed": 5,
+      "tasks_total": 5
+    },
+    "phase2_core_refactoring": {
+      "status": "completed",
+      "completed_at": "2025-10-11T22:50:00Z",
+      "tasks_completed": 4,
+      "tasks_total": 4
+    },
+    "phase3_mapping_completion": {
+      "status": "completed",
+      "completed_at": "2025-10-11T23:00:00Z",
+      "tasks_completed": 4,
+      "tasks_total": 4
+    },
+    "phase4_global_replacement": {
+      "status": "completed",
+      "completed_at": "2025-10-11T23:30:00Z",
+      "tasks_completed": 3,
+      "tasks_total": 3
+    }
+  },
+  "created_at": "2025-10-11T00:00:00Z",
+  "updated_at": "2025-10-11T23:30:00Z",
+  "production_ready": true,
+  "notes": "HackerNoon dual icon system is 100% production ready. Phase 5-6 are optional."
+}

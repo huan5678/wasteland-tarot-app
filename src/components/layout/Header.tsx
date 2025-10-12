@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
-import { VolumeControl } from '@/components/audio/VolumeControl'
 import { PixelIcon } from '@/components/ui/icons'
 
 export function Header() {
@@ -142,8 +141,7 @@ export function Header() {
               </button>
             ))}
 
-            {/* Volume Control */}
-            <VolumeControl />
+            {/* Volume Control 已移至 MusicPlayerDrawer */}
 
             {/* Logout Button */}
             {user && (

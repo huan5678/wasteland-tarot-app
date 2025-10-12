@@ -3,13 +3,14 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { animated } from '@react-spring/web'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
-import { Star, Spade, Zap, ZoomIn, ZoomOut, RotateCw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
 import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
 import { use3DTilt } from '@/hooks/tilt/use3DTilt'
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
 import { useGyroscopePermission } from '@/hooks/tilt/useGyroscopePermission'
 import { PipBoyButton } from '@/components/ui/pipboy'
+import { CardBackPixelEffect } from '@/components/cards/CardBackPixelEffect'
 
 interface TarotCard {
   id: number
@@ -110,6 +111,7 @@ export function MobileTarotCard({
   const [isZoomed, setIsZoomed] = useState(false)
   const [showControls, setShowControls] = useState(false)
   const [rotation, setRotation] = useState(0)
+  const [isHovered, setIsHovered] = useState(false)
 
   const cardRef = useRef<HTMLDivElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -138,6 +140,10 @@ export function MobileTarotCard({
   // Advanced gesture handlers
   const gestureHandlers = {
     onTap: useCallback((event: any) => {
+      // Trigger hover effect on tap (for pixel animation)
+      setIsHovered(true)
+      setTimeout(() => setIsHovered(false), 300)
+
       if (onClick && (isRevealed || isSelectable)) {
         onClick(card)
       }
@@ -164,6 +170,10 @@ export function MobileTarotCard({
     }, [onDoubleTap, card, enableZoom, size]),
 
     onLongPress: useCallback((event: any) => {
+      // Trigger hover effect on long press
+      setIsHovered(true)
+      setTimeout(() => setIsHovered(false), 600)
+
       if (onLongPress) {
         onLongPress(card)
       } else {
@@ -381,7 +391,7 @@ export function MobileTarotCard({
             className="p-2 bg-black/80 text-pip-boy-green border border-pip-boy-green/50 rounded-full"
             aria-label="重置位置"
           >
-            <RotateCw className="w-4 h-4" />
+            <PixelIcon name="reload" size={16} aria-hidden="true" />
           </button>
           {enableRotation && (
             <button
@@ -389,7 +399,7 @@ export function MobileTarotCard({
               className="p-2 bg-black/80 text-pip-boy-green border border-pip-boy-green/50 rounded-full"
               aria-label="旋转卡牌"
             >
-              <RotateCw className="w-4 h-4" />
+              <PixelIcon name="reload" size={16} aria-hidden="true" />
             </button>
           )}
         </div>
@@ -409,10 +419,15 @@ export function MobileTarotCard({
             absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-lg
             border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
             flex items-center justify-center bg-gradient-to-br from-wasteland-dark to-black
-            transition-all duration-300
+            transition-all duration-300 relative overflow-hidden
           `}>
-            <div className="text-center text-pip-boy-green">
-              <Spade className={`${size === 'small' ? 'w-4 h-4' : size === 'medium' ? 'w-6 h-6' : 'w-8 h-8'} mb-2 mx-auto`} />
+            <div className="text-center text-pip-boy-green relative z-10">
+              <PixelIcon
+                name="cards"
+                size={size === 'small' ? 16 : size === 'medium' ? 24 : size === 'fullscreen' ? 32 : 32}
+                className="mb-2 mx-auto"
+                aria-hidden="true"
+              />
               <div className={`${size === 'small' ? 'text-[8px]' : size === 'medium' ? 'text-[10px]' : 'text-sm'}`}>
                 WASTELAND
               </div>
@@ -422,6 +437,14 @@ export function MobileTarotCard({
                 </div>
               )}
             </div>
+            {/* Pixel hover effect for card back */}
+            {!isRevealed && (
+              <CardBackPixelEffect
+                isHovered={isHovered}
+                gap={size === 'small' ? 12 : size === 'medium' ? 10 : size === 'large' ? 8 : 6}
+                speed={35}
+              />
+            )}
           </div>
 
           {/* Card Front */}
@@ -439,7 +462,7 @@ export function MobileTarotCard({
               `}>
                 <div className="w-2 h-2 bg-pip-boy-green/70 rounded-full animate-pulse"></div>
                 {isSelected && (
-                  <Zap className="w-3 h-3 text-pip-boy-green animate-pulse" />
+                  <PixelIcon name="zap" size={12} className="text-pip-boy-green animate-pulse" aria-hidden="true" />
                 )}
               </div>
             )}
@@ -453,7 +476,12 @@ export function MobileTarotCard({
             <div className="flex-1 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full relative overflow-hidden">
               {imageError ? (
                 <div className="text-pip-boy-green/60 text-center">
-                  <Spade className={`${size === 'small' ? 'w-6 h-6' : 'w-8 h-8'} mb-2 mx-auto`} />
+                  <PixelIcon
+                    name="image"
+                    size={size === 'small' ? 24 : 32}
+                    className="mb-2 mx-auto"
+                    aria-hidden="true"
+                  />
                   <div className={`${size === 'small' ? 'text-[8px]' : 'text-xs'}`}>無圖</div>
                 </div>
               ) : (

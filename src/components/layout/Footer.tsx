@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { ExternalLink, Twitter, MessageSquare } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 export function Footer() {
   const [currentYear, setCurrentYear] = useState<number | null>(null)
@@ -19,9 +19,9 @@ export function Footer() {
   ]
 
   const socialLinks = [
-    { href: 'https://github.com', label: 'GitHub', icon: ExternalLink },
-    { href: 'https://twitter.com', label: 'Twitter', icon: Twitter },
-    { href: 'https://discord.com', label: 'Discord', icon: MessageSquare },
+    { href: 'https://github.com', label: 'GitHub', icon: 'github', ariaLabel: 'GitHub' },
+    { href: 'https://twitter.com', label: 'Twitter', icon: 'external-link', ariaLabel: 'Twitter' },
+    { href: 'https://discord.com', label: 'Discord', icon: 'message', ariaLabel: 'Discord' },
   ]
 
   return (
@@ -79,7 +79,12 @@ export function Footer() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200"
                 >
-                  <link.icon className="w-4 h-4" />
+                  <PixelIcon
+                    name={link.icon}
+                    size={16}
+                    className="w-4 h-4"
+                    aria-label={link.ariaLabel}
+                  />
                   <span>{link.label}</span>
                 </a>
               ))}

@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Fingerprint, Plus, Edit2, Trash2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import { usePasskey } from '@/hooks/usePasskey';
 import { useAuthStore } from '@/lib/authStore';
 

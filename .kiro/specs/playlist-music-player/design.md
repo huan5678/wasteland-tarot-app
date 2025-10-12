@@ -1,946 +1,1191 @@
-# 技術設計 - 播放清單音樂播放器
+# 技術設計文件 - 音樂系統整合方案（v4.0）
 
-## 概述
+**版本**: 4.0
+**建立日期**: 2025-01-10
+**更新日期**: 2025-10-13
+**語言**: 繁體中文 (zh-TW)
 
-本設計文件描述了將 Wasteland Tarot 的自動場景音樂系統轉換為使用者主導的播放清單音樂控制系統的技術實現方案。系統採用 shadcn/ui Drawer 作為主播放器介面，Sheet 作為播放清單彈窗，並完全整合現有的 ProceduralMusicEngine 和 audioStore Zustand 狀態管理。
+## 概覽
+
+本設計文件涵蓋兩個獨立但互補的音樂系統，以及全新的訪客與公開歌曲分享機制：
+
+### 系統組成
+
+1. **系統 A：播放清單音樂播放器**（前台，訪客 + 註冊使用者）
+   - Pattern-Based 播放清單系統
+   - RhythmAudioSynthesizer 音訊合成
+   - 訪客播放清單（localStorage，上限 4 首）⭐ v4.0
+   - 註冊使用者播放清單（資料庫，無限制）⭐ v4.0
+
+2. **系統 B：節奏編輯器**（後台，僅註冊使用者）
+   - 16 步驟音序器
+   - AI 節奏生成（20 次/日配額）
+   - Preset 管理（系統預設 + 使用者自訂）
+   - 公開/私密歌曲控制 ⭐ v4.0
+
+3. **系統 C：訪客與公開歌曲系統** ⭐ v4.0 新增
+   - 訪客瀏覽公開歌曲
+   - 公開歌曲分享機制
+   - 訪客轉註冊使用者的資料遷移
 
 ### 設計目標
 
-1. **完全移除自動播放**：移除 SCENE_MUSIC_MAP 場景音樂自動播放邏輯
-2. **使用者主導控制**：所有音樂播放由使用者手動啟動和管理
-3. **Fallout Pip-Boy 美學**：保持沉浸式終端機風格介面
-4. **效能優化**：< 500ms 音樂切換，< 100ms UI 渲染，≤ 50MB 記憶體
-5. **無障礙支援**：WCAG 2.1 AA 合規，完整鍵盤導航
+- **Pattern-Based 架構**：所有音樂基於 16 步驟節奏 pattern，由 Web Audio API 即時合成
+- **完全使用者控制**：移除自動場景音樂，所有播放由使用者主導
+- **訪客友善體驗**：訪客可試用核心功能，鼓勵註冊以解鎖完整功能 ⭐ v4.0
+- **社群分享機制**：使用者可選擇公開分享創作，豐富平台內容 ⭐ v4.0
+- **系統獨立性**：播放器與節奏編輯器完全獨立，互不干擾
 
-## 需求映射
+---
 
-### 設計元件追溯性
-
-每個設計元件對應特定需求（requirements.md）：
-
-#### 播放器架構
-- **MusicPlayerDrawer 元件** → 需求 4: Drawer 播放器介面設計（13 條驗收標準）
-- **PlaylistSheet 元件** → 需求 12: Sheet 彈窗播放清單介面（14 條驗收標準）
-- **MusicModeSelector** → 需求 1: 音樂模式瀏覽與選擇（7 條驗收標準）
-
-#### 播放控制
-- **PlaybackControls 元件** → 需求 2: 播放控制功能（9 條驗收標準）
-- **VolumeControl 整合** → 需求 5: 音量控制整合（8 條驗收標準）
-- **KeyboardNavigation Hook** → 需求 7: 鍵盤導航（8 條驗收標準）
-
-#### 狀態管理
-- **musicPlayerStore** → 需求 6: 狀態持久化（8 條驗收標準）
-- **PlaylistManager** → 需求 3: 播放清單管理（8 條驗收標準）
-
-#### 自動音樂移除
-- **AutoMusicRemoval 重構** → 需求 11: 移除自動場景音樂系統（8 條驗收標準）
-
-#### 效能與無障礙
-- **PerformanceOptimizer** → 需求 8: 效能要求（8 條驗收標準）
-- **AccessibilityWrapper** → 需求 9: 無障礙支援（8 條驗收標準）
-- **ErrorBoundary** → 需求 10: 錯誤處理（8 條驗收標準）
-
-### 使用者故事覆蓋
-
-| 使用者故事 | 技術實現 |
-|------------|----------|
-| 瀏覽所有可用音樂模式 | `MusicModeSelector` 元件在 Sheet 中顯示 4 種模式，每個模式包含名稱、描述和圖示 |
-| 完整播放控制功能 | `PlaybackControls` 元件提供播放/暫停、上一首/下一首、循環模式、隨機播放按鈕 |
-| 建立和管理播放清單 | `PlaylistManager` 提供新增、刪除、重新命名播放清單功能，支援拖曳排序 |
-| Drawer 播放器介面 | `MusicPlayerDrawer` 從底部滑入，60% 高度可調整（30%-90%），包含完整播放控制 |
-| 音量控制整合 | 整合現有 `VolumeControl` 元件，即時更新 audioStore，支援靜音和音量調整 |
-| 狀態持久化 | `musicPlayerStore` 使用 Zustand persist middleware，儲存至 localStorage |
-| 鍵盤導航 | `useKeyboardShortcuts` hook 實現空白鍵、方向鍵、M、L、Esc 等快捷鍵 |
-| 效能要求 | React.memo、useMemo、useCallback 優化渲染，Web Audio API 降低 CPU |
-| 無障礙支援 | 完整 ARIA 標籤、role 屬性、螢幕閱讀器支援、焦點管理 |
-| 錯誤處理 | ErrorBoundary + 重試機制 + 回退策略 + 使用者友善錯誤訊息 |
-| 移除自動音樂 | 移除 SCENE_MUSIC_MAP 場景映射，audioStore.isPlaying.music 預設 false |
-| Sheet 播放清單彈窗 | `PlaylistSheet` 從右側滑入，桌面 400px / 行動 90% 寬度 |
-
-## 架構
+## 架構設計
 
 ### 系統架構圖
 
 ```mermaid
 graph TB
-    subgraph "UI Layer - React Components"
-        A[MusicPlayerDrawer<br/>主播放器介面]
-        B[PlaylistSheet<br/>播放清單彈窗]
-        C[FloatingMiniPlayer<br/>最小化控制條]
-        D[MusicModeSelector<br/>模式選擇器]
-        E[PlaybackControls<br/>播放控制]
-        F[VolumeControl<br/>音量控制]
+    subgraph "訪客流程（v4.0 新增）"
+        Guest[訪客使用者] --> PublicSongs[公開歌曲瀏覽器]
+        PublicSongs --> SystemPresets[系統預設歌曲<br/>5 首]
+        PublicSongs --> PublicUserSongs[公開使用者創作<br/>is_public=true]
+        PublicSongs --> GuestPlaylist[訪客播放清單<br/>localStorage<br/>上限 4 首]
+        GuestPlaylist --> GuestPlayer[音樂播放器<br/>RhythmAudioSynthesizer]
+        Guest -->|註冊| Migration[播放清單遷移對話框]
+        Migration --> UserAccount[註冊使用者帳號]
     end
 
-    subgraph "State Management - Zustand"
-        G[musicPlayerStore<br/>播放器狀態]
-        H[audioStore<br/>音訊狀態]
-        I[playlistStore<br/>播放清單狀態]
+    subgraph "註冊使用者流程"
+        User[註冊使用者] --> RhythmEditor[節奏編輯器<br/>/dashboard/rhythm-editor]
+        RhythmEditor --> CreatePattern[建立 Pattern<br/>16 步驟音序器]
+        CreatePattern --> SaveDialog[儲存對話框<br/>勾選公開/私密]
+        SaveDialog --> PresetDB[(user_rhythm_presets<br/>is_public欄位)]
+        PresetDB --> UserPlaylist[註冊使用者播放清單<br/>資料庫<br/>無限制]
+        UserPlaylist --> Player[音樂播放器<br/>RhythmAudioSynthesizer]
+        User --> BrowsePublic[瀏覽公開歌曲<br/>含自己的私密歌曲]
     end
 
-    subgraph "Business Logic"
-        J[PlaylistManager<br/>播放清單管理器]
-        K[MusicModeManager<br/>模式管理器]
-        L[PlaybackController<br/>播放控制器]
+    subgraph "資料庫層（Supabase）"
+        PresetDB
+        PlaylistDB[(playlists)]
+        PlaylistPatternsDB[(playlist_patterns)]
+        QuotaDB[(user_ai_quotas)]
+
+        PresetDB -.->|FK| PlaylistPatternsDB
+        PlaylistDB -.->|FK| PlaylistPatternsDB
     end
 
-    subgraph "Audio Engine"
-        M[ProceduralMusicEngine<br/>程序式音樂引擎]
-        N[AudioContext<br/>Web Audio API]
+    subgraph "音訊引擎層"
+        WebAudioAPI[Web Audio API]
+        RhythmSynthesizer[RhythmAudioSynthesizer<br/>播放器專用]
+        EditorSynthesizer[EditorAudioSynthesizer<br/>編輯器專用]
+
+        GuestPlayer --> RhythmSynthesizer
+        Player --> RhythmSynthesizer
+        CreatePattern --> EditorSynthesizer
+        RhythmSynthesizer --> WebAudioAPI
+        EditorSynthesizer --> WebAudioAPI
     end
 
-    subgraph "Data Persistence"
-        O[localStorage<br/>wasteland-tarot-audio]
+    subgraph "後端 API（FastAPI）"
+        PublicAPI[GET /api/v1/music/presets/public<br/>訪客可存取]
+        PresetAPI[POST /api/v1/music/presets<br/>儲存 Pattern + is_public]
+        PlaylistAPI[POST /api/v1/playlists<br/>建立播放清單]
+        ImportAPI[POST /api/v1/playlists/import-guest<br/>匯入訪客播放清單]
+        AIGenAPI[POST /api/v1/music/generate-rhythm<br/>AI 生成節奏]
+        QuotaAPI[GET /api/v1/music/quota<br/>查詢配額]
     end
 
-    A --> E
-    A --> F
-    A --> C
-    A --> G
-    B --> D
-    B --> I
+    PresetDB -.->|RLS Policies| PublicAPI
+    PresetDB -.->|RLS Policies| PresetAPI
+    QuotaDB -.-> AIGenAPI
 
-    E --> L
-    F --> H
-    D --> K
-
-    G --> O
-    H --> O
-    I --> O
-
-    J --> I
-    K --> G
-    L --> G
-    L --> M
-
-    M --> N
-    H --> M
+    style Guest fill:#ff8800
+    style User fill:#00ff88
+    style PresetDB fill:#0055aa
+    style GuestPlaylist fill:#ffdd00
+    style UserPlaylist fill:#00ff41
 ```
 
-### 元件階層架構
+### 資料流圖
 
 ```mermaid
-graph TB
-    Root[App Layout]
-    Root --> Trigger[FloatingMusicButton<br/>固定於右下角]
-    Root --> Drawer[MusicPlayerDrawer]
-    Root --> Sheet[PlaylistSheet]
+graph LR
+    subgraph "訪客歌曲瀏覽流程（v4.0）"
+        A1[訪客訪問網站] --> B1[GET /api/v1/music/presets/public]
+        B1 --> C1{RLS Policy 檢查}
+        C1 -->|系統預設| D1[is_system_preset = true]
+        C1 -->|公開歌曲| D2[is_public = true]
+        D1 --> E1[顯示歌曲列表]
+        D2 --> E1
+        E1 --> F1[點擊「加入播放清單」]
+        F1 --> G1{localStorage 檢查}
+        G1 -->|< 4 首| H1[加入 localStorage]
+        G1 -->|>= 4 首| H2[顯示「已滿」警告<br/>引導註冊]
+        H1 --> I1[音樂播放器播放]
+    end
 
-    Drawer --> DrawerHeader[DrawerHeader<br/>當前曲目資訊]
-    Drawer --> DrawerContent[DrawerContent]
-    Drawer --> DrawerFooter[DrawerFooter<br/>附加操作]
+    subgraph "使用者創作與分享流程（v4.0）"
+        A2[使用者創建節奏] --> B2[點擊「儲存」]
+        B2 --> C2[儲存對話框]
+        C2 --> D3{勾選「公開分享」?}
+        D3 -->|是| E2[POST /api/v1/music/presets<br/>is_public = true]
+        D3 -->|否| E3[POST /api/v1/music/presets<br/>is_public = false]
+        E2 --> F2[儲存到 user_rhythm_presets]
+        E3 --> F2
+        F2 --> G2{is_public = true?}
+        G2 -->|是| H3[訪客可見 + 自己可見]
+        G2 -->|否| H4[僅自己可見]
+    end
 
-    DrawerContent --> Controls[PlaybackControls<br/>播放/暫停/上一首/下一首]
-    DrawerContent --> Progress[ProgressBar<br/>播放進度條]
-    DrawerContent --> Volume[VolumeControl<br/>音量滑桿]
-    DrawerContent --> Modes[RepeatShuffleControls<br/>循環/隨機]
-    DrawerContent --> PlaylistBtn[PlaylistButton<br/>開啟 Sheet]
-
-    Sheet --> SheetHeader[SheetHeader<br/>播放清單標題]
-    Sheet --> SheetContent[SheetContent]
-
-    SheetContent --> ModeSelector[MusicModeSelector<br/>4 種音樂模式]
-    SheetContent --> PlaylistList[PlaylistList<br/>播放清單顯示]
-    SheetContent --> PlaylistActions[PlaylistActions<br/>新增/刪除/重新命名]
+    subgraph "訪客轉註冊流程（v4.0）"
+        A3[訪客完成註冊] --> B3[首次登入]
+        B3 --> C3{localStorage 有 guest_playlist?}
+        C3 -->|是| D4[顯示匯入對話框]
+        C3 -->|否| D5[跳過]
+        D4 --> E4{使用者選擇?}
+        E4 -->|匯入| F3[POST /api/v1/playlists/import-guest]
+        E4 -->|跳過| F4[清除 localStorage]
+        F3 --> G3[建立新播放清單<br/>「訪客播放清單（已匯入）」]
+        G3 --> H5[清除 localStorage]
+        F4 --> H5
+    end
 ```
-
-### 資料流動圖
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Drawer as MusicPlayerDrawer
-    participant Store as musicPlayerStore
-    participant Engine as ProceduralMusicEngine
-    participant Audio as Web Audio API
-    participant LS as localStorage
-
-    User->>Drawer: 點擊播放按鈕
-    Drawer->>Store: dispatch(playMusic(mode))
-    Store->>Engine: switchMode(mode) + start()
-    Engine->>Audio: 建立音訊節點 + 開始排程
-    Audio-->>User: 播放音樂
-    Store->>LS: 持久化狀態 (mode, isPlaying)
-    Store-->>Drawer: 更新 UI 狀態
-
-    User->>Drawer: 調整音量
-    Drawer->>Store: setVolume(value)
-    Store->>Engine: setVolume(value)
-    Engine->>Audio: 更新 GainNode
-    Store->>LS: 持久化音量設定
-
-    User->>Drawer: 點擊「播放清單」按鈕
-    Drawer->>Sheet: 開啟 Sheet 彈窗
-    Sheet-->>User: 顯示音樂模式和播放清單
-
-    User->>Sheet: 選擇新音樂模式
-    Sheet->>Store: switchMode(newMode)
-    Store->>Engine: stop() + switchMode() + start()
-    Engine->>Audio: Crossfade 2 秒平滑切換
-    Audio-->>User: 播放新模式音樂
-    Sheet->>Sheet: 關閉彈窗
-```
-
-### 狀態管理流程
-
-```mermaid
-stateDiagram-v2
-    [*] --> Idle: 初始化
-    Idle --> Loading: 使用者點擊播放
-    Loading --> Playing: 音樂引擎啟動成功
-    Loading --> Error: 引擎初始化失敗
-
-    Playing --> Paused: 使用者暫停
-    Paused --> Playing: 使用者繼續播放
-
-    Playing --> Switching: 使用者切換模式
-    Switching --> Playing: Crossfade 完成
-    Switching --> Error: 切換失敗
-
-    Playing --> Idle: 使用者停止
-    Paused --> Idle: 使用者停止
-
-    Error --> Loading: 使用者重試
-    Error --> Idle: 使用者取消
-
-    note right of Playing
-        狀態自動持久化至 localStorage
-        每次狀態變更都觸發 persist
-    end note
-```
-
-## 技術堆疊
-
-基於專案現有技術棧和需求分析：
-
-### 前端框架
-- **React 19**: 使用 `use client` 指令的客戶端元件
-- **Next.js 15 (App Router)**: 頁面路由和伺服器元件（若需要）
-- **TypeScript 5**: 嚴格模式，完整型別定義
-
-### UI 元件庫
-- **shadcn/ui**: 基於 Radix UI primitives
-  - **Drawer**: 主播放器介面（底部滑入，基於 `vaul` 函式庫）
-  - **Sheet**: 播放清單彈窗（右側滑入，基於 `@radix-ui/react-dialog`）
-  - **Button, Slider, Popover**: 現有元件重用
-- **Tailwind CSS v4**: 樣式系統，Pip-Boy 綠色主題自訂
-- **Lucide React**: 圖示庫（Play, Pause, SkipForward, SkipBack, Volume2, List, Repeat, Shuffle 等）
-
-### 狀態管理
-- **Zustand 4.5+**: 狀態管理
-  - `musicPlayerStore`: 播放器狀態（新增）
-  - `audioStore`: 音訊狀態（現有，需擴充）
-  - `playlistStore`: 播放清單狀態（新增）
-- **Zustand Persist Middleware**: localStorage 持久化
-
-### 音訊引擎
-- **ProceduralMusicEngine**: 現有程序式音樂生成引擎
-  - 支援 4 種模式：synthwave, divination, lofi, ambient
-  - Web Audio API 合成器聲部（Bass, Pad, Lead）
-  - 和弦進行演算法
-- **Web Audio API**: 原生音訊 API
-
-### 動畫
-- **Framer Motion (motion)**: Drawer 和 Sheet 動畫效果
-  - 滑入/滑出動畫：300ms ease-out
-  - 拖曳手勢支援
-
-### 效能優化
-- **React.memo**: 避免不必要的重新渲染
-- **useMemo / useCallback**: 優化計算和回調函數
-- **Dynamic Import**: 按需載入 Drawer 和 Sheet
-
-### 測試
-- **Jest + React Testing Library**: 單元測試和元件測試
-- **Playwright**: E2E 測試（播放流程、鍵盤導航、無障礙）
-
-### 架構決策理由
-
-#### 為何選擇 Drawer 作為主播放器？
-**研究發現**：
-- shadcn/ui Drawer 基於 `vaul` 函式庫，專門為行動裝置底部滑出式 UI 設計
-- 支援手勢拖曳、可調整高度（透過 `snapPoints` 或 CSS）
-- 符合現代音樂播放器 UX 模式（Spotify、YouTube Music 等）
-
-**技術優勢**：
-- 原生支援最小化為浮動控制條（`<Drawer open={isMinimized === false}`）
-- 可配置高度：預設 60vh，可拖曳調整至 30vh-90vh
-- 內建無障礙支援（ARIA 標籤、焦點陷阱）
-
-#### 為何選擇 Sheet 作為播放清單？
-**研究發現**：
-- Sheet 基於 `@radix-ui/react-dialog`，從側邊滑入的對話框
-- 適合顯示次要內容（播放清單、設定等）
-- 可獨立於 Drawer 開啟/關閉
-
-**技術優勢**：
-- 響應式寬度控制：桌面 400px，行動 90vw
-- 與 Drawer 層級分離，避免 z-index 衝突
-- 支援遮罩點擊關閉、Esc 鍵關閉
-
-#### 為何保留 ProceduralMusicEngine？
-**整合優勢**：
-- 已實現 4 種音樂模式的程序式生成
-- 支援即時切換模式（`switchMode()`）
-- Web Audio API 效能優異（CPU 使用低於預渲染音訊）
-
-**無需變更**：
-- 引擎 API 已符合播放清單需求（start, stop, switchMode, setVolume）
-- 僅需擴充 Crossfade 功能以支援平滑切換
-
-#### 為何使用 Zustand Persist？
-**localStorage 模式研究**：
-- Zustand persist middleware 自動處理序列化/反序列化
-- 支援部分持久化（`partialize`），只儲存必要欄位
-- 內建版本管理（`version`），支援未來資料遷移
-
-**資料結構**：
-```typescript
-{
-  version: 1,
-  state: {
-    currentMode: 'synthwave',
-    isPlaying: false,
-    volume: 0.5,
-    playlists: [
-      { id: '1', name: '我的最愛', modes: ['synthwave', 'lofi'] }
-    ],
-    repeatMode: 'off',
-    shuffleEnabled: false
-  }
-}
-```
-
-## 元件與介面
-
-### 前端元件
-
-| 元件名稱 | 職責 | 主要 Props/State |
-|---------|------|-----------------|
-| `MusicPlayerDrawer` | 主播放器 Drawer 容器 | `isOpen`, `isMinimized`, `onOpenChange` |
-| `FloatingMiniPlayer` | 最小化浮動控制條 | `currentMode`, `isPlaying`, `onExpand` |
-| `PlaybackControls` | 播放控制按鈕組 | `isPlaying`, `onPlay`, `onPause`, `onNext`, `onPrevious` |
-| `ProgressBar` | 播放進度條（裝飾性） | `currentTime`, `duration` |
-| `RepeatShuffleControls` | 循環和隨機按鈕 | `repeatMode`, `shuffleEnabled`, `onToggle` |
-| `PlaylistSheet` | 播放清單彈窗 | `isOpen`, `playlists`, `onClose` |
-| `MusicModeSelector` | 音樂模式選擇器 | `modes`, `selectedMode`, `onSelect` |
-| `PlaylistList` | 播放清單顯示 | `playlists`, `currentPlaylist`, `onSelect` |
-| `PlaylistActions` | 播放清單管理按鈕 | `onAdd`, `onDelete`, `onRename` |
-| `VolumeControlWrapper` | 音量控制整合 | 整合現有 `VolumeControl` 元件 |
-
-### 資料模型
-
-#### TypeScript 介面定義
-
-```typescript
-/**
- * 音樂模式定義
- * 對應 ProceduralMusicEngine 的 MusicMode
- */
-export type MusicMode = 'synthwave' | 'divination' | 'lofi' | 'ambient';
-
-/**
- * 音樂模式資訊
- * 需求 1.6: 每個音樂模式項目顯示名稱、描述和視覺化圖示
- */
-export interface MusicModeInfo {
-  id: MusicMode;
-  name: string;        // 顯示名稱（例如：「賽博龐克 Synthwave」）
-  description: string; // 描述（例如：「80 年代電子合成器風格」）
-  icon: LucideIcon;    // 圖示元件
-  color: string;       // 主題色（Tailwind class）
-  bpm: number;         // 預設 BPM
-}
-
-/**
- * 播放清單定義
- * 需求 3: 播放清單管理
- */
-export interface Playlist {
-  id: string;          // UUID
-  name: string;        // 使用者自訂名稱（最長 30 字元）
-  modes: MusicMode[];  // 播放清單中的音樂模式陣列
-  createdAt: Date;     // 建立時間
-  updatedAt: Date;     // 更新時間
-}
-
-/**
- * 循環模式
- * 需求 2.5-2.7: 單曲循環、列表循環、隨機播放
- */
-export type RepeatMode = 'off' | 'one' | 'all';
-
-/**
- * 播放器狀態（musicPlayerStore）
- * 需求 6: 狀態持久化
- */
-export interface MusicPlayerState {
-  // 播放狀態
-  currentMode: MusicMode | null;          // 當前播放模式
-  isPlaying: boolean;                     // 是否正在播放
-  currentPlaylist: string | null;         // 當前播放清單 ID
-  currentModeIndex: number;               // 當前模式在播放清單中的索引
-
-  // 播放設定
-  repeatMode: RepeatMode;                 // 循環模式
-  shuffleEnabled: boolean;                // 隨機播放
-
-  // UI 狀態
-  isDrawerOpen: boolean;                  // Drawer 是否開啟
-  isDrawerMinimized: boolean;             // Drawer 是否最小化
-  isSheetOpen: boolean;                   // Sheet 是否開啟
-
-  // 持久化資料（儲存至 localStorage）
-  playlists: Playlist[];                  // 使用者建立的播放清單
-
-  // Actions
-  playMode: (mode: MusicMode) => void;
-  pauseMusic: () => void;
-  stopMusic: () => void;
-  nextMode: () => void;
-  previousMode: () => void;
-  setRepeatMode: (mode: RepeatMode) => void;
-  toggleShuffle: () => void;
-
-  // Drawer 控制
-  openDrawer: () => void;
-  closeDrawer: () => void;
-  toggleDrawer: () => void;
-  minimizeDrawer: () => void;
-  expandDrawer: () => void;
-
-  // Sheet 控制
-  openSheet: () => void;
-  closeSheet: () => void;
-
-  // 播放清單管理
-  createPlaylist: (name: string) => void;
-  deletePlaylist: (id: string) => void;
-  renamePlaylist: (id: string, newName: string) => void;
-  addModeToPlaylist: (playlistId: string, mode: MusicMode) => void;
-  removeModeFromPlaylist: (playlistId: string, mode: MusicMode) => void;
-  reorderPlaylistModes: (playlistId: string, modes: MusicMode[]) => void;
-  selectPlaylist: (id: string | null) => void;
-}
-
-/**
- * audioStore 擴充
- * 整合現有 audioStore（src/lib/audio/audioStore.ts）
- */
-export interface AudioStoreExtension {
-  // 擴充現有 audioStore
-  musicEngine: ProceduralMusicEngine | null;
-  initMusicEngine: (audioContext: AudioContext) => void;
-  switchMusicMode: (mode: MusicMode) => Promise<void>;
-  startMusic: () => void;
-  stopMusic: () => void;
-}
-```
-
-### 資料庫架構
-
-**不需要資料庫**：所有資料儲存在 localStorage。
-
-### localStorage 資料結構
-
-```typescript
-// localStorage key: 'wasteland-tarot-audio' (STORAGE_KEY)
-interface LocalStorageData {
-  version: 1;  // 資料版本，支援未來遷移
-  state: {
-    // musicPlayerStore 持久化欄位
-    currentMode: MusicMode | null;
-    repeatMode: RepeatMode;
-    shuffleEnabled: boolean;
-    playlists: Playlist[];
-
-    // audioStore 持久化欄位（現有）
-    volumes: {
-      sfx: number;
-      music: number;
-      voice: number;
-    };
-    muted: {
-      sfx: boolean;
-      music: boolean;
-      voice: boolean;
-    };
-    selectedVoice: CharacterVoice;
-    isAudioEnabled: boolean;
-    isSilentMode: boolean;
-  };
-}
-```
-
-## 錯誤處理
-
-### 錯誤處理策略
-
-```typescript
-/**
- * 錯誤類型定義
- * 需求 10: 錯誤處理
- */
-export enum MusicPlayerErrorType {
-  ENGINE_INIT_FAILED = 'ENGINE_INIT_FAILED',      // 音樂引擎初始化失敗
-  MODE_LOAD_FAILED = 'MODE_LOAD_FAILED',          // 音樂模式載入失敗
-  AUDIO_CONTEXT_SUSPENDED = 'AUDIO_CONTEXT_SUSPENDED', // AudioContext 被暫停
-  STORAGE_WRITE_FAILED = 'STORAGE_WRITE_FAILED',  // localStorage 寫入失敗
-  PLAYLIST_CORRUPTED = 'PLAYLIST_CORRUPTED',      // 播放清單資料損壞
-}
-
-/**
- * 錯誤處理類別
- */
-export class MusicPlayerError extends Error {
-  type: MusicPlayerErrorType;
-  retryable: boolean;
-  userMessage: string;
-
-  constructor(
-    type: MusicPlayerErrorType,
-    message: string,
-    retryable: boolean = true
-  ) {
-    super(message);
-    this.type = type;
-    this.retryable = retryable;
-    this.userMessage = this.getUserMessage();
-  }
-
-  private getUserMessage(): string {
-    const messages = {
-      [MusicPlayerErrorType.ENGINE_INIT_FAILED]:
-        '音樂引擎初始化失敗。請檢查瀏覽器音訊支援。',
-      [MusicPlayerErrorType.MODE_LOAD_FAILED]:
-        '音樂模式載入失敗。正在重試...',
-      [MusicPlayerErrorType.AUDIO_CONTEXT_SUSPENDED]:
-        '音訊已被瀏覽器暫停。請點擊任意位置以繼續播放。',
-      [MusicPlayerErrorType.STORAGE_WRITE_FAILED]:
-        '無法儲存設定。請檢查瀏覽器儲存空間。',
-      [MusicPlayerErrorType.PLAYLIST_CORRUPTED]:
-        '播放清單資料損壞。已重置為預設設定。',
-    };
-    return messages[this.type] || '發生未知錯誤';
-  }
-}
-```
-
-### 錯誤處理機制
-
-```typescript
-/**
- * 錯誤處理工具
- * 需求 10.2-10.3: 自動重試 3 次，失敗後回退至預設
- */
-export class ErrorHandler {
-  private static readonly MAX_RETRIES = 3;
-  private static readonly ERROR_RATE_THRESHOLD = 0.3;
-  private static errorCount = 0;
-  private static totalAttempts = 0;
-
-  /**
-   * 帶重試的操作執行
-   */
-  static async withRetry<T>(
-    operation: () => Promise<T>,
-    operationName: string,
-    fallback?: () => T
-  ): Promise<T> {
-    this.totalAttempts++;
-
-    for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
-      try {
-        return await operation();
-      } catch (error) {
-        logger.warn(`[ErrorHandler] ${operationName} failed (attempt ${attempt}/${this.MAX_RETRIES})`, error);
-
-        if (attempt === this.MAX_RETRIES) {
-          this.errorCount++;
-          this.checkErrorRate();
-
-          if (fallback) {
-            logger.info(`[ErrorHandler] Using fallback for ${operationName}`);
-            return fallback();
-          }
-          throw error;
-        }
-
-        // 指數退避
-        await this.delay(Math.pow(2, attempt) * 100);
-      }
-    }
-
-    throw new Error('Unreachable');
-  }
-
-  /**
-   * 檢查錯誤率
-   * 需求 10.4: 錯誤率超過 30% 時停用音樂功能
-   */
-  private static checkErrorRate(): void {
-    const errorRate = this.errorCount / this.totalAttempts;
-    if (errorRate > this.ERROR_RATE_THRESHOLD) {
-      logger.error(`[ErrorHandler] Error rate ${(errorRate * 100).toFixed(1)}% exceeds threshold. Disabling music.`);
-      useAudioStore.getState().setAudioEnabled(false);
-    }
-  }
-
-  private static delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * 重置錯誤計數器
-   */
-  static resetMetrics(): void {
-    this.errorCount = 0;
-    this.totalAttempts = 0;
-  }
-}
-```
-
-### React 錯誤邊界
-
-```typescript
-/**
- * MusicPlayerErrorBoundary
- * 需求 10.8: 提供「重置播放器」按鈕以恢復預設狀態
- */
-export class MusicPlayerErrorBoundary extends React.Component<
-  { children: React.ReactNode },
-  { hasError: boolean; error: Error | null }
-> {
-  constructor(props: { children: React.ReactNode }) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('[MusicPlayerErrorBoundary]', error, errorInfo);
-  }
-
-  handleReset = () => {
-    // 重置播放器狀態至預設
-    const { resetToDefaults } = useMusicPlayerStore.getState();
-    resetToDefaults();
-    this.setState({ hasError: false, error: null });
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[300px] p-8 border-2 border-pip-boy-green bg-black/80 text-pip-boy-green font-mono">
-          <h2 className="text-xl mb-4">音樂播放器發生錯誤</h2>
-          <p className="text-sm mb-6 text-center opacity-70">
-            {this.state.error?.message || '未知錯誤'}
-          </p>
-          <button
-            onClick={this.handleReset}
-            className="px-6 py-2 border-2 border-pip-boy-green bg-pip-boy-green/10 hover:bg-pip-boy-green hover:text-black transition-colors"
-          >
-            重置播放器
-          </button>
-        </div>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-```
-
-## 效能與擴展性
-
-### 效能目標
-
-| 指標 | 目標值 | 測量方式 |
-|------|--------|---------|
-| 音樂切換延遲 (p95) | < 500ms | 從 `switchMode()` 呼叫到音訊開始播放 |
-| UI 渲染時間 (p95) | < 100ms | React DevTools Profiler |
-| 記憶體使用上限 | ≤ 50MB | Chrome DevTools Performance Monitor |
-| FPS（動畫流暢度） | ≥ 30 FPS | Drawer 拖曳、Sheet 滑入動畫期間 |
-| Crossfade 轉場 | 2 秒 | ProceduralMusicEngine 平滑切換 |
-
-### 快取策略
-
-```typescript
-/**
- * 音樂模式預載入策略
- * 需求 8.1: 在 500ms 內開始播放
- */
-export class MusicModePreloader {
-  private static preloadedModes = new Set<MusicMode>();
-
-  /**
-   * 預載入常用音樂模式
-   */
-  static async preloadCommonModes(): Promise<void> {
-    const commonModes: MusicMode[] = ['synthwave', 'lofi'];
-
-    for (const mode of commonModes) {
-      try {
-        // ProceduralMusicEngine 本身不需要預載入（程序式生成）
-        // 但可以預先初始化和弦進行資料
-        this.preloadedModes.add(mode);
-      } catch (error) {
-        logger.warn(`[Preloader] Failed to preload mode: ${mode}`, error);
-      }
-    }
-  }
-
-  static isPreloaded(mode: MusicMode): boolean {
-    return this.preloadedModes.has(mode);
-  }
-}
-```
-
-### 擴展性方法
-
-#### 水平擴展
-- **元件化設計**：每個 UI 元件獨立可重用
-- **Store 分離**：`musicPlayerStore` 和 `audioStore` 職責清晰
-- **無狀態邏輯**：所有業務邏輯函數純淨（pure functions）
-
-#### 效能優化
-```typescript
-/**
- * React 元件優化策略
- */
-
-// 1. 使用 React.memo 避免不必要的重新渲染
-export const PlaybackControls = React.memo(({ isPlaying, onPlay, onPause }: Props) => {
-  // ...
-});
-
-// 2. 使用 useMemo 快取昂貴計算
-function MusicModeSelector({ modes }: Props) {
-  const sortedModes = useMemo(() => {
-    return modes.sort((a, b) => a.name.localeCompare(b.name));
-  }, [modes]);
-
-  // ...
-}
-
-// 3. 使用 useCallback 穩定回調函數
-function PlaylistSheet({ onClose }: Props) {
-  const handleModeSelect = useCallback((mode: MusicMode) => {
-    playMode(mode);
-    onClose();
-  }, [playMode, onClose]);
-
-  // ...
-}
-
-// 4. 動態載入 Drawer 和 Sheet（按需載入）
-const MusicPlayerDrawer = React.lazy(() => import('./MusicPlayerDrawer'));
-const PlaylistSheet = React.lazy(() => import('./PlaylistSheet'));
-```
-
-#### 記憶體管理
-```typescript
-/**
- * 音訊引擎資源管理
- * 需求 8.6, 9.1: 最小化時釋放不必要資源
- */
-export function useAudioEngineCleanup() {
-  const { isDrawerMinimized } = useMusicPlayerStore();
-  const { musicEngine } = useAudioStore();
-
-  useEffect(() => {
-    if (isDrawerMinimized && musicEngine) {
-      // 最小化時不需要釋放引擎（音樂繼續播放）
-      // 但可以停止不必要的視覺化更新
-      logger.info('[Cleanup] Drawer minimized, reducing visual updates');
-    }
-  }, [isDrawerMinimized, musicEngine]);
-
-  // 元件卸載時清理
-  useEffect(() => {
-    return () => {
-      if (musicEngine && !musicEngine.playing) {
-        musicEngine.dispose();
-        logger.info('[Cleanup] Music engine disposed on unmount');
-      }
-    };
-  }, [musicEngine]);
-}
-```
-
-## 測試策略
-
-### 風險矩陣
-
-| 區域 | 風險 | 必須測試 | 可選測試 | 參考需求 |
-|------|------|---------|---------|---------|
-| 音樂播放控制 | H | Unit, Integration, E2E | - | 2.1-2.9 |
-| 狀態持久化 | H | Unit, Integration | Property | 6.1-6.8 |
-| Drawer UI 互動 | M | Unit, E2E | A11y | 4.1-4.13 |
-| Sheet 播放清單 | M | Unit, E2E | - | 12.1-12.14 |
-| 音訊引擎整合 | H | Integration, Contract | - | 8.1-8.8 |
-| 鍵盤導航 | M | E2E | A11y | 7.1-7.8 |
-| 錯誤處理 | H | Unit, Integration | Chaos | 10.1-10.8 |
-| 效能 | M | Performance | Load/Stress | 8.1-8.8 |
-
-### 各層級測試
-
-#### 單元測試（Unit Tests）
-- **musicPlayerStore**: 所有 actions 的狀態轉換邏輯
-- **PlaylistManager**: 播放清單 CRUD 操作
-- **ErrorHandler**: 重試機制、錯誤率監控
-- **MusicModePreloader**: 預載入邏輯
-
-```typescript
-// 範例：musicPlayerStore 測試
-describe('musicPlayerStore', () => {
-  beforeEach(() => {
-    // 重置 store
-    useMusicPlayerStore.getState().reset();
-  });
-
-  test('playMode should update currentMode and isPlaying', () => {
-    const { playMode } = useMusicPlayerStore.getState();
-    playMode('synthwave');
-
-    const state = useMusicPlayerStore.getState();
-    expect(state.currentMode).toBe('synthwave');
-    expect(state.isPlaying).toBe(true);
-  });
-
-  test('nextMode should skip to next in playlist', () => {
-    const { createPlaylist, selectPlaylist, playMode, nextMode } = useMusicPlayerStore.getState();
-
-    createPlaylist('Test Playlist');
-    const playlist = useMusicPlayerStore.getState().playlists[0];
-    addModeToPlaylist(playlist.id, 'synthwave');
-    addModeToPlaylist(playlist.id, 'lofi');
-
-    selectPlaylist(playlist.id);
-    playMode('synthwave');
-    nextMode();
-
-    expect(useMusicPlayerStore.getState().currentMode).toBe('lofi');
-  });
-});
-```
-
-#### 整合測試（Integration Tests）
-- **音訊引擎整合**: `ProceduralMusicEngine` 與 `musicPlayerStore` 整合
-- **localStorage 持久化**: Zustand persist middleware 運作
-- **Drawer + Sheet 互動**: 同時開啟 Drawer 和 Sheet 不衝突
-
-```typescript
-// 範例：音訊引擎整合測試
-describe('Music Engine Integration', () => {
-  let audioContext: AudioContext;
-  let musicEngine: ProceduralMusicEngine;
-
-  beforeEach(() => {
-    audioContext = new AudioContext();
-    musicEngine = new ProceduralMusicEngine(audioContext, audioContext.destination, {
-      mode: 'synthwave',
-      volume: 0.5,
-    });
-    useAudioStore.setState({ musicEngine });
-  });
-
-  test('switching mode should crossfade smoothly', async () => {
-    const { switchMusicMode } = useAudioStore.getState();
-
-    musicEngine.start();
-    await switchMusicMode('lofi');
-
-    expect(musicEngine.getCurrentMode()).toBe('lofi');
-    expect(musicEngine.playing).toBe(true);
-  });
-});
-```
-
-#### E2E 測試（End-to-End Tests）≤3
-使用 Playwright 測試關鍵使用者流程：
-
-1. **主要流程：開啟播放器並播放音樂**
-```typescript
-test('User can open drawer and play music', async ({ page }) => {
-  await page.goto('/');
-
-  // 點擊浮動音樂按鈕
-  await page.click('[data-testid="floating-music-button"]');
-
-  // Drawer 應該開啟
-  await expect(page.locator('[data-testid="music-player-drawer"]')).toBeVisible();
-
-  // 點擊播放按鈕
-  await page.click('[data-testid="play-button"]');
-
-  // 播放狀態應該更新
-  await expect(page.locator('[data-testid="play-button"]')).toHaveAttribute('aria-label', '暫停');
-});
-```
-
-2. **播放清單管理流程**
-```typescript
-test('User can create and manage playlist', async ({ page }) => {
-  await page.goto('/');
-  await page.click('[data-testid="floating-music-button"]');
-
-  // 開啟播放清單 Sheet
-  await page.click('[data-testid="playlist-button"]');
-  await expect(page.locator('[data-testid="playlist-sheet"]')).toBeVisible();
-
-  // 建立新播放清單
-  await page.click('[data-testid="create-playlist-button"]');
-  await page.fill('[data-testid="playlist-name-input"]', 'My Favorites');
-  await page.click('[data-testid="confirm-create"]');
-
-  // 新播放清單應該出現在清單中
-  await expect(page.locator('text=My Favorites')).toBeVisible();
-});
-```
-
-3. **鍵盤導航測試**
-```typescript
-test('User can control playback with keyboard shortcuts', async ({ page }) => {
-  await page.goto('/');
-  await page.click('[data-testid="floating-music-button"]');
-
-  // 按空白鍵播放
-  await page.keyboard.press('Space');
-  await expect(page.locator('[data-testid="play-button"]')).toHaveAttribute('aria-label', '暫停');
-
-  // 按 M 鍵靜音
-  await page.keyboard.press('m');
-  await expect(page.locator('[data-testid="volume-icon"]')).toHaveClass(/muted/);
-
-  // 按 Esc 鍵最小化
-  await page.keyboard.press('Escape');
-  await expect(page.locator('[data-testid="music-player-drawer"]')).toHaveAttribute('data-minimized', 'true');
-});
-```
-
-### CI 階段閘門
-
-| 階段 | 執行測試 | 閘門 | SLA |
-|------|---------|------|-----|
-| PR | Unit + Integration | 失敗 = 阻擋合併 | ≤ 5 分鐘 |
-| Staging | E2E (3 個) | 失敗 = 阻擋部署 | ≤ 10 分鐘 |
-| Nightly (可選) | Performance + A11y | 回歸 → 建立 issue | - |
-
-### 退出條件
-
-- ✅ Sev1/Sev2 bug = 0
-- ✅ 所有 CI 閘門通過
-- ✅ 效能目標達成（< 500ms 切換、< 100ms UI、≤ 50MB 記憶體）
-- ✅ 無障礙測試通過（WCAG 2.1 AA）
-- ✅ 需求 1-12 的所有驗收標準通過
 
 ---
 
-**文檔版本**：1.0
-**建立日期**：2025-01-10
-**語言**：繁體中文（zh-TW）
-**對應需求版本**：requirements.md v1.2
+## 組件設計
+
+### 組件架構
+
+```typescript
+// ============================================
+// 前端組件層級結構（Component Hierarchy）
+// ============================================
+
+// 系統 A：播放器組件（前台，訪客 + 註冊使用者）
+MusicPlayerDrawer                           // 主播放器介面（Drawer）
+├── PlaybackControls                        // 播放控制按鈕
+│   ├── PlayPauseButton
+│   ├── PreviousButton
+│   ├── NextButton
+│   ├── ShuffleButton
+│   └── RepeatButton
+├── CurrentTrackInfo                        // 當前曲目資訊
+│   ├── PatternName
+│   ├── PatternDescription
+│   └── PlaylistName
+├── ProgressBar                             // 播放進度條
+├── VolumeControl                           // 音量控制（現有組件）
+└── PlaylistButton                          // 開啟播放清單 Sheet 按鈕
+
+PlaylistSheet                               // 播放清單彈窗（Sheet）
+├── PublicSongsBrowser ⭐ v4.0 新增          // 公開歌曲瀏覽器
+│   ├── SystemPresetsSection               // 系統預設歌曲（5 首）
+│   ├── PublicPresetsSection               // 公開使用者創作
+│   ├── SearchFilter                       // 搜尋和排序
+│   └── PaginationControls                 // 分頁控制
+├── GuestPlaylistManager ⭐ v4.0 新增        // 訪客播放清單管理
+│   ├── PlaylistHeader                     // 標題「訪客播放清單 (x/4 首)」
+│   ├── LimitWarning                       // 限制警告（滿 4 首時）
+│   ├── PatternList                        // 歌曲列表
+│   └── ClearDataWarning                   // 瀏覽器資料清除警告
+├── UserPlaylistManager                     // 註冊使用者播放清單管理
+│   ├── PlaylistSelector                   // 切換播放清單下拉選單
+│   ├── CreatePlaylistButton               // 建立新播放清單
+│   ├── PlaylistPatternList                // Pattern 列表（可拖曳排序）
+│   └── PlaylistActions                    // 編輯/刪除播放清單
+└── PatternBrowser                          // Pattern 瀏覽器（加入播放清單）
+    ├── SystemPresetsList
+    └── UserPresetsList
+
+// 系統 B：節奏編輯器組件（後台，僅註冊使用者）
+RhythmEditorPage                            // 獨立頁面 /dashboard/rhythm-editor
+├── SequencerGrid                           // 16 步驟音序器
+│   ├── TrackRow (5 個)                    // Kick, Snare, HiHat, OpenHat, Clap
+│   │   ├── TrackLabel
+│   │   └── StepButton (16 個)            // 步驟按鈕（可點擊切換）
+│   └── PlayheadIndicator                  // 播放頭指示器
+├── TransportControls                       // 傳輸控制
+│   ├── PlayPauseButton
+│   ├── StopButton
+│   ├── ClearButton
+│   └── TempoSlider                        // BPM 60-180
+├── PresetManager                           // Preset 管理
+│   ├── SystemPresetButtons (5 個)         // Techno, House, Trap, Breakbeat, Minimal
+│   ├── UserPresetList                     // 使用者自訂 Preset 列表（捲動）
+│   ├── SavePresetButton                   // 儲存按鈕
+│   └── SavePresetDialog ⭐ v4.0 更新       // 儲存對話框
+│       ├── NameInput                      // 名稱輸入
+│       ├── DescriptionTextarea            // 描述（可選）
+│       ├── PublicShareCheckbox ⭐ v4.0     // 公開分享勾選框
+│       └── SaveButton
+├── AIRhythmGenerator                       // AI 生成區塊
+│   ├── PromptInput                        // 提示輸入框（200 字元）
+│   ├── QuickKeywordButtons                // 快速關鍵字（808 Cowbell, Glitch 等）
+│   ├── GenerateButton                     // 生成按鈕
+│   ├── LoadingIndicator                   // 載入動畫
+│   └── QuotaDisplay ⭐                     // 配額顯示「15/20 remaining」
+└── EditorAudioSynthesizer                  // 獨立音訊合成器（Web Audio API）
+
+// 系統 C：訪客轉換組件（v4.0 新增）
+GuestPlaylistMigrationDialog ⭐             // 播放清單匯入對話框
+├── MigrationPrompt                         // 提示文字「你在訪客模式時建立了...」
+├── PatternCountDisplay                     // 顯示歌曲數量
+├── ImportButton                            // 匯入按鈕
+├── SkipButton                              // 跳過按鈕
+└── SuccessToast                            // 匯入成功提示
+```
+
+### 核心組件介面定義
+
+#### 1. PublicSongsBrowser（公開歌曲瀏覽器）⭐ v4.0
+
+**職責**：
+- 顯示系統預設歌曲（5 首）
+- 顯示公開使用者創作歌曲（is_public = true）
+- 提供搜尋、排序、分頁功能
+- 支援訪客和註冊使用者存取
+
+**介面**：
+```typescript
+interface PublicSongsBrowserProps {
+  isGuest: boolean;
+  onAddToPlaylist: (patternId: string) => void;
+}
+
+interface PublicSongsBrowserState {
+  systemPresets: SystemPreset[];        // 系統預設
+  publicPresets: PublicPreset[];        // 公開使用者創作
+  searchQuery: string;
+  sortBy: 'created_at_desc' | 'created_at_asc' | 'name_asc' | 'name_desc';
+  currentPage: number;
+  totalPages: number;
+  isLoading: boolean;
+}
+
+interface PublicPreset {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  userName: string;          // 創作者名稱
+  isPublic: true;
+  createdAt: string;
+}
+```
+
+**方法**：
+```typescript
+class PublicSongsBrowser {
+  async fetchPublicSongs(page: number, limit: number, sort: string): Promise<{
+    systemPresets: SystemPreset[];
+    publicPresets: PublicPreset[];
+    pagination: PaginationInfo;
+  }>
+
+  handleSearch(query: string): void
+  handleSort(sortBy: string): void
+  handlePageChange(page: number): void
+  handleAddToPlaylist(patternId: string): void
+}
+```
+
+---
+
+#### 2. GuestPlaylistManager（訪客播放清單管理）⭐ v4.0
+
+**職責**：
+- 管理 localStorage 播放清單（上限 4 首）
+- 顯示限制警告和註冊導引
+- 提供清除警告提示
+
+**介面**：
+```typescript
+interface GuestPlaylistManagerProps {
+  onRegisterClick: () => void;
+}
+
+interface GuestPlaylist {
+  id: string;           // 固定為 "guest-playlist-local"
+  name: string;         // 固定為「訪客播放清單」
+  patterns: GuestPlaylistPattern[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface GuestPlaylistPattern {
+  patternId: string;    // 引用 DB 中的 pattern ID
+  position: number;
+  addedAt: string;      // ISO timestamp
+}
+
+const GUEST_PLAYLIST_LIMIT = 4; // 硬編碼上限
+```
+
+**方法**：
+```typescript
+class GuestPlaylistManager {
+  loadFromLocalStorage(): GuestPlaylist | null
+  saveToLocalStorage(playlist: GuestPlaylist): void
+
+  addPattern(patternId: string): boolean // 成功返回 true，已滿返回 false
+  removePattern(patternId: string): void
+  clearPlaylist(): void
+
+  isFull(): boolean      // patterns.length >= 4
+  getPatternCount(): number
+
+  exportForMigration(): GuestPlaylistExport // 用於註冊時匯入
+}
+```
+
+---
+
+#### 3. GuestPlaylistMigrationDialog（播放清單匯入對話框）⭐ v4.0
+
+**職責**：
+- 檢測訪客播放清單（localStorage）
+- 提示使用者匯入或跳過
+- 執行匯入 API 呼叫
+- 清除 localStorage
+
+**介面**：
+```typescript
+interface GuestPlaylistMigrationDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onImportSuccess: (playlistId: string) => void;
+}
+
+interface GuestPlaylistMigrationState {
+  guestPlaylist: GuestPlaylist | null;
+  isImporting: boolean;
+  error: string | null;
+}
+```
+
+**方法**：
+```typescript
+class GuestPlaylistMigrationDialog {
+  async detectGuestPlaylist(): Promise<GuestPlaylist | null>
+
+  async importToUserAccount(): Promise<{
+    playlistId: string;
+    patternCount: number;
+  }>
+
+  clearLocalStorage(): void
+
+  handleSkip(): void    // 跳過匯入並清除 localStorage
+  handleImport(): void  // 執行匯入
+}
+```
+
+---
+
+#### 4. SavePresetDialog（儲存對話框）⭐ v4.0 更新
+
+**職責**：
+- 儲存使用者創作的節奏 Pattern
+- 提供公開/私密選項 ⭐ v4.0
+- 驗證輸入（名稱、描述）
+
+**介面**：
+```typescript
+interface SavePresetDialogProps {
+  isOpen: boolean;
+  pattern: Pattern;
+  onSave: (preset: SavePresetData) => void;
+  onClose: () => void;
+}
+
+interface SavePresetData {
+  name: string;         // 最多 50 字元
+  description?: string; // 最多 200 字元
+  pattern: Pattern;
+  isPublic: boolean;    // ⭐ v4.0 新增
+}
+```
+
+**UI 範例**：
+```tsx
+<Dialog open={isOpen} onOpenChange={onClose}>
+  <DialogTitle>儲存節奏</DialogTitle>
+  <DialogContent>
+    <Input
+      label="歌曲名稱"
+      value={name}
+      maxLength={50}
+      required
+    />
+    <Textarea
+      label="描述（可選）"
+      value={description}
+      maxLength={200}
+    />
+    <Checkbox
+      label="公開分享"
+      description="勾選後其他使用者（含訪客）可以查看並使用此節奏"
+      checked={isPublic}
+      onChange={setIsPublic}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button variant="secondary" onClick={onClose}>取消</Button>
+    <Button variant="primary" onClick={handleSave}>儲存</Button>
+  </DialogActions>
+</Dialog>
+```
+
+---
+
+#### 5. RhythmAudioSynthesizer（播放器音訊合成器）
+
+**職責**：
+- 播放 Pattern 音訊（Web Audio API）
+- 循環播放 Pattern（每個 Pattern 循環 4 次）
+- 管理播放清單切換
+
+**介面**：
+```typescript
+interface RhythmAudioSynthesizerConfig {
+  audioContext: AudioContext;
+  patterns: Pattern[];      // 播放清單中的所有 Pattern
+  tempo: number;            // BPM（預設 120）
+  loopCount: number;        // 每個 Pattern 循環次數（預設 4）
+}
+
+interface RhythmAudioSynthesizerState {
+  isPlaying: boolean;
+  currentPatternIndex: number;
+  currentStep: number;      // 0-15
+  currentLoop: number;      // 1-4
+}
+```
+
+**方法**：
+```typescript
+class RhythmAudioSynthesizer {
+  constructor(config: RhythmAudioSynthesizerConfig)
+
+  // 播放控制
+  play(): void
+  pause(): void
+  stop(): void
+  next(): void              // 下一個 Pattern
+  previous(): void          // 上一個 Pattern
+
+  // Pattern 管理
+  setPatterns(patterns: Pattern[]): void
+  setTempo(bpm: number): void
+
+  // 音效合成（參考 sample.html）
+  private playKick(time: number): void
+  private playSnare(time: number): void
+  private playHiHat(time: number): void
+  private playOpenHat(time: number): void
+  private playClap(time: number): void
+
+  // 循環邏輯
+  private scheduleNextStep(): void
+  private handlePatternComplete(): void  // 循環 4 次後切換 Pattern
+
+  // 資源管理
+  destroy(): void           // 釋放 AudioContext 資源
+}
+```
+
+---
+
+## 資料模型
+
+### 核心資料結構定義
+
+#### 1. Pattern（節奏 Pattern）
+
+```typescript
+/**
+ * 16 步驟節奏 Pattern
+ * 每個軌道包含 16 個布林值，true 表示該步驟啟用
+ */
+interface Pattern {
+  kick: boolean[];      // Kick Drum（16 步驟）
+  snare: boolean[];     // Snare Drum（16 步驟）
+  hihat: boolean[];     // Hi-Hat（16 步驟）
+  openhat: boolean[];   // Open Hi-Hat（16 步驟）
+  clap: boolean[];      // Clap（16 步驟）
+}
+
+// 範例：Techno Pattern
+const technoPattern: Pattern = {
+  kick:    [true, false, false, false, true, false, false, false, true, false, false, false, true, false, false, false],
+  snare:   [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false],
+  hihat:   [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false],
+  openhat: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, true],
+  clap:    [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
+};
+```
+
+#### 2. UserRhythmPreset（使用者節奏 Preset）
+
+```typescript
+/**
+ * 使用者節奏 Preset（對應 DB 表：user_rhythm_presets）
+ */
+interface UserRhythmPreset {
+  id: string;                  // UUID
+  userId: string;              // FK to auth.users(id)
+  name: string;                // Preset 名稱（最多 50 字元）
+  description?: string;        // 描述（可選）
+  pattern: Pattern;            // 16 步驟 Pattern（JSONB）
+  isSystemPreset: boolean;     // 是否為系統預設
+  isPublic: boolean;           // 是否公開分享 ⭐ v4.0
+  createdAt: string;           // ISO timestamp
+  updatedAt: string;           // ISO timestamp
+}
+```
+
+#### 3. GuestPlaylist（訪客播放清單）⭐ v4.0
+
+```typescript
+/**
+ * 訪客播放清單（localStorage 儲存）
+ * Key: "guest_playlist"
+ */
+interface GuestPlaylist {
+  id: string;                  // 固定為 "guest-playlist-local"
+  name: string;                // 固定為「訪客播放清單」
+  patterns: GuestPlaylistPattern[];
+  createdAt: string;           // ISO timestamp
+  updatedAt: string;           // ISO timestamp
+}
+
+interface GuestPlaylistPattern {
+  patternId: string;           // 引用 DB 中的 pattern ID（user_rhythm_presets.id）
+  position: number;            // 順序（0-based）
+  addedAt: string;             // 加入時間（ISO timestamp）
+}
+
+// localStorage 儲存範例
+const guestPlaylistExample: GuestPlaylist = {
+  id: "guest-playlist-local",
+  name: "訪客播放清單",
+  patterns: [
+    {
+      patternId: "uuid-techno-preset",
+      position: 0,
+      addedAt: "2025-10-13T12:00:00Z"
+    },
+    {
+      patternId: "uuid-house-preset",
+      position: 1,
+      addedAt: "2025-10-13T12:05:00Z"
+    }
+  ],
+  createdAt: "2025-10-13T12:00:00Z",
+  updatedAt: "2025-10-13T12:05:00Z"
+};
+
+// localStorage API
+localStorage.setItem('guest_playlist', JSON.stringify(guestPlaylistExample));
+const stored = JSON.parse(localStorage.getItem('guest_playlist') || 'null') as GuestPlaylist | null;
+```
+
+---
+
+### 資料模型圖（Mermaid ER Diagram）
+
+```mermaid
+erDiagram
+    auth_users ||--o{ user_rhythm_presets : creates
+    auth_users ||--o{ playlists : owns
+    auth_users ||--|| user_ai_quotas : has
+
+    user_rhythm_presets ||--o{ playlist_patterns : references
+    playlists ||--o{ playlist_patterns : contains
+
+    user_rhythm_presets {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text description
+        jsonb pattern
+        boolean is_system_preset
+        boolean is_public
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    playlists {
+        uuid id PK
+        uuid user_id FK
+        text name
+        text description
+        boolean is_public
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    playlist_patterns {
+        uuid id PK
+        uuid playlist_id FK
+        uuid pattern_id FK
+        integer position
+        timestamp created_at
+    }
+
+    user_ai_quotas {
+        uuid user_id PK_FK
+        integer rhythm_quota_used
+        integer rhythm_quota_limit
+        timestamp quota_reset_at
+    }
+
+    auth_users {
+        uuid id PK
+        text email
+        timestamp created_at
+    }
+```
+
+---
+
+## 業務流程
+
+### 流程 1：訪客瀏覽與播放公開歌曲 ⭐ v4.0
+
+```mermaid
+sequenceDiagram
+    participant Guest as 訪客
+    participant Browser as 瀏覽器
+    participant PublicSongsBrowser as 公開歌曲瀏覽器
+    participant API as GET /api/v1/music/presets/public
+    participant DB as Supabase DB
+    participant GuestPlaylistMgr as 訪客播放清單管理
+    participant LocalStorage as localStorage
+    participant Player as 音樂播放器
+
+    Guest->>Browser: 訪問網站
+    Browser->>PublicSongsBrowser: 載入公開歌曲瀏覽器
+    PublicSongsBrowser->>API: GET /api/v1/music/presets/public?page=1&limit=20
+    API->>DB: SELECT * FROM user_rhythm_presets<br/>WHERE is_system_preset = true OR is_public = true
+    DB-->>API: 系統預設 + 公開歌曲列表
+    API-->>PublicSongsBrowser: { systemPresets, publicPresets, pagination }
+    PublicSongsBrowser-->>Guest: 顯示歌曲列表
+
+    Guest->>PublicSongsBrowser: 點擊「加入播放清單」
+    PublicSongsBrowser->>GuestPlaylistMgr: addPattern(patternId)
+    GuestPlaylistMgr->>LocalStorage: 讀取 guest_playlist
+
+    alt 播放清單未滿 (< 4 首)
+        GuestPlaylistMgr->>LocalStorage: 加入 pattern + 儲存
+        LocalStorage-->>GuestPlaylistMgr: 儲存成功
+        GuestPlaylistMgr-->>Guest: 顯示「已加入播放清單」
+    else 播放清單已滿 (>= 4 首)
+        GuestPlaylistMgr-->>Guest: 顯示「播放清單已滿（上限 4 首）<br/>立即註冊以解除限制」
+    end
+
+    Guest->>Player: 點擊「播放」
+    Player->>LocalStorage: 讀取 guest_playlist
+    LocalStorage-->>Player: { patterns: [patternId1, patternId2] }
+    Player->>API: GET /api/v1/music/presets/public（批次獲取 pattern 詳情）
+    API->>DB: SELECT * FROM user_rhythm_presets WHERE id IN (...)
+    DB-->>API: Pattern 詳情列表
+    API-->>Player: { patterns: [pattern1, pattern2] }
+    Player->>Player: RhythmAudioSynthesizer.play()
+    Player-->>Guest: 開始播放音樂
+```
+
+---
+
+### 流程 2：註冊使用者創作並分享公開歌曲 ⭐ v4.0
+
+```mermaid
+sequenceDiagram
+    participant User as 註冊使用者
+    participant RhythmEditor as 節奏編輯器
+    participant SaveDialog as 儲存對話框
+    participant API as POST /api/v1/music/presets
+    participant DB as Supabase DB
+
+    User->>RhythmEditor: 訪問 /dashboard/rhythm-editor
+    RhythmEditor->>User: 顯示 16 步驟音序器
+    User->>RhythmEditor: 點擊步驟格子（建立 Pattern）
+    RhythmEditor->>RhythmEditor: 更新 pattern state
+
+    User->>RhythmEditor: 點擊「儲存」按鈕
+    RhythmEditor->>SaveDialog: 開啟儲存對話框
+    SaveDialog->>User: 顯示輸入表單<br/>- 名稱<br/>- 描述<br/>- ☐ 公開分享（勾選框）
+
+    User->>SaveDialog: 輸入名稱「我的 Techno Mix」
+    User->>SaveDialog: 勾選「公開分享」
+    User->>SaveDialog: 點擊「儲存」
+
+    SaveDialog->>API: POST /api/v1/music/presets<br/>{ name, description, pattern, isPublic: true }
+    API->>DB: INSERT INTO user_rhythm_presets<br/>(user_id, name, pattern, is_public)<br/>VALUES (uuid, ..., true)
+    DB-->>API: { id, name, isPublic: true, ... }
+    API-->>SaveDialog: 儲存成功
+    SaveDialog-->>User: 顯示「✓ 已儲存為公開歌曲」
+
+    Note over DB: 此歌曲現在對所有訪客和<br/>註冊使用者可見
+```
+
+---
+
+### 流程 3：訪客轉註冊使用者（播放清單遷移）⭐ v4.0
+
+```mermaid
+sequenceDiagram
+    participant Guest as 訪客
+    participant Browser as 瀏覽器
+    participant LocalStorage as localStorage
+    participant Auth as 註冊/登入頁面
+    participant MigrationDialog as 匯入對話框
+    participant API as POST /api/v1/playlists/import-guest
+    participant DB as Supabase DB
+
+    Guest->>Auth: 點擊「註冊」按鈕
+    Auth->>Guest: 顯示註冊表單
+    Guest->>Auth: 填寫資料並提交
+    Auth->>DB: 建立使用者帳號
+    DB-->>Auth: 註冊成功
+    Auth->>Browser: 重導向至首頁（已登入）
+
+    Browser->>LocalStorage: 檢查 guest_playlist
+    LocalStorage-->>Browser: { id, patterns: [patternId1, patternId2] }
+
+    alt localStorage 有訪客播放清單
+        Browser->>MigrationDialog: 開啟匯入對話框
+        MigrationDialog->>Guest: 顯示提示<br/>「你在訪客模式時建立了包含 2 首歌曲的播放清單<br/>是否要將這些歌曲匯入到你的帳號中？」
+
+        Guest->>MigrationDialog: 點擊「匯入到我的帳號」
+        MigrationDialog->>API: POST /api/v1/playlists/import-guest<br/>{ guestPlaylist: { patterns: [...] } }
+
+        API->>DB: BEGIN TRANSACTION
+        API->>DB: INSERT INTO playlists<br/>(user_id, name)<br/>VALUES (uuid, '訪客播放清單（已匯入）')
+        DB-->>API: { playlistId: uuid }
+
+        loop 每個 Pattern
+            API->>DB: INSERT INTO playlist_patterns<br/>(playlist_id, pattern_id, position)<br/>VALUES (playlistId, patternId, position)
+        end
+
+        API->>DB: COMMIT TRANSACTION
+        DB-->>API: 匯入成功
+        API-->>MigrationDialog: { playlistId, patternCount: 2 }
+
+        MigrationDialog->>LocalStorage: 清除 guest_playlist
+        LocalStorage-->>MigrationDialog: 已清除
+        MigrationDialog-->>Guest: 顯示「✓ 已成功匯入 2 首歌曲到『訪客播放清單（已匯入）』」
+    else localStorage 無訪客播放清單
+        Browser->>Guest: 跳過匯入流程，直接進入首頁
+    end
+```
+
+---
+
+## 錯誤處理策略
+
+### 錯誤分類與處理
+
+#### 1. 前端錯誤
+
+| 錯誤類型 | 觸發條件 | 處理方式 | 使用者體驗 |
+|---------|---------|---------|----------|
+| **訪客播放清單已滿** | 訪客嘗試加入第 5 首歌曲 | 顯示警告對話框，引導註冊 | 「訪客播放清單已滿（上限 4 首），<link>立即註冊</link>以解除限制」 |
+| **localStorage 無法寫入** | localStorage 已滿或瀏覽器限制 | 顯示錯誤提示，建議清除資料 | 「無法儲存播放清單，請檢查瀏覽器儲存空間」 |
+| **localStorage 資料損壞** | JSON.parse() 失敗 | 清除損壞資料，重新初始化 | 「播放清單資料損壞，已重置為空白清單」 |
+| **Pattern 載入失敗** | API 回傳 404/500 | 顯示錯誤提示，移除失效 Pattern | 「歌曲載入失敗，已從播放清單移除」 |
+| **AudioContext 初始化失敗** | 瀏覽器不支援 Web Audio API | 停用播放器，顯示不支援提示 | 「您的瀏覽器不支援音樂播放功能」 |
+
+#### 2. 後端 API 錯誤
+
+| HTTP 狀態碼 | 錯誤情境 | API 回應 | 前端處理 |
+|-----------|---------|---------|---------|
+| **400 Bad Request** | - AI 配額用盡<br/>- Pattern ID 無效<br/>- 請求格式錯誤 | `{ error: "Daily quota exceeded", quotaLimit: 20, quotaUsed: 20, resetAt: "2025-10-14T00:00:00Z" }` | 顯示錯誤訊息，停用生成按鈕直到重置時間 |
+| **401 Unauthorized** | - Token 過期<br/>- 未登入存取受保護 API | `{ error: "Unauthorized", message: "Invalid or expired token" }` | 重導向至登入頁面，顯示「Session 已過期，請重新登入」 |
+| **403 Forbidden** | - 嘗試存取他人私密歌曲<br/>- 嘗試刪除系統預設 | `{ error: "Forbidden", message: "Cannot delete system preset" }` | 顯示錯誤提示，阻止操作 |
+| **404 Not Found** | - Pattern ID 不存在<br/>- Playlist ID 不存在 | `{ error: "Not found", message: "Pattern not found" }` | 從播放清單移除失效項目，顯示提示 |
+| **500 Internal Server Error** | - AI Provider 失敗<br/>- DB 連線錯誤 | `{ error: "Internal server error", message: "AI generation failed" }` | 顯示「伺服器錯誤，請稍後重試」，提供重試按鈕 |
+
+#### 3. 訪客轉註冊錯誤處理 ⭐ v4.0
+
+```typescript
+// 播放清單匯入失敗處理
+async function importGuestPlaylist(guestPlaylist: GuestPlaylist): Promise<void> {
+  try {
+    const response = await fetch('/api/v1/playlists/import-guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ guestPlaylist })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+
+      if (errorData.error === 'INVALID_PATTERN_ID') {
+        // 部分 Pattern ID 無效（歌曲被刪除）
+        showWarning(
+          `部分歌曲已無法使用（${errorData.invalidPatternIds.length} 首），` +
+          `已匯入其餘 ${guestPlaylist.patterns.length - errorData.invalidPatternIds.length} 首歌曲`
+        );
+        // 仍清除 localStorage
+        localStorage.removeItem('guest_playlist');
+      } else {
+        throw new Error(errorData.message);
+      }
+    } else {
+      const data = await response.json();
+      showSuccess(`已成功匯入 ${data.patternCount} 首歌曲到「訪客播放清單（已匯入）」`);
+      localStorage.removeItem('guest_playlist');
+    }
+  } catch (error) {
+    // 匯入失敗，保留 localStorage 資料讓使用者重試
+    showError('匯入失敗，請稍後重試。你的訪客播放清單已保留。');
+  }
+}
+```
+
+---
+
+## 測試策略
+
+### 單元測試
+
+#### 1. localStorage 播放清單管理測試 ⭐ v4.0
+
+```typescript
+describe('GuestPlaylistManager', () => {
+  let manager: GuestPlaylistManager;
+
+  beforeEach(() => {
+    localStorage.clear();
+    manager = new GuestPlaylistManager();
+  });
+
+  test('should initialize empty guest playlist', () => {
+    const playlist = manager.loadFromLocalStorage();
+    expect(playlist).toBeNull();
+  });
+
+  test('should add pattern to guest playlist', () => {
+    const success = manager.addPattern('pattern-uuid-1');
+    expect(success).toBe(true);
+    const playlist = manager.loadFromLocalStorage();
+    expect(playlist?.patterns).toHaveLength(1);
+  });
+
+  test('should reject adding 5th pattern (exceeds limit)', () => {
+    manager.addPattern('pattern-uuid-1');
+    manager.addPattern('pattern-uuid-2');
+    manager.addPattern('pattern-uuid-3');
+    manager.addPattern('pattern-uuid-4');
+    const success = manager.addPattern('pattern-uuid-5');
+    expect(success).toBe(false);
+    expect(manager.isFull()).toBe(true);
+  });
+
+  test('should remove pattern from guest playlist', () => {
+    manager.addPattern('pattern-uuid-1');
+    manager.addPattern('pattern-uuid-2');
+    manager.removePattern('pattern-uuid-1');
+    const playlist = manager.loadFromLocalStorage();
+    expect(playlist?.patterns).toHaveLength(1);
+    expect(playlist?.patterns[0].patternId).toBe('pattern-uuid-2');
+  });
+
+  test('should export playlist for migration', () => {
+    manager.addPattern('pattern-uuid-1');
+    manager.addPattern('pattern-uuid-2');
+    const exported = manager.exportForMigration();
+    expect(exported.patterns).toHaveLength(2);
+    expect(exported.patterns[0]).toEqual({ patternId: 'pattern-uuid-1', position: 0 });
+  });
+});
+```
+
+#### 2. RLS Policy 測試（資料庫層）⭐ v4.0
+
+```sql
+-- 測試訪客可見系統預設歌曲
+BEGIN;
+SET LOCAL ROLE anon; -- 模擬訪客（未登入）
+SELECT COUNT(*) FROM user_rhythm_presets WHERE is_system_preset = true;
+-- Expected: 5（系統預設歌曲）
+ROLLBACK;
+
+-- 測試訪客可見公開歌曲
+BEGIN;
+SET LOCAL ROLE anon;
+SELECT COUNT(*) FROM user_rhythm_presets WHERE is_public = true;
+-- Expected: > 0（公開使用者創作歌曲）
+ROLLBACK;
+
+-- 測試訪客無法見私密歌曲
+BEGIN;
+SET LOCAL ROLE anon;
+SELECT COUNT(*) FROM user_rhythm_presets WHERE is_public = false AND is_system_preset = false;
+-- Expected: 0
+ROLLBACK;
+
+-- 測試註冊使用者可見自己的私密歌曲
+BEGIN;
+SET LOCAL jwt.claims.sub = 'user-uuid-123'; -- 模擬登入使用者
+SELECT COUNT(*) FROM user_rhythm_presets
+WHERE user_id = 'user-uuid-123' AND is_public = false;
+-- Expected: 使用者自己的私密歌曲數量
+ROLLBACK;
+```
+
+---
+
+## 附錄
+
+### A. 系統預設 Pattern 定義
+
+```typescript
+const SYSTEM_PRESETS: SystemPreset[] = [
+  {
+    id: 'system-preset-techno',
+    name: 'Techno',
+    description: '經典 Techno 四四拍節奏，強勁的 Kick 和規律的 Hi-Hat',
+    pattern: {
+      kick:    [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+      snare:   [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+      hihat:   [0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0],
+      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      clap:    [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]
+    },
+    isSystemPreset: true
+  },
+  {
+    id: 'system-preset-house',
+    name: 'House',
+    description: 'House 音樂節奏，持續的四四拍 Kick 和活潑的 Hi-Hat',
+    pattern: {
+      kick:    [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],
+      snare:   [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0],
+      hihat:   [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+      openhat: [0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1],
+      clap:    [0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]
+    },
+    isSystemPreset: true
+  },
+  {
+    id: 'system-preset-trap',
+    name: 'Trap',
+    description: 'Trap 風格節奏，重低音 Kick 和快速的 Hi-Hat roll',
+    pattern: {
+      kick:    [1,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0],
+      snare:   [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+      hihat:   [1,0,1,0,1,0,1,0,1,1,0,1,0,1,1,1],
+      openhat: [0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0],
+      clap:    [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0]
+    },
+    isSystemPreset: true
+  },
+  {
+    id: 'system-preset-breakbeat',
+    name: 'Breakbeat',
+    description: 'Breakbeat 碎拍節奏，不規則的 Kick 和 Snare 組合',
+    pattern: {
+      kick:    [1,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0],
+      snare:   [0,0,0,0,1,0,0,0,0,0,0,1,0,0,1,0],
+      hihat:   [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],
+      openhat: [0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1],
+      clap:    [0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0]
+    },
+    isSystemPreset: true
+  },
+  {
+    id: 'system-preset-minimal',
+    name: 'Minimal',
+    description: 'Minimal 極簡節奏，稀疏的鼓點和空間感',
+    pattern: {
+      kick:    [1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],
+      snare:   [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0],
+      hihat:   [0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0],
+      openhat: [0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],
+      clap:    [0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0]
+    },
+    isSystemPreset: true
+  }
+];
+```
+
+### B. Web Audio API 音效合成參數
+
+```typescript
+// Kick Drum 合成參數
+private playKick(time: number): void {
+  const osc = this.audioContext.createOscillator();
+  const gain = this.audioContext.createGain();
+
+  osc.frequency.setValueAtTime(150, time);
+  osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+  gain.gain.setValueAtTime(1, time);
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+
+  osc.connect(gain);
+  gain.connect(this.audioContext.destination);
+
+  osc.start(time);
+  osc.stop(time + 0.5);
+}
+
+// Snare Drum 合成參數
+private playSnare(time: number): void {
+  const noiseBuffer = this.createNoiseBuffer();
+  const noise = this.audioContext.createBufferSource();
+  noise.buffer = noiseBuffer;
+
+  const noiseFilter = this.audioContext.createBiquadFilter();
+  noiseFilter.type = 'highpass';
+  noiseFilter.frequency.value = 1000;
+
+  const noiseGain = this.audioContext.createGain();
+  noiseGain.gain.setValueAtTime(1, time);
+  noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(this.audioContext.destination);
+
+  const osc = this.audioContext.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.value = 180;
+
+  const oscGain = this.audioContext.createGain();
+  oscGain.gain.setValueAtTime(0.7, time);
+  oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+
+  osc.connect(oscGain);
+  oscGain.connect(this.audioContext.destination);
+
+  noise.start(time);
+  noise.stop(time + 0.2);
+  osc.start(time);
+  osc.stop(time + 0.2);
+}
+
+// Hi-Hat 合成參數
+private playHiHat(time: number): void {
+  const osc = this.audioContext.createOscillator();
+  osc.type = 'square';
+  osc.frequency.value = 10000;
+
+  const filter = this.audioContext.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 7000;
+
+  const gain = this.audioContext.createGain();
+  gain.gain.setValueAtTime(0.3, time);
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(this.audioContext.destination);
+
+  osc.start(time);
+  osc.stop(time + 0.05);
+}
+
+// Open Hi-Hat 合成參數
+private playOpenHat(time: number): void {
+  const osc = this.audioContext.createOscillator();
+  osc.type = 'square';
+  osc.frequency.value = 10000;
+
+  const filter = this.audioContext.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 7000;
+
+  const gain = this.audioContext.createGain();
+  gain.gain.setValueAtTime(0.3, time);
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.3);
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(this.audioContext.destination);
+
+  osc.start(time);
+  osc.stop(time + 0.3);
+}
+
+// Clap 合成參數
+private playClap(time: number): void {
+  const noiseBuffer = this.createNoiseBuffer();
+  const noise = this.audioContext.createBufferSource();
+  noise.buffer = noiseBuffer;
+
+  const filter = this.audioContext.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 1500;
+
+  const gain = this.audioContext.createGain();
+  gain.gain.setValueAtTime(1, time);
+  gain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(this.audioContext.destination);
+
+  noise.start(time);
+  noise.stop(time + 0.1);
+}
+
+// 白噪音 Buffer 生成
+private createNoiseBuffer(): AudioBuffer {
+  const bufferSize = this.audioContext.sampleRate * 0.5;
+  const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
+  const output = buffer.getChannelData(0);
+
+  for (let i = 0; i < bufferSize; i++) {
+    output[i] = Math.random() * 2 - 1;
+  }
+
+  return buffer;
+}
+```
+
+### C. API 端點完整清單
+
+#### 公開端點（訪客可存取）⭐ v4.0
+
+```
+GET  /api/v1/music/presets/public       # 獲取公開歌曲列表
+POST /api/v1/music/presets/batch        # 批次獲取 Pattern 詳情
+```
+
+#### 認證端點（需登入）
+
+```
+# 播放清單管理
+GET    /api/v1/playlists                     # 獲取使用者所有播放清單
+POST   /api/v1/playlists                     # 建立新播放清單
+GET    /api/v1/playlists/{id}                # 獲取播放清單詳情
+PUT    /api/v1/playlists/{id}                # 更新播放清單
+DELETE /api/v1/playlists/{id}                # 刪除播放清單
+POST   /api/v1/playlists/import-guest ⭐      # 匯入訪客播放清單
+
+# Pattern 管理
+POST   /api/v1/playlists/{id}/patterns       # 加入 Pattern
+DELETE /api/v1/playlists/{id}/patterns/{pid} # 移除 Pattern
+PUT    /api/v1/playlists/{id}/patterns/{pid}/position # 調整順序
+
+# Preset 管理
+GET    /api/v1/music/presets/available       # 獲取可用 Pattern
+POST   /api/v1/music/presets ⭐               # 儲存 Preset（支援 isPublic）
+PUT    /api/v1/music/presets/{id} ⭐          # 更新 Preset
+DELETE /api/v1/music/presets/{id}            # 刪除 Preset
+
+# AI 生成
+POST   /api/v1/music/generate-rhythm         # AI 生成節奏
+GET    /api/v1/music/quota                   # 獲取配額狀態
+```
+
+---
+
+**設計文件結束**
+
+本設計文件涵蓋了 v4.0 所有核心功能，包括訪客系統、公開歌曲分享機制、播放清單管理和節奏編輯器。所有組件、API 和資料流程均已詳細定義，可直接進入實作階段。

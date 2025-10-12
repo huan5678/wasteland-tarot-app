@@ -15,7 +15,7 @@
 
 import React, { useState, useCallback, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'motion/react'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons/PixelIcon'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
 
@@ -205,7 +205,7 @@ export function CarouselContainer({
           aria-label="上一張卡牌"
           aria-disabled={activeIndex === 0 || isDisabled}
         >
-          <ChevronLeft className="w-6 h-6" aria-hidden="true" />
+          <PixelIcon name="chevron-left" size={24} decorative />
         </button>
 
         {/* 右箭頭按鈕 with Enhanced Accessibility */}
@@ -216,7 +216,7 @@ export function CarouselContainer({
           aria-label="下一張卡牌"
           aria-disabled={activeIndex === cards.length - 1 || isDisabled}
         >
-          <ChevronRight className="w-6 h-6" aria-hidden="true" />
+          <PixelIcon name="chevron-right" size={24} decorative />
         </button>
       </div>
 

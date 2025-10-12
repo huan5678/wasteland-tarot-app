@@ -9,6 +9,7 @@ import asyncpg
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from fastapi import HTTPException
 from app.config import get_settings
 from app.core.exceptions import DatabaseConnectionError
 
@@ -110,6 +111,12 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
             yield session
             # Explicit commit on successful completion
             await session.commit()
+    except HTTPException:
+        # Re-raise HTTPException without modification (preserve status code)
+        if session:
+            await session.rollback()
+            logger.debug("Session rolled back due to HTTPException")
+        raise
     except Exception as e:
         logger.error(
             f"Database session error: {str(e)}",

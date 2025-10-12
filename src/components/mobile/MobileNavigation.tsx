@@ -2,16 +2,14 @@
 
 import React, { useState, useEffect } from 'react'
 import { animated, useSpring, useTransition } from '@react-spring/web'
-import {
-  Home, Cards, BookOpen, User, Settings, Menu, X,
-  ChevronUp, Search, Filter, Star, Calendar, Dices
-} from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
+import type { IconName } from '@/components/ui/icons'
 import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
 
 interface NavigationItem {
   id: string
   label: string
-  icon: React.ReactNode
+  iconName: IconName
   href: string
   isActive?: boolean
   badge?: number
@@ -24,19 +22,19 @@ interface MobileNavigationProps {
 }
 
 const navigationItems: NavigationItem[] = [
-  { id: 'home', label: '主頁', icon: <Home className="w-5 h-5" />, href: '/' },
-  { id: 'cards', label: '卡牌', icon: <Cards className="w-5 h-5" />, href: '/cards' },
-  { id: 'bingo', label: '賓果', icon: <Dices className="w-5 h-5" />, href: '/bingo' },
-  { id: 'readings', label: '占卜', icon: <BookOpen className="w-5 h-5" />, href: '/readings' },
-  { id: 'profile', label: '個人', icon: <User className="w-5 h-5" />, href: '/profile' },
+  { id: 'home', label: '主頁', iconName: 'home', href: '/' },
+  { id: 'cards', label: '卡牌', iconName: 'cards', href: '/cards' },
+  { id: 'bingo', label: '賓果', iconName: 'dice-6', href: '/bingo' },
+  { id: 'readings', label: '占卜', iconName: 'book-open', href: '/readings' },
+  { id: 'profile', label: '個人', iconName: 'user', href: '/profile' },
 ]
 
 const quickActions = [
-  { id: 'new-reading', label: '新占卜', icon: <Star className="w-4 h-4" />, action: 'new-reading' },
-  { id: 'daily-card', label: '每日', icon: <Calendar className="w-4 h-4" />, action: 'daily-card' },
-  { id: 'search', label: '搜尋', icon: <Search className="w-4 h-4" />, action: 'search' },
-  { id: 'filter', label: '篩選', icon: <Filter className="w-4 h-4" />, action: 'filter' },
-]
+  { id: 'new-reading', label: '新占卜', iconName: 'star', action: 'new-reading' },
+  { id: 'daily-card', label: '每日', iconName: 'calendar', action: 'daily-card' },
+  { id: 'search', label: '搜尋', iconName: 'search', action: 'search' },
+  { id: 'filter', label: '篩選', iconName: 'filter', action: 'filter' },
+] as const
 
 export function MobileNavigation({
   currentPath = '/',
@@ -136,7 +134,7 @@ export function MobileNavigation({
                     onClick={() => handleQuickAction(action.action)}
                     className="flex flex-col items-center gap-1 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-xl transition-colors"
                   >
-                    {action.icon}
+                    <PixelIcon name={action.iconName as any} size={16} decorative />
                     <span className="text-xs">{action.label}</span>
                   </button>
                 ))}
@@ -169,7 +167,7 @@ export function MobileNavigation({
                   onClick={() => handleQuickAction(action.action)}
                   className="flex flex-col items-center gap-2 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-xl transition-colors"
                 >
-                  {action.icon}
+                  <PixelIcon name={action.iconName as any} size={16} decorative />
                   <span className="text-xs">{action.label}</span>
                 </button>
               ))}
@@ -196,7 +194,7 @@ export function MobileNavigation({
                 `}
               >
                 <div className="relative">
-                  {item.icon}
+                  <PixelIcon name={item.iconName as any} size={24} decorative />
                   {item.badge && (
                     <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                       {item.badge > 99 ? '99+' : item.badge}
@@ -227,7 +225,7 @@ export function MobileNavigation({
               }
             `}
           >
-            <ChevronUp className={`w-5 h-5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+            <PixelIcon name="chevron-up" size={24} className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} decorative />
             <span className="text-xs">更多</span>
           </button>
         </div>
@@ -244,7 +242,7 @@ export function MobileNavigation({
           `}
           aria-label="快速操作"
         >
-          <Star className="w-6 h-6" />
+          <PixelIcon name="star" size={24} decorative />
         </button>
 
         {/* Safe area padding for iOS */}
@@ -259,7 +257,7 @@ interface MobileTabBarProps {
   tabs: Array<{
     id: string
     label: string
-    icon: React.ReactNode
+    iconName: IconName
     isActive?: boolean
     badge?: number
   }>
@@ -294,7 +292,7 @@ export function MobileTabBar({
             `}
           >
             <div className="relative">
-              {tab.icon}
+              <PixelIcon name={tab.iconName as any} size={24} decorative />
               {tab.badge && (
                 <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                   {tab.badge > 99 ? '99+' : tab.badge}

@@ -18,7 +18,7 @@ import {
 } from 'motion/react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
-import { XIcon } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import useClickOutside from '@/hooks/useClickOutside';
 
 export type MorphingDialogContextType = {
@@ -396,7 +396,7 @@ function MorphingDialogClose({
     <motion.button
       onClick={handleClose}
       type='button'
-      aria-label='Close dialog'
+      aria-label='關閉對話框'
       key={`dialog-close-${uniqueId}`}
       className={cn('absolute top-6 right-6', className)}
       initial='initial'
@@ -404,7 +404,7 @@ function MorphingDialogClose({
       exit='exit'
       variants={variants}
     >
-      {children || <XIcon size={24} />}
+      {children || <PixelIcon name="close" size={24} aria-label="關閉" />}
     </motion.button>
   );
 }

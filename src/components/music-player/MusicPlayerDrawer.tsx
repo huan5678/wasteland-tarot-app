@@ -8,11 +8,12 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle } from '@/components/ui/drawer';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistManager } from '@/hooks/useMusicPlayer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
+import { useMusicEngine } from '@/hooks/audio/useMusicEngine';
 import { PixelIcon } from '@/components/ui/icons';
 
 // Import all child components (will be created in following tasks)
@@ -22,6 +23,7 @@ import { ProgressBar } from './ProgressBar';
 import { VolumeControl } from './VolumeControl';
 import { MusicVisualizer } from './MusicVisualizer';
 import { ShortcutHelp } from './ShortcutHelp';
+import { PlaylistSheet } from './PlaylistSheet';
 
 /**
  * Drawer 高度狀態
@@ -70,6 +72,10 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
   } = useMusicPlayer();
 
   const { currentPlaylist } = usePlaylistManager();
+
+  // ========== Music Engine Integration ==========
+  // Task: 整合 ProceduralMusicEngine 實際播放音樂
+  const { engine, isReady } = useMusicEngine();
 
   // ========== Keyboard Shortcuts ==========
   const { showHelp, setShowHelp, shortcuts } = useKeyboardShortcuts({
@@ -124,7 +130,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
           className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 bg-pip-boy-green text-black rounded-full border-2 border-pip-boy-green-dark shadow-[0_0_20px_rgba(0,255,136,0.5)] hover:shadow-[0_0_30px_rgba(0,255,136,0.7)] transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
           aria-label="開啟音樂播放器"
         >
-          <PixelIcon name="music" sizePreset="sm" variant="primary" animation={isPlaying ? 'pulse' : undefined} aria-label="音樂" />
+          <PixelIcon name="music" sizePreset="sm" animation={isPlaying ? 'pulse' : undefined} aria-label="音樂" />
           {isPlaying && (
             <motion.div
               className="absolute inset-0 rounded-full border-2 border-pip-boy-green"
@@ -147,8 +153,11 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
         aria-atomic="false"
         role="region"
       >
-        {/* Visually Hidden Title for Accessibility */}
+        {/* Visually Hidden Title & Description for Accessibility */}
         <DrawerTitle className="sr-only">音樂播放器</DrawerTitle>
+        <DrawerDescription className="sr-only">
+          控制音樂播放、選擇音樂模式、調整音量和查看音訊視覺化
+        </DrawerDescription>
 
         {/* Minimized Mode (80px) */}
         {isDrawerMinimized ? (
@@ -174,61 +183,61 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
             {/* Play/Pause Button */}
             <button
               onClick={handlePlayPause}
-              className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label={isPlaying ? '暫停' : '播放'}
             >
-              {isPlaying ? <PixelIcon name="pause" sizePreset="sm" variant="primary" aria-label="暫停" /> : <PixelIcon name="play" sizePreset="sm" variant="primary" aria-label="播放" />}
+              {isPlaying ? <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" /> : <PixelIcon name="play" sizePreset="sm" aria-label="播放" />}
             </button>
 
             {/* Expand Button */}
             <button
               onClick={handleExpand}
-              className="p-2 bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
               aria-label="展開播放器"
             >
-              <PixelIcon name="maximize-2" sizePreset="sm" variant="primary" aria-label="展開" />
+              <PixelIcon name="maximize-2" sizePreset="sm" aria-label="展開" />
             </button>
           </motion.div>
         ) : (
           /* Normal/Expanded Mode */
           <motion.div
-            className="flex flex-col h-full p-6 gap-6 overflow-y-auto"
+            className="flex flex-col h-full p-4 sm:p-6 gap-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
           >
             {/* Drag Handle */}
-            <div className="flex justify-center">
+            <div className="flex justify-center flex-shrink-0">
               <div className="w-12 h-1 bg-pip-boy-green/50 rounded-full" />
             </div>
 
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">音樂播放器</h2>
+            <div className="flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-bold">音樂播放器</h2>
               <div className="flex gap-2">
                 <button
                   onClick={handleMinimize}
-                  className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="最小化播放器"
                 >
-                  <PixelIcon name="minimize-2" sizePreset="xs" variant="primary" aria-label="最小化" />
+                  <PixelIcon name="minimize-2" sizePreset="xs" aria-label="最小化" />
                 </button>
                 <button
                   onClick={openSheet}
-                  className="flex items-center gap-1.5 px-2 py-1 text-xs bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
                   aria-label="開啟播放清單"
                 >
-                  <PixelIcon name="list" sizePreset="xs" variant="primary" aria-label="播放清單" />
+                  <PixelIcon name="playlist" sizePreset="xs" aria-label="播放清單" />
                 </button>
               </div>
             </div>
 
-            {/* Responsive Layout */}
-            <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left Column: Controls */}
-              <div className="flex flex-col gap-4">
+            {/* Responsive Layout - 移除 overflow-y-auto 以防止拖動音量時頁面跳轉 */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 min-h-0">
+              {/* Left Column: Controls - 可以獨立捲動 */}
+              <div className="flex flex-col gap-4 overflow-y-auto pr-2 min-w-0">
                 {/* Music Mode Selector */}
-                <div className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <h3 className="text-sm font-bold mb-3">音樂模式</h3>
                   <MusicModeSelector
                     currentMode={currentMode}
@@ -237,7 +246,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                 </div>
 
                 {/* Playback Controls */}
-                <div className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <PlaybackControls
                     isPlaying={isPlaying}
                     onPlay={resume}
@@ -252,22 +261,27 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                 </div>
 
                 {/* Progress Bar */}
-                <div className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <h3 className="text-sm font-bold mb-3">播放進度</h3>
                   <ProgressBar isPlaying={isPlaying} />
                 </div>
+              </div>
 
-                {/* Volume Control */}
-                <div className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
+              {/* Right Column: Visualizer + Volume Control */}
+              <div className="flex flex-col gap-4 lg:overflow-y-auto">
+                {/* Visualizer - 固定高度，不會太高 */}
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
+                  <h3 className="text-sm font-bold mb-3">音訊視覺化</h3>
+                  <div className="h-48 sm:h-56">
+                    <MusicVisualizer isPlaying={isPlaying} />
+                  </div>
+                </div>
+
+                {/* Volume Control - 移到右側 */}
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <h3 className="text-sm font-bold mb-3">音量控制</h3>
                   <VolumeControl />
                 </div>
-              </div>
-
-              {/* Right Column: Visualizer */}
-              <div className="p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
-                <h3 className="text-sm font-bold mb-3">音訊視覺化</h3>
-                <MusicVisualizer isPlaying={isPlaying} />
               </div>
             </div>
           </motion.div>
@@ -280,6 +294,9 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
         onClose={() => setShowHelp(false)}
         shortcuts={shortcuts}
       />
+
+      {/* Playlist Sheet */}
+      <PlaylistSheet />
     </Drawer>
   );
 }

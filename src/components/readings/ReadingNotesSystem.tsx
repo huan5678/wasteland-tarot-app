@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 import { useReadingsStore, ReadingNote } from '@/lib/readingsStore'
-import { Plus, Edit2, Trash2, Save, X, FileText, Lightbulb, Heart, Clock, MessageSquare } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface Props {
   readingId: string
@@ -140,7 +140,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
             className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green text-sm
                      hover:border-pip-boy-green/60 flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" />
+            < PixelIcon name="plus" className="w-4 h-4" />
             新增筆記
           </button>
           {onClose && (
@@ -148,7 +148,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
               onClick={onClose}
               className="text-pip-boy-green/70 hover:text-pip-boy-green"
             >
-              <X className="w-5 h-5" />
+              < PixelIcon name="x" className="w-5 h-5" />
             </button>
           )}
         </div>
@@ -219,7 +219,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
               className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
-              <X className="w-4 h-4" />
+              < PixelIcon name="x" className="w-4 h-4" />
               取消
             </button>
             <button
@@ -228,7 +228,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
               className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                        hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
+              < PixelIcon name="save" className="w-4 h-4" />
               {editingNote ? '更新' : '保存'}
             </button>
           </div>
@@ -279,14 +279,14 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                             className="p-1 text-pip-boy-green/60 hover:text-pip-boy-green"
                             title="編輯筆記"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            < PixelIcon name="edit-2" className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDelete(note.id)}
                             className="p-1 text-pip-boy-green/60 hover:text-red-400"
                             title="刪除筆記"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            < PixelIcon name="trash-2" className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
@@ -305,7 +305,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
         {/* Empty State */}
         {notes.length === 0 && (
           <div className="text-center py-12 border-2 border-pip-boy-green/30">
-            <MessageSquare className="w-12 h-12 mx-auto mb-4 text-pip-boy-green/40" />
+            < PixelIcon name="message-square" className="w-12 h-12 mx-auto mb-4 text-pip-boy-green/40" />
             <div className="text-lg font-bold text-pip-boy-green/70 mb-2">
               尚無筆記
             </div>
@@ -317,7 +317,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
               className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2 mx-auto"
             >
-              <Plus className="w-4 h-4" />
+              < PixelIcon name="plus" className="w-4 h-4" />
               建立第一個筆記
             </button>
           </div>

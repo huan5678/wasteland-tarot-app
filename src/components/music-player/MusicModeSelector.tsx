@@ -10,16 +10,16 @@ import React, { useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAudioEffect } from '@/hooks/audio/useAudioEffect';
 import type { MusicMode } from '@/lib/audio/playlistTypes';
-import { Piano, Sparkles, Headphones, Waves, LucideIcon } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 
 /**
  * 音樂模式資訊
  */
-const MODES: Array<{ id: MusicMode; label: string; icon: LucideIcon; description: string }> = [
-  { id: 'synthwave', label: 'Synthwave', icon: Piano, description: '80 年代電子合成器風格' },
-  { id: 'divination', label: '占卜', icon: Sparkles, description: '神秘氛圍音樂' },
-  { id: 'lofi', label: 'Lo-fi', icon: Headphones, description: 'Lo-fi 節奏音樂' },
-  { id: 'ambient', label: 'Ambient', icon: Waves, description: '環境音樂' },
+const MODES: Array<{ id: MusicMode; label: string; iconName: string; description: string }> = [
+  { id: 'synthwave', label: 'Synthwave', iconName: 'music', description: '80 年代電子合成器風格' },
+  { id: 'divination', label: '占卜', iconName: 'sparkling-2', description: '神秘氛圍音樂' },
+  { id: 'lofi', label: 'Lo-fi', iconName: 'headphone', description: 'Lo-fi 節奏音樂' },
+  { id: 'ambient', label: 'Ambient', iconName: 'disc', description: '環境音樂' },
 ];
 
 /**
@@ -69,38 +69,38 @@ export const MusicModeSelector = React.memo(function MusicModeSelector({
       role="radiogroup"
       aria-label="音樂模式選擇"
     >
-      <AnimatePresence mode="wait">
-        {MODES.map((mode) => {
-          const isActive = mode.id === currentMode;
+      {MODES.map((mode) => {
+        const isActive = mode.id === currentMode;
 
-          return (
-            <motion.button
-              key={mode.id}
-              onClick={() => handleModeSelect(mode.id)}
-              className={`relative p-3 flex flex-col items-center gap-2 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker ${
-                isActive
-                  ? 'bg-pip-boy-green/20 border-pip-boy-green shadow-[0_0_15px_rgba(0,255,136,0.4)]'
-                  : 'bg-pip-boy-green/5 border-pip-boy-green/30 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/50'
-              }`}
-              role="radio"
-              aria-checked={isActive}
-              aria-label={`${mode.label} - ${mode.description}`}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ duration: 0.2, ease: 'easeOut' }}
-            >
-              {/* Icon */}
-              <mode.icon className="w-8 h-8" aria-hidden="true" />
+        return (
+          <motion.button
+            key={mode.id}
+            onClick={() => handleModeSelect(mode.id)}
+            className={`relative p-3 flex flex-col items-center gap-2 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker ${
+              isActive
+                ? 'bg-pip-boy-green/20 border-pip-boy-green shadow-[0_0_15px_rgba(0,255,136,0.4)]'
+                : 'bg-pip-boy-green/5 border-pip-boy-green/30 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/50'
+            }`}
+            role="radio"
+            aria-checked={isActive}
+            aria-label={`${mode.label} - ${mode.description}`}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          >
+            {/* Icon */}
+            <PixelIcon name={mode.iconName} sizePreset="md" decorative />
 
-              {/* Label */}
-              <div className="text-sm font-bold text-center">{mode.label}</div>
+            {/* Label */}
+            <div className="text-sm font-bold text-center">{mode.label}</div>
 
-              {/* Description */}
-              <div className="text-xs text-pip-boy-green/60 text-center line-clamp-1">
-                {mode.description}
-              </div>
+            {/* Description */}
+            <div className="text-xs text-pip-boy-green/60 text-center line-clamp-1">
+              {mode.description}
+            </div>
 
-              {/* Active Indicator */}
+            {/* Active Indicator */}
+            <AnimatePresence>
               {isActive && (
                 <motion.div
                   className="absolute inset-0 border-2 border-pip-boy-green rounded pointer-events-none"
@@ -110,20 +110,20 @@ export const MusicModeSelector = React.memo(function MusicModeSelector({
                   transition={{ duration: 0.3 }}
                 />
               )}
+            </AnimatePresence>
 
-              {/* Playing Animation */}
-              {isActive && (
-                <motion.div
-                  className="absolute -top-1 -right-1 w-3 h-3 bg-pip-boy-green rounded-full"
-                  animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  aria-hidden="true"
-                />
-              )}
-            </motion.button>
-          );
-        })}
-      </AnimatePresence>
+            {/* Playing Animation */}
+            {isActive && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-3 h-3 bg-pip-boy-green rounded-full"
+                animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                aria-hidden="true"
+              />
+            )}
+          </motion.button>
+        );
+      })}
     </div>
   );
 });

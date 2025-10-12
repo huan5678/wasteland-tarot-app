@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { Spade, X, Star, Archive, Tag, Hash, Edit2, Download, Share2, FileText, TrendingUp, Plus } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { ReadingMetaEditor } from './ReadingMetaEditor'
 import { CategoryManager } from './CategoryManager'
 import { TagsManager } from './TagsManager'
@@ -56,8 +56,8 @@ export function ReadingDetailModal({ id, onClose }: Props) {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-bold text-pip-boy-green">占卜詳細資訊</h2>
-              {reading.is_favorite && <Star className="w-5 h-5 text-yellow-400" />}
-              {reading.archived && <Archive className="w-5 h-5 text-pip-boy-green/60" />}
+              {reading.is_favorite && < PixelIcon name="star" className="w-5 h-5 text-yellow-400" />}
+              {reading.archived && < PixelIcon name="archive" className="w-5 h-5 text-pip-boy-green/60" />}
               {reading._offline && <div className="px-2 py-1 bg-orange-500/20 border border-orange-500/30 text-orange-400 text-xs">離線</div>}
             </div>
             <div className="flex items-center gap-2">
@@ -67,14 +67,14 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                 className={`p-2 border border-pip-boy-green/30 hover:border-pip-boy-green/60 ${reading.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/70'}`}
                 title={reading.is_favorite ? '移除最愛' : '加入最愛'}
               >
-                <Star className="w-4 h-4" />
+                < PixelIcon name="star" className="w-4 h-4" />
               </button>
               <button
                 onClick={() => toggleArchived(reading.id)}
                 className={`p-2 border border-pip-boy-green/30 hover:border-pip-boy-green/60 ${reading.archived ? 'text-pip-boy-green' : 'text-pip-boy-green/70'}`}
                 title={reading.archived ? '取消封存' : '封存'}
               >
-                <Archive className="w-4 h-4" />
+                < PixelIcon name="archive" className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setEditing(!editing)}
@@ -168,7 +168,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                       >
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-18 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
-                            <Spade className="w-4 h-4" />
+                            < PixelIcon name="spade" className="w-4 h-4" />
                           </div>
                           <div className="flex-1">
                             <p className="text-pip-boy-green text-sm font-bold">{card.name || '未知卡牌'}</p>

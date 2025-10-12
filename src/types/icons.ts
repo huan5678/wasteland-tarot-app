@@ -350,7 +350,39 @@ export interface IconMetadata {
 }
 
 /**
+ * HackerNoon 圖示模式
+ *
+ * @hackernoon/pixel-icon-library 專屬選項
+ */
+export type HackernoonIconMode = 'light' | 'dark';
+
+/**
+ * HackerNoon 圖示格式
+ *
+ * @hackernoon/pixel-icon-library 專屬選項
+ */
+export type HackernoonIconFormat = 'svg' | 'png';
+
+/**
+ * HackerNoon 圖示風格
+ *
+ * @hackernoon/pixel-icon-library 專屬選項
+ */
+export type HackernoonIconStyle = 'regular' | 'solid' | 'brands' | 'purcats';
+
+/**
+ * HackerNoon 原始圖示尺寸
+ *
+ * @hackernoon/pixel-icon-library 提供的原始 PNG 尺寸
+ */
+export type HackernoonIconSize = 12 | 16 | 24 | 48;
+
+/**
  * PixelIcon 元件的 Props 介面
+ *
+ * 支援兩種圖示系統：
+ * 1. pixelarticons (舊系統，保留向後相容)
+ * 2. @hackernoon/pixel-icon-library (新系統) ⭐
  */
 export interface PixelIconProps {
   /**
@@ -483,4 +515,22 @@ export interface PixelIconProps {
    * 滑鼠離開事件處理器
    */
   onMouseLeave?: (event: MouseEvent<HTMLSpanElement>) => void;
+
+  // ==================== RemixIcon Props ====================
+
+  /**
+   * 圖示風格（RemixIcon CSS class name）
+   *
+   * 選擇圖示風格：line（線條）或 fill（實心）
+   * 對應 RemixIcon 的 class name 規則: ri-{name}-{style}
+   *
+   * @default 'line'
+   *
+   * @example
+   * ```tsx
+   * <PixelIcon name="home" remixVariant="line" />  // ri-home-line
+   * <PixelIcon name="home" remixVariant="fill" />  // ri-home-fill
+   * ```
+   */
+  remixVariant?: 'line' | 'fill';
 }

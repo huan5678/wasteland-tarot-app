@@ -170,7 +170,7 @@ class WastelandCard(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         """Convert card to dictionary representation matching WastelandCard schema"""
         return {
-            "id": self.id,
+            "id": str(self.id),  # Convert UUID to string for Pydantic
             "name": self.name,
             "suit": self.suit,
             "number": self.number,

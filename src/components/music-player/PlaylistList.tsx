@@ -9,7 +9,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Play, Pencil, Trash2 } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { AnimatePresence, motion } from 'motion/react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
@@ -243,7 +243,7 @@ export function PlaylistList({
                     data-testid={`play-playlist-${playlist.id}`}
                     disabled={isDeleting}
                   >
-                    <Play className="w-4 h-4 text-pip-boy-green" />
+                    <PixelIcon name="play" sizePreset="xs" variant="primary" decorative />
                   </button>
 
                   {/* Edit Button */}
@@ -260,7 +260,7 @@ export function PlaylistList({
                     data-testid={`edit-playlist-${playlist.id}`}
                     disabled={isDeleting}
                   >
-                    <Pencil className="w-4 h-4 text-pip-boy-green" />
+                    <PixelIcon name="edit" sizePreset="xs" variant="primary" decorative />
                   </button>
 
                   {/* Delete Button */}
@@ -277,7 +277,7 @@ export function PlaylistList({
                     data-testid={`delete-playlist-${playlist.id}`}
                     disabled={isDeleting}
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <PixelIcon name="delete" sizePreset="xs" variant="error" decorative />
                   </button>
                 </div>
               </div>

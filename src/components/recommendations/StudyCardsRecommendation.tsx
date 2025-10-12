@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { BookOpen, TrendingUp, RefreshCw } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 import { useStudyCards } from '@/hooks/useRecommendations'
 import { Card } from '@/components/ui/card'
 
@@ -33,7 +33,7 @@ export function StudyCardsRecommendation({
     return (
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center gap-2 mb-4">
-          <BookOpen className="w-5 h-5 text-pip-boy-green" />
+          <PixelIcon name="book-open" size={24} className="text-pip-boy-green" decorative />
           <h3 className="text-lg font-semibold">建議學習的卡片</h3>
         </div>
 
@@ -48,7 +48,7 @@ export function StudyCardsRecommendation({
     <Card className={`p-6 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-pip-boy-green" />
+          <PixelIcon name="book-open" size={24} className="text-pip-boy-green" decorative />
           <h3 className="text-lg font-semibold">建議學習的卡片</h3>
         </div>
 
@@ -101,7 +101,7 @@ export function StudyCardsRecommendation({
                 </p>
 
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-3 h-3 text-emerald-500" />
+                  <PixelIcon name="trending-up" size={16} className="text-emerald-500" decorative />
                   <div className="flex-1 h-1.5 bg-wasteland-darker rounded-full overflow-hidden">
                     <div
                       className="h-full bg-emerald-500 transition-all"

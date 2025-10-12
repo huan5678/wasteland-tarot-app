@@ -29,7 +29,7 @@ export const BASS_PRESETS: Record<string, BassSynthConfig> = {
   synthwave_classic: {
     waveform: 'sawtooth',
     filterCutoff: 300,
-    filterResonance: 3.5,
+    filterResonance: 1.8, // 降低共振避免 300Hz 附近音量峰值 (原 3.5)
     ampEnvelope: ADSR_PRESETS.bass_sustained,
     filterEnvelope: {
       attack: 0.01,
@@ -44,7 +44,7 @@ export const BASS_PRESETS: Record<string, BassSynthConfig> = {
   pluck: {
     waveform: 'square',
     filterCutoff: 500,
-    filterResonance: 2.0,
+    filterResonance: 1.5, // 降低共振避免音量峰值 (原 2.0)
     ampEnvelope: ADSR_PRESETS.bass_pluck,
     filterEnvelope: {
       attack: 0.005,
@@ -67,7 +67,7 @@ export const BASS_PRESETS: Record<string, BassSynthConfig> = {
   lofi: {
     waveform: 'triangle',
     filterCutoff: 350,
-    filterResonance: 2.5,
+    filterResonance: 1.5, // 降低共振保持溫暖音色 (原 2.5)
     ampEnvelope: {
       attack: 0.03,
       decay: 0.25,
@@ -131,6 +131,18 @@ export class BassSynthesizer {
     duration: number,
     velocity: number = 0.8
   ): void {
+    // DEBUG: 詳細日誌
+    console.log('[BassSynthesizer] playNote called', {
+      frequency,
+      startTime,
+      duration,
+      velocity,
+      audioContextTime: this.audioContext.currentTime,
+      audioContextState: this.audioContext.state,
+      waveform: this.config.waveform,
+      filterCutoff: this.config.filterCutoff,
+    });
+
     // 建立振盪器
     this.oscillator = this.audioContext.createOscillator();
     this.oscillator.type = this.config.waveform;
@@ -151,6 +163,8 @@ export class BassSynthesizer {
     this.filter.connect(this.ampGain);
     this.ampGain.connect(this.destination);
 
+    console.log('[BassSynthesizer] Nodes connected, oscillator starting at', startTime);
+
     // 套用振幅包絡
     const peakGain = velocity;
     this.ampEnvelope.applyToParam(this.ampGain.gain, startTime, peakGain);
@@ -169,6 +183,7 @@ export class BassSynthesizer {
 
     // 啟動振盪器
     this.oscillator.start(startTime);
+    console.log('[BassSynthesizer] Oscillator started');
 
     // 排程 Release 階段和停止
     const releaseTime = startTime + duration;
@@ -180,6 +195,8 @@ export class BassSynthesizer {
 
     const stopTime = releaseTime + this.ampEnvelope.releaseDuration;
     this.oscillator.stop(stopTime);
+
+    console.log('[BassSynthesizer] Oscillator will stop at', stopTime);
 
     // 自動清理
     this.scheduleCleanup(stopTime);

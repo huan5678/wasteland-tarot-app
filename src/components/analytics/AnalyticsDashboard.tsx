@@ -12,13 +12,7 @@ import { CardFrequency } from './CardFrequency';
 import { SpreadUsage } from './SpreadUsage';
 import { PatternInsights } from './PatternInsights';
 import { RecommendationCard } from './RecommendationCard';
-import {
-  BookOpen,
-  TrendingUp,
-  Clock,
-  Sparkles,
-  RefreshCw,
-} from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons';
 import { Button } from '@/components/ui/button';
 
 interface AnalyticsDashboardProps {
@@ -259,7 +253,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+          <PixelIcon name="reload" size={32} className="animate-spin mx-auto mb-2" decorative />
           <p className="text-sm text-muted-foreground">Loading analytics...</p>
         </div>
       </div>
@@ -274,7 +268,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
             {error || 'Failed to load analytics'}
           </p>
           <Button onClick={fetchAnalytics} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <PixelIcon name="reload" size={16} className="mr-2" decorative />
             Retry
           </Button>
         </div>
@@ -290,7 +284,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Analytics Dashboard</h2>
         <Button onClick={fetchAnalytics} variant="outline" size="sm">
-          <RefreshCw className="w-4 h-4 mr-2" />
+          <PixelIcon name="reload" size={16} className="mr-2" decorative />
           Refresh
         </Button>
       </div>
@@ -300,26 +294,26 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
         <StatisticsCard
           title="Total Readings"
           value={user_analytics.readings_count}
-          icon={BookOpen}
+          iconName="book-open"
           description="All time"
         />
         <StatisticsCard
           title="Sessions"
           value={user_analytics.session_count}
-          icon={TrendingUp}
+          iconName="trending-up"
           description="Total sessions"
         />
         <StatisticsCard
           title="Avg. Session"
           value={`${Math.round(user_analytics.avg_session_duration / 60)}m`}
-          icon={Clock}
+          iconName="clock"
           description="Duration"
           useNumericFont={true}
         />
         <StatisticsCard
           title="Engagement"
           value={user_analytics.shares_count + user_analytics.notes_count}
-          icon={Sparkles}
+          iconName="sparkles"
           description="Shares & notes"
         />
       </div>
@@ -346,7 +340,7 @@ export function AnalyticsDashboard({ className = '' }: AnalyticsDashboardProps) 
               variant="outline"
               size="sm"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <PixelIcon name="sparkles" size={16} className="mr-2" decorative />
               Generate New
             </Button>
           </div>

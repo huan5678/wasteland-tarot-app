@@ -1,1182 +1,798 @@
-# Playlist Music Player - Implementation Tasks
+# 實作計畫 - 音樂系統整合方案（v4.0）
 
-**Version**: 1.0
-**Language**: zh-TW (繁體中文)
-**Status**: tasks-generated
-**Last Updated**: 2025-01-10
-
----
-
-## 任務總覽
-
-本文件包含 Playlist Music Player 功能的分步驟實作任務，所有任務均可由程式碼生成代理執行。任務按技術依賴順序排列，每個任務預計 1-3 小時完成。
-
-**基礎資訊**：
-- 總任務數：35 個主要任務
-- 預估總工時：約 70-105 小時
-- 關鍵路徑：Foundation → State Management → UI Components → Integration → Testing
-
-**技術棧**：
-- React 19 + Next.js 15 + TypeScript 5
-- Zustand 4.5+ (state management + persist middleware)
-- shadcn/ui (Drawer + Sheet components)
-- Web Audio API (ProceduralMusicEngine)
-- Tailwind CSS v4
-- Vitest + Playwright (testing)
+**版本**: 4.0
+**建立日期**: 2025-10-13
+**語言**: 繁體中文 (zh-TW)
 
 ---
 
-## 📋 Phase 1: Foundation & Audio System
+## Part 1: 資料庫與基礎設施（Database & Infrastructure）
 
-- [x] Task 1: 擴展 audioStore 支援音樂播放器狀態
-- [x] Task 2: ProceduralMusicEngine 新增 crossfade 支援
-- [x] Task 3: 建立 MusicMode 和 Playlist 型別定義
-- [x] Task 4: 建立 ErrorHandler 錯誤處理模組
+- [ ] 1.1 建立 user_rhythm_presets 表結構
+  - 建立/修改 `supabase/migrations/20250111000000_create_user_rhythm_presets.sql`
+  - 實作欄位：id (UUID), user_id (UUID FK), name (TEXT), description (TEXT), pattern (JSONB), is_system_preset (BOOLEAN), is_public (BOOLEAN), created_at, updated_at
+  - 建立索引：idx_user_rhythm_presets_user_id, idx_user_rhythm_presets_is_public
+  - 測試 migration 執行成功
+  - _Requirements: 需求 24.6, 需求 29.7_
 
-### 1. 擴展 audioStore 支援音樂播放器狀態
+- [ ] 1.2 建立 playlists 表結構
+  - 建立/修改 `supabase/migrations/20250111000005_create_playlists.sql`
+  - 實作欄位：id (UUID), user_id (UUID FK), name (TEXT), description (TEXT), is_public (BOOLEAN), created_at, updated_at
+  - 建立索引：idx_playlists_user_id
+  - 設定 CASCADE DELETE 規則
+  - _Requirements: 需求 28.1, 需求 28.7_
 
-**目標**：在現有 `/src/lib/audio/audioStore.ts` 中新增音樂播放器專用狀態欄位。
+- [ ] 1.3 建立 playlist_patterns 關聯表
+  - 建立/修改 `supabase/migrations/20250111000006_create_playlist_patterns.sql`
+  - 實作欄位：id (UUID), playlist_id (UUID FK), pattern_id (UUID FK), position (INTEGER), created_at
+  - 建立 UNIQUE 約束：(playlist_id, position), (playlist_id, pattern_id)
+  - 建立索引：idx_playlist_patterns_playlist_id, idx_playlist_patterns_pattern_id
+  - 設定 ON DELETE CASCADE 規則
+  - _Requirements: 需求 28.2, 需求 28.3_
 
-**實作步驟**：
-1. 在 `AudioState` interface 新增以下欄位：
-   ```typescript
-   currentMusicMode: MusicMode | null; // 當前播放的音樂模式
-   musicPlayerInitialized: boolean;    // 音樂播放器初始化狀態
-   ```
-2. 更新 `persist` middleware 的 `partialize` 函數，確保 `currentMusicMode` 被持久化到 localStorage
-3. 新增 `setCurrentMusicMode` action 方法：
-   ```typescript
-   setCurrentMusicMode: (mode: MusicMode | null) => void;
-   ```
-4. 更新現有的 `setIsPlaying` 方法，當 `type === 'music'` 時同步更新音樂播放器狀態
-5. 新增單元測試 `/src/lib/audio/__tests__/audioStore.music.test.ts`，測試新增的 action 和狀態持久化
+- [ ] 1.4 建立 RLS Policies（訪客與註冊使用者權限）
+  - 建立/修改 `supabase/migrations/20250111000007_create_rls_policies.sql`
+  - 實作 Policy：訪客可見 is_system_preset = true 的 presets
+  - 實作 Policy：訪客可見 is_public = true 的 presets
+  - 實作 Policy：註冊使用者可見自己的所有 presets（含私密）
+  - 實作 Policy：註冊使用者只能修改/刪除自己的 presets
+  - 實作 Policy：禁止刪除/修改 is_system_preset = true 的 presets
+  - 測試 RLS 驗證（訪客、註冊使用者、擁有者）
+  - _Requirements: 需求 31.1-31.3, 需求 29.5_
 
-_Requirements: 1.1, 1.2, 2.1, 6.1 (audioStore 狀態擴展、音樂模式播放、localStorage 持久化)_
+- [ ] 1.5 Seed 系統預設 Pattern（5 個預設歌曲）
+  - 建立/修改 `supabase/migrations/20250111000008_seed_system_presets.sql`
+  - 插入 5 個預設 Pattern：Techno, House, Trap, Breakbeat, Minimal
+  - 使用系統帳號：user_id = '00000000-0000-0000-0000-000000000000'
+  - 設定 is_system_preset = true, is_public = true
+  - 測試 seed 資料正確插入
+  - _Requirements: 需求 29.1, 需求 29.6_
 
----
-
-### 2. ProceduralMusicEngine 新增 crossfade 支援
-
-**目標**：在 `/src/lib/audio/ProceduralMusicEngine.ts` 實作無縫淡入淡出切換功能。
-
-**實作步驟**：
-1. 新增 `crossfadeDuration` 參數到 `ProceduralMusicEngineConfig` interface (預設 2000ms)
-2. 建立 `CrossfadeManager` 內部類別：
-   ```typescript
-   class CrossfadeManager {
-     private currentGainNode: GainNode | null = null;
-     private nextGainNode: GainNode | null = null;
-     async crossfade(
-       from: VoiceManager,
-       to: VoiceManager,
-       duration: number
-     ): Promise<void>;
-   }
-   ```
-3. 修改 `switchMode` 方法，使用 `CrossfadeManager` 實現淡出當前音樂、淡入新音樂
-4. 實作漸變邏輯：
-   - 當前音樂從 volume 1.0 → 0.0 (duration/2)
-   - 新音樂從 volume 0.0 → 1.0 (duration/2)
-   - 兩者重疊播放 (duration/2) 時段
-5. 新增單元測試 `/src/lib/audio/__tests__/ProceduralMusicEngine.crossfade.test.ts`，驗證淡入淡出時間和音量變化
-
-_Requirements: 1.4, 2.2 (無縫切換、淡入淡出效果)_
+- [ ] 1.6 配置 Supabase 環境變數與測試連線
+  - 更新 `backend/.env.example` 和 `.env.local.example`
+  - 確認 SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+  - 建立 `backend/app/core/supabase.py` 的連線測試腳本
+  - 測試前端與後端的 Supabase Client 初始化
+  - _Requirements: 需求 26.11_
 
 ---
 
-### 2. ProceduralMusicEngine 新增 crossfade 支援
+## Part 2: 後端 API 開發（Backend API Development）
 
-**目標**：在 `/src/lib/audio/ProceduralMusicEngine.ts` 實作無縫淡入淡出切換功能。
+- [ ] 2.1 實作 Pattern/Preset CRUD API 端點
+  - 建立/修改 `backend/app/api/v1/endpoints/music.py`
+  - 實作 POST /api/v1/music/presets（儲存 Preset，支援 isPublic 參數）
+  - 實作 GET /api/v1/music/presets（獲取使用者所有 Presets）
+  - 實作 PUT /api/v1/music/presets/{id}（更新 Preset，支援變更 isPublic）
+  - 實作 DELETE /api/v1/music/presets/{id}（刪除 Preset，禁止刪除系統預設）
+  - 驗證 JWT Token，提取 user_id
+  - 回傳格式：{ id, name, description, pattern, isPublic, createdAt }
+  - 測試 API 端點（Postman/pytest）
+  - _Requirements: 需求 26.6-26.10, 需求 32.3-32.4_
 
-**實作步驟**:
-1. 新增 `crossfadeDuration` 參數到 `ProceduralMusicEngineConfig` interface (預設 2000ms)
-2. 建立 `CrossfadeManager` 內部類別：
-   ```typescript
-   class CrossfadeManager {
-     private currentGainNode: GainNode | null = null;
-     private nextGainNode: GainNode | null = null;
-     async crossfade(
-       from: VoiceManager,
-       to: VoiceManager,
-       duration: number
-     ): Promise<void>;
-   }
-   ```
-3. 修改 `switchMode` 方法，使用 `CrossfadeManager` 實現淡出當前音樂、淡入新音樂
-4. 實作漸變邏輯：
-   - 當前音樂從 volume 1.0 → 0.0 (duration/2)
-   - 新音樂從 volume 0.0 → 1.0 (duration/2)
-   - 兩者重疊播放 (duration/2) 時段
-5. 新增單元測試 `/src/lib/audio/__tests__/ProceduralMusicEngine.crossfade.test.ts`，驗證淡入淡出時間和音量變化
+- [ ] 2.2 實作公開歌曲查詢 API（訪客可存取）
+  - 建立/修改 `backend/app/api/v1/endpoints/music.py`
+  - 實作 GET /api/v1/music/presets/public（無需 Token）
+  - 查詢條件：is_system_preset = true OR is_public = true
+  - 支援分頁：page (default: 1), limit (default: 20, max: 100)
+  - 支援排序：created_at_desc | created_at_asc | name_asc | name_desc
+  - 回傳 systemPresets 和 publicPresets 分開的陣列
+  - 包含創作者名稱（JOIN auth.users）
+  - 測試訪客存取（無 Token）和註冊使用者存取
+  - _Requirements: 需求 31.1-31.2, 需求 31.7-31.8_
 
-_Requirements: 1.4, 2.2 (無縫切換、淡入淡出效果)_
+- [ ] 2.3 實作批次獲取 Pattern 詳情 API
+  - 建立/修改 `backend/app/api/v1/endpoints/music.py`
+  - 實作 POST /api/v1/music/presets/batch（批次查詢多個 Pattern）
+  - Request Body: { patternIds: string[] }
+  - Response: { patterns: Pattern[] }
+  - 驗證所有 patternId 存在，過濾無效 ID
+  - 支援訪客存取（僅回傳公開歌曲）
+  - 測試批次查詢（訪客 localStorage 使用）
+  - _Requirements: 需求 33.5_
 
----
+- [ ] 2.4 實作 Playlist CRUD API 端點
+  - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
+  - 實作 POST /api/v1/playlists（建立播放清單）
+  - 實作 GET /api/v1/playlists（獲取使用者所有播放清單）
+  - 實作 GET /api/v1/playlists/{id}（獲取播放清單詳情，JOIN patterns）
+  - 實作 PUT /api/v1/playlists/{id}（更新播放清單名稱/描述）
+  - 實作 DELETE /api/v1/playlists/{id}（刪除播放清單，CASCADE patterns）
+  - 驗證擁有權（user_id 必須匹配）
+  - 測試 API 端點
+  - _Requirements: 需求 28.1, 需求 28.4-28.7_
 
-### 3. 建立 MusicMode 和 Playlist 型別定義
+- [ ] 2.5 實作 Playlist Pattern 管理 API
+  - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
+  - 實作 POST /api/v1/playlists/{id}/patterns（加入 Pattern）
+  - 實作 DELETE /api/v1/playlists/{id}/patterns/{pattern_id}（移除 Pattern）
+  - 實作 PUT /api/v1/playlists/{id}/patterns/{pattern_id}/position（調整順序）
+  - 自動調整其他 patterns 的 position 值
+  - 驗證 UNIQUE 約束（同一 pattern 不可重複加入）
+  - 測試順序調整邏輯
+  - _Requirements: 需求 28.2-28.3_
 
-**目標**：建立共用型別定義檔案 `/src/lib/audio/types.ts`。
+- [ ] 2.6 實作訪客播放清單匯入 API
+  - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
+  - 實作 POST /api/v1/playlists/import-guest
+  - Request Body: { guestPlaylist: { patterns: [{ patternId, position }] } }
+  - 建立新播放清單：name = "訪客播放清單（已匯入）"
+  - 批次插入 playlist_patterns 記錄（使用 TRANSACTION）
+  - 驗證所有 patternId 存在，記錄無效 ID
+  - Response: { playlistId, patternCount, invalidPatternIds }
+  - 測試匯入流程（部分 Pattern 無效的情況）
+  - _Requirements: 需求 34.4, 需求 34.6-34.7_
 
-**實作步驟**：
-1. 定義 `MusicMode` 型別：
-   ```typescript
-   export type MusicMode = 'synthwave' | 'divination' | 'lofi' | 'ambient';
-   export const MUSIC_MODES: readonly MusicMode[] = ['synthwave', 'divination', 'lofi', 'ambient'] as const;
-   ```
-2. 定義 `Playlist` interface：
-   ```typescript
-   export interface Playlist {
-     id: string;              // UUID
-     name: string;            // 播放清單名稱 (1-50 字元)
-     modes: MusicMode[];      // 音樂模式陣列 (1-20 個模式)
-     createdAt: Date;
-     updatedAt: Date;
-   }
-   ```
-3. 定義 `RepeatMode` 和 `ShuffleMode`：
-   ```typescript
-   export type RepeatMode = 'off' | 'one' | 'all';
-   export type ShuffleMode = boolean;
-   ```
-4. 匯出 `PlaylistValidationError` 錯誤類別
-5. 建立 `validatePlaylist` 輔助函數，驗證播放清單格式和長度限制
+- [ ] 2.7 實作 AI 節奏生成 API
+  - 建立/修改 `backend/app/api/v1/endpoints/music.py`
+  - 實作 POST /api/v1/music/generate-rhythm
+  - 檢查 user_ai_quotas 配額（每日 20 次）
+  - 呼叫 AI Provider（OpenAI/Gemini）生成 Pattern
+  - Prompt 範例：「Generate a 16-step drum pattern for {prompt}. Return JSON with kick, snare, hihat, openhat, clap arrays of 16 booleans.」
+  - 更新配額使用量（rhythm_quota_used += 1）
+  - Response: { pattern, quotaRemaining }
+  - 配額用盡時回傳 400 錯誤：{ error: "Daily quota exceeded", quotaLimit, quotaUsed, resetAt }
+  - 測試 AI 生成成功/失敗情境
+  - _Requirements: 需求 23.5-23.12, 需求 26.1-26.5_
 
-_Requirements: 3.1, 3.2, 4.1, 4.2 (播放清單建立、模式選擇、重複/隨機播放)_
-
----
-
-### 4. 建立 ErrorHandler 錯誤處理模組
-
-**目標**：實作集中式錯誤處理系統 `/src/lib/audio/errorHandler.ts`。
-
-**實作步驟**：
-1. 定義 `MusicPlayerErrorType` enum：
-   ```typescript
-   export enum MusicPlayerErrorType {
-     ENGINE_INIT_FAILED = 'ENGINE_INIT_FAILED',
-     MODE_LOAD_FAILED = 'MODE_LOAD_FAILED',
-     AUDIO_CONTEXT_SUSPENDED = 'AUDIO_CONTEXT_SUSPENDED',
-     STORAGE_WRITE_FAILED = 'STORAGE_WRITE_FAILED',
-     PLAYLIST_CORRUPTED = 'PLAYLIST_CORRUPTED',
-   }
-   ```
-2. 建立 `MusicPlayerError` 自訂錯誤類別：
-   ```typescript
-   export class MusicPlayerError extends Error {
-     constructor(
-       public type: MusicPlayerErrorType,
-       public message: string,
-       public recoverable: boolean,
-       public originalError?: Error
-     );
-   }
-   ```
-3. 實作 `ErrorHandler` 單例類別：
-   - `retry<T>()`: 重試機制 (最多 3 次，exponential backoff)
-   - `trackError()`: 錯誤率監控 (30% 閾值)
-   - `handleError()`: 統一錯誤處理邏輯
-4. 新增單元測試 `/src/lib/audio/__tests__/errorHandler.test.ts`，驗證重試邏輯和錯誤率計算
-
-_Requirements: 10.1, 10.2, 10.3 (錯誤處理、重試機制、錯誤率監控)_
+- [ ] 2.8 實作配額查詢 API
+  - 建立/修改 `backend/app/api/v1/endpoints/music.py`
+  - 實作 GET /api/v1/music/quota
+  - 查詢 user_ai_quotas 表
+  - Response: { quotaLimit: 20, quotaUsed, quotaRemaining, resetAt }
+  - 若使用者無記錄則自動建立（quotaUsed = 0）
+  - 測試配額查詢
+  - _Requirements: 需求 23.13_
 
 ---
 
-## 📦 Phase 2: State Management
+## Part 3: 前端核心音訊系統（Frontend Audio Core）
 
-- [x] Task 5: 建立 musicPlayerStore (Zustand store)
-- [x] Task 6: 建立 playlistStore (播放清單管理)
-- [x] Task 7: 實作 useMusicPlayer 自訂 Hook
-- [x] Task 8: 實作播放清單隨機播放邏輯
+- [ ] 3.1 實作 RhythmAudioSynthesizer 類別（播放器專用）
+  - 建立 `src/lib/audio/RhythmAudioSynthesizer.ts`
+  - 初始化獨立 AudioContext
+  - 實作 playKick(time)：150 Hz → 0.01 Hz exponentialRamp 0.5s
+  - 實作 playSnare(time)：白噪音 + triangle wave @ 180 Hz，highpass @ 1000 Hz
+  - 實作 playHiHat(time)：square wave @ 10000 Hz，highpass @ 7000 Hz，decay 0.05s
+  - 實作 playOpenHat(time)：square wave @ 10000 Hz，decay 0.3s
+  - 實作 playClap(time)：白噪音，bandpass @ 1500 Hz，decay 0.1s
+  - 實作 createNoiseBuffer() 方法（白噪音生成）
+  - 測試 5 種樂器音效播放
+  - _Requirements: 需求 25.1-25.7, 需求 30.6_
 
-### 5. 建立 musicPlayerStore (Zustand store)
+- [ ] 3.2 實作 Pattern 播放邏輯（16 步驟循環）
+  - 修改 `src/lib/audio/RhythmAudioSynthesizer.ts`
+  - 實作 loadPattern(pattern: Pattern) 方法
+  - 實作 scheduleNextStep() 方法（Web Audio API 精準排程）
+  - 計算步驟時間：stepDuration = 60 / bpm / 4（16 分音符）
+  - 循環播放 16 步驟，檢查每個軌道的啟用狀態
+  - 實作 currentStep 和 currentLoop 狀態管理
+  - 測試 Pattern 循環播放（4 次循環）
+  - _Requirements: 需求 25.8-25.9, 需求 30.7_
 
-**目標**：實作音樂播放器專用 Zustand store `/src/stores/musicPlayerStore.ts`。
+- [ ] 3.3 實作播放控制方法（播放/暫停/停止/切換）
+  - 修改 `src/lib/audio/RhythmAudioSynthesizer.ts`
+  - 實作 play() 方法（開始播放）
+  - 實作 pause() 方法（暫停播放，保留位置）
+  - 實作 stop() 方法（停止播放，重置到步驟 0）
+  - 實作 setTempo(bpm: number) 方法（60-180 BPM）
+  - 實作 destroy() 方法（釋放 AudioContext 資源）
+  - 實作播放完成回呼：onPatternComplete()
+  - 測試播放控制（播放/暫停/停止/速度調整）
+  - _Requirements: 需求 30.1-30.4, 需求 22.6-22.7_
 
-**實作步驟**：
-1. 定義 `MusicPlayerState` interface：
-   ```typescript
-   export interface MusicPlayerState {
-     // Playback State
-     currentMode: MusicMode | null;
-     isPlaying: boolean;
-     currentPlaylist: string | null;  // Playlist ID
-     currentModeIndex: number;
+- [ ] 3.4 實作 EditorAudioSynthesizer 類別（編輯器專用）
+  - 建立 `src/lib/audio/EditorAudioSynthesizer.ts`
+  - 複製 RhythmAudioSynthesizer 的音效合成方法
+  - 建立獨立 AudioContext（不干擾播放器）
+  - 實作即時預覽播放（編輯器播放按鈕）
+  - 實作單步驟音效測試（點擊步驟格子時播放）
+  - 測試編輯器音效播放（與播放器隔離）
+  - _Requirements: 需求 25.1-25.2, 需求 21.6_
 
-     // Playback Settings
-     repeatMode: RepeatMode;
-     shuffleEnabled: boolean;
-
-     // UI State
-     isDrawerOpen: boolean;
-     isDrawerMinimized: boolean;
-     isSheetOpen: boolean;
-
-     // Actions (30+ methods)
-     playMode: (mode: MusicMode) => Promise<void>;
-     pause: () => void;
-     resume: () => void;
-     next: () => void;
-     previous: () => void;
-     setRepeatMode: (mode: RepeatMode) => void;
-     toggleShuffle: () => void;
-     openDrawer: () => void;
-     closeDrawer: () => void;
-     minimizeDrawer: () => void;
-     openSheet: () => void;
-     closeSheet: () => void;
-     // ... 其他 actions
-   }
-   ```
-2. 使用 `zustand/middleware` 的 `persist` 持久化以下欄位：
-   - `repeatMode`, `shuffleEnabled`, `currentPlaylist`, `currentModeIndex`
-3. 實作播放邏輯：
-   - `playMode`: 調用 `ProceduralMusicEngine.start()` 和 `switchMode()`
-   - `next/previous`: 處理循環播放、隨機播放邏輯
-4. 整合 `audioStore`：在 `playMode` 中同步更新 `audioStore.setCurrentMusicMode()`
-
-_Requirements: 1.1, 1.2, 1.3, 2.1, 4.2, 4.3, 6.1 (播放控制、音樂模式切換、重複/隨機播放、狀態持久化)_
-
----
-
-### 6. 建立 playlistStore (播放清單管理)
-
-**目標**：實作播放清單 CRUD 操作的 Zustand store `/src/stores/playlistStore.ts`。
-
-**實作步驟**：
-1. 定義 `PlaylistStore` interface：
-   ```typescript
-   export interface PlaylistStore {
-     playlists: Playlist[];
-
-     // CRUD Actions
-     createPlaylist: (name: string, modes: MusicMode[]) => string;  // 回傳 UUID
-     updatePlaylist: (id: string, updates: Partial<Playlist>) => void;
-     deletePlaylist: (id: string) => void;
-     reorderPlaylistModes: (id: string, fromIndex: number, toIndex: number) => void;
-
-     // Query Actions
-     getPlaylistById: (id: string) => Playlist | undefined;
-     getAllPlaylists: () => Playlist[];
-   }
-   ```
-2. 使用 `persist` middleware 持久化 `playlists` 陣列到 localStorage
-3. 實作驗證邏輯：
-   - 播放清單名稱：1-50 字元
-   - 音樂模式數量：1-20 個
-   - UUID 唯一性檢查
-4. 新增錯誤處理：當 localStorage 寫入失敗時拋出 `STORAGE_WRITE_FAILED` 錯誤
-5. 新增單元測試 `/src/stores/__tests__/playlistStore.test.ts`
-
-_Requirements: 3.1, 3.2, 3.3, 3.4, 6.1, 6.3 (播放清單 CRUD、模式管理、localStorage 持久化)_
+- [ ] 3.5 實作 Pattern 循環切換邏輯（4 次循環後切歌）
+  - 修改 `src/lib/audio/RhythmAudioSynthesizer.ts`
+  - 實作 loopCount 計數器（每次 Pattern 完成 += 1）
+  - 當 loopCount >= 4 時觸發 onPatternComplete 回呼
+  - 實作 next() 方法（切換到下一個 Pattern）
+  - 實作 previous() 方法（切換到上一個 Pattern）
+  - 重置 loopCount 和 currentStep
+  - 測試循環切換邏輯
+  - _Requirements: 需求 30.2, 需求 30.7_
 
 ---
 
-### 7. 實作 useMusicPlayer 自訂 Hook
+## Part 4: 前端狀態管理（Frontend State Management）
 
-**目標**：建立便捷的 Hook `/src/hooks/useMusicPlayer.ts` 統一存取 musicPlayerStore。
+- [ ] 4.1 建立 playlistStore（播放清單狀態管理）
+  - 建立 `src/lib/stores/playlistStore.ts`
+  - 使用 Zustand 建立 store
+  - 狀態：playlists (Playlist[]), currentPlaylist (Playlist | null), isLoading, error
+  - Actions: fetchPlaylists(), createPlaylist(), deletePlaylist(), loadPlaylist()
+  - Actions: addPatternToPlaylist(), removePatternFromPlaylist(), reorderPattern()
+  - 整合後端 API 呼叫（/api/v1/playlists）
+  - 測試狀態更新
+  - _Requirements: 需求 28.1-28.4_
 
-**實作步驟**：
-1. 使用 Zustand 的 `useStore` 和 selector 模式：
-   ```typescript
-   export function useMusicPlayer() {
-     const {
-       currentMode,
-       isPlaying,
-       playMode,
-       pause,
-       resume,
-       next,
-       previous
-     } = useMusicPlayerStore();
+- [ ] 4.2 建立 rhythmEditorStore（節奏編輯器狀態管理）
+  - 建立 `src/lib/stores/rhythmEditorStore.ts`
+  - 使用 Zustand 建立 store
+  - 狀態：pattern (Pattern), tempo (number), isPlaying, currentStep, systemPresets, userPresets
+  - Actions: toggleStep(track, step), setTempo(), play(), pause(), stop(), clear()
+  - Actions: loadPreset(), savePreset(), deletePreset()
+  - Actions: fetchSystemPresets(), fetchUserPresets()
+  - 測試狀態更新
+  - _Requirements: 需求 21.8, 需求 22.1-22.8, 需求 24.2_
 
-     return {
-       currentMode,
-       isPlaying,
-       playMode,
-       pause,
-       resume,
-       next,
-       previous
-     };
-   }
-   ```
-2. 實作 `usePlaybackControls` Hook (僅訂閱播放控制相關狀態)
-3. 實作 `usePlaylistManager` Hook (僅訂閱播放清單相關狀態)
-4. 使用 `useMemo` 和 `useCallback` 優化效能
-5. 新增單元測試 `/src/hooks/__tests__/useMusicPlayer.test.ts`
+- [ ] 4.3 實作 localStorage 訪客播放清單管理
+  - 建立 `src/lib/localStorage/guestPlaylistManager.ts`
+  - 實作 loadFromLocalStorage(): GuestPlaylist | null
+  - 實作 saveToLocalStorage(playlist: GuestPlaylist): void
+  - 實作 addPattern(patternId: string): boolean（成功返回 true，已滿返回 false）
+  - 實作 removePattern(patternId: string): void
+  - 實作 clearPlaylist(): void
+  - 實作 isFull(): boolean（檢查 >= 4 首）
+  - 實作 getPatternCount(): number
+  - 實作 exportForMigration(): GuestPlaylistExport
+  - Key: "guest_playlist"
+  - 測試 localStorage 讀寫（單元測試）
+  - _Requirements: 需求 33.1-33.5_
 
-_Requirements: 1.1, 1.2, 1.3, 2.1 (播放控制 Hook 封裝)_
+- [ ] 4.4 整合訪客與註冊使用者狀態同步
+  - 修改 `src/lib/stores/playlistStore.ts`
+  - 新增 isGuest 狀態（根據 Supabase session 判斷）
+  - 訪客模式：使用 guestPlaylistManager
+  - 註冊使用者模式：使用 API + playlistStore
+  - 實作 detectGuestPlaylist() 方法（登入時檢測 localStorage）
+  - 實作 promptMigration() 方法（顯示匯入對話框）
+  - 測試訪客/註冊使用者切換
+  - _Requirements: 需求 33.1, 需求 34.1-34.2_
 
----
-
-### 8. 實作播放清單隨機播放邏輯
-
-**目標**：在 `musicPlayerStore` 實作 Fisher-Yates 隨機演算法。
-
-**實作步驟**：
-1. 建立 `shuffleQueue` 內部狀態：
-   ```typescript
-   shuffleQueue: number[] | null; // 隨機播放時的索引佇列
-   ```
-2. 實作 `generateShuffleQueue` 輔助函數：
-   ```typescript
-   function generateShuffleQueue(length: number, currentIndex: number): number[] {
-     // Fisher-Yates shuffle
-     // 確保當前索引不在第一位
-   }
-   ```
-3. 修改 `toggleShuffle` action：
-   - 開啟隨機播放時生成 `shuffleQueue`
-   - 關閉隨機播放時清空 `shuffleQueue`
-4. 修改 `next/previous` action，根據 `shuffleEnabled` 使用不同的索引邏輯
-5. 新增單元測試驗證隨機播放的唯一性和均勻分布
-
-_Requirements: 4.3 (隨機播放功能)_
+- [ ] 4.5 實作 AI 生成配額狀態管理
+  - 修改 `src/lib/stores/rhythmEditorStore.ts`
+  - 新增狀態：aiQuota { limit: 20, used: number, remaining: number, resetAt: string }
+  - 新增 Actions: fetchQuota(), generateRhythm(prompt: string)
+  - 實作配額檢查邏輯（used >= limit 時停用生成按鈕）
+  - 整合後端 API：POST /api/v1/music/generate-rhythm
+  - 顯示載入狀態和錯誤訊息
+  - 測試配額更新
+  - _Requirements: 需求 23.11-23.13_
 
 ---
 
-## 🎨 Phase 3: UI Components - Drawer (Main Player)
+## Part 5: 前端 UI 組件 - 播放器（Frontend UI - Music Player）
 
-- [x] Task 9: 安裝並設定 shadcn/ui Drawer 元件
-- [x] Task 10: 實作 MusicPlayerDrawer 佈局結構
-- [x] Task 11: 實作 PlaybackControls 播放控制元件
-- [x] Task 12: 實作 MusicModeSelector 音樂模式選擇器
-- [x] Task 13: 實作 ProgressBar 播放進度條元件
-- [x] Task 14: 實作 VolumeControl 音量控制元件
-- [x] Task 15: 實作 MusicVisualizer 音樂視覺化元件
-- [x] Task 16: 整合 MusicPlayerDrawer 所有子元件
+- [ ] 5.1 實作 MusicPlayerDrawer 主播放器
+  - 建立 `src/components/music-player/MusicPlayerDrawer.tsx`
+  - 使用 shadcn/ui Drawer 組件
+  - 實作 Pip-Boy 綠色主題樣式（#00ff88、Cubic 11 字體）
+  - 實作 CRT 掃描線效果（CSS overlay）
+  - 高度：60% 螢幕高度，可拖曳調整（30%-90%）
+  - 包含子組件：PlaybackControls, CurrentTrackInfo, ProgressBar, VolumeControl, PlaylistButton
+  - 實作拖曳最小化為浮動控制條
+  - 測試 Drawer 開啟/關閉動畫
+  - _Requirements: 需求 4.1-4.13_
 
-### 9. 安裝並設定 shadcn/ui Drawer 元件
+- [ ] 5.2 實作 PlaylistSheet 播放清單彈窗
+  - 建立 `src/components/music-player/PlaylistSheet.tsx`
+  - 使用 shadcn/ui Sheet 組件
+  - 從右側滑入，寬度：行動 90%，桌面 400px
+  - 包含子組件：PublicSongsBrowser, GuestPlaylistManager, UserPlaylistManager
+  - 實作 Pip-Boy 風格樣式
+  - 實作半透明黑色背景遮罩（rgba(0,0,0,0.8)）
+  - 測試 Sheet 開啟/關閉
+  - _Requirements: 需求 12.1-12.14_
 
-**目標**：使用 shadcn CLI 安裝 Drawer 元件並進行基礎設定。
+- [ ] 5.3 實作 PublicSongsBrowser 公開歌曲瀏覽器
+  - 建立 `src/components/music-player/PublicSongsBrowser.tsx`
+  - 呼叫 API：GET /api/v1/music/presets/public
+  - 顯示系統預設歌曲區塊（SystemPresetsSection）
+  - 顯示公開使用者創作區塊（PublicPresetsSection）
+  - 實作搜尋輸入框（debounced search）
+  - 實作排序下拉選單（created_at_desc | name_asc 等）
+  - 實作分頁控制（PaginationControls）
+  - 顯示創作者名稱
+  - 測試搜尋、排序、分頁功能
+  - _Requirements: 需求 31.1-31.7_
 
-**實作步驟**：
-1. 執行指令安裝 Drawer：
-   ```bash
-   npx shadcn@latest add drawer
-   ```
-2. 確認生成的檔案：`/src/components/ui/drawer.tsx`
-3. 檢查 `vaul` 依賴已正確安裝 (`package.json`)
-4. 建立基礎包裝元件 `/src/components/music-player/MusicPlayerDrawer.tsx`：
-   ```tsx
-   import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+- [ ] 5.4 實作 GuestPlaylistManager 訪客播放清單管理
+  - 建立 `src/components/music-player/GuestPlaylistManager.tsx`
+  - 整合 guestPlaylistManager
+  - 顯示標題：「訪客播放清單（{count}/4 首）」
+  - 顯示歌曲列表（PatternList）
+  - 實作「加入播放清單」按鈕
+  - 已滿時顯示警告：「播放清單已滿（上限 4 首），<link>立即註冊</link>以解除限制」
+  - 顯示資料清除警告提示
+  - 測試加入/移除歌曲
+  - _Requirements: 需求 33.4-33.8_
 
-   export function MusicPlayerDrawer() {
-     return (
-       <Drawer>
-         <DrawerTrigger>Open Player</DrawerTrigger>
-         <DrawerContent>
-           {/* 待實作 */}
-         </DrawerContent>
-       </Drawer>
-     );
-   }
-   ```
-5. 新增 Playwright E2E 測試驗證 Drawer 可正常開啟和關閉
+- [ ] 5.5 實作 PlaybackControls 播放控制組件
+  - 建立 `src/components/music-player/PlaybackControls.tsx`
+  - 按鈕：PlayPause, Previous, Next, Shuffle, Repeat
+  - 使用 PixelIcon 圖示（不使用 lucide-react）
+  - 整合 RhythmAudioSynthesizer 控制
+  - 實作隨機播放邏輯（randomPattern()）
+  - 實作循環模式：單曲循環、列表循環、不循環
+  - 播放狀態變更時播放 pip-boy-beep 音效
+  - 測試播放控制
+  - _Requirements: 需求 2.1-2.9, 需求 30.3-30.5_
 
-_Requirements: 5.1, 5.2 (Drawer 元件使用、底部滑出介面)_
+- [ ] 5.6 實作 CurrentTrackInfo 當前曲目資訊
+  - 建立 `src/components/music-player/CurrentTrackInfo.tsx`
+  - 顯示 Pattern 名稱（大字體）
+  - 顯示 Pattern 描述
+  - 顯示播放清單名稱
+  - 使用 Pip-Boy 綠色主題
+  - 測試資訊顯示
+  - _Requirements: 需求 4.13, 需求 30.9_
 
----
+- [ ] 5.7 實作 ProgressBar 播放進度條
+  - 建立 `src/components/music-player/ProgressBar.tsx`
+  - 顯示當前步驟進度（1-16 步驟）
+  - 顯示當前循環進度（1-4 循環）
+  - 使用 Pip-Boy 綠色進度條
+  - 即時更新進度
+  - 測試進度顯示
+  - _Requirements: 需求 4.13_
 
-### 10. 實作 MusicPlayerDrawer 佈局結構
-
-**目標**：建立 Drawer 的完整 UI 佈局，包含縮小模式和展開模式。
-
-**實作步驟**：
-1. 定義 Drawer 高度狀態：
-   ```typescript
-   const [drawerHeight, setDrawerHeight] = useState<'minimized' | 'normal' | 'expanded'>('normal');
-   // minimized: 80px, normal: 60%, expanded: 90%
-   ```
-2. 建立三層結構：
-   - **縮小模式 (80px)**：當前音樂模式名稱 + 播放/暫停按鈕 + 展開按鈕
-   - **正常模式 (60%)**：完整播放控制 + 播放清單按鈕 + 視覺化區域
-   - **展開模式 (90%)**：額外顯示歌詞區域（未來擴充）
-3. 使用 `motion.div` 實作平滑高度過渡動畫
-4. 整合 `useMusicPlayer` Hook 取得播放狀態
-5. 新增拖曳手勢支援 (vaul 內建功能)
-
-_Requirements: 5.2, 5.3, 5.4, 7.1, 7.3 (Drawer 佈局、高度調整、拖曳手勢、響應式設計)_
-
----
-
-### 11. 實作 PlaybackControls 播放控制元件
-
-**目標**：建立播放控制按鈕群組 `/src/components/music-player/PlaybackControls.tsx`。
-
-**實作步驟**：
-1. 定義元件 Props：
-   ```typescript
-   interface PlaybackControlsProps {
-     isPlaying: boolean;
-     onPlay: () => void;
-     onPause: () => void;
-     onNext: () => void;
-     onPrevious: () => void;
-     onToggleShuffle: () => void;
-     onToggleRepeat: () => void;
-     shuffleEnabled: boolean;
-     repeatMode: RepeatMode;
-   }
-   ```
-2. 使用 `lucide-react` 圖示：
-   - Play/Pause: `Play` / `Pause`
-   - Next/Previous: `SkipForward` / `SkipBack`
-   - Shuffle: `Shuffle` (啟用時改變顏色)
-   - Repeat: `Repeat` / `Repeat1` (根據 repeatMode 切換)
-3. 整合 `useAudioEffect` Hook 播放 UI 音效 ('button-click')
-4. 新增鍵盤快捷鍵支援：
-   - Space: 播放/暫停
-   - Arrow Left/Right: 上一首/下一首
-5. 使用 `React.memo` 優化效能
-6. 新增單元測試驗證按鈕點擊和鍵盤事件
-
-_Requirements: 1.1, 1.2, 1.3, 4.2, 4.3, 8.1 (播放控制、重複/隨機播放、鍵盤快捷鍵)_
+- [ ] 5.8 整合現有 VolumeControl 組件
+  - 修改 `src/components/audio/VolumeControl.tsx`
+  - 整合到 MusicPlayerDrawer
+  - 確保 audioStore.music 音量控制正常
+  - 使用 Pip-Boy 風格樣式（綠色滑桿）
+  - 測試音量調整
+  - _Requirements: 需求 5.1-5.8_
 
 ---
 
-### 12. 實作 MusicModeSelector 音樂模式選擇器
+## Part 6: 前端 UI 組件 - 節奏編輯器（Frontend UI - Rhythm Editor）
 
-**目標**：建立音樂模式選擇 UI `/src/components/music-player/MusicModeSelector.tsx`。
+- [ ] 6.1 實作 RhythmGrid 16 步驟網格組件
+  - 建立 `src/components/music-player/RhythmGrid.tsx`
+  - 顯示 5 × 16 網格（Kick, Snare, HiHat, OpenHat, Clap）
+  - 實作步驟格子切換（toggleStep）
+  - 啟用狀態：Pip-Boy 綠色（#00ff88），停用：深灰色
+  - 每 4 步驟顯示視覺分隔線
+  - 實作播放頭高亮（脈衝動畫）
+  - 響應式佈局：桌面完整網格，手機橫向捲動
+  - 測試網格互動
+  - _Requirements: 需求 21.1-21.9_
 
-**實作步驟**：
-1. 顯示 4 個音樂模式按鈕：
-   ```typescript
-   const MODES: { id: MusicMode; label: string; icon: string }[] = [
-     { id: 'synthwave', label: 'Synthwave', icon: '🎹' },
-     { id: 'divination', label: '占卜', icon: '🔮' },
-     { id: 'lofi', label: 'Lo-fi', icon: '🎧' },
-     { id: 'ambient', label: 'Ambient', icon: '🌊' },
-   ];
-   ```
-2. 當前播放模式高亮顯示 (Pip-Boy 綠色邊框)
-3. 點擊模式按鈕時：
-   - 調用 `playMode(mode)`
-   - 播放切換音效 ('ui-hover')
-   - 顯示載入動畫 (< 500ms)
-4. 使用 `AnimatePresence` 實作模式切換動畫
-5. 新增單元測試驗證模式選擇邏輯
+- [ ] 6.2 實作 InstrumentTrackRow 樂器軌道組件
+  - 建立 `src/components/music-player/InstrumentTrackRow.tsx`
+  - 顯示軌道標籤（Kick, Snare, HiHat, OpenHat, Clap）
+  - 顯示 16 個步驟按鈕（StepButton）
+  - 實作點擊切換步驟狀態
+  - 整合 rhythmEditorStore.toggleStep()
+  - 測試軌道互動
+  - _Requirements: 需求 21.2-21.7_
 
-_Requirements: 2.1, 2.2, 9.2, 11.1 (音樂模式切換、視覺反饋、Fallout Pip-Boy 風格)_
+- [ ] 6.3 實作 RhythmEditorControls 編輯器控制
+  - 建立 `src/components/music-player/RhythmEditorControls.tsx`
+  - 按鈕：Play/Pause（切換）、Stop、Clear
+  - 實作 Tempo 滑桿（60-180 BPM，預設 120）
+  - 顯示當前 BPM 數值
+  - Clear 按鈕顯示確認對話框
+  - 使用 PixelIcon 圖示
+  - 整合 rhythmEditorStore
+  - 測試控制功能
+  - _Requirements: 需求 22.1-22.9_
 
----
+- [ ] 6.4 實作 SavePresetDialog 儲存對話框
+  - 建立 `src/components/music-player/SavePresetDialog.tsx`
+  - 輸入欄位：名稱（最多 50 字元，必填）
+  - 輸入欄位：描述（最多 200 字元，可選）
+  - 勾選框：公開分享（預設未勾選）
+  - 說明文字：「勾選後其他使用者（含訪客）可以查看並使用此節奏」
+  - 驗證輸入
+  - 呼叫 API：POST /api/v1/music/presets
+  - 顯示成功訊息：「已儲存為公開歌曲」或「已儲存為私密歌曲」
+  - 測試儲存流程
+  - _Requirements: 需求 32.1-32.8_
 
-### 13. 實作 ProgressBar 播放進度條元件
+- [ ] 6.5 實作 PresetManager Preset 管理區塊
+  - 建立 `src/components/music-player/PresetManager.tsx`
+  - 顯示 5 個系統預設按鈕（Techno, House, Trap, Breakbeat, Minimal）
+  - 顯示使用者自訂 Preset 列表（捲動）
+  - 實作點擊載入 Preset
+  - 實作刪除按鈕（顯示確認對話框）
+  - 限制數量：最多 10 個使用者 Preset
+  - 啟用狀態：綠色背景填滿
+  - 測試 Preset 載入/刪除
+  - _Requirements: 需求 24.1-24.11_
 
-**目標**：建立進度條 UI `/src/components/music-player/ProgressBar.tsx`（僅視覺效果，無實際時間軸）。
-
-**實作步驟**：
-1. 由於 ProceduralMusicEngine 是程序生成音樂（無固定長度），進度條顯示循環動畫
-2. 使用 `motion.div` 實作循環進度動畫：
-   ```tsx
-   <motion.div
-     className="h-1 bg-pip-boy-green"
-     animate={{ width: ['0%', '100%'] }}
-     transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
-   />
-   ```
-3. 當音樂暫停時停止動畫
-4. 進度條可點擊但不支援拖曳（因為無時間軸）
-5. 新增 Storybook story 展示不同狀態
-
-_Requirements: 5.3, 11.1 (播放進度視覺化、Pip-Boy 風格)_
-
----
-
-### 14. 實作 VolumeControl 音量控制元件
-
-**目標**：建立音量滑桿 UI `/src/components/music-player/VolumeControl.tsx`。
-
-**實作步驟**：
-1. 使用 shadcn/ui `Slider` 元件
-2. 整合 `audioStore` 的 `volumes.music` 和 `setVolume` action
-3. 新增靜音按鈕 (lucide-react `Volume2` / `VolumeX`)
-4. 實作音量變化時的視覺反饋動畫
-5. 確保音量調整即時同步到 `ProceduralMusicEngine.setVolume()`
-6. 新增單元測試驗證音量同步邏輯
-
-_Requirements: 4.1, 9.2 (音量控制、視覺反饋)_
-
----
-
-### 15. 實作 MusicVisualizer 音樂視覺化元件
-
-**目標**：建立簡易音訊視覺化 `/src/components/music-player/MusicVisualizer.tsx`。
-
-**實作步驟**：
-1. 使用 Web Audio API 的 `AnalyserNode` 取得頻率數據
-2. 實作 Canvas 繪製頻譜圖：
-   ```typescript
-   function drawVisualizer(dataArray: Uint8Array, canvas: HTMLCanvasElement) {
-     // 繪製 16 個柱狀圖，高度對應頻率強度
-   }
-   ```
-3. 使用 `requestAnimationFrame` 更新動畫 (60 FPS)
-4. 當音樂暫停時顯示靜態波形圖
-5. 記憶體優化：元件卸載時清理 AnalyserNode
-6. 新增效能測試驗證 FPS ≥ 30
-
-_Requirements: 9.1, 9.3, 9.4, 11.1 (音訊視覺化、效能優化、Pip-Boy 風格)_
+- [ ] 6.6 實作 AIGenerationPanel AI 生成面板
+  - 建立 `src/components/music-player/AIGenerationPanel.tsx`
+  - 文字輸入框（最多 200 字元）
+  - 快速關鍵字按鈕：808 Cowbell, Glitch, Jazz Fusion, Afrobeat, Lo-Fi, Stadium Rock, Ambient
+  - 點擊關鍵字自動填入輸入框
+  - 生成按鈕：整合 rhythmEditorStore.generateRhythm()
+  - 顯示載入動畫：Pip-Boy 風格旋轉圖示 + "GENERATING RHYTHM..." 文字
+  - 顯示配額：「15/20 remaining」
+  - 配額用盡時停用按鈕並顯示「今日配額已用完（20/20），明日重置」
+  - 測試 AI 生成流程
+  - _Requirements: 需求 23.1-23.13_
 
 ---
 
-### 16. 整合 MusicPlayerDrawer 所有子元件
+## Part 7: 前端頁面整合（Frontend Page Integration）
 
-**目標**：組裝所有子元件到 `MusicPlayerDrawer` 主元件。
+- [ ] 7.1 建立 /dashboard/rhythm-editor 頁面
+  - 建立 `src/app/dashboard/rhythm-editor/page.tsx`
+  - 整合 RhythmGrid, RhythmEditorControls, PresetManager, AIGenerationPanel
+  - 實作路由保護（檢查 Supabase session）
+  - 未登入時重導向至 /login
+  - 使用 Fallout Pip-Boy 美學（Cubic 11 字體、#00ff88、CRT 效果）
+  - 響應式佈局（桌面/手機）
+  - 測試頁面載入和路由保護
+  - _Requirements: 需求 20.1-20.8_
 
-**實作步驟**：
-1. 在 `MusicPlayerDrawer` 中引入所有子元件：
-   - `PlaybackControls`
-   - `MusicModeSelector`
-   - `ProgressBar`
-   - `VolumeControl`
-   - `MusicVisualizer`
-2. 建立響應式佈局：
-   - 桌面版 (≥768px)：左右分欄，左側控制區，右側視覺化區
-   - 行動版 (<768px)：垂直堆疊
-3. 整合 `useMusicPlayer` 和 `usePlaylistStore` Hooks
-4. 新增播放清單按鈕，點擊時開啟 Sheet
-5. 新增 Playwright E2E 測試驗證完整互動流程
+- [ ] 7.2 整合音樂播放器與全域狀態
+  - 修改 `src/components/layout/Header.tsx` 或 `src/components/layout/Footer.tsx`
+  - 新增浮動播放器觸發按鈕（右下角固定位置）
+  - 整合 MusicPlayerDrawer
+  - 確保播放器在所有頁面可存取
+  - 測試跨頁面播放持續性
+  - _Requirements: 需求 4.2, 需求 11.4_
 
-_Requirements: 5.1, 5.2, 5.3, 7.1, 7.2, 7.3 (Drawer 完整功能、響應式設計)_
+- [ ] 7.3 實作 GuestPlaylistMigrationDialog 匯入對話框
+  - 建立 `src/components/music-player/GuestPlaylistMigrationDialog.tsx`
+  - 首次登入時檢測 localStorage.guest_playlist
+  - 顯示提示：「你在訪客模式時建立了包含 {count} 首歌曲的播放清單，是否要將這些歌曲匯入到你的帳號中?」
+  - 按鈕：「匯入到我的帳號」、「跳過」
+  - 呼叫 API：POST /api/v1/playlists/import-guest
+  - 成功後清除 localStorage
+  - 顯示成功訊息：「✓ 已成功匯入 {count} 首歌曲到『訪客播放清單（已匯入）』」
+  - 測試匯入流程
+  - _Requirements: 需求 34.1-34.8_
 
----
+- [ ] 7.4 整合錯誤處理與 Toast 提示
+  - 安裝/配置 shadcn/ui Toast 組件
+  - 建立 `src/components/music-player/ErrorToast.tsx`
+  - 實作錯誤訊息顯示（API 失敗、配額用盡、localStorage 已滿等）
+  - 使用 Pip-Boy 綠色主題
+  - 測試各種錯誤情境
+  - _Requirements: 需求 10.1-10.8_
 
-## 📜 Phase 4: UI Components - Sheet (Playlist)
+- [ ] 7.5 實作鍵盤快捷鍵支援
+  - 修改 `src/components/music-player/MusicPlayerDrawer.tsx`
+  - 空白鍵：播放/暫停
+  - 左方向鍵：上一首
+  - 右方向鍵：下一首
+  - M 鍵：靜音
+  - Esc 鍵：收合播放器
+  - 僅在播放器獲得焦點時生效
+  - Tab 鍵導航顯示綠色外框焦點指示
+  - 測試鍵盤操作
+  - _Requirements: 需求 7.1-7.8_
 
-- [x] Task 17: 安裝並設定 shadcn/ui Sheet 元件
-- [x] Task 18: 實作 PlaylistList 播放清單列表元件
-- [x] Task 19: 實作 PlaylistEditor 播放清單編輯器
-- [x] Task 20: 實作 ModeReorderList 模式重新排序元件
-- [x] Task 21: 實作 PlaylistSheet 完整功能
+- [ ] 7.6 實作無障礙支援（ARIA 標籤）
+  - 修改所有音樂播放器組件
+  - 播放器主容器：role="region" aria-label="音樂播放器"
+  - 播放按鈕：aria-label="播放" / "暫停"（根據狀態）
+  - 步驟格子：aria-label="Kick 步驟 1"
+  - Tempo 滑桿：role="slider" aria-valuenow aria-valuemin="60" aria-valuemax="180"
+  - 播放狀態變更：aria-live="polite"
+  - prefers-reduced-motion：停用所有動畫
+  - 測試螢幕閱讀器支援
+  - _Requirements: 需求 9.1-9.8, 需求 27.4-27.7_
 
-### 17. 安裝並設定 shadcn/ui Sheet 元件
-
-**目標**：使用 shadcn CLI 安裝 Sheet 元件並進行基礎設定。
-
-**實作步驟**：
-1. 執行指令安裝 Sheet：
-   ```bash
-   npx shadcn@latest add sheet
-   ```
-2. 確認生成的檔案：`/src/components/ui/sheet.tsx`
-3. 檢查 `@radix-ui/react-dialog` 依賴已正確安裝
-4. 建立基礎包裝元件 `/src/components/music-player/PlaylistSheet.tsx`：
-   ```tsx
-   import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-
-   export function PlaylistSheet() {
-     return (
-       <Sheet>
-         <SheetTrigger>Open Playlist</SheetTrigger>
-         <SheetContent side="right">
-           <SheetHeader>
-             <SheetTitle>播放清單</SheetTitle>
-           </SheetHeader>
-           {/* 待實作 */}
-         </SheetContent>
-       </Sheet>
-     );
-   }
-   ```
-5. 設定 Sheet 寬度：桌面版 400px，行動版 90vw
-
-_Requirements: 5.5, 5.6 (Sheet 元件使用、右側滑出介面)_
-
----
-
-### 18. 實作 PlaylistList 播放清單列表元件
-
-**目標**：建立播放清單列表 UI `/src/components/music-player/PlaylistList.tsx`。
-
-**實作步驟**：
-1. 從 `playlistStore` 取得所有播放清單
-2. 顯示播放清單卡片，每個卡片包含：
-   - 播放清單名稱
-   - 音樂模式數量 (例: "4 首")
-   - 建立時間 (相對時間，例: "2 天前")
-   - 播放按鈕 (Play icon)
-   - 編輯按鈕 (Pencil icon)
-   - 刪除按鈕 (Trash icon)
-3. 當前播放的播放清單高亮顯示
-4. 點擊播放按鈕時：
-   - 調用 `musicPlayerStore.loadPlaylist(playlistId)`
-   - 自動開始播放第一首
-5. 使用 `AnimatePresence` 實作列表新增/刪除動畫
-6. 新增單元測試驗證 CRUD 操作
-
-_Requirements: 3.1, 3.2, 3.3, 5.6 (播放清單列表、CRUD 操作、Sheet 內容)_
+- [ ] 7.7 移除自動場景音樂系統
+  - 修改 `src/lib/audio/MusicGenerator.ts` 或相關檔案
+  - 移除/註解 SCENE_MUSIC_MAP 和自動播放邏輯
+  - 確保頁面切換時不自動播放音樂
+  - 移除 audioStore 初始化時的自動播放
+  - 首次訪問網站時 isPlaying.music = false
+  - 測試頁面切換不自動播放
+  - _Requirements: 需求 11.1-11.8_
 
 ---
 
-### 19. 實作 PlaylistEditor 播放清單編輯器
+## Part 8: 測試（Testing）
 
-**目標**：建立播放清單編輯表單 `/src/components/music-player/PlaylistEditor.tsx`。
+- [ ] 8.1 後端 API 單元測試
+  - 建立 `backend/tests/music/test_presets_api.py`
+  - 測試 POST /api/v1/music/presets（建立 Preset）
+  - 測試 GET /api/v1/music/presets/public（訪客存取）
+  - 測試 PUT /api/v1/music/presets/{id}（更新 Preset）
+  - 測試 DELETE /api/v1/music/presets/{id}（刪除 Preset，禁止刪除系統預設）
+  - 測試 JWT Token 驗證
+  - 測試錯誤情境（401, 403, 404）
+  - _Requirements: 需求 26.6-26.11_
 
-**實作步驟**：
-1. 使用 `react-hook-form` 處理表單驗證
-2. 表單欄位：
-   - 播放清單名稱 (input, 1-50 字元)
-   - 音樂模式選擇器 (multi-select checkboxes)
-3. 模式列表可拖曳排序 (使用 `@dnd-kit/core`)
-4. 驗證規則：
-   - 名稱不可為空
-   - 至少選擇 1 個音樂模式
-   - 最多 20 個音樂模式
-5. 儲存時調用 `playlistStore.createPlaylist()` 或 `updatePlaylist()`
-6. 新增錯誤提示 UI (使用 shadcn/ui `Alert`)
-7. 新增單元測試驗證表單驗證邏輯
+- [ ] 8.2 後端 Playlist API 單元測試
+  - 建立 `backend/tests/music/test_playlists_api.py`
+  - 測試 POST /api/v1/playlists（建立播放清單）
+  - 測試 POST /api/v1/playlists/{id}/patterns（加入 Pattern）
+  - 測試 PUT /api/v1/playlists/{id}/patterns/{pid}/position（調整順序）
+  - 測試 DELETE /api/v1/playlists/{id}（CASCADE 刪除）
+  - 測試擁有權驗證（user_id 匹配）
+  - 測試 UNIQUE 約束
+  - _Requirements: 需求 28.1-28.7_
 
-_Requirements: 3.1, 3.2, 3.4, 6.3 (播放清單建立、模式選擇、重新排序)_
+- [ ] 8.3 後端 AI 生成 API 單元測試
+  - 建立 `backend/tests/music/test_ai_generation.py`
+  - 測試 POST /api/v1/music/generate-rhythm（成功生成）
+  - 測試配額檢查（20 次上限）
+  - 測試配額用盡錯誤（400 Bad Request）
+  - 測試 AI Provider 失敗處理（500 Internal Server Error）
+  - 測試配額重置邏輯（pg_cron）
+  - _Requirements: 需求 26.1-26.5_
 
----
+- [ ] 8.4 前端組件單元測試
+  - 建立 `src/components/music-player/__tests__/RhythmGrid.test.tsx`
+  - 測試步驟格子切換
+  - 測試播放頭高亮
+  - 測試響應式佈局
+  - 建立 `src/components/music-player/__tests__/PlaybackControls.test.tsx`
+  - 測試播放/暫停/停止控制
+  - 測試隨機播放和循環模式
+  - _Requirements: 需求 21.3, 需求 2.1-2.7_
 
-### 20. 實作 ModeReorderList 模式重新排序元件
+- [ ] 8.5 localStorage 測試
+  - 建立 `src/lib/localStorage/__tests__/guestPlaylistManager.test.ts`
+  - 測試 addPattern()（成功/已滿情況）
+  - 測試 removePattern()
+  - 測試 isFull()（>= 4 首）
+  - 測試 exportForMigration()
+  - 測試 localStorage 資料結構
+  - 測試 JSON 解析錯誤處理
+  - _Requirements: 需求 33.1-33.5_
 
-**目標**：建立可拖曳排序的音樂模式列表 `/src/components/music-player/ModeReorderList.tsx`。
+- [ ] 8.6 RLS Policy 測試
+  - 建立 `backend/tests/rls/test_presets_policies.py`
+  - 測試訪客可見 is_system_preset = true
+  - 測試訪客可見 is_public = true
+  - 測試訪客無法見 is_public = false（私密歌曲）
+  - 測試註冊使用者可見自己的私密歌曲
+  - 測試禁止刪除系統預設
+  - _Requirements: 需求 31.1-31.3, 需求 29.5_
 
-**實作步驟**：
-1. 安裝 `@dnd-kit/core` 和 `@dnd-kit/sortable`
-2. 實作拖曳排序邏輯：
-   ```tsx
-   import { DndContext, closestCenter } from '@dnd-kit/core';
-   import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+- [ ] 8.7 E2E 測試（播放流程）
+  - 建立 `tests/e2e/music-player.spec.ts`
+  - 測試訪客瀏覽公開歌曲並加入播放清單
+  - 測試訪客播放清單上限（4 首）
+  - 測試註冊使用者建立播放清單並播放
+  - 測試播放控制（播放/暫停/上一首/下一首）
+  - 測試 Pattern 循環播放（4 次循環後切歌）
+  - _Requirements: 需求 30.1-30.5_
 
-   function ModeReorderList({ modes, onReorder }: Props) {
-     const handleDragEnd = (event: DragEndEvent) => {
-       const { active, over } = event;
-       if (active.id !== over.id) {
-         onReorder(oldIndex, newIndex);
-       }
-     };
-     // ...
-   }
-   ```
-3. 每個模式項目顯示：
-   - 拖曳手柄 (GripVertical icon)
-   - 音樂模式圖示和名稱
-   - 刪除按鈕
-4. 整合 `playlistStore.reorderPlaylistModes()`
-5. 新增單元測試驗證排序邏輯
+- [ ] 8.8 E2E 測試（編輯器流程）
+  - 建立 `tests/e2e/rhythm-editor.spec.ts`
+  - 測試路由保護（未登入重導向）
+  - 測試建立節奏 Pattern（點擊步驟格子）
+  - 測試儲存 Preset（公開/私密）
+  - 測試 AI 生成節奏（配額管理）
+  - 測試載入系統預設 Preset
+  - 測試刪除使用者 Preset
+  - _Requirements: 需求 20.2, 需求 21.3, 需求 23.4, 需求 24.2_
 
-_Requirements: 3.4 (模式重新排序)_
-
----
-
-### 21. 實作 PlaylistSheet 完整功能
-
-**目標**：組裝所有子元件到 `PlaylistSheet` 主元件。
-
-**實作步驟**：
-1. 整合 `PlaylistList` 和 `PlaylistEditor` 元件
-2. 實作兩種模式切換：
-   - 列表模式 (預設)
-   - 編輯模式 (點擊 "新增播放清單" 或 "編輯" 按鈕時)
-3. 新增搜尋框過濾播放清單 (使用 `useDeferredValue` 優化效能)
-4. 新增空狀態提示 (無播放清單時)
-5. 整合 `usePlaylistStore` Hook
-6. 新增 Playwright E2E 測試驗證完整播放清單管理流程
-
-_Requirements: 3.1, 3.2, 3.3, 3.4, 5.5, 5.6, 7.1, 7.2 (播放清單管理、Sheet 完整功能、響應式設計)_
-
----
-
-## 🔗 Phase 5: Integration & Data Persistence
-
-- [x] Task 22: 實作 localStorage 持久化邏輯
-- [x] Task 23: 實作音樂播放器初始化邏輯
-- [x] Task 24: 整合 MusicPlayerDrawer 到全域佈局
-- [x] Task 25: 實作 Drawer 與 Sheet 的協調邏輯
-
-### 22. 實作 localStorage 持久化邏輯
-
-**目標**：確保所有狀態正確持久化到 localStorage。
-
-**實作步驟**：
-1. 驗證 `musicPlayerStore` 的 persist 配置：
-   ```typescript
-   persist(
-     (set, get) => ({ /* state */ }),
-     {
-       name: 'wasteland-tarot-music-player',
-       partialize: (state) => ({
-         repeatMode: state.repeatMode,
-         shuffleEnabled: state.shuffleEnabled,
-         currentPlaylist: state.currentPlaylist,
-         currentModeIndex: state.currentModeIndex,
-       }),
-     }
-   )
-   ```
-2. 驗證 `playlistStore` 的 persist 配置：
-   ```typescript
-   persist(
-     (set, get) => ({ /* state */ }),
-     {
-       name: 'wasteland-tarot-playlists',
-       partialize: (state) => ({
-         playlists: state.playlists,
-       }),
-     }
-   )
-   ```
-3. 實作錯誤處理：當 localStorage 配額超限時顯示警告
-4. 新增 Playwright E2E 測試驗證重新整理後狀態恢復
-
-_Requirements: 6.1, 6.2, 6.3 (localStorage 持久化、重新整理恢復)_
+- [ ] 8.9 E2E 測試（訪客轉註冊流程）
+  - 建立 `tests/e2e/guest-migration.spec.ts`
+  - 測試訪客建立播放清單（localStorage）
+  - 測試註冊後顯示匯入對話框
+  - 測試匯入播放清單到資料庫
+  - 測試 localStorage 清除
+  - 測試跳過匯入流程
+  - _Requirements: 需求 34.1-34.8_
 
 ---
 
-### 23. 實作音樂播放器初始化邏輯
+## 任務依賴關係圖
 
-**目標**：在應用啟動時自動恢復音樂播放器狀態。
+```mermaid
+flowchart TD
+    T1_1[Task 1.1: user_rhythm_presets 表]
+    T1_2[Task 1.2: playlists 表]
+    T1_3[Task 1.3: playlist_patterns 表]
+    T1_4[Task 1.4: RLS Policies]
+    T1_5[Task 1.5: Seed 系統預設]
+    T1_6[Task 1.6: Supabase 配置]
 
-**實作步驟**：
-1. 建立 `useMusicPlayerInitializer` Hook `/src/hooks/useMusicPlayerInitializer.ts`
-2. 在 Hook 中執行初始化流程：
-   ```typescript
-   useEffect(() => {
-     const init = async () => {
-       try {
-         // 1. 從 localStorage 恢復狀態
-         const savedState = localStorage.getItem('wasteland-tarot-music-player');
+    T2_1[Task 2.1: Pattern CRUD API]
+    T2_2[Task 2.2: 公開歌曲 API]
+    T2_3[Task 2.3: 批次查詢 API]
+    T2_4[Task 2.4: Playlist CRUD API]
+    T2_5[Task 2.5: Playlist Pattern API]
+    T2_6[Task 2.6: 訪客匯入 API]
+    T2_7[Task 2.7: AI 生成 API]
+    T2_8[Task 2.8: 配額查詢 API]
 
-         // 2. 如果有儲存的播放清單，載入它
-         if (savedState?.currentPlaylist) {
-           await musicPlayerStore.loadPlaylist(savedState.currentPlaylist);
-         }
+    T3_1[Task 3.1: RhythmAudioSynthesizer]
+    T3_2[Task 3.2: Pattern 播放邏輯]
+    T3_3[Task 3.3: 播放控制方法]
+    T3_4[Task 3.4: EditorAudioSynthesizer]
+    T3_5[Task 3.5: 循環切換邏輯]
 
-         // 3. 初始化 ProceduralMusicEngine
-         await audioEngine.initialize();
+    T4_1[Task 4.1: playlistStore]
+    T4_2[Task 4.2: rhythmEditorStore]
+    T4_3[Task 4.3: localStorage 管理]
+    T4_4[Task 4.4: 訪客/註冊同步]
+    T4_5[Task 4.5: AI 配額狀態]
 
-         // 4. 標記初始化完成
-         musicPlayerStore.setInitialized(true);
-       } catch (error) {
-         ErrorHandler.handleError(error);
-       }
-     };
-     init();
-   }, []);
-   ```
-3. 在 `/src/app/layout.tsx` 中引入此 Hook
-4. 新增單元測試驗證初始化流程
+    T5_1[Task 5.1: MusicPlayerDrawer]
+    T5_2[Task 5.2: PlaylistSheet]
+    T5_3[Task 5.3: PublicSongsBrowser]
+    T5_4[Task 5.4: GuestPlaylistManager]
+    T5_5[Task 5.5: PlaybackControls]
+    T5_6[Task 5.6: CurrentTrackInfo]
+    T5_7[Task 5.7: ProgressBar]
+    T5_8[Task 5.8: VolumeControl]
 
-_Requirements: 6.1, 6.2 (應用啟動時恢復狀態)_
+    T6_1[Task 6.1: RhythmGrid]
+    T6_2[Task 6.2: InstrumentTrackRow]
+    T6_3[Task 6.3: RhythmEditorControls]
+    T6_4[Task 6.4: SavePresetDialog]
+    T6_5[Task 6.5: PresetManager]
+    T6_6[Task 6.6: AIGenerationPanel]
 
----
+    T7_1[Task 7.1: /dashboard/rhythm-editor]
+    T7_2[Task 7.2: 全域播放器整合]
+    T7_3[Task 7.3: GuestMigrationDialog]
+    T7_4[Task 7.4: 錯誤處理 Toast]
+    T7_5[Task 7.5: 鍵盤快捷鍵]
+    T7_6[Task 7.6: 無障礙支援]
+    T7_7[Task 7.7: 移除自動音樂]
 
-### 24. 整合 MusicPlayerDrawer 到全域佈局
+    T8_1[Task 8.1: 後端 API 測試]
+    T8_2[Task 8.2: Playlist API 測試]
+    T8_3[Task 8.3: AI API 測試]
+    T8_4[Task 8.4: 前端組件測試]
+    T8_5[Task 8.5: localStorage 測試]
+    T8_6[Task 8.6: RLS Policy 測試]
+    T8_7[Task 8.7: E2E 播放流程]
+    T8_8[Task 8.8: E2E 編輯器流程]
+    T8_9[Task 8.9: E2E 訪客轉換]
 
-**目標**：將 Drawer 放置在全域佈局中，所有頁面可存取。
+    %% Part 1 依賴
+    T1_1 --> T1_3
+    T1_2 --> T1_3
+    T1_1 --> T1_4
+    T1_1 --> T1_5
+    T1_6 --> T1_1
+    T1_6 --> T1_2
 
-**實作步驟**：
-1. 在 `/src/app/layout.tsx` 新增 `MusicPlayerDrawer` 元件：
-   ```tsx
-   export default function RootLayout({ children }: Props) {
-     return (
-       <html>
-         <body>
-           <MusicPlayerInitializer />
-           {children}
-           <MusicPlayerDrawer />
-         </body>
-       </html>
-     );
-   }
-   ```
-2. 新增浮動觸發按鈕 (固定在右下角)：
-   - 顯示當前播放狀態 (播放中/暫停)
-   - 點擊時開啟 Drawer
-3. 使用 CSS `position: fixed` 確保 Drawer 不受頁面滾動影響
-4. 新增 Playwright E2E 測試驗證全域存取
+    %% Part 2 依賴
+    T1_1 --> T2_1
+    T1_1 --> T2_2
+    T1_1 --> T2_3
+    T1_2 --> T2_4
+    T1_3 --> T2_5
+    T1_2 --> T2_6
+    T1_1 --> T2_7
+    T1_1 --> T2_8
 
-_Requirements: 5.1, 5.2, 7.1 (Drawer 全域存取)_
+    %% Part 3 獨立（可並行）
+    T3_1 --> T3_2
+    T3_2 --> T3_3
+    T3_2 --> T3_5
 
----
+    %% Part 4 依賴後端 API
+    T2_4 --> T4_1
+    T2_1 --> T4_2
+    T4_3 --> T4_4
+    T2_7 --> T4_5
 
-### 25. 實作 Drawer 與 Sheet 的協調邏輯
+    %% Part 5 依賴狀態管理
+    T4_1 --> T5_1
+    T4_1 --> T5_2
+    T2_2 --> T5_3
+    T4_3 --> T5_4
+    T3_3 --> T5_5
+    T4_1 --> T5_6
+    T3_3 --> T5_7
 
-**目標**：確保 Drawer 和 Sheet 的開啟/關閉狀態正確協調。
+    %% Part 6 依賴狀態管理
+    T4_2 --> T6_1
+    T4_2 --> T6_2
+    T4_2 --> T6_3
+    T2_1 --> T6_4
+    T2_1 --> T6_5
+    T4_5 --> T6_6
 
-**實作步驟**：
-1. 在 `musicPlayerStore` 實作狀態協調邏輯：
-   ```typescript
-   openSheet: () => set({ isSheetOpen: true, isDrawerMinimized: true }),
-   closeSheet: () => set({ isSheetOpen: false }),
-   ```
-2. 當 Sheet 開啟時，自動最小化 Drawer (避免視覺衝突)
-3. 當 Sheet 關閉時，Drawer 恢復原始高度
-4. 實作 `useMediaQuery` Hook 偵測桌面/行動裝置，行動裝置開啟 Sheet 時關閉 Drawer
-5. 新增 Playwright E2E 測試驗證協調邏輯
+    %% Part 7 依賴 UI 組件
+    T6_1 --> T7_1
+    T6_3 --> T7_1
+    T6_5 --> T7_1
+    T6_6 --> T7_1
+    T5_1 --> T7_2
+    T4_4 --> T7_3
 
-_Requirements: 5.1, 5.5, 7.1, 7.2 (Drawer 與 Sheet 協調)_
+    %% Part 8 測試依賴實作
+    T2_1 --> T8_1
+    T2_4 --> T8_2
+    T2_7 --> T8_3
+    T6_1 --> T8_4
+    T4_3 --> T8_5
+    T1_4 --> T8_6
+    T5_5 --> T8_7
+    T7_1 --> T8_8
+    T7_3 --> T8_9
 
----
+    style T1_1 fill:#0055aa
+    style T1_2 fill:#0055aa
+    style T1_3 fill:#0055aa
+    style T1_4 fill:#0055aa
+    style T1_5 fill:#0055aa
+    style T1_6 fill:#0055aa
 
-## ⌨️ Phase 6: Accessibility & Keyboard Support
+    style T2_1 fill:#ff8800
+    style T2_2 fill:#ff8800
+    style T2_3 fill:#ff8800
+    style T2_4 fill:#ff8800
+    style T2_5 fill:#ff8800
+    style T2_6 fill:#ff8800
+    style T2_7 fill:#ff8800
+    style T2_8 fill:#ff8800
 
-- [x] Task 26: 實作鍵盤快捷鍵系統
-- [x] Task 27: 實作 ARIA 無障礙屬性
-- [x] Task 28: 實作焦點管理邏輯
+    style T3_1 fill:#00ff88
+    style T3_2 fill:#00ff88
+    style T3_3 fill:#00ff88
+    style T3_4 fill:#00ff88
+    style T3_5 fill:#00ff88
 
-### 26. 實作鍵盤快捷鍵系統
+    style T4_1 fill:#00ff41
+    style T4_2 fill:#00ff41
+    style T4_3 fill:#00ff41
+    style T4_4 fill:#00ff41
+    style T4_5 fill:#00ff41
 
-**目標**：建立全域鍵盤快捷鍵 Hook `/src/hooks/useKeyboardShortcuts.ts`。
+    style T5_1 fill:#c8e6c9
+    style T5_2 fill:#c8e6c9
+    style T5_3 fill:#c8e6c9
+    style T5_4 fill:#c8e6c9
+    style T5_5 fill:#c8e6c9
 
-**實作步驟**：
-1. 定義快捷鍵映射：
-   ```typescript
-   const SHORTCUTS = {
-     'Space': 'toggle-play',           // 播放/暫停
-     'ArrowRight': 'next',              // 下一首
-     'ArrowLeft': 'previous',           // 上一首
-     'KeyM': 'toggle-mute',             // 靜音
-     'KeyS': 'toggle-shuffle',          // 隨機播放
-     'KeyR': 'cycle-repeat',            // 循環重複模式
-     'KeyP': 'open-playlist',           // 開啟播放清單
-     'Escape': 'close-all',             // 關閉所有彈出視窗
-   } as const;
-   ```
-2. 使用 `useEffect` 監聽 `keydown` 事件
-3. 實作快捷鍵衝突處理：當輸入框 focus 時停用快捷鍵
-4. 新增快捷鍵提示 UI (按下 `?` 時顯示)
-5. 新增 Playwright E2E 測試驗證所有快捷鍵
+    style T6_1 fill:#e1f5fe
+    style T6_2 fill:#e1f5fe
+    style T6_3 fill:#e1f5fe
+    style T6_4 fill:#e1f5fe
 
-_Requirements: 8.1, 8.2 (鍵盤快捷鍵、快捷鍵提示)_
-
----
-
-### 27. 實作 ARIA 無障礙屬性
-
-**目標**：為所有音樂播放器元件新增完整的 ARIA 屬性。
-
-**實作步驟**：
-1. 為 `MusicPlayerDrawer` 新增 ARIA 屬性：
-   ```tsx
-   <Drawer
-     aria-label="音樂播放器"
-     role="region"
-     aria-live="polite"
-   >
-   ```
-2. 為播放按鈕新增 ARIA 標籤：
-   ```tsx
-   <button
-     aria-label={isPlaying ? '暫停' : '播放'}
-     aria-pressed={isPlaying}
-   >
-   ```
-3. 為音量滑桿新增 ARIA 屬性：
-   ```tsx
-   <Slider
-     aria-label="音量控制"
-     aria-valuemin={0}
-     aria-valuemax={100}
-     aria-valuenow={volume}
-   />
-   ```
-4. 為播放清單新增 ARIA 屬性：
-   ```tsx
-   <ul role="list" aria-label="播放清單">
-     <li role="listitem">...</li>
-   </ul>
-   ```
-5. 使用 `axe-core` 進行無障礙測試
-
-_Requirements: 8.3 (螢幕閱讀器支援)_
-
----
-
-### 28. 實作焦點管理邏輯
-
-**目標**：確保鍵盤導航時的焦點順序合理。
-
-**實作步驟**：
-1. 使用 `useFocusTrap` Hook 限制焦點在 Drawer/Sheet 內
-2. 當 Drawer 開啟時，自動將焦點移到第一個可互動元素
-3. 當 Sheet 開啟時，自動將焦點移到搜尋框
-4. 按下 Escape 時關閉彈出視窗並恢復焦點到觸發元素
-5. 新增 Playwright E2E 測試驗證焦點順序
-
-_Requirements: 8.3 (鍵盤導航焦點管理)_
-
----
-
-## 🎯 Phase 7: Error Handling & Edge Cases
-
-- [x] Task 29: 實作音訊載入失敗處理
-- [x] Task 30: 實作 localStorage 配額超限處理
-- [x] Task 31: 實作播放清單損壞恢復邏輯
-
-### 29. 實作音訊載入失敗處理
-
-**目標**：當 ProceduralMusicEngine 初始化失敗時顯示錯誤 UI。
-
-**實作步驟**：
-1. 在 `musicPlayerStore.playMode()` 包裝錯誤處理：
-   ```typescript
-   playMode: async (mode: MusicMode) => {
-     try {
-       await ErrorHandler.retry(
-         () => audioEngine.start(mode),
-         { maxRetries: 3, backoff: 'exponential' }
-       );
-     } catch (error) {
-       set({ error: new MusicPlayerError(...) });
-       // 顯示 Toast 錯誤提示
-     }
-   },
-   ```
-2. 建立 `ErrorToast` 元件顯示錯誤訊息
-3. 實作重試按鈕，允許用戶手動重試
-4. 當錯誤率超過 30% 時停用音樂播放器並顯示警告
-5. 新增單元測試模擬音訊載入失敗場景
-
-_Requirements: 10.1, 10.2, 10.3 (錯誤處理、重試機制、錯誤率監控)_
+    style T8_1 fill:#ffdd00
+    style T8_7 fill:#ffdd00
+    style T8_8 fill:#ffdd00
+    style T8_9 fill:#ffdd00
+```
 
 ---
 
-### 30. 實作 localStorage 配額超限處理
+## 注意事項
 
-**目標**：當 localStorage 寫入失敗時清理舊資料。
+1. **並行開發策略**：
+   - Part 1（資料庫）必須優先完成，作為所有功能的基礎
+   - Part 2（後端 API）和 Part 3（音訊核心）可並行開發
+   - Part 4（狀態管理）依賴 Part 2，但可與 Part 3 並行
+   - Part 5 和 Part 6（UI 組件）可並行開發，分別對應播放器和編輯器
+   - Part 7（頁面整合）需等待 Part 5 和 Part 6 完成
+   - Part 8（測試）可在各功能完成後立即進行
 
-**實作步驟**：
-1. 在 `playlistStore` 包裝 `createPlaylist` 錯誤處理：
-   ```typescript
-   createPlaylist: (name, modes) => {
-     try {
-       const playlist = { id: uuid(), name, modes, ... };
-       set({ playlists: [...get().playlists, playlist] });
-     } catch (error) {
-       if (error.name === 'QuotaExceededError') {
-         // 清理最舊的播放清單
-         const sorted = get().playlists.sort((a, b) => a.createdAt - b.createdAt);
-         set({ playlists: sorted.slice(1) });
-         // 重試
-         return this.createPlaylist(name, modes);
-       }
-       throw new MusicPlayerError(MusicPlayerErrorType.STORAGE_WRITE_FAILED, ...);
-     }
-   },
-   ```
-2. 顯示 Toast 提示用戶配額超限
-3. 實作手動清理功能 (設定頁面)
-4. 新增單元測試模擬配額超限場景
+2. **圖示系統**：
+   - **絕對禁止使用 lucide-react**
+   - 全站統一使用 `<PixelIcon>` 元件（`@/components/ui/icons`）
+   - 查看可用圖示：訪問 `/icon-showcase` 頁面
 
-_Requirements: 10.1, 10.3 (localStorage 錯誤處理)_
+3. **字體系統**：
+   - 使用 Cubic 11 字體（已全域配置）
+   - 組件自動繼承，無需手動指定 `font-cubic`
 
----
+4. **測試策略**：
+   - 每個 Part 完成後立即進行單元測試
+   - E2E 測試在完整功能整合後執行
+   - RLS Policy 測試優先確保資料安全
 
-### 31. 實作播放清單損壞恢復邏輯
-
-**目標**：當 localStorage 資料格式錯誤時自動修復或清空。
-
-**實作步驟**：
-1. 在 `playlistStore` 初始化時驗證資料格式：
-   ```typescript
-   const validatePlaylists = (playlists: unknown): Playlist[] => {
-     if (!Array.isArray(playlists)) return [];
-     return playlists.filter((p) => {
-       return (
-         typeof p.id === 'string' &&
-         typeof p.name === 'string' &&
-         Array.isArray(p.modes) &&
-         p.modes.every((m) => MUSIC_MODES.includes(m))
-       );
-     });
-   };
-   ```
-2. 當驗證失敗時：
-   - 記錄錯誤到 ErrorHandler
-   - 清空損壞的播放清單
-   - 顯示 Toast 提示用戶資料已重置
-3. 新增單元測試模擬損壞的 localStorage 資料
-
-_Requirements: 10.1, 10.4 (播放清單損壞恢復)_
+5. **錯誤處理**：
+   - 所有 API 呼叫必須包含錯誤處理
+   - localStorage 操作必須處理 JSON 解析錯誤
+   - AI 生成失敗必須提供重試機制
 
 ---
 
-## 🧪 Phase 8: Testing & Quality Assurance
+**任務總數**：64 個任務
+**預估完成時間**：約 96-128 小時（1-3 小時/任務）
+**建議並行開發數**：2-3 個 agent 同時工作於不同 Part
 
-- [x] Task 32: 撰寫單元測試 (Unit Tests)
-- [x] Task 33: 撰寫整合測試 (Integration Tests)
-- [x] Task 34: 撰寫 E2E 測試 (End-to-End Tests)
-- [x] Task 35: 效能測試與優化
-
-### 32. 撰寫單元測試 (Unit Tests)
-
-**目標**：為所有核心邏輯撰寫單元測試，覆蓋率 ≥ 80%。
-
-**實作步驟**：
-1. 測試 `musicPlayerStore` 所有 actions：
-   - `playMode`, `pause`, `resume`, `next`, `previous`
-   - `setRepeatMode`, `toggleShuffle`
-   - `openDrawer`, `closeDrawer`, `minimizeDrawer`
-2. 測試 `playlistStore` CRUD 操作：
-   - `createPlaylist`, `updatePlaylist`, `deletePlaylist`
-   - `reorderPlaylistModes`
-3. 測試 `ErrorHandler` 重試邏輯和錯誤率計算
-4. 測試 `validatePlaylist` 輸入驗證
-5. 使用 Vitest 執行測試，產生覆蓋率報告
-
-_Requirements: 12.1, 12.2 (單元測試、測試覆蓋率)_
-
----
-
-### 33. 撰寫整合測試 (Integration Tests)
-
-**目標**：測試 UI 元件與 store 的整合邏輯。
-
-**實作步驟**：
-1. 測試 `MusicPlayerDrawer` 整合：
-   - 點擊播放按鈕時調用 `musicPlayerStore.playMode()`
-   - 拖曳 Drawer 時高度正確更新
-   - 音量滑桿調整時同步到 `audioStore`
-2. 測試 `PlaylistSheet` 整合：
-   - 建立播放清單時調用 `playlistStore.createPlaylist()`
-   - 編輯播放清單時調用 `playlistStore.updatePlaylist()`
-   - 刪除播放清單時調用 `playlistStore.deletePlaylist()`
-3. 測試鍵盤快捷鍵整合
-4. 使用 Vitest + Testing Library 執行測試
-
-_Requirements: 12.1, 12.3 (整合測試)_
-
----
-
-### 34. 撰寫 E2E 測試 (End-to-End Tests)
-
-**目標**：使用 Playwright 撰寫 3 個關鍵 E2E 流程測試。
-
-**實作步驟**：
-1. **E2E Flow 1: 播放音樂完整流程**
-   ```typescript
-   test('播放音樂完整流程', async ({ page }) => {
-     await page.goto('/');
-     await page.click('[aria-label="開啟音樂播放器"]');
-     await page.click('button:has-text("Synthwave")');
-     await expect(page.locator('[aria-label="暫停"]')).toBeVisible();
-     await page.click('[aria-label="下一首"]');
-     await expect(page.locator('text=Divination')).toBeVisible();
-   });
-   ```
-2. **E2E Flow 2: 播放清單管理流程**
-   ```typescript
-   test('播放清單管理流程', async ({ page }) => {
-     await page.goto('/');
-     await page.click('[aria-label="開啟播放清單"]');
-     await page.click('button:has-text("新增播放清單")');
-     await page.fill('input[name="name"]', 'My Playlist');
-     await page.check('label:has-text("Synthwave")');
-     await page.check('label:has-text("Lo-fi")');
-     await page.click('button:has-text("儲存")');
-     await expect(page.locator('text=My Playlist')).toBeVisible();
-   });
-   ```
-3. **E2E Flow 3: 狀態持久化流程**
-   ```typescript
-   test('狀態持久化流程', async ({ page }) => {
-     await page.goto('/');
-     await page.click('[aria-label="開啟音樂播放器"]');
-     await page.click('button:has-text("Synthwave")');
-     await page.reload();
-     await expect(page.locator('text=Synthwave')).toBeVisible();
-   });
-   ```
-4. 新增視覺回歸測試 (Playwright screenshots)
-
-_Requirements: 12.1, 12.4 (E2E 測試、視覺回歸測試)_
-
----
-
-### 35. 效能測試與優化
-
-**目標**：驗證效能指標並進行必要優化。
-
-**實作步驟**：
-1. 測試音樂切換延遲 (目標: < 500ms)：
-   ```typescript
-   test('音樂切換延遲', async () => {
-     const start = performance.now();
-     await musicPlayerStore.playMode('synthwave');
-     const end = performance.now();
-     expect(end - start).toBeLessThan(500);
-   });
-   ```
-2. 測試 UI 渲染效能 (目標: < 100ms)：
-   - 使用 React Profiler 測量組件渲染時間
-   - 優化使用 `React.memo`, `useMemo`, `useCallback`
-3. 測試記憶體使用 (目標: ≤ 50MB)：
-   - 使用 Chrome DevTools Memory Profiler
-   - 確保 `AnalyserNode` 和 `AudioContext` 正確清理
-4. 測試 FPS (目標: ≥ 30)：
-   - 使用 Playwright 測量視覺化元件的 FPS
-5. 產生效能報告
-
-_Requirements: 9.1, 9.2, 9.3, 9.4, 9.5 (效能目標驗證)_
-
----
-
-## 📊 任務完成檢查清單
-
-完成所有 35 個任務後，請驗證以下檢查項目：
-
-### 功能完整性
-- [ ] 音樂播放、暫停、上一首、下一首功能正常
-- [ ] 4 種音樂模式可正常切換，支援無縫淡入淡出
-- [ ] 播放清單 CRUD 功能完整 (建立、編輯、刪除、重新排序)
-- [ ] 重複播放模式 (關閉/單曲/全部) 正常運作
-- [ ] 隨機播放功能正常運作
-- [ ] 音量控制和靜音功能正常
-- [ ] Drawer 可正常開啟、關閉、最小化、拖曳
-- [ ] Sheet 可正常開啟、關閉
-- [ ] 桌面版和行動版響應式佈局正確
-- [ ] 鍵盤快捷鍵全部可用
-- [ ] ARIA 無障礙屬性完整
-
-### 資料持久化
-- [ ] 播放清單儲存到 localStorage
-- [ ] 播放器狀態 (重複模式、隨機播放) 儲存到 localStorage
-- [ ] 重新整理後狀態正確恢復
-- [ ] localStorage 配額超限時自動清理
-
-### 錯誤處理
-- [ ] 音訊載入失敗時顯示錯誤提示並支援重試
-- [ ] localStorage 寫入失敗時顯示錯誤提示
-- [ ] 播放清單損壞時自動修復或清空
-- [ ] 錯誤率超過 30% 時停用音樂播放器
-
-### 效能指標
-- [ ] 音樂切換延遲 < 500ms
-- [ ] UI 渲染時間 < 100ms
-- [ ] 記憶體使用 ≤ 50MB
-- [ ] 視覺化元件 FPS ≥ 30
-
-### 測試覆蓋率
-- [ ] 單元測試覆蓋率 ≥ 80%
-- [ ] 整合測試涵蓋所有關鍵互動
-- [ ] E2E 測試涵蓋 3 個關鍵流程
-- [ ] 所有測試通過
-
-### 程式碼品質
-- [ ] 所有 TypeScript 型別定義完整
-- [ ] 所有元件使用 `React.memo` 優化
-- [ ] 所有 Hook 使用 `useMemo` 和 `useCallback` 優化
-- [ ] 無 ESLint 錯誤和警告
-- [ ] 程式碼符合專案風格指南 (Fallout Pip-Boy 風格)
-
----
-
-## 📝 附註
-
-1. **任務順序**: 本文件的任務已按技術依賴排序，建議按順序執行
-2. **時間估計**: 每個任務預計 1-3 小時，實際時間可能因實作細節而異
-3. **測試優先**: 高風險區域 (H) 優先撰寫測試，確保穩定性
-4. **效能監控**: 在實作過程中持續監控效能指標，避免最後才發現問題
-5. **文件更新**: 實作完成後更新 `spec.json` 的 `tasks.approved` 和 `ready_for_implementation` 欄位
-
----
-
-**生成時間**: 2025-01-10T17:00:00Z
-**需求版本**: v1.2
-**設計版本**: v1.0
-**任務版本**: v1.0
+**文檔版本**：4.0
+**建立日期**：2025-10-13
+**語言**：繁體中文（zh-TW）
+**對應需求版本**：requirements.md v4.0
+**對應設計版本**：design.md v4.0

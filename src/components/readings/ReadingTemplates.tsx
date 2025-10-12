@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useCallback } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
-import { Plus, Edit2, Trash2, Save, X, BookOpen, Calendar, Clock, Target, Heart, Briefcase, Star, Zap } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface ReadingTemplate {
   id: string
@@ -197,7 +197,7 @@ export function ReadingTemplates() {
           className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green text-sm
                    hover:border-pip-boy-green/60 flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
+          < PixelIcon name="plus" className="w-4 h-4" />
           新增模板
         </button>
       </div>
@@ -333,7 +333,7 @@ export function ReadingTemplates() {
               className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
                        hover:border-pip-boy-green/60 flex items-center gap-2"
             >
-              <X className="w-4 h-4" />
+              < PixelIcon name="x" className="w-4 h-4" />
               取消
             </button>
             <button
@@ -342,7 +342,7 @@ export function ReadingTemplates() {
               className="px-4 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
                        hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
+              < PixelIcon name="save" className="w-4 h-4" />
               保存
             </button>
           </div>
@@ -384,13 +384,13 @@ export function ReadingTemplates() {
                       onClick={(e) => { e.stopPropagation(); startEdit(template) }}
                       className="p-1 text-pip-boy-green/60 hover:text-pip-boy-green"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      < PixelIcon name="edit-2" className="w-4 h-4" />
                     </button>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleDelete(template) }}
                       className="p-1 text-pip-boy-green/60 hover:text-red-400"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      < PixelIcon name="trash-2" className="w-4 h-4" />
                     </button>
                   </div>
                 )}
@@ -424,7 +424,7 @@ export function ReadingTemplates() {
                       className="w-full px-3 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green
                                text-sm hover:bg-pip-boy-green/20 flex items-center justify-center gap-2"
                     >
-                      <BookOpen className="w-4 h-4" />
+                      < PixelIcon name="book-open" className="w-4 h-4" />
                       使用此模板
                     </button>
                   </div>
@@ -433,7 +433,7 @@ export function ReadingTemplates() {
 
               {usageCount > 0 && (
                 <div className="flex items-center gap-1 text-pip-boy-green/60 text-xs">
-                  <Star className="w-3 h-3" />
+                  < PixelIcon name="star" className="w-3 h-3" />
                   已使用 {usageCount} 次
                 </div>
               )}
@@ -444,7 +444,7 @@ export function ReadingTemplates() {
 
       {templates.length === 0 && (
         <div className="text-center py-12 border-2 border-pip-boy-green/30">
-          <BookOpen className="w-12 h-12 mx-auto mb-4 text-pip-boy-green/40" />
+          < PixelIcon name="book-open" className="w-12 h-12 mx-auto mb-4 text-pip-boy-green/40" />
           <div className="text-lg font-bold text-pip-boy-green/70 mb-2">尚無模板</div>
           <div className="text-sm text-pip-boy-green/50 mb-4">建立你的第一個占卜模板</div>
           <button
@@ -452,7 +452,7 @@ export function ReadingTemplates() {
             className="px-4 py-2 border border-pip-boy-green/30 text-pip-boy-green text-sm
                      hover:border-pip-boy-green/60 flex items-center gap-2 mx-auto"
           >
-            <Plus className="w-4 h-4" />
+            < PixelIcon name="plus" className="w-4 h-4" />
             新增模板
           </button>
         </div>

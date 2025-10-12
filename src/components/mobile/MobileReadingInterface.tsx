@@ -2,13 +2,9 @@
 
 import React, { useState, useCallback, useRef, useEffect } from 'react'
 import { animated, useSpring, useTransition } from '@react-spring/web'
-import {
-  X, ArrowLeft, ArrowRight, MoreVertical, Share2, Bookmark,
-  ZoomIn, ZoomOut, RotateCw, Home, ChevronUp, ChevronDown,
-  Volume2, VolumeX, Mic, MicOff
-} from 'lucide-react'
 import { MobileTarotCard } from './MobileTarotCard'
 import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface TarotCard {
   id: number
@@ -234,7 +230,7 @@ export function MobileReadingInterface({
             className="p-2 text-pip-boy-green hover:bg-pip-boy-green/20 rounded-full transition-colors"
             aria-label="關閉閱讀"
           >
-            <X className="w-6 h-6" />
+            <PixelIcon iconName="close" size={24} />
           </button>
 
           <div className="flex items-center gap-2">
@@ -251,7 +247,7 @@ export function MobileReadingInterface({
             className="p-2 text-pip-boy-green hover:bg-pip-boy-green/20 rounded-full transition-colors"
             aria-label="選單"
           >
-            <MoreVertical className="w-6 h-6" />
+            <PixelIcon iconName="menu" size={24} />
           </button>
         </div>
 
@@ -370,7 +366,7 @@ export function MobileReadingInterface({
                         onClick={() => speakText(reading.interpretation)}
                         className="flex items-center gap-2 px-4 py-2 bg-pip-boy-green text-wasteland-dark rounded-lg"
                       >
-                        <Volume2 className="w-4 h-4" />
+                        <PixelIcon iconName="volume" size={16} decorative />
                         朗讀解讀
                       </button>
                     ) : (
@@ -378,7 +374,7 @@ export function MobileReadingInterface({
                         onClick={stopSpeaking}
                         className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg"
                       >
-                        <VolumeX className="w-4 h-4" />
+                        <PixelIcon iconName="volume-x" size={16} decorative />
                         停止朗讀
                       </button>
                     )}
@@ -409,7 +405,7 @@ export function MobileReadingInterface({
             `}
             aria-label="上一張"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <PixelIcon iconName="arrow-left" size={24} />
           </button>
 
           {/* Card indicator dots */}
@@ -443,7 +439,7 @@ export function MobileReadingInterface({
             `}
             aria-label="下一張"
           >
-            <ArrowRight className="w-6 h-6" />
+            <PixelIcon iconName="arrow-right" size={24} />
           </button>
         </div>
 
@@ -466,8 +462,9 @@ export function MobileReadingInterface({
             <button
               onClick={() => setShowMenu(false)}
               className="p-2 text-pip-boy-green hover:bg-pip-boy-green/20 rounded-full"
+              aria-label="關閉選單"
             >
-              <X className="w-5 h-5" />
+              <PixelIcon iconName="close" size={20} />
             </button>
           </div>
 
@@ -480,7 +477,7 @@ export function MobileReadingInterface({
                 }}
                 className="w-full flex items-center gap-3 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg transition-colors"
               >
-                <Share2 className="w-5 h-5" />
+                <PixelIcon iconName="share" size={20} decorative />
                 分享閱讀
               </button>
             )}
@@ -493,7 +490,7 @@ export function MobileReadingInterface({
                 }}
                 className="w-full flex items-center gap-3 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg transition-colors"
               >
-                <Bookmark className="w-5 h-5" />
+                <PixelIcon iconName="bookmark" size={20} decorative />
                 儲存閱讀
               </button>
             )}
@@ -502,7 +499,7 @@ export function MobileReadingInterface({
               onClick={() => setShowNotes(!showNotes)}
               className="w-full flex items-center gap-3 p-3 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg transition-colors"
             >
-              {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {isRecording ? <PixelIcon iconName="microphone-off" size={20} decorative /> : <PixelIcon iconName="microphone" size={20} decorative />}
               {showNotes ? '隱藏筆記' : '顯示筆記'}
             </button>
 
@@ -530,7 +527,7 @@ export function MobileReadingInterface({
                         }
                       `}
                     >
-                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                      {isRecording ? <PixelIcon iconName="microphone-off" size={16} decorative /> : <PixelIcon iconName="microphone" size={16} decorative />}
                       {isRecording ? '錄音中...' : '語音筆記'}
                     </button>
                   </div>

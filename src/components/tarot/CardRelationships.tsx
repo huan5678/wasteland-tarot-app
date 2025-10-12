@@ -7,15 +7,10 @@
 
 import React, { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Network, Zap, Heart, Sword, Coins, Star,
-  TrendingUp, TrendingDown, Minus, Plus,
-  Users, Target, Brain, Lightbulb,
-  ArrowRight, ArrowLeft, RotateCw,
-  ChevronUp, ChevronDown
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DetailedTarotCard } from './CardDetailModal'
+import { PixelIcon } from '@/components/ui/icons'
+import type { IconName } from '@/types/icons'
 
 export interface CardSynergy {
   id: string
@@ -61,20 +56,20 @@ export interface CardRelationshipsProps {
 
 // Suit mapping for icons and colors
 const SUIT_CONFIG = {
-  'MAJOR_ARCANA': { icon: Star, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-  'NUKA_COLA_BOTTLES': { icon: Heart, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  'COMBAT_WEAPONS': { icon: Sword, color: 'text-red-400', bg: 'bg-red-500/10' },
-  'BOTTLE_CAPS': { icon: Coins, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
-  'RADIATION_RODS': { icon: Zap, color: 'text-pip-boy-green', bg: 'bg-pip-boy-green/10' }
+  'MAJOR_ARCANA': { iconName: 'star' as IconName, color: 'text-purple-400', bg: 'bg-purple-500/10' },
+  'NUKA_COLA_BOTTLES': { iconName: 'heart' as IconName, color: 'text-blue-400', bg: 'bg-blue-500/10' },
+  'COMBAT_WEAPONS': { iconName: 'sword' as IconName, color: 'text-red-400', bg: 'bg-red-500/10' },
+  'BOTTLE_CAPS': { iconName: 'coin' as IconName, color: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  'RADIATION_RODS': { iconName: 'zap' as IconName, color: 'text-pip-boy-green', bg: 'bg-pip-boy-green/10' }
 }
 
-const getSynergyIcon = (type: CardSynergy['synergyType']) => {
+const getSynergyIcon = (type: CardSynergy['synergyType']): IconName => {
   switch (type) {
-    case 'complementary': return Plus
-    case 'conflicting': return Minus
-    case 'amplifying': return TrendingUp
-    case 'neutralizing': return TrendingDown
-    default: return Network
+    case 'complementary': return 'plus'
+    case 'conflicting': return 'minus'
+    case 'amplifying': return 'trending-up'
+    case 'neutralizing': return 'trending-down'
+    default: return 'share'
   }
 }
 
@@ -253,12 +248,12 @@ export function CardRelationships({
     <div className="space-y-4">
       {relevantSynergies.length === 0 ? (
         <div className="text-center py-8 text-pip-boy-green/60">
-          <Network className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <PixelIcon name="share" size={48} className="mx-auto mb-4 opacity-50" decorative />
           <p className="text-sm">暫無已知的卡片協同效應</p>
         </div>
       ) : (
         relevantSynergies.map((synergy) => {
-          const SynergyIcon = getSynergyIcon(synergy.synergyType)
+          const synergyIconName = getSynergyIcon(synergy.synergyType)
           const synergyColor = getSynergyColor(synergy.synergyType)
           const isExpanded = expandedSynergy === synergy.id
 
@@ -274,7 +269,7 @@ export function CardRelationships({
                 className="w-full p-4 flex items-center justify-between hover:bg-pip-boy-green/10 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <SynergyIcon className={cn("w-5 h-5", synergyColor)} />
+                  <PixelIcon iconName={synergyIconName} size={20} className={synergyColor} decorative />
                   <div className="text-left">
                     <div className="font-bold text-pip-boy-green capitalize">
                       {synergy.synergyType.replace('_', ' ')}
@@ -288,7 +283,7 @@ export function CardRelationships({
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown className="w-5 h-5 text-pip-boy-green/60" />
+                  <PixelIcon iconName="chevron-down" size={20} className="text-pip-boy-green/60" decorative />
                 </motion.div>
               </button>
 
@@ -311,7 +306,7 @@ export function CardRelationships({
                           <ul className="space-y-1">
                             {synergy.conditions.map((condition, idx) => (
                               <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
-                                <Target className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                                <PixelIcon iconName="target" size={12} className="mt-0.5 flex-shrink-0" decorative />
                                 <span>{condition}</span>
                               </li>
                             ))}
@@ -325,7 +320,7 @@ export function CardRelationships({
                           <ul className="space-y-1">
                             {synergy.effects.map((effect, idx) => (
                               <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
-                                <Lightbulb className="w-3 h-3 mt-0.5 flex-shrink-0 text-yellow-400" />
+                                <PixelIcon iconName="bulb" size={12} className="mt-0.5 flex-shrink-0 text-yellow-400" decorative />
                                 <span>{effect}</span>
                               </li>
                             ))}
@@ -347,14 +342,13 @@ export function CardRelationships({
     <div className="space-y-4">
       {cardConnections.length === 0 ? (
         <div className="text-center py-8 text-pip-boy-green/60">
-          <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <PixelIcon name="users" size={48} className="mx-auto mb-4 opacity-50" decorative />
           <p className="text-sm">暫無相關卡片連結</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {cardConnections.map((connection, index) => {
             const suitConfig = SUIT_CONFIG[connection.suit as keyof typeof SUIT_CONFIG] || SUIT_CONFIG.MAJOR_ARCANA
-            const SuitIcon = suitConfig.icon
 
             return (
               <motion.div
@@ -371,12 +365,12 @@ export function CardRelationships({
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <SuitIcon className={cn("w-4 h-4", suitConfig.color)} />
+                    <PixelIcon iconName={suitConfig.iconName} size={16} className={suitConfig.color} decorative />
                     <span className={cn("font-bold text-sm", suitConfig.color)}>
                       {connection.name}
                     </span>
                   </div>
-                  <ArrowRight className={cn("w-4 h-4", suitConfig.color)} />
+                  <PixelIcon iconName="arrow-right" size={16} className={suitConfig.color} decorative />
                 </div>
 
                 <p className="text-pip-boy-green/80 text-xs mb-2">
@@ -415,7 +409,7 @@ export function CardRelationships({
       {elementalAssociations.length > 0 && (
         <div>
           <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-            <RotateCw className="w-5 h-5" />
+            <PixelIcon name="reload" size={24} decorative />
             元素關聯
           </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -459,7 +453,7 @@ export function CardRelationships({
       {numericalPatterns.length > 0 && (
         <div>
           <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-            <Brain className="w-5 h-5" />
+            <PixelIcon name="brain" size={24} decorative />
             數字規律
           </h4>
           <div className="space-y-3">
@@ -507,7 +501,7 @@ export function CardRelationships({
 
       {elementalAssociations.length === 0 && numericalPatterns.length === 0 && (
         <div className="text-center py-8 text-pip-boy-green/60">
-          <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <PixelIcon name="brain" size={48} className="mx-auto mb-4 opacity-50" decorative />
           <p className="text-sm">暫無發現的規律模式</p>
         </div>
       )}
@@ -519,9 +513,9 @@ export function CardRelationships({
       {/* Section Tabs */}
       <div className="flex bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg p-1">
         {[
-          { id: 'synergies', label: '協同效應', icon: Network },
-          { id: 'connections', label: '卡片連結', icon: Users },
-          { id: 'patterns', label: '規律模式', icon: Brain }
+          { id: 'synergies', label: '協同效應', iconName: 'share' as IconName },
+          { id: 'connections', label: '卡片連結', iconName: 'users' as IconName },
+          { id: 'patterns', label: '規律模式', iconName: 'brain' as IconName }
         ].map((section) => {
           const isActive = activeSection === section.id
           return (
@@ -537,7 +531,7 @@ export function CardRelationships({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <section.icon className="w-4 h-4" />
+              <PixelIcon iconName={section.iconName} size={16} decorative />
               <span>{section.label}</span>
             </motion.button>
           )

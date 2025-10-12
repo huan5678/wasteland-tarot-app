@@ -11,7 +11,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { ArrowRight, Repeat2 } from "lucide-react";
+import { PixelIcon } from "@/components/ui/icons/PixelIcon";
 import { useState } from "react";
 
 export interface CardFlipProps {
@@ -98,7 +98,7 @@ export default function CardFlip({
                                         "bg-gradient-to-br from-orange-500/20 via-orange-500/10 to-transparent"
                                     )}
                                 />
-                                <Repeat2 className="relative z-10 w-4 h-4 text-orange-500 transition-transform duration-300 group-hover/icon:scale-110 group-hover/icon:-rotate-12" />
+                                <PixelIcon name="repeat" size={16} className="relative z-10 text-orange-500 transition-transform duration-300 group-hover/icon:scale-110 group-hover/icon:-rotate-12" decorative />
                             </div>
                         </div>
                     </div>
@@ -144,7 +144,7 @@ export default function CardFlip({
                                         }ms`,
                                     }}
                                 >
-                                    <ArrowRight className="w-3 h-3 text-orange-500" />
+                                    <PixelIcon name="arrow-right" size={12} className="text-orange-500" decorative />
                                     <span>{feature}</span>
                                 </div>
                             ))}
@@ -176,7 +176,7 @@ export default function CardFlip({
                                         "opacity-0 group-hover/start:opacity-100 scale-90 group-hover/start:scale-100"
                                     )}
                                 />
-                                <ArrowRight className="relative z-10 w-4 h-4 text-orange-500 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" />
+                                <PixelIcon name="arrow-right" size={16} className="relative z-10 text-orange-500 transition-all duration-300 group-hover/start:translate-x-0.5 group-hover/start:scale-110" decorative />
                             </div>
                         </div>
                     </div>

@@ -1,7 +1,7 @@
 'use client'
 import React, { useMemo, useState } from 'react'
 import { useReadingsStore, ReadingStatistics } from '@/lib/readingsStore'
-import { BarChart3, TrendingUp, Calendar, Star, Hash, Spade, Target, Flame, Clock, Award } from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 export function ReadingStatsDashboard() {
   const { calculateStatistics, getReadingsByPeriod, readings, categories } = useReadingsStore()
@@ -136,7 +136,7 @@ export function ReadingStatsDashboard() {
             {stats.total_readings}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            <Spade className="w-4 h-4" />
+            < PixelIcon name="spade" className="w-4 h-4" />
             總占卜次數
           </div>
         </div>
@@ -146,7 +146,7 @@ export function ReadingStatsDashboard() {
             {stats.favorite_readings}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            <Star className="w-4 h-4" />
+            < PixelIcon name="star" className="w-4 h-4" />
             最愛占卜
           </div>
         </div>
@@ -156,7 +156,7 @@ export function ReadingStatsDashboard() {
             {stats.reading_streak}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            <Flame className="w-4 h-4" />
+            < PixelIcon name="flame" className="w-4 h-4" />
             連續天數
           </div>
         </div>
@@ -166,7 +166,7 @@ export function ReadingStatsDashboard() {
             {periodReadings.length}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            <TrendingUp className="w-4 h-4" />
+            < PixelIcon name="trending-up" className="w-4 h-4" />
             {selectedPeriod === 'week' ? '本週' : selectedPeriod === 'month' ? '本月' : '今年'}占卜
           </div>
         </div>
@@ -175,7 +175,7 @@ export function ReadingStatsDashboard() {
       {/* Insights Panel */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
         <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          <Target className="w-5 h-5" />
+          < PixelIcon name="target" className="w-5 h-5" />
           智能洞察
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -204,7 +204,7 @@ export function ReadingStatsDashboard() {
         {/* Spread Type Distribution */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            <BarChart3 className="w-5 h-5" />
+            < PixelIcon name="bar-chart-3" className="w-5 h-5" />
             牌陣使用分佈
           </h3>
           <div className="space-y-3">
@@ -228,7 +228,7 @@ export function ReadingStatsDashboard() {
         {/* Monthly Activity */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+            < PixelIcon name="calendar" className="w-5 h-5" />
             月度活躍度
           </h3>
           <div className="space-y-2">
@@ -260,7 +260,7 @@ export function ReadingStatsDashboard() {
         {/* Top Tags */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            <Hash className="w-5 h-5" />
+            < PixelIcon name="hash" className="w-5 h-5" />
             熱門標籤
           </h3>
           <div className="space-y-2">
@@ -285,7 +285,7 @@ export function ReadingStatsDashboard() {
         {/* Top Cards */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            <Award className="w-5 h-5" />
+            < PixelIcon name="award" className="w-5 h-5" />
             常見卡牌
           </h3>
           <div className="space-y-2">
@@ -311,7 +311,7 @@ export function ReadingStatsDashboard() {
       {/* Additional Stats */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
         <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          <Clock className="w-5 h-5" />
+          < PixelIcon name="clock" className="w-5 h-5" />
           其他統計
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">

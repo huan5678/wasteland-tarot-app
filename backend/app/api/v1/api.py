@@ -17,7 +17,10 @@ from app.api.v1.endpoints import (
     analytics,
     preferences,
     bingo,
-    sessions
+    sessions,
+    music,
+    playlists,
+    ai,
 )
 from app.api import oauth
 
@@ -95,6 +98,25 @@ api_router.include_router(
     sessions.router,
     prefix="/sessions",
     tags=["💾 Sessions"]
+)
+
+# Music system endpoints
+api_router.include_router(
+    music.router,
+    prefix="/music",
+    tags=["🎵 Music Tracks"]
+)
+
+api_router.include_router(
+    playlists.router,
+    prefix="/playlists",
+    tags=["📀 Playlists"]
+)
+
+api_router.include_router(
+    ai.router,
+    prefix="/ai",
+    tags=["🤖 AI Music Generation"]
 )
 
 api_router.include_router(

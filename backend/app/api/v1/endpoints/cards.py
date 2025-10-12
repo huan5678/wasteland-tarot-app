@@ -597,18 +597,18 @@ async def get_card_interpretation(
 
     Retrieve all cards from one of the five Wasteland Tarot suits:
 
-    - **Major Arcana**: 22 cards representing major life themes
-    - **Nuka-Cola Bottles**: Cups equivalent - emotions, relationships
-    - **Combat Weapons**: Swords equivalent - conflict, intellect
-    - **Bottle Caps**: Pentacles equivalent - material matters, resources
-    - **Radiation Rods**: Wands equivalent - energy, creativity, action
+    - **Major Arcana**: Use 'major' or 'major_arcana' - 22 cards representing major life themes
+    - **Nuka-Cola Bottles**: Use 'bottles' or 'nuka_cola_bottles' - emotions, relationships (Cups)
+    - **Combat Weapons**: Use 'weapons' or 'combat_weapons' - conflict, intellect (Swords)
+    - **Bottle Caps**: Use 'caps' or 'bottle_caps' - material matters, resources (Pentacles)
+    - **Radiation Rods**: Use 'rods' or 'radiation_rods' - energy, creativity, action (Wands)
 
-    Perfect for suit-specific studies and themed card collections.
+    Accepts both short route names (SEO-friendly) and full API enum values (backwards compatible).
     """,
     response_description="All cards from the specified suit"
 )
 async def get_cards_by_suit(
-    suit: WastelandSuit = Path(..., description="Suit to retrieve"),
+    suit: str = Path(..., description="Suit to retrieve (short name or full enum value)"),
     page: int = Query(default=1, ge=1, description="頁碼（從 1 開始）"),
     page_size: int = Query(default=8, ge=1, le=50, description="每頁卡牌數量（預設 8 張）"),
     sort_by: str = Query(default="number", description="Sort by: number, name, radiation_level"),
@@ -617,9 +617,29 @@ async def get_cards_by_suit(
 ) -> CardListResponse:
     """Get all cards from a specific suit with pagination (8 cards per page by default)."""
     try:
+        # Map short route names to full API enum values (for SEO-friendly URLs)
+        suit_mapping = {
+            'major': 'major_arcana',
+            'bottles': 'nuka_cola_bottles',
+            'weapons': 'combat_weapons',
+            'caps': 'bottle_caps',
+            'rods': 'radiation_rods',
+        }
+
+        # Convert short name to full enum value if needed (backwards compatible)
+        api_suit = suit_mapping.get(suit.lower(), suit)
+
+        # Validate that the suit exists
+        valid_suits = [s.value for s in WastelandSuit]
+        if api_suit not in valid_suits:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Invalid suit: {suit}. Valid values: {', '.join(list(suit_mapping.keys()) + valid_suits)}"
+            )
+
         # Base query
-        query = select(WastelandCardModel).where(WastelandCardModel.suit == suit.value)
-        count_query = select(func.count(WastelandCardModel.id)).where(WastelandCardModel.suit == suit.value)
+        query = select(WastelandCardModel).where(WastelandCardModel.suit == api_suit)
+        count_query = select(func.count(WastelandCardModel.id)).where(WastelandCardModel.suit == api_suit)
 
         # Apply sorting
         sort_column = getattr(WastelandCardModel, sort_by, WastelandCardModel.number)

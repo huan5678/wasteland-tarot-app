@@ -9,7 +9,7 @@
 'use client';
 
 import React, { useState, useMemo, useDeferredValue } from 'react';
-import { Plus, Search, X } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import {
   Sheet,
   SheetContent,
@@ -81,6 +81,24 @@ export function PlaylistSheet({
   // Requirements 7.2: 使用 useDeferredValue 優化搜尋效能
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
+  // ========== Controlled / Uncontrolled ==========
+  // 必須在 useFocusTrap 之前定義 isOpen
+  const isOpen = controlledOpen !== undefined ? controlledOpen : isSheetOpen;
+  const handleOpenChange = (open: boolean) => {
+    if (onOpenChange) {
+      onOpenChange(open);
+    } else {
+      open ? openSheet() : closeSheet();
+    }
+
+    // 關閉時重置模式和搜尋
+    if (!open) {
+      setMode('list');
+      setSearchQuery('');
+      setEditingPlaylistId(null);
+    }
+  };
+
   // ========== Focus Management ==========
   // Task 28: 焦點陷阱 - 當 Sheet 開啟時限制焦點在 Sheet 內
   const sheetContentRef = useFocusTrap<HTMLDivElement>({
@@ -106,23 +124,6 @@ export function PlaylistSheet({
       playlist.name.toLowerCase().includes(query)
     );
   }, [playlists, deferredSearchQuery]);
-
-  // ========== Controlled / Uncontrolled ==========
-  const isOpen = controlledOpen !== undefined ? controlledOpen : isSheetOpen;
-  const handleOpenChange = (open: boolean) => {
-    if (onOpenChange) {
-      onOpenChange(open);
-    } else {
-      open ? openSheet() : closeSheet();
-    }
-
-    // 關閉時重置模式和搜尋
-    if (!open) {
-      setMode('list');
-      setSearchQuery('');
-      setEditingPlaylistId(null);
-    }
-  };
 
   // ========== Handlers ==========
 
@@ -215,37 +216,18 @@ export function PlaylistSheet({
         aria-atomic="false"
         data-testid="playlist-sheet"
       >
-        {/* Header */}
+        {/* Header - 標題列 */}
         <SheetHeader className="border-b-2 border-pip-boy-green pb-4 flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="text-pip-boy-green text-xl">
-              {mode === 'list' && '播放清單'}
-              {mode === 'create' && '新增播放清單'}
-              {mode === 'edit' && '編輯播放清單'}
-            </SheetTitle>
-
-            {/* Action Button (List mode only) */}
-            {mode === 'list' && (
-              <button
-                onClick={handleCreateNew}
-                className={cn(
-                  'p-2 rounded transition-all duration-200',
-                  'border border-pip-boy-green/30',
-                  'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
-                  'focus:outline-none focus:ring-2 focus:ring-pip-boy-green'
-                )}
-                aria-label="新增播放清單"
-                data-testid="create-playlist-button"
-              >
-                <Plus className="w-5 h-5 text-pip-boy-green" />
-              </button>
-            )}
-          </div>
+          <SheetTitle className="text-pip-boy-green text-xl">
+            {mode === 'list' && '播放清單'}
+            {mode === 'create' && '新增播放清單'}
+            {mode === 'edit' && '編輯播放清單'}
+          </SheetTitle>
 
           {/* Search Bar (List mode only) */}
           {mode === 'list' && playlists.length > 0 && (
             <div className="relative mt-4">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pip-boy-green/50" />
+              <PixelIcon name="search" sizePreset="xs" className="absolute left-3 top-1/2 -translate-y-1/2 text-pip-boy-green/50" decorative />
               <input
                 type="text"
                 value={searchQuery}
@@ -267,15 +249,15 @@ export function PlaylistSheet({
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-pip-boy-green/50 hover:text-pip-boy-green"
                   aria-label="清除搜尋"
                 >
-                  <X className="w-4 h-4" />
+                  <PixelIcon name="close" sizePreset="xs" decorative />
                 </button>
               )}
             </div>
           )}
         </SheetHeader>
 
-        {/* Content Area */}
-        <div className="flex-1 overflow-y-auto py-6 relative z-0">
+        {/* Content Area - 可滾動區域 */}
+        <div className="flex-1 overflow-y-auto py-6 px-6 relative z-0 min-h-0">
           {/* List Mode */}
           {mode === 'list' && (
             <>
@@ -288,19 +270,8 @@ export function PlaylistSheet({
               ) : playlists.length === 0 ? (
                 // Empty State (No playlists)
                 <div className="flex flex-col items-center justify-center h-full text-center text-pip-boy-green/50">
-                  <p className="text-sm mb-4">尚無播放清單</p>
-                  <button
-                    onClick={handleCreateNew}
-                    className={cn(
-                      'flex items-center gap-2 px-4 py-2 rounded',
-                      'bg-pip-boy-green text-black font-semibold',
-                      'hover:bg-pip-boy-green/80 transition-all duration-200',
-                      'focus:outline-none focus:ring-2 focus:ring-pip-boy-green'
-                    )}
-                  >
-                    <Plus className="w-4 h-4" />
-                    建立第一個播放清單
-                  </button>
+                  <p className="text-sm">尚無播放清單</p>
+                  <p className="text-xs mt-2">點擊下方按鈕建立第一個播放清單</p>
                 </div>
               ) : (
                 // Empty State (No search results)
@@ -331,6 +302,27 @@ export function PlaylistSheet({
             />
           )}
         </div>
+
+        {/* Fixed Bottom Button (List mode only) */}
+        {mode === 'list' && (
+          <div className="border-t-2 border-pip-boy-green pt-4 px-6 pb-6 flex-shrink-0">
+            <button
+              onClick={handleCreateNew}
+              className={cn(
+                'w-full flex items-center justify-center gap-2 px-4 py-3 rounded',
+                'bg-pip-boy-green text-black font-semibold text-sm',
+                'hover:bg-pip-boy-green/80 transition-all duration-200',
+                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',
+                'shadow-[0_0_15px_rgba(0,255,136,0.3)]'
+              )}
+              aria-label="新增播放清單"
+              data-testid="create-playlist-button"
+            >
+              <PixelIcon name="add" sizePreset="sm" decorative />
+              新增播放清單
+            </button>
+          </div>
+        )}
       </SheetContent>
     </Sheet>
   );

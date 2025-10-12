@@ -31,8 +31,8 @@ def get_supabase_client() -> Client:
             user = await supabase.auth.get_user()
         ```
     """
-    supabase_url = settings.SUPABASE_URL
-    supabase_key = settings.SUPABASE_SERVICE_ROLE_KEY  # 後端使用 service role key
+    supabase_url = settings.supabase_url
+    supabase_key = settings.supabase_service_role_key  # 後端使用 service role key
 
     # 建立 Supabase 客戶端
     client = create_client(supabase_url, supabase_key)

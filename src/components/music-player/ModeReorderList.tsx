@@ -28,7 +28,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, X } from 'lucide-react';
+import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import type { MusicMode } from '@/lib/audio/playlistTypes';
@@ -37,11 +37,11 @@ import type { MusicMode } from '@/lib/audio/playlistTypes';
 // Music Mode Metadata
 // ============================================================================
 
-const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; icon: string }> = {
-  synthwave: { label: 'Synthwave', icon: '🎹' },
-  divination: { label: '占卜', icon: '🔮' },
-  lofi: { label: 'Lo-fi', icon: '🎧' },
-  ambient: { label: 'Ambient', icon: '🌊' },
+const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; iconName: string }> = {
+  synthwave: { label: 'Synthwave', iconName: 'music' },
+  divination: { label: '占卜', iconName: 'sparkling-2' },
+  lofi: { label: 'Lo-fi', iconName: 'headphone' },
+  ambient: { label: 'Ambient', iconName: 'disc' },
 };
 
 // ============================================================================
@@ -123,11 +123,11 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
         aria-label={`拖曳 ${metadata.label}`}
         data-testid={`drag-handle-${mode}`}
       >
-        <GripVertical className="w-4 h-4" />
+        <PixelIcon name="draggable" sizePreset="xs" decorative />
       </button>
 
       {/* Mode Icon */}
-      <span className="text-2xl">{metadata.icon}</span>
+      <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
 
       {/* Mode Label */}
       <div className="flex-1 min-w-0">
@@ -151,7 +151,7 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
           aria-label={`移除 ${metadata.label}`}
           data-testid={`remove-mode-${mode}`}
         >
-          <X className="w-4 h-4" />
+          <PixelIcon name="close" sizePreset="xs" variant="error" decorative />
         </button>
       )}
     </div>
@@ -177,8 +177,8 @@ function DragOverlayItem({ mode }: { mode: MusicMode }) {
         'cursor-grabbing'
       )}
     >
-      <GripVertical className="w-4 h-4 text-pip-boy-green" />
-      <span className="text-2xl">{metadata.icon}</span>
+      <PixelIcon name="draggable" sizePreset="xs" variant="primary" decorative />
+      <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
       <div className="text-sm font-semibold text-pip-boy-green">{metadata.label}</div>
     </div>
   );
