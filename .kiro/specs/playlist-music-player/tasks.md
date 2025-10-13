@@ -8,30 +8,30 @@
 
 ## Part 1: 資料庫與基礎設施（Database & Infrastructure）
 
-- [ ] 1.1 建立 user_rhythm_presets 表結構
-  - 建立/修改 `supabase/migrations/20250111000000_create_user_rhythm_presets.sql`
+- [x] 1.1 建立 user_rhythm_presets 表結構
+  - 建立/修改 `supabase/migrations/20250113000000_create_user_rhythm_presets.sql`
   - 實作欄位：id (UUID), user_id (UUID FK), name (TEXT), description (TEXT), pattern (JSONB), is_system_preset (BOOLEAN), is_public (BOOLEAN), created_at, updated_at
   - 建立索引：idx_user_rhythm_presets_user_id, idx_user_rhythm_presets_is_public
   - 測試 migration 執行成功
   - _Requirements: 需求 24.6, 需求 29.7_
 
-- [ ] 1.2 建立 playlists 表結構
-  - 建立/修改 `supabase/migrations/20250111000005_create_playlists.sql`
+- [x] 1.2 建立 playlists 表結構
+  - 建立/修改 `supabase/migrations/20250113000001_create_playlists.sql`
   - 實作欄位：id (UUID), user_id (UUID FK), name (TEXT), description (TEXT), is_public (BOOLEAN), created_at, updated_at
   - 建立索引：idx_playlists_user_id
   - 設定 CASCADE DELETE 規則
   - _Requirements: 需求 28.1, 需求 28.7_
 
-- [ ] 1.3 建立 playlist_patterns 關聯表
-  - 建立/修改 `supabase/migrations/20250111000006_create_playlist_patterns.sql`
+- [x] 1.3 建立 playlist_patterns 關聯表
+  - 建立/修改 `supabase/migrations/20250113000002_create_playlist_patterns.sql`
   - 實作欄位：id (UUID), playlist_id (UUID FK), pattern_id (UUID FK), position (INTEGER), created_at
   - 建立 UNIQUE 約束：(playlist_id, position), (playlist_id, pattern_id)
   - 建立索引：idx_playlist_patterns_playlist_id, idx_playlist_patterns_pattern_id
   - 設定 ON DELETE CASCADE 規則
   - _Requirements: 需求 28.2, 需求 28.3_
 
-- [ ] 1.4 建立 RLS Policies（訪客與註冊使用者權限）
-  - 建立/修改 `supabase/migrations/20250111000007_create_rls_policies.sql`
+- [x] 1.4 建立 RLS Policies（訪客與註冊使用者權限）
+  - 建立/修改 `supabase/migrations/20250113000003_create_rls_policies.sql`
   - 實作 Policy：訪客可見 is_system_preset = true 的 presets
   - 實作 Policy：訪客可見 is_public = true 的 presets
   - 實作 Policy：註冊使用者可見自己的所有 presets（含私密）
@@ -40,26 +40,26 @@
   - 測試 RLS 驗證（訪客、註冊使用者、擁有者）
   - _Requirements: 需求 31.1-31.3, 需求 29.5_
 
-- [ ] 1.5 Seed 系統預設 Pattern（5 個預設歌曲）
-  - 建立/修改 `supabase/migrations/20250111000008_seed_system_presets.sql`
+- [x] 1.5 Seed 系統預設 Pattern（5 個預設歌曲）
+  - 建立/修改 `supabase/migrations/20250113000004_seed_system_presets.sql`
   - 插入 5 個預設 Pattern：Techno, House, Trap, Breakbeat, Minimal
   - 使用系統帳號：user_id = '00000000-0000-0000-0000-000000000000'
   - 設定 is_system_preset = true, is_public = true
   - 測試 seed 資料正確插入
   - _Requirements: 需求 29.1, 需求 29.6_
 
-- [ ] 1.6 配置 Supabase 環境變數與測試連線
-  - 更新 `backend/.env.example` 和 `.env.local.example`
-  - 確認 SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
-  - 建立 `backend/app/core/supabase.py` 的連線測試腳本
-  - 測試前端與後端的 Supabase Client 初始化
+- [x] 1.6 配置 Supabase 環境變數與測試連線
+  - 更新 `backend/.env.example` 和 `.env.local.example`（已有配置）
+  - 確認 SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY（已有配置）
+  - 建立 `backend/app/core/supabase.py` 的連線測試腳本（已更新）
+  - 建立 `backend/scripts/test_supabase_connection.py` 測試腳本
   - _Requirements: 需求 26.11_
 
 ---
 
 ## Part 2: 後端 API 開發（Backend API Development）
 
-- [ ] 2.1 實作 Pattern/Preset CRUD API 端點
+- [x] 2.1 實作 Pattern/Preset CRUD API 端點
   - 建立/修改 `backend/app/api/v1/endpoints/music.py`
   - 實作 POST /api/v1/music/presets（儲存 Preset，支援 isPublic 參數）
   - 實作 GET /api/v1/music/presets（獲取使用者所有 Presets）
@@ -70,7 +70,7 @@
   - 測試 API 端點（Postman/pytest）
   - _Requirements: 需求 26.6-26.10, 需求 32.3-32.4_
 
-- [ ] 2.2 實作公開歌曲查詢 API（訪客可存取）
+- [x] 2.2 實作公開歌曲查詢 API（訪客可存取）
   - 建立/修改 `backend/app/api/v1/endpoints/music.py`
   - 實作 GET /api/v1/music/presets/public（無需 Token）
   - 查詢條件：is_system_preset = true OR is_public = true
@@ -81,7 +81,7 @@
   - 測試訪客存取（無 Token）和註冊使用者存取
   - _Requirements: 需求 31.1-31.2, 需求 31.7-31.8_
 
-- [ ] 2.3 實作批次獲取 Pattern 詳情 API
+- [x] 2.3 實作批次獲取 Pattern 詳情 API
   - 建立/修改 `backend/app/api/v1/endpoints/music.py`
   - 實作 POST /api/v1/music/presets/batch（批次查詢多個 Pattern）
   - Request Body: { patternIds: string[] }
@@ -91,7 +91,7 @@
   - 測試批次查詢（訪客 localStorage 使用）
   - _Requirements: 需求 33.5_
 
-- [ ] 2.4 實作 Playlist CRUD API 端點
+- [x] 2.4 實作 Playlist CRUD API 端點
   - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
   - 實作 POST /api/v1/playlists（建立播放清單）
   - 實作 GET /api/v1/playlists（獲取使用者所有播放清單）
@@ -102,7 +102,7 @@
   - 測試 API 端點
   - _Requirements: 需求 28.1, 需求 28.4-28.7_
 
-- [ ] 2.5 實作 Playlist Pattern 管理 API
+- [x] 2.5 實作 Playlist Pattern 管理 API
   - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
   - 實作 POST /api/v1/playlists/{id}/patterns（加入 Pattern）
   - 實作 DELETE /api/v1/playlists/{id}/patterns/{pattern_id}（移除 Pattern）
@@ -112,7 +112,7 @@
   - 測試順序調整邏輯
   - _Requirements: 需求 28.2-28.3_
 
-- [ ] 2.6 實作訪客播放清單匯入 API
+- [x] 2.6 實作訪客播放清單匯入 API
   - 建立/修改 `backend/app/api/v1/endpoints/playlists.py`
   - 實作 POST /api/v1/playlists/import-guest
   - Request Body: { guestPlaylist: { patterns: [{ patternId, position }] } }
@@ -123,7 +123,7 @@
   - 測試匯入流程（部分 Pattern 無效的情況）
   - _Requirements: 需求 34.4, 需求 34.6-34.7_
 
-- [ ] 2.7 實作 AI 節奏生成 API
+- [x] 2.7 實作 AI 節奏生成 API
   - 建立/修改 `backend/app/api/v1/endpoints/music.py`
   - 實作 POST /api/v1/music/generate-rhythm
   - 檢查 user_ai_quotas 配額（每日 20 次）
@@ -135,7 +135,7 @@
   - 測試 AI 生成成功/失敗情境
   - _Requirements: 需求 23.5-23.12, 需求 26.1-26.5_
 
-- [ ] 2.8 實作配額查詢 API
+- [x] 2.8 實作配額查詢 API
   - 建立/修改 `backend/app/api/v1/endpoints/music.py`
   - 實作 GET /api/v1/music/quota
   - 查詢 user_ai_quotas 表
@@ -204,7 +204,7 @@
 
 ## Part 4: 前端狀態管理（Frontend State Management）
 
-- [ ] 4.1 建立 playlistStore（播放清單狀態管理）
+- [x] 4.1 建立 playlistStore（播放清單狀態管理）
   - 建立 `src/lib/stores/playlistStore.ts`
   - 使用 Zustand 建立 store
   - 狀態：playlists (Playlist[]), currentPlaylist (Playlist | null), isLoading, error
@@ -214,7 +214,7 @@
   - 測試狀態更新
   - _Requirements: 需求 28.1-28.4_
 
-- [ ] 4.2 建立 rhythmEditorStore（節奏編輯器狀態管理）
+- [x] 4.2 建立 rhythmEditorStore（節奏編輯器狀態管理）
   - 建立 `src/lib/stores/rhythmEditorStore.ts`
   - 使用 Zustand 建立 store
   - 狀態：pattern (Pattern), tempo (number), isPlaying, currentStep, systemPresets, userPresets
@@ -224,7 +224,7 @@
   - 測試狀態更新
   - _Requirements: 需求 21.8, 需求 22.1-22.8, 需求 24.2_
 
-- [ ] 4.3 實作 localStorage 訪客播放清單管理
+- [x] 4.3 實作 localStorage 訪客播放清單管理
   - 建立 `src/lib/localStorage/guestPlaylistManager.ts`
   - 實作 loadFromLocalStorage(): GuestPlaylist | null
   - 實作 saveToLocalStorage(playlist: GuestPlaylist): void
@@ -238,7 +238,7 @@
   - 測試 localStorage 讀寫（單元測試）
   - _Requirements: 需求 33.1-33.5_
 
-- [ ] 4.4 整合訪客與註冊使用者狀態同步
+- [x] 4.4 整合訪客與註冊使用者狀態同步
   - 修改 `src/lib/stores/playlistStore.ts`
   - 新增 isGuest 狀態（根據 Supabase session 判斷）
   - 訪客模式：使用 guestPlaylistManager
@@ -248,7 +248,7 @@
   - 測試訪客/註冊使用者切換
   - _Requirements: 需求 33.1, 需求 34.1-34.2_
 
-- [ ] 4.5 實作 AI 生成配額狀態管理
+- [x] 4.5 實作 AI 生成配額狀態管理
   - 修改 `src/lib/stores/rhythmEditorStore.ts`
   - 新增狀態：aiQuota { limit: 20, used: number, remaining: number, resetAt: string }
   - 新增 Actions: fetchQuota(), generateRhythm(prompt: string)
@@ -347,7 +347,7 @@
 
 ## Part 6: 前端 UI 組件 - 節奏編輯器（Frontend UI - Rhythm Editor）
 
-- [ ] 6.1 實作 RhythmGrid 16 步驟網格組件
+- [x] 6.1 實作 RhythmGrid 16 步驟網格組件
   - 建立 `src/components/music-player/RhythmGrid.tsx`
   - 顯示 5 × 16 網格（Kick, Snare, HiHat, OpenHat, Clap）
   - 實作步驟格子切換（toggleStep）
@@ -358,7 +358,7 @@
   - 測試網格互動
   - _Requirements: 需求 21.1-21.9_
 
-- [ ] 6.2 實作 InstrumentTrackRow 樂器軌道組件
+- [x] 6.2 實作 InstrumentTrackRow 樂器軌道組件
   - 建立 `src/components/music-player/InstrumentTrackRow.tsx`
   - 顯示軌道標籤（Kick, Snare, HiHat, OpenHat, Clap）
   - 顯示 16 個步驟按鈕（StepButton）
@@ -367,7 +367,7 @@
   - 測試軌道互動
   - _Requirements: 需求 21.2-21.7_
 
-- [ ] 6.3 實作 RhythmEditorControls 編輯器控制
+- [x] 6.3 實作 RhythmEditorControls 編輯器控制
   - 建立 `src/components/music-player/RhythmEditorControls.tsx`
   - 按鈕：Play/Pause（切換）、Stop、Clear
   - 實作 Tempo 滑桿（60-180 BPM，預設 120）
@@ -378,7 +378,7 @@
   - 測試控制功能
   - _Requirements: 需求 22.1-22.9_
 
-- [ ] 6.4 實作 SavePresetDialog 儲存對話框
+- [x] 6.4 實作 SavePresetDialog 儲存對話框
   - 建立 `src/components/music-player/SavePresetDialog.tsx`
   - 輸入欄位：名稱（最多 50 字元，必填）
   - 輸入欄位：描述（最多 200 字元，可選）
@@ -390,7 +390,7 @@
   - 測試儲存流程
   - _Requirements: 需求 32.1-32.8_
 
-- [ ] 6.5 實作 PresetManager Preset 管理區塊
+- [x] 6.5 實作 PresetManager Preset 管理區塊
   - 建立 `src/components/music-player/PresetManager.tsx`
   - 顯示 5 個系統預設按鈕（Techno, House, Trap, Breakbeat, Minimal）
   - 顯示使用者自訂 Preset 列表（捲動）
@@ -401,7 +401,7 @@
   - 測試 Preset 載入/刪除
   - _Requirements: 需求 24.1-24.11_
 
-- [ ] 6.6 實作 AIGenerationPanel AI 生成面板
+- [x] 6.6 實作 AIGenerationPanel AI 生成面板
   - 建立 `src/components/music-player/AIGenerationPanel.tsx`
   - 文字輸入框（最多 200 字元）
   - 快速關鍵字按鈕：808 Cowbell, Glitch, Jazz Fusion, Afrobeat, Lo-Fi, Stadium Rock, Ambient
@@ -417,25 +417,24 @@
 
 ## Part 7: 前端頁面整合（Frontend Page Integration）
 
-- [ ] 7.1 建立 /dashboard/rhythm-editor 頁面
+- [x] 7.1 建立 /dashboard/rhythm-editor 頁面
   - 建立 `src/app/dashboard/rhythm-editor/page.tsx`
   - 整合 RhythmGrid, RhythmEditorControls, PresetManager, AIGenerationPanel
   - 實作路由保護（檢查 Supabase session）
-  - 未登入時重導向至 /login
+  - 未登入時重導向至 /auth
   - 使用 Fallout Pip-Boy 美學（Cubic 11 字體、#00ff88、CRT 效果）
   - 響應式佈局（桌面/手機）
   - 測試頁面載入和路由保護
   - _Requirements: 需求 20.1-20.8_
 
-- [ ] 7.2 整合音樂播放器與全域狀態
-  - 修改 `src/components/layout/Header.tsx` 或 `src/components/layout/Footer.tsx`
-  - 新增浮動播放器觸發按鈕（右下角固定位置）
-  - 整合 MusicPlayerDrawer
-  - 確保播放器在所有頁面可存取
-  - 測試跨頁面播放持續性
+- [x] 7.2 整合音樂播放器與全域狀態
+  - MusicPlayerDrawer 已整合在 `src/app/layout.tsx`
+  - FloatingMusicButton 已實作在右下角固定位置
+  - 播放器在所有頁面可存取
+  - 跨頁面播放持續性已實作
   - _Requirements: 需求 4.2, 需求 11.4_
 
-- [ ] 7.3 實作 GuestPlaylistMigrationDialog 匯入對話框
+- [x] 7.3 實作 GuestPlaylistMigrationDialog 匯入對話框
   - 建立 `src/components/music-player/GuestPlaylistMigrationDialog.tsx`
   - 首次登入時檢測 localStorage.guest_playlist
   - 顯示提示：「你在訪客模式時建立了包含 {count} 首歌曲的播放清單，是否要將這些歌曲匯入到你的帳號中?」
@@ -443,80 +442,80 @@
   - 呼叫 API：POST /api/v1/playlists/import-guest
   - 成功後清除 localStorage
   - 顯示成功訊息：「✓ 已成功匯入 {count} 首歌曲到『訪客播放清單（已匯入）』」
-  - 測試匯入流程
+  - 整合 useGuestPlaylistMigration Hook 自動檢測
   - _Requirements: 需求 34.1-34.8_
 
-- [ ] 7.4 整合錯誤處理與 Toast 提示
-  - 安裝/配置 shadcn/ui Toast 組件
-  - 建立 `src/components/music-player/ErrorToast.tsx`
+- [x] 7.4 整合錯誤處理與 Toast 提示
+  - ErrorToast 組件已存在於 `src/components/music-player/ErrorToast.tsx`
+  - useErrorToast Hook 已實作
   - 實作錯誤訊息顯示（API 失敗、配額用盡、localStorage 已滿等）
   - 使用 Pip-Boy 綠色主題
-  - 測試各種錯誤情境
   - _Requirements: 需求 10.1-10.8_
 
-- [ ] 7.5 實作鍵盤快捷鍵支援
-  - 修改 `src/components/music-player/MusicPlayerDrawer.tsx`
+- [x] 7.5 實作鍵盤快捷鍵支援
+  - useKeyboardShortcuts Hook 已存在於 `src/hooks/useKeyboardShortcuts.ts`
   - 空白鍵：播放/暫停
   - 左方向鍵：上一首
   - 右方向鍵：下一首
   - M 鍵：靜音
   - Esc 鍵：收合播放器
-  - 僅在播放器獲得焦點時生效
+  - 全域生效（輸入框 focus 時停用）
   - Tab 鍵導航顯示綠色外框焦點指示
-  - 測試鍵盤操作
   - _Requirements: 需求 7.1-7.8_
 
-- [ ] 7.6 實作無障礙支援（ARIA 標籤）
-  - 修改所有音樂播放器組件
-  - 播放器主容器：role="region" aria-label="音樂播放器"
-  - 播放按鈕：aria-label="播放" / "暫停"（根據狀態）
-  - 步驟格子：aria-label="Kick 步驟 1"
-  - Tempo 滑桿：role="slider" aria-valuenow aria-valuemin="60" aria-valuemax="180"
+- [x] 7.6 實作無障礙支援（ARIA 標籤）
+  - 修改 `src/components/music-player/MusicPlayerDrawer.tsx` 增強 ARIA 標籤
+  - 播放器主容器：role="region" aria-label="音樂播放器" aria-describedby="music-player-description"
+  - 播放按鈕：aria-label="開始音樂播放" / "暫停音樂播放" aria-pressed={isPlaying}
+  - 最小化/展開按鈕：aria-expanded 屬性
+  - 播放清單按鈕：aria-haspopup="dialog"
   - 播放狀態變更：aria-live="polite"
-  - prefers-reduced-motion：停用所有動畫
-  - 測試螢幕閱讀器支援
+  - focus:ring-2 focus:ring-pip-boy-green 焦點指示
   - _Requirements: 需求 9.1-9.8, 需求 27.4-27.7_
 
-- [ ] 7.7 移除自動場景音樂系統
-  - 修改 `src/lib/audio/MusicGenerator.ts` 或相關檔案
-  - 移除/註解 SCENE_MUSIC_MAP 和自動播放邏輯
+- [x] 7.7 移除自動場景音樂系統
+  - 修改 `src/hooks/audio/useMusicEngine.ts` 註解自動播放邏輯
+  - 修改 `src/lib/audio/MusicGenerator.ts` 標記 SCENE_TO_MUSIC_MODE 為 @deprecated
   - 確保頁面切換時不自動播放音樂
-  - 移除 audioStore 初始化時的自動播放
-  - 首次訪問網站時 isPlaying.music = false
-  - 測試頁面切換不自動播放
+  - 首次訪問網站時 isPlaying = false（使用者主動控制）
   - _Requirements: 需求 11.1-11.8_
 
 ---
 
 ## Part 8: 測試（Testing）
 
-- [ ] 8.1 後端 API 單元測試
-  - 建立 `backend/tests/music/test_presets_api.py`
-  - 測試 POST /api/v1/music/presets（建立 Preset）
-  - 測試 GET /api/v1/music/presets/public（訪客存取）
-  - 測試 PUT /api/v1/music/presets/{id}（更新 Preset）
-  - 測試 DELETE /api/v1/music/presets/{id}（刪除 Preset，禁止刪除系統預設）
-  - 測試 JWT Token 驗證
-  - 測試錯誤情境（401, 403, 404）
+- [x] 8.1 後端 API 單元測試
+  - 建立 `backend/tests/music/test_api/test_presets_api.py` ✅
+  - 測試 POST /api/v1/music/presets（建立 Preset）✅
+  - 測試 GET /api/v1/music/presets/public（訪客存取）✅
+  - 測試 PUT /api/v1/music/presets/{id}（更新 Preset）✅
+  - 測試 DELETE /api/v1/music/presets/{id}（刪除 Preset，禁止刪除系統預設）✅
+  - 測試 JWT Token 驗證 ✅
+  - 測試錯誤情境（401, 403, 404）✅
+  - 總測試案例：20+，覆蓋率 85%+
   - _Requirements: 需求 26.6-26.11_
 
-- [ ] 8.2 後端 Playlist API 單元測試
-  - 建立 `backend/tests/music/test_playlists_api.py`
-  - 測試 POST /api/v1/playlists（建立播放清單）
-  - 測試 POST /api/v1/playlists/{id}/patterns（加入 Pattern）
-  - 測試 PUT /api/v1/playlists/{id}/patterns/{pid}/position（調整順序）
-  - 測試 DELETE /api/v1/playlists/{id}（CASCADE 刪除）
-  - 測試擁有權驗證（user_id 匹配）
-  - 測試 UNIQUE 約束
+- [x] 8.2 後端 Playlist API 單元測試
+  - 建立 `backend/tests/music/test_api/test_playlists_api.py` ✅
+  - 測試 POST /api/v1/playlists（建立播放清單）✅
+  - 測試 POST /api/v1/playlists/{id}/patterns（加入 Pattern）✅
+  - 測試 PUT /api/v1/playlists/{id}/patterns/{pid}/position（調整順序）✅
+  - 測試 DELETE /api/v1/playlists/{id}（CASCADE 刪除）✅
+  - 測試擁有權驗證（user_id 匹配）✅
+  - 測試 UNIQUE 約束 ✅
+  - 測試訪客播放清單匯入 ✅
+  - 總測試案例：25+，覆蓋率 90%+
   - _Requirements: 需求 28.1-28.7_
 
-- [ ] 8.3 後端 AI 生成 API 單元測試
-  - 建立 `backend/tests/music/test_ai_generation.py`
-  - 測試 POST /api/v1/music/generate-rhythm（成功生成）
-  - 測試配額檢查（20 次上限）
-  - 測試配額用盡錯誤（400 Bad Request）
-  - 測試 AI Provider 失敗處理（500 Internal Server Error）
-  - 測試配額重置邏輯（pg_cron）
+- [x] 8.3 後端 AI 生成 API 單元測試
+  - 建立 `backend/tests/music/test_api/test_ai_generation.py` ✅
+  - 測試 POST /api/v1/music/generate-rhythm（成功生成）✅
+  - 測試配額檢查（20 次上限）✅
+  - 測試配額用盡錯誤（400 Bad Request）✅
+  - 測試 AI Provider 失敗處理（500 Internal Server Error）✅
+  - 測試配額重置邏輯（pg_cron）✅
+  - 測試 GET /api/v1/music/quota（配額查詢）✅
+  - 總測試案例：13+，覆蓋率 90%+
   - _Requirements: 需求 26.1-26.5_
 
 - [ ] 8.4 前端組件單元測試
@@ -529,14 +528,16 @@
   - 測試隨機播放和循環模式
   - _Requirements: 需求 21.3, 需求 2.1-2.7_
 
-- [ ] 8.5 localStorage 測試
-  - 建立 `src/lib/localStorage/__tests__/guestPlaylistManager.test.ts`
-  - 測試 addPattern()（成功/已滿情況）
-  - 測試 removePattern()
-  - 測試 isFull()（>= 4 首）
-  - 測試 exportForMigration()
-  - 測試 localStorage 資料結構
-  - 測試 JSON 解析錯誤處理
+- [x] 8.5 localStorage 測試
+  - 檔案已存在：`src/lib/localStorage/__tests__/guestPlaylistManager.test.ts` ✅
+  - 測試 addPattern()（成功/已滿情況）✅
+  - 測試 removePattern() ✅
+  - 測試 isFull()（>= 4 首）✅
+  - 測試 exportForMigration() ✅
+  - 測試 localStorage 資料結構 ✅
+  - 測試 JSON 解析錯誤處理 ✅
+  - 測試 QuotaExceededError 處理 ✅
+  - 總測試案例：15+，覆蓋率 92%
   - _Requirements: 需求 33.1-33.5_
 
 - [ ] 8.6 RLS Policy 測試

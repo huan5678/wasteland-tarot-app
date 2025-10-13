@@ -46,3 +46,23 @@ export type {
 
 // Constants
 export * from './constants';
+
+// ============================================
+// Music Player System - Rhythm Audio Synthesizers
+// ============================================
+
+// RhythmAudioSynthesizer（播放器專用）
+export {
+  RhythmAudioSynthesizer,
+  type Pattern,
+  type RhythmAudioSynthesizerConfig,
+  type RhythmAudioSynthesizerState,
+  type OnPatternCompleteCallback,
+} from './RhythmAudioSynthesizer';
+
+// EditorAudioSynthesizer（編輯器專用）
+export {
+  EditorAudioSynthesizer,
+  type EditorAudioSynthesizerConfig,
+  type InstrumentType,
+} from './EditorAudioSynthesizer';

@@ -152,11 +152,12 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
         aria-live="polite"
         aria-atomic="false"
         role="region"
+        aria-describedby="music-player-description"
       >
         {/* Visually Hidden Title & Description for Accessibility */}
         <DrawerTitle className="sr-only">音樂播放器</DrawerTitle>
-        <DrawerDescription className="sr-only">
-          控制音樂播放、選擇音樂模式、調整音量和查看音訊視覺化
+        <DrawerDescription id="music-player-description" className="sr-only">
+          控制音樂播放、選擇音樂模式、調整音量和查看音訊視覺化。使用空白鍵播放/暫停，左右方向鍵切換歌曲，M 鍵靜音，Esc 鍵關閉。
         </DrawerDescription>
 
         {/* Minimized Mode (80px) */}
@@ -183,19 +184,21 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
             {/* Play/Pause Button */}
             <button
               onClick={handlePlayPause}
-              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
-              aria-label={isPlaying ? '暫停' : '播放'}
+              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
+              aria-label={isPlaying ? '暫停音樂播放' : '開始音樂播放'}
+              aria-pressed={isPlaying}
             >
-              {isPlaying ? <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" /> : <PixelIcon name="play" sizePreset="sm" aria-label="播放" />}
+              {isPlaying ? <PixelIcon name="pause" sizePreset="sm" aria-label="暫停圖示" /> : <PixelIcon name="play" sizePreset="sm" aria-label="播放圖示" />}
             </button>
 
             {/* Expand Button */}
             <button
               onClick={handleExpand}
-              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
-              aria-label="展開播放器"
+              className="p-2 text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black"
+              aria-label="展開播放器至完整模式"
+              aria-expanded="false"
             >
-              <PixelIcon name="maximize-2" sizePreset="sm" aria-label="展開" />
+              <PixelIcon name="maximize-2" sizePreset="sm" aria-label="展開圖示" />
             </button>
           </motion.div>
         ) : (
@@ -217,17 +220,19 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               <div className="flex gap-2">
                 <button
                   onClick={handleMinimize}
-                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
-                  aria-label="最小化播放器"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green"
+                  aria-label="最小化播放器至控制條"
+                  aria-expanded="true"
                 >
-                  <PixelIcon name="minimize-2" sizePreset="xs" aria-label="最小化" />
+                  <PixelIcon name="minimize-2" sizePreset="xs" aria-label="最小化圖示" />
                 </button>
                 <button
                   onClick={openSheet}
-                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors"
-                  aria-label="開啟播放清單"
+                  className="flex items-center gap-1.5 px-2 py-1 text-xs text-pip-boy-green bg-pip-boy-green/10 border border-pip-boy-green rounded hover:bg-pip-boy-green hover:text-black transition-colors focus:outline-none focus:ring-2 focus:ring-pip-boy-green"
+                  aria-label="開啟播放清單面板"
+                  aria-haspopup="dialog"
                 >
-                  <PixelIcon name="playlist" sizePreset="xs" aria-label="播放清單" />
+                  <PixelIcon name="playlist" sizePreset="xs" aria-label="播放清單圖示" />
                 </button>
               </div>
             </div>

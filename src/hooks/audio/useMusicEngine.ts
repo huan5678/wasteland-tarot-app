@@ -38,12 +38,14 @@ export function useMusicEngine() {
   }, [currentMode, isPlaying, volume, isMuted]);
 
   // 初始化 AudioContext 和 ProceduralMusicEngine
-  // 延遲初始化直到使用者開始播放音樂
+  // 延遲初始化直到使用者主動開始播放音樂
+  // Task 7.7: 移除自動場景音樂 - 首次訪問時不自動播放
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (isInitialized.current) return;
 
-    // 只要 isPlaying 為 true 就初始化，currentMode 可以稍後設定
+    // 只有當使用者主動點擊播放按鈕時才初始化
+    // 不再根據場景自動播放
     if (!isPlaying) return;
 
     const initEngine = async () => {

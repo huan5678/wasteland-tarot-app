@@ -101,8 +101,11 @@ export class MusicGenerator {
 }
 
 /**
- * 音樂模式映射表
- * 將場景 ID 映射到對應的音樂模式
+ * Task 7.7: 移除自動場景音樂系統
+ * 保留此映射表作為參考，但不再自動根據場景切換音樂
+ * 所有音樂播放由使用者主動控制
+ *
+ * @deprecated 不再使用自動場景音樂
  */
 export const SCENE_TO_MUSIC_MODE: Record<string, MusicMode> = {
   '/': 'synthwave',              // 主頁 - Synthwave
@@ -115,6 +118,7 @@ export const SCENE_TO_MUSIC_MODE: Record<string, MusicMode> = {
 
 /**
  * 根據場景路徑取得音樂模式
+ * @deprecated 不再使用自動場景音樂，保留作為參考
  * @param scenePath - 場景路徑
  * @returns 對應的音樂模式
  */
