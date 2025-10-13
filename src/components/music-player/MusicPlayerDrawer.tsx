@@ -13,7 +13,8 @@ import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistManager } from '@/hooks/useMusicPlayer';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
-import { useMusicEngine } from '@/hooks/audio/useMusicEngine';
+import { useRhythmMusicEngine } from '@/hooks/audio/useRhythmMusicEngine';
+import { useMusicPlayerStore } from '@/stores/musicPlayerStore';
 import { PixelIcon } from '@/components/ui/icons';
 
 // Import all child components (will be created in following tasks)
@@ -71,11 +72,14 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
     openSheet,
   } = useMusicPlayer();
 
-  const { currentPlaylist } = usePlaylistManager();
+  const { currentPlaylist, currentModeIndex } = usePlaylistManager();
 
   // ========== Music Engine Integration ==========
-  // Task: 整合 ProceduralMusicEngine 實際播放音樂
-  const { engine, isReady } = useMusicEngine();
+  // Task: 整合 RhythmAudioSynthesizer 從資料庫播放 Pattern
+  const { synth, isReady, systemPresets } = useRhythmMusicEngine();
+
+  // Store actions
+  const setModeIndex = useMusicPlayerStore((state) => state.setModeIndex);
 
   // ========== Keyboard Shortcuts ==========
   const { showHelp, setShowHelp, shortcuts } = useKeyboardShortcuts({
@@ -243,10 +247,12 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               <div className="flex flex-col gap-4 overflow-y-auto pr-2 min-w-0">
                 {/* Music Mode Selector */}
                 <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
-                  <h3 className="text-sm font-bold mb-3">音樂模式</h3>
+                  <h3 className="text-sm font-bold mb-3">節奏 Pattern</h3>
                   <MusicModeSelector
-                    currentMode={currentMode}
-                    onModeSelect={playMode}
+                    currentMode={systemPresets[currentModeIndex]?.name || null}
+                    onModeSelect={async (index: number) => {
+                      setModeIndex(index);
+                    }}
                   />
                 </div>
 

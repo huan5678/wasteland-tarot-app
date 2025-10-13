@@ -6,9 +6,9 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { createBrowserClient } from '@supabase/ssr';
 import { PixelIcon } from '@/components/ui/icons';
 import { RhythmGrid } from '@/components/music-player/RhythmGrid';
 import { RhythmEditorControls } from '@/components/music-player/RhythmEditorControls';
@@ -22,7 +22,12 @@ import { SavePresetDialog } from '@/components/music-player/SavePresetDialog';
  */
 export default function RhythmEditorPage() {
   const router = useRouter();
-  const supabase = createClientComponentClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
 
   // ========== Route Protection ==========
   // 檢查使用者是否已登入，未登入則重導向至登入頁面
@@ -216,7 +221,10 @@ export default function RhythmEditorPage() {
       </div>
 
       {/* Save Preset Dialog */}
-      <SavePresetDialog />
+      <SavePresetDialog
+        isOpen={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+      />
 
       {/* CRT Scanline Effect */}
       <div className="pointer-events-none fixed inset-0 bg-gradient-to-b from-transparent via-pip-boy-green/5 to-transparent opacity-20" />

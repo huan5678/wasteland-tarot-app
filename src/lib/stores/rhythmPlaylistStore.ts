@@ -69,6 +69,7 @@ export interface RhythmPlaylistState {
   // === 資料狀態 ===
   playlists: Playlist[];
   currentPlaylist: Playlist | null;
+  systemPresets: UserRhythmPreset[];  // 系統預設 Pattern（用於音樂播放器）
   isLoading: boolean;
   error: string | null;
   isGuest: boolean;
@@ -78,6 +79,7 @@ export interface RhythmPlaylistState {
   createPlaylist: (name: string, description?: string) => Promise<void>;
   deletePlaylist: (id: string) => Promise<void>;
   loadPlaylist: (id: string) => Promise<void>;
+  loadSystemPresets: () => Promise<UserRhythmPreset[]>;  // 載入系統預設 Pattern
 
   // === Actions: Pattern 管理 ===
   addPatternToPlaylist: (patternId: string) => Promise<void>;
@@ -115,7 +117,7 @@ const STORAGE_KEY = 'wasteland-tarot-rhythm-playlists';
 /**
  * API Base URL
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 /**
  * 取得 Supabase session 檢查是否為訪客
@@ -142,6 +144,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
       // === 初始狀態 ===
       playlists: [],
       currentPlaylist: null,
+      systemPresets: [],
       isLoading: false,
       error: null,
       isGuest: checkIsGuest(),
@@ -278,6 +281,49 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : '載入播放清單失敗';
           set({ error: errorMessage, isLoading: false });
+          throw error;
+        }
+      },
+
+      /**
+       * 載入系統預設 Pattern（用於音樂播放器）
+       * Requirements 20.1: 從資料庫載入 5 個系統預設 Pattern
+       */
+      loadSystemPresets: async () => {
+        try {
+          set({ isLoading: true, error: null });
+
+          // 從後端 API 載入系統預設 Pattern
+          const response = await fetch(`${API_BASE_URL}/music/presets/public`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error(`Failed to load system presets: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const systemPresets: UserRhythmPreset[] = data.system_presets.map((p: any) => ({
+            id: p.id,
+            userId: p.user_id || null,
+            name: p.name,
+            description: p.description || '',
+            pattern: p.pattern,
+            isSystemPreset: p.is_system_preset,
+            isPublic: p.is_public,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+          }));
+
+          set({ systemPresets, isLoading: false });
+          return systemPresets;
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : '載入系統預設 Pattern 失敗';
+          set({ error: errorMessage, isLoading: false });
+          console.error('[rhythmPlaylistStore] Failed to load system presets', error);
           throw error;
         }
       },

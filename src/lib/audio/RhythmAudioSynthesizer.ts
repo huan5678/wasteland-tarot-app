@@ -16,6 +16,8 @@
  * synthesizer.play();
  */
 
+import { logger } from '../logger';
+
 /**
  * 16 步驟節奏 Pattern
  * 每個軌道包含 16 個布林值，true 表示該步驟啟用
@@ -63,6 +65,7 @@ export type OnPatternCompleteCallback = () => void;
  */
 export class RhythmAudioSynthesizer {
   private audioContext: AudioContext;
+  private destination: AudioNode;
   private patterns: Pattern[];
   private tempo: number;
   private loopCountLimit: number;
@@ -72,6 +75,10 @@ export class RhythmAudioSynthesizer {
   private currentPatternIndex: number = 0;
   private currentStep: number = 0;
   private currentLoop: number = 1;
+
+  // 音量控制
+  private masterGainNode: GainNode;
+  private currentVolume: number = 0.7;
 
   // 白噪音 Buffer（預先生成，避免重複計算）
   private noiseBuffer: AudioBuffer | null = null;
@@ -86,13 +93,26 @@ export class RhythmAudioSynthesizer {
 
   /**
    * 建構子
-   * @param config - RhythmAudioSynthesizer 配置
+   * @param audioContext - Web Audio API AudioContext
+   * @param destination - 音訊輸出目標節點
+   * @param config - 可選配置（BPM, volume, loopCount）
    */
-  constructor(config: RhythmAudioSynthesizerConfig) {
-    this.audioContext = config.audioContext;
-    this.patterns = config.patterns;
-    this.tempo = config.tempo;
-    this.loopCountLimit = config.loopCount;
+  constructor(
+    audioContext: AudioContext,
+    destination: AudioNode,
+    config?: { bpm?: number; volume?: number; loopCount?: number }
+  ) {
+    this.audioContext = audioContext;
+    this.destination = destination;
+    this.patterns = [];
+    this.tempo = config?.bpm || 120;
+    this.loopCountLimit = config?.loopCount || 4;
+    this.currentVolume = config?.volume ?? 0.7;
+
+    // 創建 master gain node 用於音量控制
+    this.masterGainNode = this.audioContext.createGain();
+    this.masterGainNode.gain.value = this.currentVolume;
+    this.masterGainNode.connect(this.destination);
 
     // 預先生成白噪音 Buffer
     this.noiseBuffer = this.createNoiseBuffer();
@@ -148,6 +168,59 @@ export class RhythmAudioSynthesizer {
     this.currentLoop = 1;
   }
 
+  /**
+   * 載入播放清單
+   * @param patterns - Pattern 陣列
+   * @param startIndex - 起始索引（預設 0）
+   */
+  public loadPlaylist(patterns: Pattern[], startIndex: number = 0): void {
+    this.patterns = patterns;
+    this.currentPatternIndex = Math.max(0, Math.min(startIndex, patterns.length - 1));
+    this.currentStep = 0;
+    this.currentLoop = 1;
+  }
+
+  /**
+   * 設定當前 Pattern 索引
+   * @param index - Pattern 索引
+   */
+  public setCurrentPatternIndex(index: number): void {
+    if (index < 0 || index >= this.patterns.length) {
+      logger.warn(`[RhythmAudioSynthesizer] Invalid pattern index: ${index}`);
+      return;
+    }
+
+    this.currentPatternIndex = index;
+    this.currentStep = 0;
+    this.currentLoop = 1;
+  }
+
+  /**
+   * 設定音量
+   * @param volume - 音量值（0-1）
+   */
+  public setVolume(volume: number): void {
+    this.currentVolume = Math.max(0, Math.min(1, volume));
+    if (this.masterGainNode) {
+      this.masterGainNode.gain.value = this.currentVolume;
+    }
+  }
+
+  /**
+   * 取得當前音量
+   * @returns 當前音量（0-1）
+   */
+  public getVolume(): number {
+    return this.currentVolume;
+  }
+
+  /**
+   * 釋放資源（dispose 別名）
+   */
+  public dispose(): void {
+    this.destroy();
+  }
+
   // ===========================================
   // 音效合成方法（5 種樂器）
   // ===========================================
@@ -172,7 +245,7 @@ export class RhythmAudioSynthesizer {
     gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
 
     osc.connect(gain);
-    gain.connect(this.audioContext.destination);
+    gain.connect(this.masterGainNode);
 
     osc.start(time);
     osc.stop(time + 0.5);
@@ -204,7 +277,7 @@ export class RhythmAudioSynthesizer {
 
     noise.connect(noiseFilter);
     noiseFilter.connect(noiseGain);
-    noiseGain.connect(this.audioContext.destination);
+    noiseGain.connect(this.masterGainNode);
 
     // Triangle Wave 部分
     const osc = this.audioContext.createOscillator();
@@ -216,7 +289,7 @@ export class RhythmAudioSynthesizer {
     oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
 
     osc.connect(oscGain);
-    oscGain.connect(this.audioContext.destination);
+    oscGain.connect(this.masterGainNode);
 
     noise.start(time);
     noise.stop(time + 0.2);
@@ -249,7 +322,7 @@ export class RhythmAudioSynthesizer {
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioContext.destination);
+    gain.connect(this.masterGainNode);
 
     osc.start(time);
     osc.stop(time + 0.05);
@@ -280,7 +353,7 @@ export class RhythmAudioSynthesizer {
 
     osc.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioContext.destination);
+    gain.connect(this.masterGainNode);
 
     osc.start(time);
     osc.stop(time + 0.3);
@@ -312,7 +385,7 @@ export class RhythmAudioSynthesizer {
 
     noise.connect(filter);
     filter.connect(gain);
-    gain.connect(this.audioContext.destination);
+    gain.connect(this.masterGainNode);
 
     noise.start(time);
     noise.stop(time + 0.1);

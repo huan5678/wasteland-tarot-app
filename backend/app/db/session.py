@@ -53,29 +53,35 @@ AsyncSessionLocal = sessionmaker(
 
 
 async def init_db() -> None:
-    """Initialize database tables."""
+    """
+    Initialize database connection check.
+
+    Note: Uses Supabase SDK for database operations instead of direct SQLAlchemy.
+    This function performs a simple health check to verify Supabase connectivity.
+    """
     try:
-        # Import all models to ensure they are registered with SQLAlchemy
-        from app.models import (
-            wasteland_card,
-            reading_enhanced,
-            user,
-            social_features,
-            base
-        )
+        from app.core.supabase import get_supabase_client
 
-        logger.info("📦 Imported database models")
+        logger.info("📦 Initializing Supabase connection...")
 
-        # Create tables if they don't exist
-        # Note: In production, use Alembic migrations instead
-        if settings.environment in ["development", "testing"]:
-            async with engine.begin() as conn:
-                await conn.run_sync(Base.metadata.create_all)
-                logger.info("🏗️ Database tables created/verified")
+        # Get Supabase client and verify connection
+        supabase = get_supabase_client()
+
+        # Simple health check - query system presets
+        response = supabase.table("user_rhythm_presets")\
+            .select("id")\
+            .eq("is_system_preset", True)\
+            .limit(1)\
+            .execute()
+
+        logger.info("✅ Supabase connection verified")
+        logger.info("🏗️ Database ready (using Supabase SDK)")
 
     except Exception as e:
         logger.error(f"❌ Failed to initialize database: {str(e)}")
-        raise DatabaseConnectionError()
+        logger.warning("⚠️ Database connection failed - API may not work correctly")
+        # Don't raise exception - allow API to start even if DB check fails
+        # Individual endpoints will handle connection errors
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
