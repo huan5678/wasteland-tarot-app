@@ -198,7 +198,6 @@ class UserProfileFactory(factory.Factory):
 
     # Wasteland Character Info
     preferred_voice = factory.fuzzy.FuzzyChoice([v.value for v in CharacterVoice])
-    vault_number = factory.LazyFunction(FalloutDataGenerator.random_vault_number)
     wasteland_location = factory.LazyFunction(FalloutDataGenerator.random_wasteland_location)
     favorite_faction = factory.fuzzy.FuzzyChoice([f.value for f in FactionAlignment])
     experience_level = factory.fuzzy.FuzzyChoice([

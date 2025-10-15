@@ -18,6 +18,8 @@ interface AuthState {
   clearError: () => void
   // OAuth 專用 actions
   setOAuthUser: (user: User) => void
+  // 通用設定使用者方法
+  setUser: (user: User, tokenExpiresAt?: number) => void
 }
 
 // Token 儲存在 httpOnly cookies 中，由後端管理
@@ -333,6 +335,32 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       user: user.id,
       provider: user.oauthProvider
     }))
+  },
+
+  /**
+   * 設定使用者（用於註冊後或其他需要直接設定用戶的場景）
+   *
+   * @param user - 用戶資料
+   * @param tokenExpiresAt - Token 過期時間（可選）
+   */
+  setUser: (user: User, tokenExpiresAt?: number) => {
+    // 儲存登入狀態
+    if (tokenExpiresAt) {
+      saveAuthState(tokenExpiresAt)
+    }
+
+    // 判斷是否為 OAuth 使用者
+    const isOAuth = user.isOAuthUser || user.oauthProvider !== null
+
+    set({
+      user,
+      isOAuthUser: isOAuth,
+      oauthProvider: user.oauthProvider || null,
+      profilePicture: user.profilePicture || null,
+      error: null,
+      isLoading: false,
+      isInitialized: true
+    })
   }
 }), {
   name: 'auth-store',

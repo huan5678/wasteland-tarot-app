@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiRequest } from '@/lib/api'
+import { spreadTemplatesAPI } from '@/lib/api'
 
 export interface SpreadTemplate {
   id: string
@@ -11,7 +11,6 @@ export interface SpreadTemplate {
   positions: any[]
   interpretation_guide?: string
   difficulty_level?: string
-  tags?: string[]
   is_active?: boolean
 }
 
@@ -35,9 +34,11 @@ export const useSpreadTemplatesStore = create<SpreadTemplateState>((set, get) =>
     if (!force && state.templates.length && (Date.now() - (state as any)._ts < TTL)) return
     set({ isLoading: true, error: null })
     try {
-      const data = await apiRequest<SpreadTemplate[]>('/api/v1/spread-templates/')
+      const response = await spreadTemplatesAPI.getAll()
+      // API 回傳格式: { spreads: [...], total_count: N, page: 1, page_size: 20 }
+      const data = Array.isArray(response) ? response : (response as any).spreads || []
       const map: Record<string, SpreadTemplate> = {}
-      data.forEach(t => { map[t.id] = t })
+      data.forEach((t: SpreadTemplate) => { map[t.id] = t })
       set({ templates: data, byId: map, isLoading: false, error: null, _ts: Date.now() } as any)
     } catch (e: any) {
       set({ error: e?.message || '讀取牌陣模板失敗', isLoading: false })

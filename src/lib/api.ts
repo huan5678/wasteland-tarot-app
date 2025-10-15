@@ -1,8 +1,13 @@
 /**
  * API 服務層 - 與後端 FastAPI 通信
+ *
+ * 重要：使用 Next.js API Proxy 解決 Cookie 跨 port 問題
+ * - 所有 /api/v1/* 請求會自動被 Next.js rewrites 轉發至 localhost:8000
+ * - 這解決了 Chrome 拒絕接收 SameSite=lax cookies 的問題
+ * - API_BASE_URL 設為空字串，使用相對路徑（/api/v1/...）
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
 interface TarotCard {
   id: string
@@ -43,7 +48,6 @@ interface User {
   display_name?: string
   faction_alignment?: string
   karma_score?: number
-  vault_number?: number
   experience_level?: string
   total_readings?: number
   created_at: string
@@ -65,7 +69,44 @@ class APIError extends Error {
 import { useErrorStore } from './errorStore'
 import { timedFetch } from './metrics'
 
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+// Global token refresh lock to prevent concurrent refresh requests
+let refreshTokenPromise: Promise<boolean> | null = null
+
+/**
+ * Global token refresh with concurrency lock
+ * - Only one refresh request can be in flight at a time
+ * - Other requests wait for the active refresh to complete
+ * - Returns true if refresh succeeded, false otherwise
+ */
+async function refreshToken(): Promise<boolean> {
+  // If refresh is already in progress, wait for it
+  if (refreshTokenPromise) {
+    return refreshTokenPromise
+  }
+
+  // Create new refresh promise
+  refreshTokenPromise = (async () => {
+    try {
+      const refreshResponse = await timedFetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+      })
+      return refreshResponse.ok
+    } catch (error) {
+      console.error('Token refresh failed:', error)
+      return false
+    } finally {
+      // Clear the lock after 100ms to allow future refreshes
+      setTimeout(() => {
+        refreshTokenPromise = null
+      }, 100)
+    }
+  })()
+
+  return refreshTokenPromise
+}
+
+export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
 
   const defaultHeaders = {
@@ -102,33 +143,37 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
 
-        // 401 Unauthorized - 嘗試刷新 token（僅一次）
+        // 401 Unauthorized - 嘗試刷新 token（使用全域鎖）
         if (response.status === 401 && endpoint !== '/api/v1/auth/refresh' && endpoint !== '/api/v1/auth/login') {
-          try {
-            // 呼叫 refresh endpoint
-            const refreshResponse = await timedFetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
-              method: 'POST',
+          const refreshSucceeded = await refreshToken()
+
+          if (refreshSucceeded) {
+            // Token 刷新成功，重試原始請求
+            const retryResponse = await timedFetch(url, {
+              ...options,
+              headers: {
+                ...defaultHeaders,
+                ...options.headers,
+              },
               credentials: 'include',
             })
 
-            if (refreshResponse.ok) {
-              // Token 刷新成功，重試原始請求
-              const retryResponse = await timedFetch(url, {
-                ...options,
-                headers: {
-                  ...defaultHeaders,
-                  ...options.headers,
-                },
-                credentials: 'include',
-              })
-
-              if (retryResponse.ok) {
-                return retryResponse.json()
+            if (retryResponse.ok) {
+              return retryResponse.json()
+            } else {
+              // Retry also failed - token might be expired
+              const retryError = await retryResponse.json().catch(() => ({ detail: 'Unknown error' }))
+              throw new APIError(retryError.detail || `HTTP ${retryResponse.status}`, retryResponse.status)
+            }
+          } else {
+            // Refresh failed - redirect to login
+            if (typeof window !== 'undefined') {
+              const currentPath = window.location.pathname
+              if (currentPath !== '/auth/login' && !currentPath.startsWith('/auth')) {
+                window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentPath)}`
               }
             }
-          } catch (refreshError) {
-            // 刷新失敗，繼續拋出原始 401 錯誤
-            console.error('Token refresh failed:', refreshError)
+            throw new APIError('Authentication expired', 401)
           }
         }
 
@@ -239,7 +284,6 @@ export const authAPI = {
     name: string
     display_name?: string
     faction_alignment?: string
-    vault_number?: number
     wasteland_location?: string
   }): Promise<{ message: string; user: User }> =>
     apiRequest('/api/v1/auth/register', {
@@ -323,10 +367,14 @@ export const sessionsAPI = {
 
   // Update session (auto-save)
   update: (id: string, data: SessionUpdateRequest, expectedUpdatedAt?: string): Promise<ReadingSession> => {
-    const query = expectedUpdatedAt ? `?expected_updated_at=${expectedUpdatedAt}` : ''
-    return apiRequest(`/api/v1/sessions/${id}${query}`, {
+    // Include expected_updated_at in request body for optimistic locking
+    const requestBody = expectedUpdatedAt
+      ? { ...data, expected_updated_at: expectedUpdatedAt }
+      : data
+
+    return apiRequest(`/api/v1/sessions/${id}`, {
       method: 'PATCH',
-      body: JSON.stringify(data),
+      body: JSON.stringify(requestBody),
     })
   },
 
@@ -337,9 +385,15 @@ export const sessionsAPI = {
     }),
 
   // Complete session (convert to Reading)
-  complete: (id: string): Promise<SessionCompletionResult> =>
+  complete: (id: string, data?: {
+    interpretation?: string
+    character_voice?: string
+    karma_context?: string
+    faction_influence?: string
+  }): Promise<SessionCompletionResult> =>
     apiRequest(`/api/v1/sessions/${id}/complete`, {
       method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
     }),
 
   // Sync offline session
@@ -355,6 +409,10 @@ export const sessionsAPI = {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+}
+
+export const spreadTemplatesAPI = {
+  getAll: (): Promise<any[]> => apiRequest<any[]>('/api/v1/spreads'),
 }
 
 export type { TarotCard, Reading, User, APIError }

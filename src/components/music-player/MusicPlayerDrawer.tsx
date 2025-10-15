@@ -220,7 +220,12 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
 
             {/* Header */}
             <div className="flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg sm:text-xl font-bold">音樂播放器</h2>
+              <div>
+                <h2 className="text-lg sm:text-xl font-bold">音樂播放器</h2>
+                <p className="text-xs text-pip-boy-green/70 mt-1">
+                  [ 避難所標準作業程序 §17.9：命運預測時啟用音樂可提升準確度 3.6% ]
+                </p>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleMinimize}

@@ -37,7 +37,7 @@ class ReadingService:
         # Extract data from dictionary
         user_id = reading_data["user_id"]
         question = reading_data["question"]
-        reading_type = reading_data["reading_type"]
+        reading_type = reading_data["spread_type"]
         num_cards = reading_data.get("num_cards", 1)
         character_voice = reading_data.get("character_voice", CharacterVoice.PIP_BOY)
         radiation_factor = reading_data.get("radiation_factor", 0.5)
@@ -90,7 +90,6 @@ class ReadingService:
             faction_influence=user.faction_alignment if hasattr(user, 'faction_alignment') else None,
             is_private=True,  # Default to private
             allow_public_sharing=False,
-            tags=[],
             mood=self._detect_question_mood(question),
             reading_duration=0  # Will be updated when user finishes
         )
@@ -174,7 +173,7 @@ class ReadingService:
 
         # Update allowed fields
         allowed_fields = [
-            "user_feedback", "accuracy_rating", "tags", "mood", "notes", "context_notes",
+            "user_feedback", "accuracy_rating", "mood", "notes", "context_notes",
             "is_private", "allow_public_sharing", "share_with_friends", "is_favorite"
         ]
 

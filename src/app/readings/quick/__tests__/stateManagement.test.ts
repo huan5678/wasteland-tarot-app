@@ -21,15 +21,15 @@ describe('狀態管理輔助函式測試', () => {
     it('應該成功初始化卡牌池', () => {
       // 模擬卡牌池初始化
       const mockCards = [
-        { id: '0', name: 'The Fool', suit: '大阿爾克那' },
-        { id: '1', name: 'The Magician', suit: '大阿爾克那' },
-        { id: '2', name: 'The High Priestess', suit: '大阿爾克那' },
-        { id: '3', name: 'The Empress', suit: '大阿爾克那' },
-        { id: '4', name: 'The Emperor', suit: '大阿爾克那' },
+        { id: '0', name: 'The Fool', suit: 'major_arcana' },
+        { id: '1', name: 'The Magician', suit: 'major_arcana' },
+        { id: '2', name: 'The High Priestess', suit: 'major_arcana' },
+        { id: '3', name: 'The Empress', suit: 'major_arcana' },
+        { id: '4', name: 'The Emperor', suit: 'major_arcana' },
       ]
 
       expect(mockCards.length).toBe(5)
-      expect(mockCards.every((card) => card.suit === '大阿爾克那')).toBe(true)
+      expect(mockCards.every((card) => card.suit === 'major_arcana')).toBe(true)
     })
 
     it('初始化失敗時應該返回空陣列', () => {

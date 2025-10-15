@@ -16,11 +16,12 @@ export const mockUser = {
 }
 
 // 測試塔羅牌資料
+// 注意：suit 必須使用 API 枚舉值，不能用中文名稱
 export const mockTarotCards = [
   {
     id: 1,
     name: '愚者',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：使用 API 枚舉值
     number: 0,
     meaning_upright: '新的開始、純真、自發性、自由精神',
     meaning_reversed: '魯莽、愚蠢、冒險、輕率',
@@ -30,7 +31,7 @@ export const mockTarotCards = [
   {
     id: 2,
     name: '魔術師',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：使用 API 枚舉值
     number: 1,
     meaning_upright: '意志力、渴望、創造、顯化',
     meaning_reversed: '操縱、詭計、缺乏能量',
@@ -40,7 +41,7 @@ export const mockTarotCards = [
   {
     id: 3,
     name: '女祭司',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：使用 API 枚舉值
     number: 2,
     meaning_upright: '直覺、神聖知識、潛意識、內在聲音',
     meaning_reversed: '缺乏中心、迷失方向、壓抑情感',
@@ -50,7 +51,7 @@ export const mockTarotCards = [
   {
     id: 4,
     name: '權杖一',
-    suit: '權杖',
+    suit: 'radiation_rods', // 修正：權杖 → radiation_rods (Wands)
     number: 1,
     meaning_upright: '創意、新項目、行動、靈感',
     meaning_reversed: '缺乏方向、創意受阻、延遲',
@@ -60,7 +61,7 @@ export const mockTarotCards = [
   {
     id: 5,
     name: '聖杯一',
-    suit: '聖杯',
+    suit: 'nuka_cola_bottles', // 修正：聖杯 → nuka_cola_bottles (Cups)
     number: 1,
     meaning_upright: '愛、新關係、同情心、創造力',
     meaning_reversed: '自私、情感受阻、空虛',
@@ -70,7 +71,7 @@ export const mockTarotCards = [
   {
     id: 6,
     name: '寶劍一',
-    suit: '寶劍',
+    suit: 'combat_weapons', // 修正：寶劍 → combat_weapons (Swords)
     number: 1,
     meaning_upright: '突破、新想法、精神清晰、溝通',
     meaning_reversed: '困惑、殘酷、混亂、缺乏清晰度',
@@ -80,7 +81,7 @@ export const mockTarotCards = [
   {
     id: 7,
     name: '錢幣一',
-    suit: '錢幣',
+    suit: 'bottle_caps', // 修正：錢幣 → bottle_caps (Pentacles)
     number: 1,
     meaning_upright: '新機會、顯化、豐盛、新事業',
     meaning_reversed: '錯失機會、缺乏規劃、糟糕投資',
@@ -134,7 +135,7 @@ export const mockReadings = [
 export const createMockTarotCard = (overrides = {}) => ({
   id: 1,
   name: '愚者',
-  suit: '大阿爾克那',
+  suit: 'major_arcana', // 修正：使用 API 枚舉值
   number: 0,
   meaning_upright: '新的開始、純真、自發性、自由精神',
   meaning_reversed: '魯莽、愚蠢、冒險、輕率',

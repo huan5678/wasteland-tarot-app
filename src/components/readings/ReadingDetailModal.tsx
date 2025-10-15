@@ -1,15 +1,13 @@
 'use client'
 import React from 'react'
 import { PixelIcon } from '@/components/ui/icons'
-import { ReadingMetaEditor } from './ReadingMetaEditor'
-import { CategoryManager } from './CategoryManager'
-import { TagsManager } from './TagsManager'
 import { ReadingNotesSystem } from './ReadingNotesSystem'
 import { ExportShareTools } from './ExportShareTools'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
 import { CardDetailModal, DetailedTarotCard } from '@/components/tarot/CardDetailModal'
 import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
+import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
 
 interface Props {
   id: string | null
@@ -17,35 +15,33 @@ interface Props {
 }
 
 export function ReadingDetailModal({ id, onClose }: Props) {
-  const { byId, toggleFavorite, toggleArchived, categories } = useReadingsStore()
+  const { byId, toggleFavorite, toggleArchived } = useReadingsStore()
   const reading = id ? byId[id] : null
-  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'category' | 'tags' | 'export'>('overview')
-  const [editing, setEditing] = useState(false)
-  const [selectedCard, setSelectedCard] = useState<DetailedTarotCard | null>(null)
-  const [isCardModalOpen, setIsCardModalOpen] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'notes' | 'export'>('overview')
+  const { templates, fetchTemplates } = useSpreadTemplatesStore()
+  const [spreadTemplate, setSpreadTemplate] = useState<any>(null)
 
-  // Get category info
-  const category = reading?.category_id ? categories.find(c => c.id === reading.category_id) : null
+  // Fetch spread template
+  useEffect(() => {
+    if (reading?.spread_template_id) {
+      fetchTemplates()
+    }
+  }, [reading?.spread_template_id, fetchTemplates])
 
-  const handleCardClick = (card: any) => {
-    const detailedCard = enhanceCardWithWastelandData(card)
-    setSelectedCard(detailedCard)
-    setIsCardModalOpen(true)
-  }
-
-  const handleCloseCardModal = () => {
-    setIsCardModalOpen(false)
-    setSelectedCard(null)
-  }
+  // Find matching template
+  useEffect(() => {
+    if (reading?.spread_template_id && templates.length > 0) {
+      const template = templates.find(t => t.id === reading.spread_template_id)
+      setSpreadTemplate(template)
+    }
+  }, [reading?.spread_template_id, templates])
 
   if (!id || !reading) return null
 
   const tabButtons = [
-    { id: 'overview', label: '總覽', icon: Spade },
-    { id: 'notes', label: '筆記', icon: FileText, badge: reading.detailed_notes?.length },
-    { id: 'category', label: '類別', icon: Hash },
-    { id: 'tags', label: '標籤', icon: Tag, badge: reading.tags?.length },
-    { id: 'export', label: '分享', icon: Share2 },
+    { id: 'overview', label: '總覽', icon: 'spade' },
+    { id: 'notes', label: '筆記', icon: 'note', badge: reading.detailed_notes?.length },
+    { id: 'export', label: '分享', icon: 'share' },
   ] as const
 
   return (
@@ -76,12 +72,6 @@ export function ReadingDetailModal({ id, onClose }: Props) {
               >
                 < PixelIcon name="archive" className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => setEditing(!editing)}
-                className="px-3 py-1 border border-pip-boy-green/50 text-pip-boy-green text-xs hover:bg-pip-boy-green/10"
-              >
-                {editing ? '完成' : '編輯'}
-              </button>
               <button onClick={onClose} className="text-pip-boy-green hover:text-pip-boy-green/80 text-2xl font-bold">×</button>
             </div>
           </div>
@@ -89,7 +79,6 @@ export function ReadingDetailModal({ id, onClose }: Props) {
           {/* Tab Navigation */}
           <div className="flex gap-1">
             {tabButtons.map(tab => {
-              const Icon = tab.icon
               const isActive = activeTab === tab.id
               return (
                 <button
@@ -101,7 +90,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                       : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <PixelIcon name={tab.icon} className="w-4 h-4" />
                   {tab.label}
                   {tab.badge && tab.badge > 0 && (
                     <span className="px-1.5 py-0.5 bg-pip-boy-green text-wasteland-dark text-xs rounded">
@@ -120,22 +109,12 @@ export function ReadingDetailModal({ id, onClose }: Props) {
             {/* Overview Tab */}
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                {editing && <ReadingMetaEditor readingId={reading.id} onClose={() => setEditing(false)} />}
-
                 {/* Reading Header */}
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-pip-boy-green">
-                        {reading.spread_type === 'single' ? '單張卡牌' : '三張卡牌'} 占卜
-                      </h3>
-                      {category && (
-                        <div className="flex items-center gap-1 px-2 py-1 border border-pip-boy-green/30 bg-pip-boy-green/5">
-                          <span style={{ color: category.color }}>{category.icon}</span>
-                          <span className="text-pip-boy-green/70 text-xs">{category.name}</span>
-                        </div>
-                      )}
-                    </div>
+                    <h3 className="text-lg font-bold text-pip-boy-green">
+                      {reading.spread_type === 'single' ? '單張卡牌' : '三張卡牌'} 占卜
+                    </h3>
                     <span className="text-pip-boy-green/70 text-sm">
                       {new Date(reading.created_at || reading.date).toLocaleString()}
                     </span>
@@ -143,46 +122,56 @@ export function ReadingDetailModal({ id, onClose }: Props) {
                   <p className="text-pip-boy-green/80 text-sm italic mb-4">
                     問題："{reading.question}"
                   </p>
-
-                  {/* Tags */}
-                  {reading.tags && reading.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {reading.tags.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/30 text-pip-boy-green text-xs">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
                 {/* Cards */}
                 <div>
                   <h4 className="text-pip-boy-green font-bold mb-3">抽取的卡牌：</h4>
-                  <div className="grid gap-3">
-                    {(reading.cards_drawn || reading.cards || []).map((card: any, index: number) => (
-                      <div
-                        key={index}
-                        className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 cursor-pointer hover:bg-pip-boy-green/10 hover:border-pip-boy-green/50 transition-colors"
-                        onClick={() => handleCardClick(card)}
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-18 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
-                            < PixelIcon name="spade" className="w-4 h-4" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    {(reading.cards_drawn || reading.cards || []).map((card: any, index: number) => {
+                      // Get position label from spread template positions
+                      const positionLabel = spreadTemplate?.positions?.[index]?.chinese_name
+                        || spreadTemplate?.positions?.[index]?.name
+                        || `位置 ${index + 1}`
+
+                      // Get card image URL - need to convert to TarotCard format
+                      const cardImagePath = card.slug
+                        ? `/images/cards/${card.slug}.jpg`
+                        : '/images/cards/back.jpg'
+
+                      return (
+                        <div key={index} className="flex flex-col items-center space-y-2">
+                          {/* Card Image */}
+                          <div className="relative w-full aspect-[2/3] border-2 border-pip-boy-green/50 bg-pip-boy-green/5 overflow-hidden">
+                            <img
+                              src={cardImagePath}
+                              alt={card.name || '未知卡牌'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = '/images/cards/back.jpg'
+                              }}
+                            />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-pip-boy-green text-sm font-bold">{card.name || '未知卡牌'}</p>
-                            <p className="text-pip-boy-green/70 text-xs">{card.suit || 'Suit'}</p>
-                            {reading.spread_type === 'three_card' && (
-                              <p className="text-pip-boy-green/60 text-xs">
-                                {index === 0 ? '過去' : index === 1 ? '現在' : '未來'}
-                              </p>
-                            )}
+
+                          {/* Position Label */}
+                          <div className="w-full px-2 py-1.5 border border-pip-boy-green/30 bg-pip-boy-green/10 text-center">
+                            <p className="text-pip-boy-green text-xs font-bold">
+                              {positionLabel}
+                            </p>
                           </div>
-                          <div className="text-pip-boy-green/40 text-xs">點擊查看詳情</div>
+
+                          {/* Card Info */}
+                          <div className="w-full text-center space-y-0.5">
+                            <p className="text-pip-boy-green text-sm font-bold">
+                              {card.name || '未知卡牌'}
+                            </p>
+                            <p className="text-pip-boy-green/70 text-xs">
+                              {card.suit || 'Unknown Suit'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
@@ -235,29 +224,6 @@ export function ReadingDetailModal({ id, onClose }: Props) {
               <ReadingNotesSystem readingId={reading.id} />
             )}
 
-            {/* Category Tab */}
-            {activeTab === 'category' && (
-              <CategoryManager
-                selectedReadingId={reading.id}
-                onCategoryAssigned={() => {
-                  // Category was assigned, could refresh data or show success message
-                }}
-              />
-            )}
-
-            {/* Tags Tab */}
-            {activeTab === 'tags' && (
-              <TagsManager
-                selectedTags={reading.tags || []}
-                onTagsChange={async (tags) => {
-                  // Update reading with new tags
-                  const { updateReading } = useReadingsStore.getState()
-                  await updateReading(reading.id, { tags })
-                }}
-                mode="select"
-              />
-            )}
-
             {/* Export Tab */}
             {activeTab === 'export' && (
               <ExportShareTools selectedReadingIds={[reading.id]} />
@@ -265,13 +231,6 @@ export function ReadingDetailModal({ id, onClose }: Props) {
           </div>
         </div>
       </div>
-
-      {/* Card Detail Modal */}
-      <CardDetailModal
-        card={selectedCard}
-        isOpen={isCardModalOpen}
-        onClose={handleCloseCardModal}
-      />
     </div>
   )
 }

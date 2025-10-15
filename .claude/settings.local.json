@@ -68,7 +68,8 @@
       "Bash(bun add:*)",
       "Bash(node test-audio-simple.js:*)",
       "Bash(.venv/bin/alembic upgrade head)",
-      "Bash(.venv/bin/alembic current -v)"
+      "Bash(.venv/bin/alembic current -v)",
+      "mcp__chrome-devtools__fill_form"
     ]
   },
   "enableAllProjectMcpServers": true,

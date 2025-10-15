@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { CardDraw } from '@/components/tarot/CardDraw'
+import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
 import { PixelIcon } from '@/components/ui/icons'
 import { readingsAPI } from '@/lib/api'
 import { SpreadSelector } from '@/components/readings/SpreadSelector'
@@ -15,7 +16,11 @@ import { useAnalytics, useReadingTracking } from '@/hooks/useAnalytics'
 import { useSessionStore } from '@/lib/sessionStore'
 import { useAutoSave, useSessionChangeTracker } from '@/hooks/useAutoSave'
 import { AutoSaveIndicator } from '@/components/session/AutoSaveIndicator'
+import { CardDetailModal } from '@/components/tarot/CardDetailModal'
+import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
+import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
 import type { SessionState } from '@/types/session'
+import commonQuestionsData from '@/data/commonTarotQuestions.json'
 
 interface TarotCardWithPosition {
   id: number
@@ -32,15 +37,29 @@ interface TarotCardWithPosition {
 export default function NewReadingPage() {
   const router = useRouter()
   const user = useAuthStore(s => s.user)
-  const token = useAuthStore(s => s.token)
   const [step, setStep] = useState<'setup' | 'drawing' | 'results'>('setup')
   const [question, setQuestion] = useState('')
-  const [spreadType, setSpreadType] = useState<string>('single')
+  const [spreadType, setSpreadType] = useState<string>('single_wasteland_reading')
   const [drawnCards, setDrawnCards] = useState<TarotCardWithPosition[]>([])
   const [interpretation, setInterpretation] = useState('')
   const [isGeneratingInterpretation, setIsGeneratingInterpretation] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [readingId, setReadingId] = useState<string>()
+
+  // 從每個類別隨機選一個問題
+  const [randomQuestions] = useState(() => {
+    return commonQuestionsData.categories.map(category => {
+      const randomIndex = Math.floor(Math.random() * category.questions.length)
+      return {
+        text: category.questions[randomIndex],
+        category: category.name
+      }
+    })
+  })
+
+  // Card Detail Modal state
+  const [selectedCardForDetail, setSelectedCardForDetail] = useState<DetailedTarotCard | null>(null)
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false)
 
   // Analytics hooks
   const { trackReadingCreated, trackReadingCompleted, trackFeatureUsage } = useAnalytics()
@@ -76,6 +95,10 @@ export default function NewReadingPage() {
     watchFields: ['session_state', 'question'],
   })
 
+  // Track if session has been initialized to prevent infinite loop
+  const sessionInitialized = useRef(false)
+  const initialSessionId = useRef<string | null>(null)
+
   // Initialize or resume session on mount
   useEffect(() => {
     const initializeSession = async () => {
@@ -83,47 +106,55 @@ export default function NewReadingPage() {
 
       // Check if there's an active session to resume
       if (activeSession) {
-        // Restore state from active session
-        if (activeSession.question) setQuestion(activeSession.question)
-        if (activeSession.spread_type) setSpreadType(activeSession.spread_type)
+        // Only initialize if this is a new session or first load
+        if (!sessionInitialized.current || initialSessionId.current !== activeSession.id) {
+          sessionInitialized.current = true
+          initialSessionId.current = activeSession.id
 
-        const sessionState = activeSession.session_state
-        if (sessionState) {
-          // Restore cards if they exist
-          if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
-            const restoredCards: TarotCardWithPosition[] = sessionState.cards_drawn.map((card) => ({
-              id: parseInt(card.card_id),
-              name: card.card_name,
-              suit: card.suit || '',
-              position: card.position as 'upright' | 'reversed',
-              meaning_upright: '',
-              meaning_reversed: '',
-              image_url: '',
-              keywords: [],
-            }))
-            setDrawnCards(restoredCards)
-          }
+          // Restore state from active session
+          if (activeSession.question) setQuestion(activeSession.question)
+          if (activeSession.spread_type) setSpreadType(activeSession.spread_type)
 
-          // Restore interpretation progress
-          if (sessionState.interpretation_progress?.text) {
-            setInterpretation(sessionState.interpretation_progress.text)
-          }
-
-          // Determine current step based on state
-          if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
-            if (sessionState.interpretation_progress?.completed) {
-              setStep('results')
-            } else {
-              setStep('drawing')
+          const sessionState = activeSession.session_state
+          if (sessionState) {
+            // Restore cards if they exist
+            if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
+              const restoredCards: TarotCardWithPosition[] = sessionState.cards_drawn.map((card) => ({
+                id: parseInt(card.card_id),
+                name: card.card_name,
+                suit: card.suit || '',
+                position: card.position as 'upright' | 'reversed',
+                meaning_upright: '',
+                meaning_reversed: '',
+                image_url: '',
+                keywords: [],
+              }))
+              setDrawnCards(restoredCards)
             }
-          } else {
-            setStep('setup')
-          }
-        }
 
-        console.log('恢復現有會話:', activeSession.id)
+            // Restore interpretation progress
+            if (sessionState.interpretation_progress?.text) {
+              setInterpretation(sessionState.interpretation_progress.text)
+            }
+
+            // Determine current step based on state
+            if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
+              if (sessionState.interpretation_progress?.completed) {
+                setStep('results')
+              } else {
+                setStep('drawing')
+              }
+            } else {
+              setStep('setup')
+            }
+          }
+
+          console.log('恢復現有會話:', activeSession.id)
+        }
       } else {
-        // No active session, we'll create one when user starts
+        // Reset initialization flag when no active session
+        sessionInitialized.current = false
+        initialSessionId.current = null
         console.log('無現有會話，等待用戶開始新占卜')
       }
     }
@@ -194,7 +225,29 @@ export default function NewReadingPage() {
   // Update session state when relevant data changes
   useEffect(() => {
     if (activeSession && (drawnCards.length > 0 || interpretation)) {
-      updateSessionState()
+      // Update the active session in the store to trigger auto-save
+      const sessionState: SessionState = {
+        cards_drawn: drawnCards.map((card) => ({
+          card_id: card.id.toString(),
+          card_name: card.name,
+          suit: card.suit,
+          position: card.position,
+          drawn_at: new Date().toISOString(),
+        })),
+        current_card_index: drawnCards.length,
+        interpretation_progress: {
+          started: interpretation.length > 0,
+          completed: !isGeneratingInterpretation && interpretation.length > 0,
+          text: interpretation,
+        },
+      }
+
+      // Update local state only - auto-save will handle the API call
+      setActiveSession({
+        ...activeSession,
+        session_state: sessionState,
+        question: question,
+      })
     }
   }, [drawnCards, interpretation, isGeneratingInterpretation])
 
@@ -284,57 +337,55 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
   }
 
   const handleSaveReading = async () => {
-    if (!user || !token) {
+    console.log('[handleSaveReading] Called')
+    console.log('[handleSaveReading] user:', user)
+    console.log('[handleSaveReading] activeSession:', activeSession)
+    console.log('[handleSaveReading] completeSession function:', completeSession)
+
+    if (!user) {
+      console.log('[handleSaveReading] No user, redirecting to login')
       router.push('/auth/login')
       return
     }
 
+    // Must have an active session to complete
+    if (!activeSession) {
+      console.log('[handleSaveReading] No active session!')
+      toast.error('保存失敗', { description: '找不到會話記錄' })
+      return
+    }
+
     setIsSaving(true)
+    console.log('[handleSaveReading] Calling completeSession with id:', activeSession.id)
 
     try {
-      const readingData = {
-        question: question,
-        spread_type: toCanonical(spreadType),
-        cards_drawn: drawnCards.map(card => ({
-          id: card.id.toString(),
-          name: card.name,
-          suit: card.suit,
-          position: card.position,
-          position_meta: (card as any)._position_meta,
-          meaning: card.position === 'upright' ? card.meaning_upright : card.meaning_reversed
-        })),
+      // Complete the session (creates Reading record internally)
+      const result = await completeSession(activeSession.id, {
         interpretation: interpretation,
         character_voice: 'pip-boy',
         karma_context: 'neutral',
         faction_influence: 'vault-tec'
-      }
+      })
 
-      import('@/lib/actionTracker').then(m=>m.track('reading:create',{question, spread: spreadType, cards: readingData.cards_drawn.length}))
-      const savedReading = await readingsAPI.create(readingData)
-      console.log('Reading saved successfully:', savedReading)
-
-      // Set reading ID for tracking
-      if (savedReading.id) {
-        setReadingId(savedReading.id)
-      }
-
-      // Complete the session (convert to reading)
-      if (activeSession) {
-        try {
-          await completeSession(activeSession.id)
-          console.log('會話已標記為完成:', activeSession.id)
-        } catch (error) {
-          console.error('標記會話為完成失敗:', error)
-          // Continue anyway - reading is saved
-        }
-      }
+      console.log('會話已完成並轉換為 Reading:', result)
 
       // Track reading completion
       const duration = Math.floor((Date.now() - readingStartTime.current) / 1000)
-      trackReadingCompleted({
-        reading_id: savedReading.id || 'unknown',
-        duration: duration
-      })
+      if (result.reading_id) {
+        setReadingId(result.reading_id)
+        trackReadingCompleted({
+          reading_id: result.reading_id,
+          duration: duration
+        })
+      }
+
+      // Track action
+      import('@/lib/actionTracker').then(m=>m.track('reading:create',{
+        question,
+        spread: spreadType,
+        cards: drawnCards.length,
+        reading_id: result.reading_id
+      }))
 
       // Show success message and redirect
       toast.success('占卜已保存', { description: '你的占卜結果已成功儲存至 Vault' })
@@ -354,10 +405,24 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
     setStep('setup')
     setQuestion('')
-    setSpreadType('single')
+    setSpreadType('single_wasteland_reading')
     setDrawnCards([])
     setInterpretation('')
     readingStartTime.current = Date.now()
+  }
+
+  // Handle card click to show detail modal
+  const handleCardClick = (card: TarotCardWithPosition) => {
+    // Enhance card data with Wasteland information
+    const enhancedCard = enhanceCardWithWastelandData(card)
+    setSelectedCardForDetail(enhancedCard)
+    setIsCardModalOpen(true)
+  }
+
+  // Handle modal close
+  const handleCloseCardModal = () => {
+    setIsCardModalOpen(false)
+    setSelectedCardForDetail(null)
   }
 
   return (
@@ -431,16 +496,35 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                   rows={4}
                   required
                 />
+
+                {/* 常見問題 Tags */}
+                <div className="mt-3 space-y-2">
+                  <p className="text-pip-boy-green/70 text-xs flex items-center">
+                    <PixelIcon name="star" size={14} className="mr-1" decorative />
+                    常見問題：
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {randomQuestions.map((item, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        onClick={() => setQuestion(item.text)}
+                        className="px-3 py-1.5 text-xs border border-pip-boy-green/40 text-pip-boy-green/80 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/60 hover:text-pip-boy-green transition-all duration-200 rounded-sm focus:outline-none focus:ring-1 focus:ring-pip-boy-green/30"
+                        title={`${item.category}類問題`}
+                      >
+                        {item.text}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <p className="text-pip-boy-green/60 text-xs mt-2 flex items-center">
                   <PixelIcon name="zap" size={16} className="mr-1" decorative />提示：請具體說明你真正需要指引的事項
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-4">
-                  <SpreadSelector value={spreadType} onChange={(v)=> setSpreadType(v as any)} />
-                  <SpreadLayoutPreview spreadType={spreadType} />
-                </div>
+                <SpreadSelector value={spreadType} onChange={(v)=> setSpreadType(v as any)} />
               </div>
 
               <button
@@ -488,26 +572,33 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                 <PixelIcon name="card-stack" size={20} className="mr-2" decorative />你的卡牌
               </h3>
 
-              <div className="flex justify-center gap-4 mb-6">
-                {drawnCards.map((card, index) => (
-                  <div key={`${card.id}-${index}`} className="text-center">
-                    <div className="mb-2">
-                      {/* The TarotCard component would be rendered here */}
-                      <div className="w-32 h-48 border-2 border-pip-boy-green bg-pip-boy-green/10 rounded flex items-center justify-center">
-                        <div className="text-center text-pip-boy-green">
-                          <PixelIcon name="card-stack" size={32} className="mb-2 mx-auto" decorative />
-                          <div className="text-xs font-bold">{card.name}</div>
-                          <div className="text-xs">{card.position}</div>
-                        </div>
-                      </div>
+              <div className="flex justify-center mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+                {drawnCards.map((card, index) => {
+                  // 取得位置標籤
+                  const positionLabel = (card as any)._position_meta ||
+                    (spreadType === 'three_card'
+                      ? (index === 0 ? '戰前狀況' : index === 1 ? '當前廢土' : '重建希望')
+                      : `位置 ${index + 1}`)
+
+                  return (
+                    <div
+                      key={`${card.id}-${index}`}
+                      className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                      onClick={() => handleCardClick(card)}
+                    >
+                      <CardThumbnailFlippable
+                        card={card}
+                        isRevealed={true}
+                        position={card.position}
+                        size="medium"
+                        positionLabel={positionLabel}
+                        onClick={() => handleCardClick(card)}
+                      />
                     </div>
-                    {spreadType === 'three_card' && (
-                      <p className="text-pip-boy-green/70 text-xs">
-                        {index === 0 ? '戰前狀況' : index === 1 ? '當前廢土' : '重建希望'}
-                      </p>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
+                </div>
               </div>
             </div>
 
@@ -554,6 +645,21 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
           </div>
         )}
       </div>
+
+      {/* Card Detail Modal */}
+      <CardDetailModal
+        card={selectedCardForDetail}
+        isOpen={isCardModalOpen}
+        onClose={handleCloseCardModal}
+        initialTab="overview"
+        enableAudio={true}
+        showQuickActions={true}
+        isGuestMode={!user}
+        showBookmark={!!user}
+        showShare={true}
+        showStudyMode={!!user}
+        showPersonalNotes={!!user}
+      />
     </div>
   )
 }

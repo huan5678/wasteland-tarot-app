@@ -13,6 +13,7 @@ from supabase import Client
 
 from app.core.supabase import get_supabase_client
 from app.core.dependencies import get_current_user, get_optional_current_user
+from app.models.user import User
 from app.schemas.music import (
     PresetCreate,
     PresetUpdate,
@@ -56,10 +57,10 @@ router = APIRouter()
 async def create_preset(
     data: PresetCreate,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> PresetResponse:
     """儲存 Preset (Task 2.1)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 插入 Preset
@@ -119,10 +120,10 @@ async def create_preset(
 )
 async def get_user_presets(
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> List[PresetResponse]:
     """獲取使用者所有 Presets (Task 2.1)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 查詢使用者 Presets + 系統預設
@@ -176,10 +177,10 @@ async def update_preset(
     preset_id: str,
     data: PresetUpdate,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> PresetResponse:
     """更新 Preset (Task 2.1)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查 Preset 是否存在且擁有
@@ -280,11 +281,10 @@ async def update_preset(
 async def delete_preset(
     preset_id: str,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     """刪除 Preset (Task 2.1)"""
-    user_id = current_user["id"]
-
+    user_id = current_user.id
     try:
         # 檢查 Preset 是否存在且擁有
         check_response = supabase.table("user_rhythm_presets")\
@@ -356,7 +356,7 @@ async def get_public_presets(
     limit: int = Query(20, ge=1, le=100, description="每頁數量（最大 100）"),
     sort: str = Query("created_at_desc", description="排序方式：created_at_desc | created_at_asc | name_asc | name_desc"),
     supabase: Client = Depends(get_supabase_client),
-    current_user: Optional[dict] = Depends(get_optional_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> PublicPresetsResponse:
     """獲取公開歌曲列表 (Task 2.2)"""
     try:
@@ -500,7 +500,7 @@ async def get_public_presets(
 async def batch_get_patterns(
     request: BatchGetPatternsRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: Optional[dict] = Depends(get_optional_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
 ) -> BatchGetPatternsResponse:
     """批次獲取 Pattern 詳情 (Task 2.3)"""
     try:
@@ -578,10 +578,10 @@ async def batch_get_patterns(
 async def generate_rhythm(
     request: AIGenerateRhythmRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> AIGenerateRhythmResponse:
     """AI 生成節奏 (Task 2.7)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 查詢配額
@@ -681,10 +681,10 @@ async def generate_rhythm(
 )
 async def get_quota(
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> QuotaResponse:
     """查詢 AI 生成配額 (Task 2.8)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 查詢配額

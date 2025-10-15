@@ -66,8 +66,7 @@ const mockReadings = [
     created_at: '2024-01-15T10:30:00Z',
     is_private: false,
     accuracy_rating: 4.2,
-    user_feedback: 'Very insightful reading!',
-    tags: ['guidance', 'future', 'leadership']
+    user_feedback: 'Very insightful reading!'
   },
   {
     id: '2',
@@ -102,8 +101,7 @@ const mockReadings = [
     created_at: '2024-01-14T14:20:00Z',
     is_private: true,
     accuracy_rating: null,
-    user_feedback: null,
-    tags: ['trust', 'caution', 'relationships']
+    user_feedback: null
   }
 ]
 
@@ -144,8 +142,7 @@ export const readingHandlers = [
       created_at: new Date().toISOString(),
       is_private: body.is_private || false,
       accuracy_rating: null,
-      user_feedback: null,
-      tags: body.tags || []
+      user_feedback: null
     }
 
     // Add mock cards based on spread type
@@ -256,7 +253,6 @@ export const readingHandlers = [
     const reading = mockReadings[readingIndex]
     if (body.user_feedback !== undefined) reading.user_feedback = body.user_feedback
     if (body.accuracy_rating !== undefined) reading.accuracy_rating = body.accuracy_rating
-    if (body.tags !== undefined) reading.tags = body.tags
     if (body.is_private !== undefined) reading.is_private = body.is_private
 
     return HttpResponse.json({

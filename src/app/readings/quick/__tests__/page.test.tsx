@@ -40,7 +40,7 @@ describe('QuickReadingPage - 任務 1: 頁面基礎架構與卡牌池初始化',
 
       // 驗證所有顯示的卡牌都是大阿爾克納
       const majorArcanaCards = enhancedWastelandCards.filter(
-        card => card.suit === '大阿爾克那'
+        card => card.suit === 'major_arcana'
       )
       expect(majorArcanaCards.length).toBeGreaterThanOrEqual(5)
     })

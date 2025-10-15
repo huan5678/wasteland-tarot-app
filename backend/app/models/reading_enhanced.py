@@ -20,6 +20,8 @@ class SpreadType(str, PyEnum):
     VAULT_TEC_SPREAD = "vault_tec_spread"  # 3 cards: past/present/future
     WASTELAND_SURVIVAL = "wasteland_survival"  # 5 cards
     BROTHERHOOD_COUNCIL = "brotherhood_council"  # 7 cards
+    CELTIC_CROSS = "celtic_cross"  # 10 cards: classic Celtic Cross adapted for Fallout
+    HORSESHOE = "horseshoe"  # 7 cards: horseshoe pattern for journey readings
     CUSTOM_SPREAD = "custom_spread"
 
 
@@ -89,7 +91,6 @@ class SpreadTemplate(BaseModel):
     is_active = Column(Boolean, default=True)
     is_premium = Column(Boolean, default=False)
     created_by = Column(String)  # User ID who created custom spreads
-    tags = Column(JSON, default=list)
 
     def get_position_meanings(self) -> List[Dict[str, Any]]:
         """Get detailed meanings for each position in the spread"""
@@ -117,7 +118,7 @@ class SpreadTemplate(BaseModel):
     def to_dict(self) -> Dict[str, Any]:
         """Convert spread template to dictionary"""
         return {
-            "id": self.id,
+            "id": str(self.id),  # Convert UUID to string
             "name": self.name,
             "display_name": self.display_name,
             "description": self.description,
@@ -134,11 +135,15 @@ class SpreadTemplate(BaseModel):
             "pip_boy_interface": self.pip_boy_interface,
             "usage_count": self.usage_count,
             "average_rating": self.average_rating,
+            "last_used": self.last_used,
             "is_active": self.is_active,
             "is_premium": self.is_premium,
-            "tags": self.tags,
+            "created_by": getattr(self, 'created_by', None),
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
             "complexity": self.calculate_complexity(),
-            "created_at": self.created_at.isoformat() if self.created_at else None
+            "estimated_duration": self.card_count * 2 + 5,  # Rough estimate in minutes
+            "reading_tips": None  # Optional field, not stored in DB
         }
 
 
@@ -288,7 +293,6 @@ class CompletedReading(BaseModel):
     accuracy_rating = Column(Integer)  # 1-5 rating how accurate it felt
     helpful_rating = Column(Integer)  # 1-5 rating how helpful it was
     user_feedback = Column(Text)
-    tags = Column(JSON, default=list)
 
     # Social Features
     likes_count = Column(Integer, default=0)
@@ -348,7 +352,6 @@ class CompletedReading(BaseModel):
             "accuracy_rating": self.accuracy_rating,
             "helpful_rating": self.helpful_rating,
             "overall_rating": self.get_overall_rating(),
-            "tags": self.tags,
             "likes_count": self.likes_count,
             "shares_count": self.shares_count,
             "comments_count": self.comments_count,

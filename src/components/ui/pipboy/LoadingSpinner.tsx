@@ -59,6 +59,7 @@ export function LoadingSpinner({
       role="status"
       aria-live="polite"
       aria-label={text || '載入中'}
+      suppressHydrationWarning
     >
       {/* 輻射符號旋轉動畫 */}
       <div
@@ -67,6 +68,7 @@ export function LoadingSpinner({
           filter: 'drop-shadow(0 0 10px rgba(51, 255, 51, 0.7))',
           animationDuration: '2s',
         }}
+        suppressHydrationWarning
       >
         <PixelIcon
           name="loader-3-line"

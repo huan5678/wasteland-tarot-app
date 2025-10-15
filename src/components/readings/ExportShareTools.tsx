@@ -313,24 +313,21 @@ ${reading.interpretation || '無解讀內容'}
                 <label className="block text-pip-boy-green text-sm mb-2">社群媒體分享</label>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {[
-                    { id: 'line', name: 'LINE', icon: MessageCircle, color: 'text-green-400' },
-                    { id: 'whatsapp', name: 'WhatsApp', icon: MessageCircle, color: 'text-green-400' },
-                    { id: 'twitter', name: 'Twitter', icon: MessageCircle, color: 'text-blue-400' },
-                    { id: 'email', name: 'Email', icon: Mail, color: 'text-pip-boy-green' },
-                  ].map(platform => {
-                    const Icon = platform.icon
-                    return (
-                      <button
-                        key={platform.id}
-                        onClick={() => openSocialShare(platform.id, readings.find(r => r.id === selectedReadingIds[0]))}
-                        className="p-2 border border-pip-boy-green/30 text-pip-boy-green/70
-                                 hover:border-pip-boy-green/60 hover:text-pip-boy-green flex items-center gap-2"
-                      >
-                        <Icon className={`w-4 h-4 ${platform.color}`} />
-                        {platform.name}
-                      </button>
-                    )
-                  })}
+                    { id: 'line', name: 'LINE', icon: 'message', color: 'text-green-400' },
+                    { id: 'whatsapp', name: 'WhatsApp', icon: 'message', color: 'text-green-400' },
+                    { id: 'twitter', name: 'Twitter', icon: 'message', color: 'text-blue-400' },
+                    { id: 'email', name: 'Email', icon: 'mail', color: 'text-pip-boy-green' },
+                  ].map(platform => (
+                    <button
+                      key={platform.id}
+                      onClick={() => openSocialShare(platform.id, readings.find(r => r.id === selectedReadingIds[0]))}
+                      className="p-2 border border-pip-boy-green/30 text-pip-boy-green/70
+                               hover:border-pip-boy-green/60 hover:text-pip-boy-green flex items-center gap-2"
+                    >
+                      <PixelIcon name={platform.icon} className={`w-4 h-4 ${platform.color}`} />
+                      {platform.name}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
@@ -345,49 +342,6 @@ ${reading.interpretation || '無解讀內容'}
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Import Section */}
-      <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-        <h4 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          < PixelIcon name="file-text" className="w-5 h-5" />
-          匯入資料
-        </h4>
-
-        <div className="space-y-3">
-          <input
-            type="file"
-            accept=".json"
-            onChange={async (e) => {
-              const file = e.target.files?.[0]
-              if (!file) return
-
-              try {
-                const text = await file.text()
-                const data = JSON.parse(text)
-
-                // Basic validation
-                if (Array.isArray(data) && data.every(item => item.id && item.question)) {
-                  // This would use the importReadings method from the store
-                  // await importReadings(data)
-                  console.log('Import data:', data)
-                  setExportSuccess(true)
-                  setTimeout(() => setExportSuccess(false), 3000)
-                } else {
-                  alert('檔案格式不正確')
-                }
-              } catch (error) {
-                alert('檔案讀取失敗')
-              }
-            }}
-            className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
-                     file:mr-4 file:py-1 file:px-3 file:border file:border-pip-boy-green/30 file:bg-pip-boy-green/10
-                     file:text-pip-boy-green file:file:text-sm"
-          />
-          <div className="text-xs text-pip-boy-green/60">
-            僅支援 JSON 格式的占卜記錄檔案。匯入的資料會與現有記錄合併，不會覆蓋重複的記錄。
-          </div>
         </div>
       </div>
     </div>

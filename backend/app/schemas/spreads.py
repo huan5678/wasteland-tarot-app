@@ -106,7 +106,6 @@ class SpreadTemplateCreate(SpreadTemplateBase):
     pip_boy_interface: Optional[Dict[str, Any]] = Field(None, description="Pip-Boy 專用 UI 配置")
 
     # 元數據
-    tags: List[str] = Field(default_factory=list, description="分類標籤")
     is_premium: bool = Field(default=False, description="此牌陣是否需要進階權限")
 
 
@@ -133,7 +132,6 @@ class SpreadTemplate(SpreadTemplateBase):
     is_active: bool = Field(default=True, description="此牌陣是否可用")
     is_premium: bool = Field(default=False, description="此牌陣是否需要進階權限")
     created_by: Optional[str] = Field(None, description="建立自訂牌陣的使用者 ID")
-    tags: List[str] = Field(default_factory=list, description="分類標籤")
 
     # 時間戳記
     created_at: datetime = Field(..., description="牌陣建立時間")
@@ -180,8 +178,7 @@ class SpreadTemplate(SpreadTemplateBase):
                 "usage_count": 1247,
                 "average_rating": 4.2,
                 "complexity": "simple",
-                "estimated_duration": 15,
-                "tags": ["beginner", "past-present-future", "popular"]
+                "estimated_duration": 15
             }
         }
     )
@@ -197,7 +194,6 @@ class SpreadTemplateUpdate(BaseModel):
     background_theme: Optional[str] = None
     audio_ambience: Optional[str] = None
     pip_boy_interface: Optional[Dict[str, Any]] = None
-    tags: Optional[List[str]] = None
     is_active: Optional[bool] = None
     is_premium: Optional[bool] = None
 
@@ -211,7 +207,6 @@ class SpreadSearchParams(BaseModel):
     min_cards: Optional[int] = Field(None, ge=1, le=15, description="最少卡牌數")
     max_cards: Optional[int] = Field(None, ge=1, le=15, description="最多卡牌數")
     is_premium: Optional[bool] = Field(None, description="篩選進階牌陣")
-    tags: Optional[List[str]] = Field(None, description="按標籤篩選")
     sort_by: str = Field(default="usage_count", description="排序欄位")
     sort_order: str = Field(default="desc", description="排序順序")
 

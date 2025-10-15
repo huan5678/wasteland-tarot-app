@@ -105,14 +105,55 @@ export const useSessionStore = create<SessionStore>()(
 
           return session
         } catch (error: any) {
-          // Check for conflict error (409)
-          if (error.status === 409) {
+          // Handle 404 Not Found (session was deleted or doesn't exist)
+          if (error.status === 404) {
+            console.warn('Session 不存在，可能已被刪除，清除並停止自動儲存')
             set({
-              error: '檢測到衝突，請解決後再試',
-              autoSaveStatus: 'error',
+              activeSession: null,
+              autoSaveStatus: 'idle',
               isUpdating: false,
+              error: null, // Don't show error for deleted session
             })
-            // TODO: Fetch server version and show conflict resolution UI
+            return null as any // Return null to indicate session was cleared
+          }
+          // Handle 403 Forbidden (session doesn't belong to user)
+          else if (error.status === 403) {
+            console.warn('Session 不屬於當前用戶，清除並停止自動儲存')
+            set({
+              activeSession: null,
+              autoSaveStatus: 'idle',
+              isUpdating: false,
+              error: null, // Don't show error for ownership mismatch
+            })
+            // Clear persisted session from localStorage
+            localStorage.removeItem('active_session_id')
+            return null as any // Return null to indicate session was cleared
+          }
+          // Check for conflict error (409) - Auto-resolve by fetching latest version
+          else if (error.status === 409) {
+            console.warn('Session 衝突偵測到，正在重新獲取最新版本...')
+            try {
+              // Fetch the latest version from server
+              const latestSession = await sessionsAPI.getById(id)
+
+              // Update our local copy with the latest version
+              set({
+                activeSession: latestSession,
+                isUpdating: false,
+                autoSaveStatus: 'idle',
+              })
+
+              console.log('已自動解決衝突，使用伺服器最新版本')
+              return latestSession
+            } catch (fetchError: any) {
+              console.error('無法獲取最新 session:', fetchError)
+              set({
+                error: '自動解決衝突失敗',
+                autoSaveStatus: 'error',
+                isUpdating: false,
+              })
+              throw error
+            }
           } else if (!navigator.onLine) {
             // Offline - add to sync queue
             const queueItem: SyncQueueItem = {
@@ -166,10 +207,23 @@ export const useSessionStore = create<SessionStore>()(
         }
       },
 
-      completeSession: async (id: string) => {
+      completeSession: async (id: string, data?: {
+        interpretation?: string
+        character_voice?: string
+        karma_context?: string
+        faction_influence?: string
+      }) => {
+        console.log('[SessionStore] completeSession called with id:', id, 'data:', data)
+        console.log('[SessionStore] sessionsAPI:', sessionsAPI)
+        console.log('[SessionStore] sessionsAPI.complete:', sessionsAPI.complete)
         set({ isUpdating: true, error: null })
         try {
-          const result = await sessionsAPI.complete(id)
+          // Disable auto-save BEFORE completing to prevent race condition
+          set({ autoSaveEnabled: false })
+
+          console.log('[SessionStore] Calling sessionsAPI.complete...')
+          const result = await sessionsAPI.complete(id, data || {})
+          console.log('[SessionStore] completeSession result:', result)
 
           // Remove from active session
           if (get().activeSession?.id === id) {
@@ -186,7 +240,7 @@ export const useSessionStore = create<SessionStore>()(
           return result
         } catch (error: any) {
           const errorMsg = error.message || '完成會話失敗'
-          set({ error: errorMsg, isUpdating: false })
+          set({ error: errorMsg, isUpdating: false, autoSaveEnabled: true })
           throw error
         }
       },
@@ -221,12 +275,40 @@ export const useSessionStore = create<SessionStore>()(
         set({ isLoading: true, error: null })
         try {
           const session = await sessionsAPI.getById(id)
+
+          // Verify ownership: Check if session belongs to current user
+          // If 403 or ownership mismatch, clear active session and localStorage
           set({
             activeSession: session,
             isLoading: false,
             autoSaveEnabled: true,
           })
         } catch (error: any) {
+          // Handle 404 Not Found (session was deleted or doesn't exist)
+          if (error.status === 404) {
+            console.warn('Session 不存在，可能已被刪除，清除並開始新會話')
+            set({
+              activeSession: null,
+              isLoading: false,
+              error: null, // Don't show error for deleted session
+            })
+            // Clear persisted session from localStorage
+            localStorage.removeItem('active_session_id')
+            return
+          }
+          // Handle 403 Forbidden (session doesn't belong to user)
+          else if (error.status === 403) {
+            console.warn('Session 不屬於當前用戶，清除並開始新會話')
+            set({
+              activeSession: null,
+              isLoading: false,
+              error: null, // Don't show error for ownership mismatch
+            })
+            // Clear persisted session from localStorage
+            localStorage.removeItem('active_session_id')
+            return
+          }
+
           const errorMsg = error.message || '恢復會話失敗'
           set({ error: errorMsg, isLoading: false })
           throw error

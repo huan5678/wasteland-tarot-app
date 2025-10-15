@@ -250,7 +250,12 @@ export interface SessionStoreActions {
   getSession: (id: string) => Promise<ReadingSession | null>
   updateSession: (id: string, data: SessionUpdateRequest) => Promise<ReadingSession>
   deleteSession: (id: string) => Promise<void>
-  completeSession: (id: string) => Promise<SessionCompletionResult>
+  completeSession: (id: string, data?: {
+    interpretation?: string
+    character_voice?: string
+    karma_context?: string
+    faction_influence?: string
+  }) => Promise<SessionCompletionResult>
 
   // Session list
   loadIncompleteSessions: (limit?: number, offset?: number) => Promise<void>

@@ -17,6 +17,7 @@ import type { IconName } from "../ui/icons";
   Trophy, Target, Brain, MessageCircle, Calendar, MapPin
 */
 import { cn } from '@/lib/utils'
+import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/utils/cardImages'
 import useClickOutside from '@/hooks/useClickOutside'
 import { useTextToSpeech } from '@/hooks/audio/useTextToSpeech'
 import { VoiceSelector } from '@/components/audio/VoiceSelector'
@@ -76,7 +77,7 @@ type TabType = 'overview' | 'meanings' | 'characters' | 'lore' | 'insights' | 'i
 interface TabConfig {
   id: TabType
   label: string
-  iconName: IconName
+  name: IconName
   color: string
 }
 
@@ -121,25 +122,25 @@ interface CardDetailModalProps {
 // Tab configuration for the modal interface
 // Base tabs that are always shown
 const BASE_TABS: TabConfig[] = [
-  { id: 'overview', label: '總覽', iconName: 'eye' as IconName, color: 'text-pip-boy-green' },
-  { id: 'meanings', label: '含義', iconName: 'book' as IconName, color: 'text-blue-400' },
-  { id: 'characters', label: '角色', iconName: 'users' as IconName, color: 'text-purple-400' }
+  { id: 'overview', label: '總覽', name: 'eye' as IconName, color: 'text-pip-boy-green' },
+  { id: 'meanings', label: '含義', name: 'book' as IconName, color: 'text-blue-400' },
+  { id: 'characters', label: '角色', name: 'users' as IconName, color: 'text-purple-400' }
 ]
 
 // Tabs that require login
 const AUTHENTICATED_TABS: TabConfig[] = [
-  { id: 'insights', label: '洞察', iconName: 'bulb' as IconName, color: 'text-yellow-400' },
-  { id: 'interactions', label: '互動', iconName: 'cog' as IconName, color: 'text-cyan-400' }
+  { id: 'insights', label: '洞察', name: 'bulb' as IconName, color: 'text-yellow-400' },
+  { id: 'interactions', label: '互動', name: 'cog' as IconName, color: 'text-cyan-400' }
 ]
 
 const getSuitIcon = (suit: string) => {
   const suitLower = suit.toLowerCase()
-  if (suitLower.includes('權杖') || suitLower.includes('wand') || suitLower.includes('radiation_rod')) return <PixelIcon iconName="zap" size={16} decorative />
-  if (suitLower.includes('聖杯') || suitLower.includes('cup') || suitLower.includes('nuka_cola')) return <PixelIcon iconName="heart" size={16} decorative />
-  if (suitLower.includes('寶劍') || suitLower.includes('sword') || suitLower.includes('combat_weapon')) return <PixelIcon iconName="sword" size={16} decorative />
-  if (suitLower.includes('錢幣') || suitLower.includes('pentacle') || suitLower.includes('bottle_cap')) return <PixelIcon iconName="coin" size={16} decorative />
-  if (suitLower.includes('major_arcana')) return <PixelIcon iconName="star" size={16} decorative />
-  return <PixelIcon iconName="star" size={16} decorative />
+  if (suitLower.includes('權杖') || suitLower.includes('wand') || suitLower.includes('radiation_rod')) return <PixelIcon name="zap" size={16} decorative />
+  if (suitLower.includes('聖杯') || suitLower.includes('cup') || suitLower.includes('nuka_cola')) return <PixelIcon name="heart" size={16} decorative />
+  if (suitLower.includes('寶劍') || suitLower.includes('sword') || suitLower.includes('combat_weapon')) return <PixelIcon name="sword" size={16} decorative />
+  if (suitLower.includes('錢幣') || suitLower.includes('pentacle') || suitLower.includes('bottle_cap')) return <PixelIcon name="coin" size={16} decorative />
+  if (suitLower.includes('major_arcana')) return <PixelIcon name="star" size={16} decorative />
+  return <PixelIcon name="star" size={16} decorative />
 }
 
 const getRadiationLevel = (factor: number = 0) => {
@@ -246,7 +247,7 @@ const CharacterVoiceSelector = ({
           )}
           title={audioEnabled ? '停用音頻' : '啟用音頻'}
         >
-          {audioEnabled ? <PixelIcon iconName="volume" size={16} className="w-4 h-4" decorative /> : <PixelIcon iconName="volume-x" size={16} className="w-4 h-4" decorative />}
+          {audioEnabled ? <PixelIcon name="volume" size={16} className="w-4 h-4" decorative /> : <PixelIcon name="volume-x" size={16} className="w-4 h-4" decorative />}
         </button>
       </div>
 
@@ -287,9 +288,9 @@ const CharacterVoiceSelector = ({
                     title="播放聲音範例"
                   >
                     {isPlaying ? (
-                      <PixelIcon iconName="volume-x" size={16} className="w-3 h-3 text-orange-400" decorative />
+                      <PixelIcon name="volume-x" size={16} className="w-3 h-3 text-orange-400" decorative />
                     ) : (
-                      <PixelIcon iconName="volume" size={16} className="w-3 h-3" decorative />
+                      <PixelIcon name="volume" size={16} className="w-3 h-3" decorative />
                     )}
                   </motion.div>
                 )}
@@ -562,6 +563,17 @@ export function CardDetailModal({
   // Click outside to close
   useClickOutside(modalRef, onClose)
 
+  // Memoize card image URL using the same logic as CardThumbnailFlippable
+  const cardImageUrl = useMemo(() => {
+    if (!card) return getFallbackImageUrl()
+    return imageError ? getFallbackImageUrl() : getCardImageUrl(card as any)
+  }, [card, imageError])
+
+  const cardImageAlt = useMemo(() => {
+    if (!card) return 'Tarot Card'
+    return getCardImageAlt(card as any)
+  }, [card])
+
   if (!isOpen || !card) return null
 
   // Tab content renderers
@@ -577,23 +589,23 @@ export function CardDetailModal({
       {/* Left Column - Card Image */}
       <div className="space-y-4">
         <div className="relative" ref={imageContainerRef}>
-          <div className={cn(
-            "w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative",
-            card.position === 'reversed' && "transform rotate-180"
-          )}>
+          <div className="w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative">
             {imageError ? (
               <div className="w-full h-full flex items-center justify-center text-pip-boy-green/60">
                 <div className="text-center">
-                  <PixelIcon iconName="alert" size={16} className="w-12 h-12 mx-auto mb-2" decorative />
+                  <PixelIcon name="alert" size={16} className="w-12 h-12 mx-auto mb-2" decorative />
                   <div className="text-sm">圖片載入失敗</div>
                 </div>
               </div>
             ) : (
               <motion.img
-                src={card.image_url}
-                alt={card.name}
-                className="w-full h-full object-cover transition-transform duration-200"
-                style={{ transform: `scale(${imageZoom})` }}
+                src={cardImageUrl}
+                alt={cardImageAlt}
+                className={cn(
+                  "w-full h-full object-cover transition-transform duration-200",
+                  card.position === 'reversed' && "rotate-180"
+                )}
+                style={{ transform: `scale(${imageZoom})${card.position === 'reversed' ? ' rotate(180deg)' : ''}` }}
                 onError={() => setImageError(true)}
                 animate={{ scale: imageZoom }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -607,21 +619,21 @@ export function CardDetailModal({
                 className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="放大"
               >
-                <PixelIcon iconName="zoom-in" size={20} className="w-5 h-5" />
+                <PixelIcon name="zoom-in" size={20} className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleImageZoom(-0.25)}
                 className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="縮小"
               >
-                <PixelIcon iconName="zoom-out" size={20} className="w-5 h-5" />
+                <PixelIcon name="zoom-out" size={20} className="w-5 h-5" />
               </button>
               <button
                 onClick={handleImageReset}
                 className="p-2 bg-black/60 text-pip-boy-green rounded hover:bg-black/80 hover:cursor-pointer transition-all"
                 title="重置大小"
               >
-                <PixelIcon iconName="reload" size={20} className="w-5 h-5" />
+                <PixelIcon name="reload" size={20} className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -660,7 +672,7 @@ export function CardDetailModal({
 
           {card.average_rating && (
             <div className="flex items-center gap-2 pt-2 border-t border-pip-boy-green/10">
-              <PixelIcon iconName="trophy" size={16} className="w-4 h-4 text-yellow-400" decorative />
+              <PixelIcon name="trophy" size={16} className="w-4 h-4 text-yellow-400" decorative />
               <span className="text-pip-boy-green/70 text-sm">
                 評分：{card.average_rating.toFixed(1)}/5.0
               </span>
@@ -672,7 +684,7 @@ export function CardDetailModal({
         {card.keywords && card.keywords.length > 0 && (
           <div>
             <h4 className="text-pip-boy-green font-bold mb-2 flex items-center gap-2">
-              <PixelIcon iconName="target" size={16} className="w-4 h-4" decorative />
+              <PixelIcon name="target" size={16} className="w-4 h-4" decorative />
               關鍵詞
             </h4>
             <div className="flex flex-wrap gap-2">
@@ -696,9 +708,9 @@ export function CardDetailModal({
       <div className="space-y-6">
         <div>
           <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-            <PixelIcon iconName="book" size={20} className="w-5 h-5" decorative />
+            <PixelIcon name="book" size={20} className="w-5 h-5" decorative />
             {card.position === 'reversed' ? '逆位含義' : '正位含義'}
-            {card.position === 'reversed' && <PixelIcon iconName="alert" size={16} className="w-4 h-4 text-orange-400" decorative />}
+            {card.position === 'reversed' && <PixelIcon name="alert" size={16} className="w-4 h-4 text-orange-400" decorative />}
           </h4>
           <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
             <p id="card-modal-description" className="text-pip-boy-green/90 text-sm leading-relaxed">
@@ -711,7 +723,7 @@ export function CardDetailModal({
         {card.description && (
           <div>
             <h4 className="text-pip-boy-green font-bold mb-2 flex items-center gap-2">
-              <PixelIcon iconName="info" size={16} className="w-4 h-4" decorative />
+              <PixelIcon name="info" size={16} className="w-4 h-4" decorative />
               描述
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-3 rounded">
@@ -726,7 +738,7 @@ export function CardDetailModal({
         {(card.draw_frequency || card.total_appearances) && (
           <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
             <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-              <PixelIcon iconName="clock" size={16} className="w-4 h-4" decorative />
+              <PixelIcon name="clock" size={16} className="w-4 h-4" decorative />
               使用統計
             </h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -750,7 +762,7 @@ export function CardDetailModal({
         {card.fallout_reference && (
           <div className="mt-6 pt-6 border-t border-pip-boy-green/20">
             <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-              <PixelIcon iconName="radioactive" size={20} className="w-5 h-5" decorative />
+              <PixelIcon name="radioactive" size={20} className="w-5 h-5" decorative />
               廢土背景
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
@@ -767,7 +779,7 @@ export function CardDetailModal({
             {card.vault_reference && (
               <div>
                 <h5 className="text-blue-400 font-bold text-sm mb-2 flex items-center gap-2">
-                  <PixelIcon iconName="pin" size={16} className="w-4 h-4" decorative />
+                  <PixelIcon name="pin" size={16} className="w-4 h-4" decorative />
                   避難所關聯
                 </h5>
                 <div className="bg-blue-500/5 border border-blue-400/20 p-3 rounded">
@@ -779,7 +791,7 @@ export function CardDetailModal({
             {card.threat_level !== undefined && (
               <div>
                 <h5 className="text-red-400 font-bold text-sm mb-2 flex items-center gap-2">
-                  <PixelIcon iconName="alert" size={16} className="w-4 h-4" decorative />
+                  <PixelIcon name="alert" size={16} className="w-4 h-4" decorative />
                   威脅等級
                 </h5>
                 <div className="bg-red-500/5 border border-red-400/20 p-3 rounded">
@@ -844,7 +856,7 @@ export function CardDetailModal({
           transition={{ delay: 0.1 }}
         >
           <h4 className="text-blue-400 font-bold text-lg mb-3 flex items-center gap-2">
-            <PixelIcon iconName="arrow-left" size={20} className="w-5 h-5" decorative />
+            <PixelIcon name="arrow-left" size={20} className="w-5 h-5" decorative />
             正位意義
           </h4>
           <div className="bg-blue-500/5 border border-blue-400/20 p-4 rounded-lg">
@@ -860,7 +872,7 @@ export function CardDetailModal({
           transition={{ delay: 0.2 }}
         >
           <h4 className="text-orange-400 font-bold text-lg mb-3 flex items-center gap-2">
-            <PixelIcon iconName="arrow-right" size={20} className="w-5 h-5" decorative />
+            <PixelIcon name="arrow-right" size={20} className="w-5 h-5" decorative />
             逆位意義
           </h4>
           <div className="bg-orange-500/5 border border-orange-400/20 p-4 rounded-lg">
@@ -880,7 +892,7 @@ export function CardDetailModal({
             transition={{ delay: 0.3 }}
           >
             <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-              <PixelIcon iconName="star" size={20} className="w-5 h-5" decorative />
+              <PixelIcon name="star" size={20} className="w-5 h-5" decorative />
               象徵意義
             </h4>
             <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
@@ -947,7 +959,7 @@ export function CardDetailModal({
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <PixelIcon iconName="message" size={20} className="w-5 h-5 text-pip-boy-green" decorative />
+                <PixelIcon name="message" size={20} className="w-5 h-5 text-pip-boy-green" decorative />
                 <h4 className="text-pip-boy-green font-bold">
                   {selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())} 的解讀
                 </h4>
@@ -972,12 +984,12 @@ export function CardDetailModal({
                 >
                   {isSpeaking ? (
                     <>
-                      <PixelIcon iconName="volume-x" size={16} className="w-4 h-4" decorative />
+                      <PixelIcon name="volume-x" size={16} className="w-4 h-4" decorative />
                       <span className="text-xs">播放中...</span>
                     </>
                   ) : (
                     <>
-                      <PixelIcon iconName="volume" size={16} className="w-4 h-4" decorative />
+                      <PixelIcon name="volume" size={16} className="w-4 h-4" decorative />
                       <span className="text-xs">播放</span>
                     </>
                   )}
@@ -1043,7 +1055,7 @@ export function CardDetailModal({
       {/* Usage Analytics */}
       <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
         <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
-          <PixelIcon iconName="brain" size={20} className="w-5 h-5" decorative />
+          <PixelIcon name="brain" size={20} className="w-5 h-5" decorative />
           卡牌分析洞察
         </h4>
 
@@ -1077,7 +1089,7 @@ export function CardDetailModal({
         {card.average_rating && (
           <div className="flex items-center justify-center gap-4 pt-4 border-t border-pip-boy-green/10">
             <div className="flex items-center gap-2">
-              <PixelIcon iconName="trophy" size={16} className="w-5 h-5 text-yellow-400" decorative />
+              <PixelIcon name="trophy" size={16} className="w-5 h-5 text-yellow-400" decorative />
               <span className="text-pip-boy-green">平均評分</span>
             </div>
             <div className="text-2xl font-bold text-yellow-400">
@@ -1090,7 +1102,7 @@ export function CardDetailModal({
       {/* Personal Progress */}
       <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
         <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
-          <PixelIcon iconName="target" size={16} className="w-5 h-5" decorative />
+          <PixelIcon name="target" size={16} className="w-5 h-5" decorative />
           個人學習進度
         </h4>
 
@@ -1112,14 +1124,14 @@ export function CardDetailModal({
 
           {cardStudyProgress?.lastViewed && (
             <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
-              <PixelIcon iconName="calendar" size={16} className="w-4 h-4" decorative />
+              <PixelIcon name="calendar" size={16} className="w-4 h-4" decorative />
               <span>上次查看：{cardStudyProgress.lastViewed.toLocaleDateString()}</span>
             </div>
           )}
 
           {cardStudyProgress?.masteryLevel && (
             <div className="flex items-center gap-2 text-sm">
-              <PixelIcon iconName="trophy" size={16} className="w-4 h-4 text-yellow-400" decorative />
+              <PixelIcon name="trophy" size={16} className="w-4 h-4 text-yellow-400" decorative />
               <span className="text-pip-boy-green/70">熟練度：</span>
               <span className="text-pip-boy-green capitalize">{cardStudyProgress.masteryLevel}</span>
             </div>
@@ -1155,7 +1167,7 @@ export function CardDetailModal({
                     : "border-pip-boy-green/40 text-pip-boy-green/70 hover:bg-pip-boy-green/10"
                 )}
               >
-                {cardIsBookmarked ? <PixelIcon iconName="bookmark" size={20} className="w-5 h-5" decorative /> : <PixelIcon iconName="bookmark" size={20} className="w-5 h-5" decorative />}
+                {cardIsBookmarked ? <PixelIcon name="bookmark" size={20} className="w-5 h-5" decorative /> : <PixelIcon name="bookmark" size={20} className="w-5 h-5" decorative />}
                 <span>{cardIsBookmarked ? '已收藏' : '收藏'}</span>
               </motion.button>
             )}
@@ -1166,7 +1178,7 @@ export function CardDetailModal({
               whileTap={{ scale: 0.95 }}
               className="p-3 rounded border border-blue-400/40 text-blue-400 text-sm hover:bg-blue-500/10 transition-colors flex flex-col items-center gap-2"
             >
-              <PixelIcon iconName="target" size={16} className="w-5 h-5" decorative />
+              <PixelIcon name="target" size={16} className="w-5 h-5" decorative />
               <span>加入占卜</span>
             </motion.button>
 
@@ -1177,7 +1189,7 @@ export function CardDetailModal({
                 whileTap={{ scale: 0.95 }}
                 className="p-3 rounded border border-purple-400/40 text-purple-400 text-sm hover:bg-purple-500/10 transition-colors flex flex-col items-center gap-2"
               >
-                <PixelIcon iconName="share" size={20} className="w-5 h-5" decorative />
+                <PixelIcon name="share" size={20} className="w-5 h-5" decorative />
                 <span>分享</span>
               </motion.button>
             )}
@@ -1188,7 +1200,7 @@ export function CardDetailModal({
               whileTap={{ scale: 0.95 }}
               className="p-3 rounded border border-cyan-400/40 text-cyan-400 text-sm hover:bg-cyan-500/10 transition-colors flex flex-col items-center gap-2"
             >
-              <PixelIcon iconName="copy" size={20} className="w-5 h-5" decorative />
+              <PixelIcon name="copy" size={20} className="w-5 h-5" decorative />
               <span>複製</span>
             </motion.button>
           </div>
@@ -1199,7 +1211,7 @@ export function CardDetailModal({
       {showPersonalNotes && (
         <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
           <h4 className="text-pip-boy-green font-bold mb-4 flex items-center gap-2">
-            <PixelIcon iconName="message" size={20} className="w-5 h-5" decorative />
+            <PixelIcon name="message" size={20} className="w-5 h-5" decorative />
             個人筆記
           </h4>
           <textarea
@@ -1296,7 +1308,7 @@ export function CardDetailModal({
                     radiationInfo.color
                   )}
                 >
-                  <PixelIcon iconName="radioactive" size={20} className="w-3 h-3" decorative />
+                  <PixelIcon name="radioactive" size={20} className="w-3 h-3" decorative />
                   {radiationInfo.label}
                 </motion.div>
               )}
@@ -1316,7 +1328,7 @@ export function CardDetailModal({
                 className="text-pip-boy-green hover:text-pip-boy-green/80 p-2 rounded border border-pip-boy-green/40 hover:bg-pip-boy-green/10 transition-colors"
                 aria-label="關閉卡牌詳情"
               >
-                <PixelIcon iconName="close" size={20} className="w-5 h-5" />
+                <PixelIcon name="close" size={20} className="w-5 h-5" />
               </motion.button>
             </div>
           </div>
@@ -1341,7 +1353,7 @@ export function CardDetailModal({
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
-                    <PixelIcon iconName={tab.iconName} size={16} decorative />
+                    <PixelIcon name={tab.name} size={16} decorative />
                     <span>{tab.label}</span>
                   </motion.button>
                 )
@@ -1365,26 +1377,26 @@ export function CardDetailModal({
             <div className="border-t border-pip-boy-green/30 p-6 bg-gradient-to-r from-pip-boy-green/10 to-pip-boy-green/5">
               <div className="max-w-3xl mx-auto text-center space-y-4">
                 <div className="flex items-center justify-center gap-2 text-pip-boy-green">
-                  <PixelIcon iconName="radioactive" size={20} className="w-5 h-5 animate-pulse" decorative />
+                  <PixelIcon name="radioactive" size={20} className="w-5 h-5 animate-pulse" decorative />
                   <h3 className="text-lg font-bold">想要更深入的解讀？</h3>
-                  <PixelIcon iconName="radioactive" size={20} className="w-5 h-5 animate-pulse" decorative />
+                  <PixelIcon name="radioactive" size={20} className="w-5 h-5 animate-pulse" decorative />
                 </div>
                 <p className="text-pip-boy-green/80 text-sm leading-relaxed">
                   註冊 Vault 帳號後，你可以：<br />
                   <span className="inline-flex items-center gap-2 mt-2">
-                    <PixelIcon iconName="bookmark" size={20} className="w-4 h-4" decorative /> 收藏卡牌
+                    <PixelIcon name="bookmark" size={20} className="w-4 h-4" decorative /> 收藏卡牌
                   </span>
                   {' | '}
                   <span className="inline-flex items-center gap-2">
-                    <PixelIcon iconName="brain" size={20} className="w-4 h-4" decorative /> AI 深度解讀
+                    <PixelIcon name="brain" size={20} className="w-4 h-4" decorative /> AI 深度解讀
                   </span>
                   {' | '}
                   <span className="inline-flex items-center gap-2">
-                    <PixelIcon iconName="clock" size={16} className="w-4 h-4" decorative /> 保存占卜歷史
+                    <PixelIcon name="clock" size={16} className="w-4 h-4" decorative /> 保存占卜歷史
                   </span>
                   {' | '}
                   <span className="inline-flex items-center gap-2">
-                    <PixelIcon iconName="target" size={16} className="w-4 h-4" decorative /> 追蹤學習進度
+                    <PixelIcon name="target" size={16} className="w-4 h-4" decorative /> 追蹤學習進度
                   </span>
                 </p>
                 <div className="flex items-center justify-center gap-4 pt-2">

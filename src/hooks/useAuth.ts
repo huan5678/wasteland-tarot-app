@@ -16,7 +16,6 @@ interface AuthResponse {
   user?: {
     id: string
     username: string
-    vaultNumber: string
     karmaLevel: string
   }
 }

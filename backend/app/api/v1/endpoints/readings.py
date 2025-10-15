@@ -12,6 +12,7 @@ import uuid
 import logging
 
 from app.db.session import get_db
+from app.models.user import User
 from app.models.reading_enhanced import (
     CompletedReading as ReadingSessionModel,
     ReadingCardPosition as ReadingCardPositionModel,
@@ -32,6 +33,7 @@ from app.schemas.readings import (
     ReadingSearchParams,
     ReadingSearchResponse,
     ReadingSearchResult,
+    PrivacyLevel,
     # Analytics schemas
     ReadingAnalyticsStats,
     ReadingFrequencyAnalysis,
@@ -114,7 +116,7 @@ async def create_reading(
         }
     ),
     db: AsyncSession = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)  # Placeholder for auth
+    current_user: User = Depends(get_current_user)
 ) -> ReadingSession:
     """
     Create a new tarot reading session.
@@ -124,9 +126,6 @@ async def create_reading(
     influenced by karma alignment and faction preferences.
     """
     try:
-        # For now, use a placeholder user ID
-        current_user = {"id": "demo-user", "username": "demo"}
-
         # Check daily reading limit (placeholder logic)
         # In production, implement proper rate limiting
         today = datetime.now().date()
@@ -155,7 +154,7 @@ async def create_reading(
         # Start creating reading session
         reading_session = ReadingSessionModel(
             id=reading_id,
-            user_id=current_user["id"],
+            user_id=current_user.id,
             spread_template_id=reading_data.spread_template_id,
             question=reading_data.question,
             focus_area=reading_data.focus_area,
@@ -355,16 +354,13 @@ async def get_readings(
     sort_by: str = Query(default="created_at", description="排序欄位"),
     sort_order: str = Query(default="desc", regex="^(asc|desc)$", description="排序方向"),
     db: AsyncSession = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> ReadingListResponse:
     """取得使用者的占卜歷史記錄，並支援篩選與分頁。"""
     try:
-        # Placeholder user
-        current_user = {"id": "demo-user"}
-
         # Build query
         query = select(ReadingSessionModel).where(
-            ReadingSessionModel.user_id == current_user["id"]
+            ReadingSessionModel.user_id == current_user.id
         )
 
         # Apply filters
@@ -396,7 +392,7 @@ async def get_readings(
 
         # Get total count
         count_query = select(func.count(ReadingSessionModel.id)).where(
-            ReadingSessionModel.user_id == current_user["id"]
+            ReadingSessionModel.user_id == current_user.id
         )
         if conditions:
             count_query = count_query.where(and_(*conditions))
@@ -419,12 +415,56 @@ async def get_readings(
         result = await db.execute(query)
         readings_data = result.scalars().all()
 
-        # Convert to response models (simplified for now)
+        # Convert to response models using Pydantic's from_attributes
         readings = []
         for reading in readings_data:
-            # In a real implementation, we'd fetch related data
-            reading_dict = reading.to_dict()
-            readings.append(ReadingSession(**reading_dict))
+            try:
+                # Use Pydantic's model_validate with from_attributes=True
+                # This properly converts SQLAlchemy model to Pydantic model
+                reading_dict = {
+                    "id": str(reading.id),
+                    "user_id": str(reading.user_id),
+                    "question": reading.question,
+                    "focus_area": reading.focus_area,
+                    "context_notes": reading.context_notes,
+                    "spread_template": SpreadTemplate(
+                        id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                        name="placeholder",
+                        display_name="Placeholder Spread",
+                        description="Spread template",
+                        spread_type="vault_tec_spread",
+                        card_count=3,
+                        positions=[],
+                        difficulty_level="beginner"
+                    ),
+                    "character_voice_used": CharacterVoice(reading.character_voice_used),
+                    "karma_context": KarmaAlignment(reading.karma_context),
+                    "faction_influence": reading.faction_influence,
+                    "radiation_factor": reading.radiation_factor,
+                    "card_positions": [],  # Empty for list view
+                    "overall_interpretation": reading.overall_interpretation,
+                    "summary_message": reading.summary_message,
+                    "prediction_confidence": reading.prediction_confidence,
+                    "energy_reading": reading.energy_reading,
+                    "session_duration": reading.session_duration,
+                    "start_time": reading.start_time,
+                    "end_time": reading.end_time,
+                    "privacy_level": PrivacyLevel(reading.privacy_level) if reading.privacy_level else PrivacyLevel.PRIVATE,
+                    "allow_public_sharing": reading.allow_public_sharing,
+                    "is_favorite": reading.is_favorite,
+                    "user_satisfaction": reading.user_satisfaction,
+                    "accuracy_rating": reading.accuracy_rating,
+                    "helpful_rating": reading.helpful_rating,
+                    "likes_count": reading.likes_count,
+                    "shares_count": reading.shares_count,
+                    "comments_count": reading.comments_count,
+                    "created_at": reading.created_at,
+                    "updated_at": reading.updated_at
+                }
+                readings.append(ReadingSession(**reading_dict))
+            except Exception as e:
+                logger.error(f"Error converting reading {reading.id}: {str(e)}")
+                continue
 
         has_more = (offset + len(readings)) < total_count
 
@@ -470,7 +510,7 @@ async def get_reading(
     include_cards: bool = Query(default=True, description="包含卡牌詳細資訊"),
     include_interpretations: bool = Query(default=True, description="包含解讀"),
     db: AsyncSession = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ) -> ReadingSession:
     """取得特定占卜的詳細資訊。"""
     try:
@@ -482,13 +522,51 @@ async def get_reading(
         if not reading:
             raise ReadingNotFoundError(reading_id)
 
-        # Check if user has access (simplified)
-        current_user = {"id": "demo-user"}
-        if reading.user_id != current_user["id"] and reading.privacy_level == "private":
+        # Check if user has access
+        if str(reading.user_id) != str(current_user.id) and reading.privacy_level == "private":
             raise HTTPException(status_code=403, detail="Access denied to private reading")
 
-        # Convert to response model (simplified)
-        reading_dict = reading.to_dict()
+        # Convert to response model properly
+        reading_dict = {
+            "id": str(reading.id),
+            "user_id": str(reading.user_id),
+            "question": reading.question,
+            "focus_area": reading.focus_area,
+            "context_notes": reading.context_notes,
+            "spread_template": SpreadTemplate(
+                id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                name="placeholder",
+                display_name="Placeholder Spread",
+                description="Spread template",
+                spread_type="vault_tec_spread",
+                card_count=3,
+                positions=[],
+                difficulty_level="beginner"
+            ),
+            "character_voice_used": CharacterVoice(reading.character_voice_used),
+            "karma_context": KarmaAlignment(reading.karma_context),
+            "faction_influence": reading.faction_influence,
+            "radiation_factor": reading.radiation_factor,
+            "card_positions": [],  # TODO: Fetch card positions
+            "overall_interpretation": reading.overall_interpretation,
+            "summary_message": reading.summary_message,
+            "prediction_confidence": reading.prediction_confidence,
+            "energy_reading": reading.energy_reading,
+            "session_duration": reading.session_duration,
+            "start_time": reading.start_time,
+            "end_time": reading.end_time,
+            "privacy_level": PrivacyLevel(reading.privacy_level) if reading.privacy_level else PrivacyLevel.PRIVATE,
+            "allow_public_sharing": reading.allow_public_sharing,
+            "is_favorite": reading.is_favorite,
+            "user_satisfaction": reading.user_satisfaction,
+            "accuracy_rating": reading.accuracy_rating,
+            "helpful_rating": reading.helpful_rating,
+            "likes_count": reading.likes_count,
+            "shares_count": reading.shares_count,
+            "comments_count": reading.comments_count,
+            "created_at": reading.created_at,
+            "updated_at": reading.updated_at
+        }
         return ReadingSession(**reading_dict)
 
     except ReadingNotFoundError:
@@ -610,12 +688,10 @@ async def quick_reading(
 )
 async def get_personal_stats(
     db: AsyncSession = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> ReadingStats:
     """Get personal reading statistics."""
     try:
-        current_user = {"id": "demo-user"}
-
         # In a real implementation, calculate these from actual data
         # This is a placeholder with mock data
         return ReadingStats(
@@ -666,7 +742,6 @@ async def get_personal_stats(
 async def search_readings(
     q: Optional[str] = Query(None, description="搜尋問題或筆記的查詢字串", min_length=1),
     spread_type: Optional[str] = Query(None, description="依牌陣類型篩選"),
-    tags: Optional[str] = Query(None, description="依標籤篩選（逗號分隔）"),
     start_date: Optional[datetime] = Query(None, description="篩選此日期之後的占卜"),
     end_date: Optional[datetime] = Query(None, description="篩選此日期之前的占卜"),
     page: int = Query(1, ge=1, description="頁碼"),
@@ -674,7 +749,7 @@ async def search_readings(
     sort: str = Query("created_at", description="排序欄位"),
     order: str = Query("desc", description="排序方向（asc/desc）"),
     db: AsyncSession = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> ReadingSearchResponse:
     """
     以進階篩選與分頁搜尋占卜。
@@ -682,9 +757,7 @@ async def search_readings(
     此端點提供強大的搜尋功能，用於在您的歷史記錄中尋找特定占卜。
     """
     try:
-        # Mock current user
-        current_user = {"id": "demo-user"}
-        user_id = current_user["id"]
+        user_id = current_user.id
 
         # Build query
         query = select(ReadingSessionModel).where(
@@ -704,12 +777,6 @@ async def search_readings(
         # Filter by spread type
         if spread_type:
             query = query.where(ReadingSessionModel.spread_template_id == spread_type)
-
-        # Filter by tags
-        if tags:
-            tag_list = [tag.strip() for tag in tags.split(",")]
-            # PostgreSQL array overlap operator
-            query = query.where(ReadingSessionModel.tags.overlap(tag_list))
 
         # Date range filters
         if start_date:
@@ -752,7 +819,6 @@ async def search_readings(
                 question=reading.question,
                 spread_type=reading.spread_template_id or "unknown",
                 created_at=reading.created_at,
-                tags=reading.tags or [],
                 notes=reading.notes,
                 cards_count=cards_count,
                 character_voice=reading.character_voice
@@ -787,14 +853,14 @@ async def search_readings(
 async def get_analytics_stats(
     start_date: Optional[datetime] = Query(None, description="起始日期篩選"),
     end_date: Optional[datetime] = Query(None, description="結束日期篩選"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得目前使用者的基本占卜統計"""
     try:
         analytics_service = AnalyticsService(db)
         stats = await analytics_service.get_basic_statistics(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             start_date=start_date,
             end_date=end_date
         )
@@ -824,14 +890,14 @@ async def get_analytics_stats(
 )
 async def get_reading_frequency(
     period: str = Query("30d", description="時間週期（例如：'30d'、'7d'）"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得指定時間週期內的占卜頻率"""
     try:
         analytics_service = AnalyticsService(db)
         frequency = await analytics_service.get_frequency_analysis(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             period=period
         )
         return ReadingFrequencyAnalysis(**frequency)
@@ -848,13 +914,13 @@ async def get_reading_frequency(
     description="分析最常使用的牌陣類型"
 )
 async def get_spread_usage(
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得牌陣類型使用統計"""
     try:
         analytics_service = AnalyticsService(db)
-        usage = await analytics_service.get_spread_usage(current_user["id"])
+        usage = await analytics_service.get_spread_usage(current_user.id)
         return SpreadUsageAnalytics(**usage)
 
     except Exception as e:
@@ -869,13 +935,13 @@ async def get_spread_usage(
     description="分析角色聲音使用模式"
 )
 async def get_voice_preferences(
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得角色聲音偏好分析"""
     try:
         analytics_service = AnalyticsService(db)
-        preferences = await analytics_service.get_voice_preferences(current_user["id"])
+        preferences = await analytics_service.get_voice_preferences(current_user.id)
         return VoicePreferenceAnalytics(**preferences)
 
     except Exception as e:
@@ -890,13 +956,13 @@ async def get_voice_preferences(
     description="分析占卜中的業力情境分佈"
 )
 async def get_karma_distribution(
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得業力情境分佈"""
     try:
         analytics_service = AnalyticsService(db)
-        distribution = await analytics_service.get_karma_distribution(current_user["id"])
+        distribution = await analytics_service.get_karma_distribution(current_user.id)
         return KarmaDistributionAnalytics(**distribution)
 
     except Exception as e:
@@ -912,14 +978,14 @@ async def get_karma_distribution(
 )
 async def get_satisfaction_trends(
     period: str = Query("30d", description="時間週期（例如：'30d'、'7d'）"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得滿意度評分趨勢"""
     try:
         analytics_service = AnalyticsService(db)
         trends = await analytics_service.get_satisfaction_trends(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             period=period
         )
         return SatisfactionTrends(**trends)
@@ -936,13 +1002,13 @@ async def get_satisfaction_trends(
     description="分析占卜行為模式（活躍日期、時間、連續紀錄）"
 )
 async def get_reading_patterns(
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得占卜模式分析"""
     try:
         analytics_service = AnalyticsService(db)
-        patterns = await analytics_service.get_reading_patterns(current_user["id"])
+        patterns = await analytics_service.get_reading_patterns(current_user.id)
         return ReadingPatterns(**patterns)
 
     except Exception as e:
@@ -958,14 +1024,14 @@ async def get_reading_patterns(
 )
 async def get_card_frequency(
     limit: int = Query(10, ge=1, le=50, description="回傳的熱門卡牌數量"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """取得最常抽取的卡牌分析"""
     try:
         analytics_service = AnalyticsService(db)
         frequency = await analytics_service.get_card_frequency(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             limit=limit
         )
         return CardFrequencyAnalytics(**frequency)
@@ -984,14 +1050,14 @@ async def get_card_frequency(
 async def compare_time_periods(
     period1: str = Query(..., description="第一個週期（例如：'7d'）"),
     period2: str = Query(..., description="第二個週期（例如：'previous_7d'）"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """比較兩個時間週期的分析資料"""
     try:
         analytics_service = AnalyticsService(db)
         comparison = await analytics_service.compare_time_periods(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             period1=period1,
             period2=period2
         )
@@ -1011,13 +1077,13 @@ async def compare_time_periods(
 )
 async def export_analytics(
     format: str = Query("json", description="匯出格式：'json' 或 'csv'"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """匯出分析資料"""
     try:
         analytics_service = AnalyticsService(db)
-        data = await analytics_service.export_analytics_data(current_user["id"])
+        data = await analytics_service.export_analytics_data(current_user.id)
 
         if format == "csv":
             # Return CSV format

@@ -4,6 +4,13 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { PixelIcon } from '@/components/ui/icons'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet'
 
 export function Header() {
   const user = useAuthStore(s => s.user)
@@ -13,6 +20,7 @@ export function Header() {
   const [currentTime, setCurrentTime] = useState<string>('')
   const [isClient, setIsClient] = useState(false)
   const [showBingoBadge, setShowBingoBadge] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // Update time only on client side to avoid hydration mismatch
   useEffect(() => {
@@ -38,6 +46,7 @@ export function Header() {
 
   const handleNavigation = (href: string) => {
     router.push(href)
+    setMobileMenuOpen(false) // Close mobile menu after navigation
   }
 
   // 檢查今日是否已領取賓果號碼 (僅在客戶端執行)
@@ -81,8 +90,6 @@ export function Header() {
               <>
                 <span className="hidden sm:inline">|</span>
                 <span className="truncate max-w-[100px] sm:max-w-none">Vault Dweller：{user.username}</span>
-                <span className="hidden lg:inline">|</span>
-                <span className="hidden lg:inline">Vault：{user.vaultNumber || '111'}</span>
               </>
             )}
           </div>
@@ -111,14 +118,14 @@ export function Header() {
             </div>
           </button>
 
-          {/* Navigation */}
-          <nav className="flex items-center gap-2 md:gap-6">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavigation(link.href)}
                 className={`
-                  relative flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm cursor-pointer
+                  relative flex items-center gap-2 px-3 py-2 text-sm cursor-pointer
                   border border-pip-boy-green/30 hover:border-pip-boy-green
                   hover:bg-pip-boy-green/10 transition-all duration-200
                   ${isActive(link.href)
@@ -133,21 +140,17 @@ export function Header() {
                   variant="primary"
                   aria-label={link.ariaLabel}
                 />
-                <span className="hidden sm:inline">{link.label}</span>
-                {/* 未領取提示紅點 */}
+                <span>{link.label}</span>
                 {link.badge && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 )}
               </button>
             ))}
 
-            {/* Volume Control 已移至 MusicPlayerDrawer */}
-
-            {/* Logout Button */}
             {user && (
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1 md:gap-2 px-3 md:px-3 py-2.5 md:py-2 text-xs md:text-sm
+                className="flex items-center gap-2 px-3 py-2 text-sm
                          border border-red-500/30 hover:border-red-500
                          hover:bg-red-500/10 text-red-400 hover:text-red-500
                          transition-all duration-200"
@@ -158,10 +161,85 @@ export function Header() {
                   variant="error"
                   aria-label="登出"
                 />
-                <span className="hidden sm:inline">登出</span>
+                <span>登出</span>
               </button>
             )}
           </nav>
+
+          {/* Mobile Menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <button
+                className="md:hidden flex items-center justify-center p-2 border-2 border-pip-boy-green/30 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200"
+                aria-label="開啟選單"
+              >
+                <PixelIcon name="menu" sizePreset="sm" variant="primary" decorative />
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="right"
+              className="w-[280px] bg-wasteland-dark border-pip-boy-green/30"
+            >
+              <SheetHeader>
+                <SheetTitle className="text-pip-boy-green text-xl font-bold text-glow-green">
+                  導航選單
+                </SheetTitle>
+              </SheetHeader>
+
+              <nav className="flex flex-col gap-2 mt-6">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.href}
+                    onClick={() => handleNavigation(link.href)}
+                    className={`
+                      relative flex items-center gap-3 px-4 py-3 text-sm cursor-pointer
+                      border border-pip-boy-green/30 hover:border-pip-boy-green
+                      hover:bg-pip-boy-green/10 transition-all duration-200 rounded-sm
+                      ${isActive(link.href)
+                        ? 'bg-pip-boy-green/10 border-pip-boy-green text-pip-boy-green'
+                        : 'text-pip-boy-green/70 hover:text-pip-boy-green'
+                      }
+                    `}
+                  >
+                    <PixelIcon
+                      name={link.icon}
+                      sizePreset="sm"
+                      variant="primary"
+                      aria-label={link.ariaLabel}
+                    />
+                    <span className="flex-1 text-left">{link.label}</span>
+                    {link.badge && (
+                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    )}
+                  </button>
+                ))}
+
+                {user && (
+                  <>
+                    <div className="h-px bg-pip-boy-green/20 my-2" />
+                    <button
+                      onClick={() => {
+                        handleLogout()
+                        setMobileMenuOpen(false)
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 text-sm
+                               border border-red-500/30 hover:border-red-500
+                               hover:bg-red-500/10 text-red-400 hover:text-red-500
+                               transition-all duration-200 rounded-sm"
+                    >
+                      <PixelIcon
+                        name="door-open"
+                        sizePreset="sm"
+                        variant="error"
+                        aria-label="登出"
+                      />
+                      <span className="flex-1 text-left">登出</span>
+                    </button>
+                  </>
+                )}
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 

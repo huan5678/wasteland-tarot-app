@@ -29,16 +29,26 @@ if settings.environment == "testing":
     )
 else:
     # Use PostgreSQL for development and production
-    # Using Supabase Connection Pooler (pgBouncer)
-    # Disable statement cache for pgBouncer compatibility
+    # Using Supabase Connection Pooler (Supavisor in Transaction mode - port 6543)
+    # Transaction mode does NOT support prepared statements, so we disable them entirely
+    # Reference: https://www.pgbouncer.org/features.html
     engine = create_async_engine(
         settings.database_url,
         echo=settings.debug,
         pool_size=settings.database_pool_size,
         max_overflow=settings.database_max_overflow,
+        pool_pre_ping=True,  # Enable connection health checks before using
         connect_args={
-            "statement_cache_size": 0,  # Required for pgBouncer compatibility
-            "prepared_statement_cache_size": 0
+            "statement_cache_size": 0,  # Disable asyncpg statement cache (CRITICAL for Transaction mode)
+            "prepared_statement_cache_size": 0,  # Additional safety
+            "server_settings": {
+                "jit": "off",  # Disable JIT compilation
+            }
+        },
+        # CRITICAL: Disable SQLAlchemy's internal prepared statement optimization
+        # This prevents the DuplicatePreparedStatementError with pgbouncer transaction mode
+        execution_options={
+            "compiled_cache": None,  # Disable compiled statement cache
         }
     )
 

@@ -102,25 +102,37 @@ def get_access_token_cookie_settings() -> Dict[str, Any]:
     """
     Get cookie settings for access token
     httpOnly, secure, sameSite for CSRF protection
+
+    Note: Do NOT set 'domain' for localhost - browsers handle it automatically
+    Setting Domain=localhost can cause cookies to be rejected in modern browsers
     """
-    return {
+    cookie_settings = {
         "key": "access_token",
         "httponly": True,
         "secure": settings.environment == "production",  # HTTPS only in production
         "samesite": "lax",  # CSRF protection
-        "max_age": settings.access_token_expire_minutes * 60,  # 30 minutes in seconds
+        "max_age": settings.access_token_expire_minutes * 60,  # 8 hours in seconds
+        "path": "/",  # CRITICAL: Ensure cookie is sent for all paths
     }
+
+    return cookie_settings
 
 
 def get_refresh_token_cookie_settings() -> Dict[str, Any]:
     """
     Get cookie settings for refresh token
     Longer expiry (7 days)
+
+    Note: Do NOT set 'domain' for localhost - browsers handle it automatically
+    Setting Domain=localhost can cause cookies to be rejected in modern browsers
     """
-    return {
+    cookie_settings = {
         "key": "refresh_token",
         "httponly": True,
         "secure": settings.environment == "production",
         "samesite": "lax",
         "max_age": 7 * 24 * 60 * 60,  # 7 days in seconds
+        "path": "/",  # CRITICAL: Ensure cookie is sent for all paths
     }
+
+    return cookie_settings

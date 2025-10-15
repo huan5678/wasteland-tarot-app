@@ -95,7 +95,6 @@ class SpreadTemplate(BaseModel):
     # Status
     is_active: bool = Field(default=True, description="此牌陣是否可用")
     is_premium: bool = Field(default=False, description="此牌陣是否需要進階權限")
-    tags: List[str] = Field(default_factory=list, description="分類標籤")
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -114,8 +113,7 @@ class SpreadTemplate(BaseModel):
                 "difficulty_level": "beginner",
                 "vault_origin": 111,
                 "usage_count": 1247,
-                "average_rating": 4.2,
-                "tags": ["beginner", "past-present-future", "popular"]
+                "average_rating": 4.2
             }
         }
     )
@@ -127,7 +125,7 @@ class ReadingCreate(BaseModel):
     spread_template_id: str = Field(..., description="要使用的牌陣模板 ID")
     character_voice: CharacterVoice = Field(..., description="解讀使用的角色聲音")
     karma_context: KarmaAlignment = Field(..., description="業力對齊情境")
-    faction_influence: Optional[FactionAlignment] = Field(None, description="派系對占卜的影響")
+    faction_influence: Optional[str] = Field(None, description="派系對占卜的影響")
     radiation_factor: float = Field(default=0.5, ge=0.0, le=1.0, description="環境輻射因子")
 
     # Optional context
@@ -168,7 +166,7 @@ class ReadingSession(BaseModel):
     spread_template: SpreadTemplate = Field(..., description="使用的牌陣模板")
     character_voice_used: CharacterVoice = Field(..., description="使用的角色聲音")
     karma_context: KarmaAlignment = Field(..., description="業力情境")
-    faction_influence: Optional[FactionAlignment] = Field(None, description="派系影響")
+    faction_influence: Optional[str] = Field(None, description="派系影響")
     radiation_factor: float = Field(..., description="使用的輻射因子")
 
     # Card positions
@@ -200,7 +198,6 @@ class ReadingSession(BaseModel):
     accuracy_rating: Optional[int] = Field(None, ge=1, le=5, description="準確度感知評分")
     helpful_rating: Optional[int] = Field(None, ge=1, le=5, description="有用程度評分")
     user_feedback: Optional[str] = Field(None, description="使用者回饋文字")
-    tags: List[str] = Field(default_factory=list, description="使用者套用的標籤")
 
     # Social features
     likes_count: int = Field(default=0, description="收到的按讚數")
@@ -249,7 +246,6 @@ class ReadingUpdate(BaseModel):
     accuracy_rating: Optional[int] = Field(None, ge=1, le=5)
     helpful_rating: Optional[int] = Field(None, ge=1, le=5)
     user_feedback: Optional[str] = Field(None, max_length=1000)
-    tags: Optional[List[str]] = None
     mood_after: Optional[str] = None
 
 
@@ -263,7 +259,6 @@ class ReadingListParams(BaseModel):
     is_favorite: Optional[bool] = Field(None, description="篩選最愛項目")
     date_from: Optional[datetime] = Field(None, description="起始日期篩選")
     date_to: Optional[datetime] = Field(None, description="結束日期篩選")
-    tags: Optional[List[str]] = Field(None, description="按標籤篩選")
     min_satisfaction: Optional[int] = Field(None, ge=1, le=5, description="最低滿意度評分")
 
     # Pagination
@@ -343,7 +338,6 @@ class ReadingSearchParams(BaseModel):
     """搜尋占卜記錄的參數"""
     q: Optional[str] = Field(None, description="搜尋問題或備註的查詢文字", min_length=1)
     spread_type: Optional[str] = Field(None, description="按牌陣類型篩選")
-    tags: Optional[str] = Field(None, description="按標籤篩選（逗號分隔）")
     start_date: Optional[datetime] = Field(None, description="篩選此日期之後建立的占卜")
     end_date: Optional[datetime] = Field(None, description="篩選此日期之前建立的占卜")
     page: int = Field(1, ge=1, description="頁碼")
@@ -356,7 +350,6 @@ class ReadingSearchParams(BaseModel):
             "example": {
                 "q": "wasteland",
                 "spread_type": "celtic_cross",
-                "tags": "important,destiny",
                 "page": 1,
                 "page_size": 20,
                 "sort": "created_at",
@@ -372,7 +365,6 @@ class ReadingSearchResult(BaseModel):
     question: Optional[str]
     spread_type: str
     created_at: datetime
-    tags: List[str] = []
     notes: Optional[str] = None
     cards_count: int
     character_voice: Optional[str] = None

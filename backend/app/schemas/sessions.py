@@ -18,12 +18,14 @@ class SessionCreateSchema(BaseModel):
 
     驗證建立新的未完成占卜會話時的使用者輸入，
     該會話可被儲存並稍後恢復。
+
+    Note: user_id 由後端從 JWT token 自動填入，client 不需要提供
     """
-    user_id: str = Field(
-        ...,
+    user_id: Optional[str] = Field(
+        default=None,
         min_length=36,
         max_length=36,
-        description="建立會話的使用者 UUID"
+        description="建立會話的使用者 UUID（由後端自動填入）"
     )
     spread_type: str = Field(
         ...,
@@ -299,6 +301,41 @@ class ConflictInfoSchema(BaseModel):
                 "client_value": {"cards_drawn": ["the-fool", "the-magician"]},
                 "server_updated_at": "2025-10-01T14:35:00Z",
                 "client_updated_at": "2025-10-01T14:30:00Z"
+            }
+        }
+
+
+class SessionCompleteSchema(BaseModel):
+    """
+    Schema for completing a session and converting it to a Reading.
+
+    Allows clients to provide interpretation and additional reading metadata
+    when marking a session as complete.
+    """
+    interpretation: Optional[str] = Field(
+        default=None,
+        description="AI-generated interpretation text"
+    )
+    character_voice: Optional[str] = Field(
+        default='pip-boy',
+        description="Character voice used for interpretation"
+    )
+    karma_context: Optional[str] = Field(
+        default='neutral',
+        description="Karma context for the reading"
+    )
+    faction_influence: Optional[str] = Field(
+        default='vault-tec',
+        description="Faction influence for the reading"
+    )
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "interpretation": "The cards reveal a journey of transformation...",
+                "character_voice": "pip-boy",
+                "karma_context": "neutral",
+                "faction_influence": "vault-tec"
             }
         }
 

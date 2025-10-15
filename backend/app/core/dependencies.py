@@ -4,20 +4,23 @@ Authentication, authorization, and common dependency injection patterns
 """
 
 from typing import Optional, Dict, Any
-from fastapi import Depends, HTTPException, status, Header
+from fastapi import Depends, HTTPException, status, Header, Cookie, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from app.db.session import get_db
+from app.models.user import User
 from app.core.exceptions import InvalidTokenError, UserNotFoundError
+from app.core.security import verify_token
 from app.config import get_settings
 from app.services.ai_interpretation_service import AIInterpretationService
+from app.services.user_service import UserService
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-# Security scheme for JWT tokens
+# Security scheme for JWT tokens (fallback for Authorization header)
 security = HTTPBearer(auto_error=False)
 
 # AI service singleton
@@ -36,90 +39,99 @@ def get_ai_interpretation_service() -> AIInterpretationService:
 
 
 async def get_current_user(
+    request: Request,
+    access_token: Optional[str] = Cookie(None),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db)
-) -> Dict[str, Any]:
+) -> User:
     """
-    Get current authenticated user from Supabase Auth JWT token.
+    Get current authenticated user from JWT token.
 
-    驗證 Supabase JWT token 並回傳使用者資訊。
+    驗證 JWT token 並回傳使用者資訊。
+
+    優先順序：
+    1. httpOnly cookie (access_token)
+    2. Authorization Bearer header (fallback)
 
     Args:
-        credentials: HTTP Bearer token
+        request: FastAPI Request object
+        access_token: JWT token from httpOnly cookie
+        credentials: HTTP Bearer token (fallback)
         db: Database session
 
     Returns:
-        Dict containing user info (id, email, etc.)
+        User: SQLAlchemy User object
 
     Raises:
         HTTPException: 401 if token is invalid or missing
     """
-    if not credentials:
-        # Development mode: return demo user
-        if settings.environment == "development":
-            logger.warning("No credentials provided, returning demo user for development")
-            return {
-                "id": "demo-user-123",
-                "username": "VaultDweller76",
-                "email": "dweller@vault76.com",
-                "karma_alignment": "good",
-                "faction_preference": "vault_dweller",
-                "is_active": True,
-                "is_premium": False
-            }
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing authentication credentials"
-            )
+    # Try to get token from cookie first (primary method)
+    token = access_token
 
-    try:
+    # Fallback to Authorization header if no cookie
+    if not token and credentials:
         token = credentials.credentials
 
-        # In test environment, accept mock JWT tokens
-        if settings.environment == "test":
-            import jwt
-            try:
-                # Decode mock JWT without verification in test env
-                payload = jwt.decode(token, options={"verify_signature": False})
-                return {
-                    "id": payload.get("sub"),
-                    "email": payload.get("email"),
-                    "username": None,
-                    "is_active": True,
-                    "is_premium": False,
-                }
-            except Exception:
-                # If not a valid JWT, still try Supabase Auth
-                pass
+    if not token:
+        logger.warning("No authentication token provided (cookie or header)")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No access token provided"
+        )
 
-        # Validate token with Supabase Auth
-        from app.core.supabase import get_supabase_client
+    try:
+        # Verify JWT token using our own security module
+        payload = verify_token(token)
 
-        supabase = get_supabase_client()
-
-        # Verify JWT token and get user
-        user_response = supabase.auth.get_user(token)
-
-        if not user_response.user:
+        if not payload:
+            logger.warning("Token verification failed: Invalid or expired token")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials"
+                detail="Invalid or expired access token"
             )
 
-        # Return user info
-        return {
-            "id": user_response.user.id,
-            "email": user_response.user.email,
-            "username": user_response.user.user_metadata.get("username"),
-            "is_active": True,
-            "is_premium": False,  # TODO: Check from user_ai_quotas or subscription table
-        }
+        # Check token type
+        if payload.get("type") != "access":
+            logger.warning(f"Wrong token type: {payload.get('type')}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token type. Expected access token."
+            )
+
+        # Extract user ID
+        user_id = payload.get("sub")
+        if not user_id:
+            logger.error("Token payload missing 'sub' field")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+
+        # Query user from database
+        user_service = UserService(db)
+        user = await user_service.get_user_by_id(user_id)
+
+        if not user:
+            logger.warning(f"User not found for ID: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+
+        if not user.is_active:
+            logger.warning(f"User is inactive: {user_id}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account is inactive"
+            )
+
+        # Return user object
+        return user
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Token validation error: {str(e)}")
+        logger.error(f"Token validation error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token validation failed"
@@ -127,12 +139,12 @@ async def get_current_user(
 
 
 async def get_current_active_user(
-    current_user: Dict[str, Any] = Depends(get_current_user)
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_user)
+) -> User:
     """
     Ensure the current user is active and not suspended.
     """
-    if not current_user.get("is_active", False):
+    if not current_user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Vault dweller account inactive. Contact Overseer for reactivation."
@@ -141,12 +153,12 @@ async def get_current_active_user(
 
 
 async def get_current_premium_user(
-    current_user: Dict[str, Any] = Depends(get_current_active_user)
-) -> Dict[str, Any]:
+    current_user: User = Depends(get_current_active_user)
+) -> User:
     """
     Ensure the current user has premium access.
     """
-    if not current_user.get("is_premium", False):
+    if not current_user.is_premium:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Premium vault access required for this feature."
@@ -157,7 +169,7 @@ async def get_current_premium_user(
 async def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     db: AsyncSession = Depends(get_db)
-) -> Optional[Dict[str, Any]]:
+) -> Optional[User]:
     """
     Get current user if authenticated, otherwise return None.
     Useful for endpoints that work for both authenticated and anonymous users.
@@ -177,11 +189,11 @@ def require_karma_alignment(required_alignments: list[str]):
 
     Usage:
     @app.get("/good-only")
-    async def good_karma_only(user: dict = Depends(require_karma_alignment(["good"]))):
+    async def good_karma_only(user: User = Depends(require_karma_alignment(["good"]))):
         pass
     """
-    async def karma_check(current_user: Dict[str, Any] = Depends(get_current_active_user)):
-        user_karma = current_user.get("karma_alignment")
+    async def karma_check(current_user: User = Depends(get_current_active_user)):
+        user_karma = current_user.karma_alignment.value if hasattr(current_user.karma_alignment, 'value') else str(current_user.karma_alignment)
         if user_karma not in required_alignments:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -198,11 +210,11 @@ def require_faction_alignment(required_factions: list[str]):
 
     Usage:
     @app.get("/brotherhood-only")
-    async def brotherhood_only(user: dict = Depends(require_faction_alignment(["brotherhood"]))):
+    async def brotherhood_only(user: User = Depends(require_faction_alignment(["brotherhood"]))):
         pass
     """
-    async def faction_check(current_user: Dict[str, Any] = Depends(get_current_active_user)):
-        user_faction = current_user.get("faction_preference")
+    async def faction_check(current_user: User = Depends(get_current_active_user)):
+        user_faction = current_user.faction_alignment
         if user_faction not in required_factions:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -216,13 +228,13 @@ def require_faction_alignment(required_factions: list[str]):
 async def get_rate_limit_key(
     request_id: Optional[str] = Header(None, alias="X-Request-ID"),
     user_agent: Optional[str] = Header(None, alias="User-Agent"),
-    current_user: Optional[Dict[str, Any]] = Depends(get_optional_current_user)
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ) -> str:
     """
     Generate rate limiting key based on user or request characteristics.
     """
     if current_user:
-        return f"user:{current_user['id']}"
+        return f"user:{current_user.id}"
 
     # For anonymous users, use IP or request headers
     # In production, get actual IP address from request
@@ -230,9 +242,9 @@ async def get_rate_limit_key(
 
 
 async def check_reading_limit(
-    current_user: Dict[str, Any] = Depends(get_current_active_user),
+    current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
-) -> Dict[str, Any]:
+) -> User:
     """
     Check if user has exceeded daily reading limit.
     """

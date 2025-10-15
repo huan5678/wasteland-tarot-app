@@ -142,7 +142,6 @@ class TestUserService:
         profile_updates = {
             "display_name": "Updated Wanderer",
             "bio": "A seasoned wasteland survivor",
-            "vault_number": 111,
             "wasteland_location": "Mojave Wasteland"
         }
 

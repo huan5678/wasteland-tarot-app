@@ -10,7 +10,7 @@ describe('卡牌池選取邏輯測試', () => {
    * 篩選大阿爾克納卡牌
    */
   const getMajorArcanaCards = () => {
-    return enhancedWastelandCards.filter((card) => card.suit === '大阿爾克那')
+    return enhancedWastelandCards.filter((card) => card.suit === 'major_arcana')
   }
 
   /**
@@ -44,7 +44,7 @@ describe('卡牌池選取邏輯測試', () => {
       const majorArcana = getMajorArcanaCards()
 
       expect(majorArcana.length).toBeGreaterThan(0)
-      expect(majorArcana.every((card) => card.suit === '大阿爾克那')).toBe(true)
+      expect(majorArcana.every((card) => card.suit === 'major_arcana')).toBe(true)
     })
 
     it('應該返回至少 22 張卡牌', () => {
@@ -117,7 +117,7 @@ describe('卡牌池選取邏輯測試', () => {
         expect(card).toHaveProperty('id')
         expect(card).toHaveProperty('name')
         expect(card).toHaveProperty('suit')
-        expect(card.suit).toBe('大阿爾克那')
+        expect(card.suit).toBe('major_arcana')
       })
     })
   })

@@ -2,10 +2,14 @@
  * Session API Client
  *
  * Client-side API functions for reading session save/resume functionality.
- * Communicates with backend SessionService endpoints.
+ * Communicates with backend SessionService endpoints via Next.js API proxy.
+ *
+ * IMPORTANT: All requests use '/api/v1/...' paths to go through Next.js proxy,
+ * ensuring cookies work correctly and avoiding CORS issues.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+// Use relative paths to go through Next.js API proxy (/src/app/api/v1/[...path]/route.ts)
+const API_BASE_URL = '';
 
 export interface SessionState {
   cards_drawn?: string[];
@@ -117,12 +121,28 @@ function createHeaders(): HeadersInit {
 }
 
 /**
+ * Custom API Error with status code
+ */
+class APIError extends Error {
+  status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = 'APIError';
+    this.status = status;
+  }
+}
+
+/**
  * Handle API response and errors
  */
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Unknown error' }));
-    throw new Error(error.message || `HTTP ${response.status}`);
+    throw new APIError(
+      error.message || `HTTP ${response.status}`,
+      response.status
+    );
   }
   return response.json();
 }
@@ -131,7 +151,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
  * Create a new reading session
  */
 export async function createSession(data: SessionCreateData): Promise<SessionResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions`, {
     method: 'POST',
     headers: createHeaders(),
     body: JSON.stringify(data),
@@ -144,7 +164,7 @@ export async function createSession(data: SessionCreateData): Promise<SessionRes
  * Get a session by ID
  */
 export async function getSession(sessionId: string): Promise<SessionResponse | null> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}`, {
     method: 'GET',
     headers: createHeaders(),
   });
@@ -174,7 +194,7 @@ export async function listIncompleteSessions(
     params.append('status', status);
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/sessions?${params}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions?${params}`, {
     method: 'GET',
     headers: createHeaders(),
   });
@@ -195,7 +215,7 @@ export async function updateSession(
     body.expected_updated_at = expectedUpdatedAt;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}`, {
     method: 'PATCH',
     headers: createHeaders(),
     body: JSON.stringify(body),
@@ -208,7 +228,7 @@ export async function updateSession(
  * Delete a session
  */
 export async function deleteSession(sessionId: string): Promise<boolean> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}`, {
     method: 'DELETE',
     headers: createHeaders(),
   });
@@ -217,14 +237,21 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
   return true;
 }
 
+export interface SessionCompleteData {
+  interpretation?: string;
+  character_voice?: string;
+  karma_context?: string;
+  faction_influence?: string;
+}
+
 /**
  * Complete a session and create reading
  */
 export async function completeSession(
   sessionId: string,
-  data: { interpretation?: string; reading_metadata?: Record<string, any> }
+  data: SessionCompleteData
 ): Promise<CompleteSessionResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/complete`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}/complete`, {
     method: 'POST',
     headers: createHeaders(),
     body: JSON.stringify(data),
@@ -239,7 +266,7 @@ export async function completeSession(
 export async function syncOfflineSession(
   data: OfflineSessionData
 ): Promise<SyncSessionResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions/sync`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/sync`, {
     method: 'POST',
     headers: createHeaders(),
     body: JSON.stringify(data),
@@ -257,7 +284,7 @@ export async function resolveConflict(
   conflicts: ConflictInfo[],
   clientData: OfflineSessionData
 ): Promise<SessionResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/sessions/${sessionId}/resolve`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}/resolve`, {
     method: 'POST',
     headers: createHeaders(),
     body: JSON.stringify({
@@ -269,4 +296,19 @@ export async function resolveConflict(
   });
 
   return handleResponse<SessionResponse>(response);
+}
+
+/**
+ * Sessions API - Default export object with aliased method names
+ * This object provides the API interface expected by sessionStore
+ */
+export default {
+  create: createSession,
+  getById: getSession,
+  list: listIncompleteSessions,
+  update: updateSession,
+  delete: deleteSession,
+  complete: completeSession,
+  syncOffline: syncOfflineSession,
+  resolveConflict: resolveConflict,
 }

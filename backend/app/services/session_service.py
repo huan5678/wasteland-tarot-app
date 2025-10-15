@@ -78,13 +78,19 @@ class SessionService:
         if not user:
             raise UserNotFoundError(f"User with ID '{session_data.user_id}' not found")
 
-        # Create session
+        # Create session (mapping schema fields to model fields)
         session = ReadingSession(
             user_id=session_data.user_id,
             spread_type=session_data.spread_type,
-            spread_config=session_data.spread_config,
             question=session_data.question,
-            session_state=session_data.session_state,
+            # Map session_state to session_data (model field)
+            session_data={
+                "spread_config": session_data.spread_config,
+                "session_state": session_data.session_state,
+            },
+            # Extract selected_cards and current_position from session_state
+            selected_cards=session_data.session_state.get("cards_drawn", []),
+            current_position=session_data.session_state.get("current_position", 0),
             status=session_data.status,
         )
 
@@ -96,11 +102,26 @@ class SessionService:
             await self.db.rollback()
             raise InvalidRequestError(f"Failed to create session: {str(e)}")
 
+        # Convert with proper UUID handling and field mapping
+        session_dict = {
+            "id": str(session.id),
+            "user_id": str(session.user_id),
+            "spread_type": session.spread_type,
+            # Extract spread_config and session_state from session_data
+            "spread_config": session.session_data.get("spread_config") if session.session_data else None,
+            "question": session.question,
+            "session_state": session.session_data.get("session_state", {}) if session.session_data else {},
+            "status": session.status,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+            "last_accessed_at": session.last_accessed_at
+        }
+
         # TODO: Cache in Redis with 15-minute TTL
         # if self.redis:
         #     await self._cache_session(session)
 
-        return SessionResponseSchema.model_validate(session)
+        return SessionResponseSchema(**session_dict)
 
     # Task 3.3: Get Session
     async def get_session(self, session_id: str) -> Optional[SessionResponseSchema]:
@@ -131,11 +152,26 @@ class SessionService:
         if not session:
             return None
 
+        # Convert with proper UUID handling and field mapping
+        session_dict = {
+            "id": str(session.id),
+            "user_id": str(session.user_id),
+            "spread_type": session.spread_type,
+            # Extract spread_config and session_state from session_data
+            "spread_config": session.session_data.get("spread_config") if session.session_data else None,
+            "question": session.question,
+            "session_state": session.session_data.get("session_state", {}) if session.session_data else {},
+            "status": session.status,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+            "last_accessed_at": session.last_accessed_at
+        }
+
         # TODO: Cache the result
         # if self.redis:
         #     await self._cache_session(session)
 
-        return SessionResponseSchema.model_validate(session)
+        return SessionResponseSchema(**session_dict)
 
     # Task 3.4: List Incomplete Sessions
     async def list_incomplete_sessions(
@@ -163,9 +199,12 @@ class SessionService:
         # Build query
         query = select(ReadingSession).where(ReadingSession.user_id == user_id)
 
-        # Apply status filter if provided
+        # Apply status filter if provided, otherwise exclude completed sessions by default
         if status:
             query = query.where(ReadingSession.status == status)
+        else:
+            # Default: only show incomplete sessions (exclude 'complete' status)
+            query = query.where(ReadingSession.status != 'complete')
 
         # Get total count
         count_query = select(func.count()).select_from(query.subquery())
@@ -179,8 +218,28 @@ class SessionService:
         result = await self.db.execute(query)
         sessions = result.scalars().all()
 
-        # Convert to metadata schemas
-        session_list = [SessionMetadataSchema.model_validate(s) for s in sessions]
+        # Convert to metadata schemas with proper UUID handling
+        session_list = []
+        for s in sessions:
+            try:
+                # Ensure UUIDs are converted to strings for Pydantic
+                session_dict = {
+                    "id": str(s.id),
+                    "user_id": str(s.user_id),
+                    "spread_type": s.spread_type,
+                    "question": s.question,
+                    "status": s.status,
+                    "created_at": s.created_at,
+                    "updated_at": s.updated_at,
+                    "last_accessed_at": s.last_accessed_at
+                }
+                session_list.append(SessionMetadataSchema(**session_dict))
+            except Exception as e:
+                # Log error but continue processing other sessions
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error converting session {s.id}: {str(e)}")
+                continue
 
         return session_list, total_count
 
@@ -227,8 +286,24 @@ class SessionService:
                     f"Actual updated_at: {session.updated_at}"
                 )
 
-        # Apply updates
+        # Apply updates (mapping schema fields to model fields)
         update_dict = update_data.model_dump(exclude_unset=True)
+
+        # Handle special field mappings
+        if "session_state" in update_dict or "spread_config" in update_dict:
+            # Merge updates into session_data
+            current_session_data = session.session_data or {}
+            if "spread_config" in update_dict:
+                current_session_data["spread_config"] = update_dict.pop("spread_config")
+            if "session_state" in update_dict:
+                new_session_state = update_dict.pop("session_state")
+                current_session_data["session_state"] = new_session_state
+                # Update selected_cards and current_position
+                session.selected_cards = new_session_state.get("cards_drawn", session.selected_cards)
+                session.current_position = new_session_state.get("current_position", session.current_position)
+            session.session_data = current_session_data
+
+        # Apply remaining updates
         for field, value in update_dict.items():
             if hasattr(session, field):
                 setattr(session, field, value)
@@ -240,11 +315,26 @@ class SessionService:
             await self.db.rollback()
             raise InvalidRequestError(f"Failed to update session: {str(e)}")
 
+        # Convert with proper UUID handling and field mapping
+        session_dict = {
+            "id": str(session.id),
+            "user_id": str(session.user_id),
+            "spread_type": session.spread_type,
+            # Extract spread_config and session_state from session_data
+            "spread_config": session.session_data.get("spread_config") if session.session_data else None,
+            "question": session.question,
+            "session_state": session.session_data.get("session_state", {}) if session.session_data else {},
+            "status": session.status,
+            "created_at": session.created_at,
+            "updated_at": session.updated_at,
+            "last_accessed_at": session.last_accessed_at
+        }
+
         # TODO: Invalidate cache
         # if self.redis:
         #     await self._invalidate_cache(session_id)
 
-        return SessionResponseSchema.model_validate(session)
+        return SessionResponseSchema(**session_dict)
 
     # Task 3.6: Delete Session
     async def delete_session(self, session_id: str) -> bool:
@@ -293,7 +383,8 @@ class SessionService:
         Convert an incomplete session to a completed Reading atomically.
 
         Transitions the session from 'active'/'paused' to 'complete' status,
-        creates a corresponding Reading record, and preserves all session data.
+        creates a corresponding Reading record with normalized card positions,
+        and preserves all session data.
 
         Args:
             session_id: UUID of the session to complete
@@ -318,29 +409,143 @@ class SessionService:
         if session.status == "complete":
             raise InvalidRequestError(f"Session '{session_id}' is already completed")
 
-        # Import Reading model here to avoid circular dependency
-        from app.models.reading_enhanced import CompletedReading as Reading
+        # Import Reading models here to avoid circular dependency
+        from app.models.reading_enhanced import CompletedReading as Reading, ReadingCardPosition
+        from app.models.wasteland_card import WastelandCard
 
-        # Create Reading from session data
+        # Extract session state and cards_drawn
+        session_state = session.session_data.get("session_state", {}) if session.session_data else {}
+        cards_drawn = session_state.get("cards_drawn", [])
+
+        # Build reading data WITHOUT cards_drawn field (normalized design)
         reading_data = {
             "user_id": session.user_id,
             "question": session.question,
-            "spread_type": session.spread_type,
-            "cards_drawn": session.session_state.get("cards_drawn", []),
-            "interpretation": interpretation or session.session_state.get("interpretation", ""),
-            **(reading_metadata or {})
+            "overall_interpretation": interpretation or session_state.get("interpretation", ""),
+            # Extract optional fields from reading_metadata
+            "spread_template_id": reading_metadata.get("spread_template_id") if reading_metadata else None,
+            "interpretation_template_id": reading_metadata.get("interpretation_template_id") if reading_metadata else None,
+            "focus_area": reading_metadata.get("focus_area") if reading_metadata else None,
+            "context_notes": reading_metadata.get("context_notes") if reading_metadata else None,
+            # Default required fields
+            "character_voice_used": reading_metadata.get("character_voice_used", "pip_boy") if reading_metadata else "pip_boy",
+            "karma_context": reading_metadata.get("karma_context", "neutral") if reading_metadata else "neutral",
+            # Optional fields from reading_metadata
+            "faction_influence": reading_metadata.get("faction_influence") if reading_metadata else None,
+            "radiation_factor": reading_metadata.get("radiation_factor", 0.5) if reading_metadata else 0.5,
+            "summary_message": reading_metadata.get("summary_message") if reading_metadata else None,
+            "prediction_confidence": reading_metadata.get("prediction_confidence") if reading_metadata else None,
+            "energy_reading": reading_metadata.get("energy_reading") if reading_metadata else None,
+            "session_duration": reading_metadata.get("session_duration") if reading_metadata else None,
+            "start_time": reading_metadata.get("start_time") if reading_metadata else None,
+            "end_time": reading_metadata.get("end_time") if reading_metadata else None,
+            "location": reading_metadata.get("location") if reading_metadata else None,
+            "mood_before": reading_metadata.get("mood_before") if reading_metadata else None,
+            "mood_after": reading_metadata.get("mood_after") if reading_metadata else None,
+            "privacy_level": reading_metadata.get("privacy_level", "private") if reading_metadata else "private",
+            "allow_public_sharing": reading_metadata.get("allow_public_sharing", False) if reading_metadata else False,
+            "is_favorite": reading_metadata.get("is_favorite", False) if reading_metadata else False,
         }
 
+        # Create the CompletedReading record
         reading = Reading(**reading_data)
 
         try:
+            # Add reading to database first to get its ID
+            self.db.add(reading)
+            await self.db.flush()  # Flush to get reading.id without committing
+
+            # Create ReadingCardPosition records for each card
+            for idx, card_data in enumerate(cards_drawn):
+                # Handle different card_data formats
+                # Format 1: Dict with card_id/id field
+                # Format 2: String UUID directly
+                # Format 3: Empty or None
+
+                if not card_data:
+                    # Skip empty cards
+                    continue
+
+                # If card_data is a string, treat it as card_id
+                if isinstance(card_data, str):
+                    card_id = card_data
+                    is_reversed = False
+                    position_number = idx
+                    position_name = None
+                    extra_fields = {}
+                elif isinstance(card_data, dict):
+                    # card_data expected format: {"card_id": "uuid", "position": 0, "is_reversed": false}
+                    # or simplified: {"id": "uuid", "isReversed": false}
+                    card_id = card_data.get("card_id") or card_data.get("id")
+                    is_reversed = card_data.get("is_reversed", False) or card_data.get("isReversed", False)
+                    position_number = card_data.get("position", idx)
+                    position_name = card_data.get("position_name")
+                    # Extract optional fields
+                    extra_fields = {
+                        "position_interpretation": card_data.get("position_interpretation"),
+                        "card_significance": card_data.get("card_significance"),
+                        "connection_to_question": card_data.get("connection_to_question"),
+                        "radiation_influence": card_data.get("radiation_influence", 0.0),
+                        "visual_effects": card_data.get("visual_effects"),
+                        "audio_cue": card_data.get("audio_cue"),
+                        "reveal_delay": card_data.get("reveal_delay", 0.0),
+                        "user_resonance": card_data.get("user_resonance"),
+                        "interpretation_confidence": card_data.get("interpretation_confidence"),
+                    }
+                else:
+                    # Unknown format, skip
+                    continue
+
+                if not card_id:
+                    # Skip cards without valid ID
+                    continue
+
+                # Check if card_id is a UUID or a name/slug
+                # If it's not a valid UUID format, try to look it up by name
+                try:
+                    from uuid import UUID
+                    UUID(card_id)  # Validate UUID format
+                    resolved_card_id = card_id
+                except (ValueError, AttributeError, TypeError):
+                    # card_id is likely a name or slug (e.g., "the-fool", "The Fool")
+                    # Try to look up by name (case-insensitive)
+                    # Convert slug format to title format: "the-fool" -> "The Fool"
+                    card_name = card_id.replace('-', ' ').title()
+                    card_result = await self.db.execute(
+                        select(WastelandCard).where(
+                            func.lower(WastelandCard.name) == func.lower(card_name)
+                        )
+                    )
+                    card = card_result.scalar_one_or_none()
+                    if not card:
+                        # Also try the original string as-is
+                        card_result2 = await self.db.execute(
+                            select(WastelandCard).where(
+                                func.lower(WastelandCard.name) == func.lower(card_id)
+                            )
+                        )
+                        card = card_result2.scalar_one_or_none()
+                        if not card:
+                            # Skip cards that can't be found
+                            continue
+                    resolved_card_id = str(card.id)
+
+                card_position = ReadingCardPosition(
+                    completed_reading_id=reading.id,
+                    card_id=resolved_card_id,  # Use resolved UUID
+                    position_number=position_number,
+                    position_name=position_name,
+                    is_reversed=is_reversed,
+                    draw_order=idx,
+                    # Optional fields (only for dict format)
+                    **extra_fields
+                )
+                self.db.add(card_position)
+
             # Update session status to complete
             session.status = "complete"
 
-            # Add reading to database
-            self.db.add(reading)
-
-            # Commit both changes atomically
+            # Commit all changes atomically
             await self.db.commit()
             await self.db.refresh(session)
             await self.db.refresh(reading)
@@ -353,8 +558,8 @@ class SessionService:
         #     await self._invalidate_cache(session_id)
 
         return {
-            "session_id": session.id,
-            "reading_id": reading.id,
+            "session_id": str(session.id),
+            "reading_id": str(reading.id),
             "status": "completed"
         }
 
@@ -397,8 +602,22 @@ class SessionService:
             existing_session = result.scalar_one_or_none()
 
             if existing_session:
+                # Convert with proper UUID handling and field mapping
+                session_dict = {
+                    "id": str(existing_session.id),
+                    "user_id": str(existing_session.user_id),
+                    "spread_type": existing_session.spread_type,
+                    # Extract spread_config and session_state from session_data
+                    "spread_config": existing_session.session_data.get("spread_config") if existing_session.session_data else None,
+                    "question": existing_session.question,
+                    "session_state": existing_session.session_data.get("session_state", {}) if existing_session.session_data else {},
+                    "status": existing_session.status,
+                    "created_at": existing_session.created_at,
+                    "updated_at": existing_session.updated_at,
+                    "last_accessed_at": existing_session.last_accessed_at
+                }
                 return (
-                    SessionResponseSchema.model_validate(existing_session),
+                    SessionResponseSchema(**session_dict),
                     conflicts
                 )
 
@@ -462,11 +681,12 @@ class SessionService:
         conflicts = []
 
         # Check session_state conflicts
-        if server_session.session_state != offline_data.session_state:
+        server_session_state = server_session.session_data.get("session_state", {}) if server_session.session_data else {}
+        if server_session_state != offline_data.session_state:
             conflicts.append(
                 ConflictInfoSchema(
                     field="session_state",
-                    server_value=server_session.session_state,
+                    server_value=server_session_state,
                     client_value=offline_data.session_state,
                     server_updated_at=server_session.updated_at,
                     client_updated_at=offline_data.updated_at
@@ -530,10 +750,16 @@ class SessionService:
         elif resolution_data.strategy == "client-wins":
             # Overwrite server with client data
             server_session.spread_type = client_data.spread_type
-            server_session.spread_config = client_data.spread_config
             server_session.question = client_data.question
-            server_session.session_state = client_data.session_state
             server_session.status = client_data.status
+            # Update session_data with client data
+            server_session.session_data = {
+                "spread_config": client_data.spread_config,
+                "session_state": client_data.session_state,
+            }
+            # Update selected_cards and current_position
+            server_session.selected_cards = client_data.session_state.get("cards_drawn", [])
+            server_session.current_position = client_data.session_state.get("current_position", 0)
 
         elif resolution_data.strategy == "last-write-wins":
             # Compare timestamps for each conflicting field
@@ -550,11 +776,26 @@ class SessionService:
             await self.db.rollback()
             raise InvalidRequestError(f"Failed to resolve conflict: {str(e)}")
 
+        # Convert with proper UUID handling and field mapping
+        session_dict = {
+            "id": str(server_session.id),
+            "user_id": str(server_session.user_id),
+            "spread_type": server_session.spread_type,
+            # Extract spread_config and session_state from session_data
+            "spread_config": server_session.session_data.get("spread_config") if server_session.session_data else None,
+            "question": server_session.question,
+            "session_state": server_session.session_data.get("session_state", {}) if server_session.session_data else {},
+            "status": server_session.status,
+            "created_at": server_session.created_at,
+            "updated_at": server_session.updated_at,
+            "last_accessed_at": server_session.last_accessed_at
+        }
+
         # TODO: Invalidate cache
         # if self.redis:
         #     await self._invalidate_cache(resolution_data.session_id)
 
-        return SessionResponseSchema.model_validate(server_session)
+        return SessionResponseSchema(**session_dict)
 
     # Helper methods for Redis caching (to be implemented when Redis is added)
     # async def _cache_session(self, session: ReadingSession) -> None:

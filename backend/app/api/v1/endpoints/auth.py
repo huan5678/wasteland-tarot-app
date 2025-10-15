@@ -66,7 +66,6 @@ class RegisterRequest(BaseModel):
     name: str
     display_name: Optional[str] = None
     faction_alignment: Optional[str] = None
-    vault_number: Optional[int] = None
     wasteland_location: Optional[str] = None
 
     @field_validator('password')
@@ -429,7 +428,6 @@ async def get_current_user(
             "karma_score": user.karma_score,
             "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
             "faction_alignment": user.faction_alignment,
-            "vault_number": user.vault_number,
             "wasteland_location": user.wasteland_location,
             "is_oauth_user": bool(user.oauth_provider),
             "is_verified": user.is_verified,
@@ -481,7 +479,6 @@ async def register_user(
             name=request.name,
             display_name=request.display_name,
             faction_alignment=request.faction_alignment,
-            vault_number=request.vault_number,
             wasteland_location=request.wasteland_location
         )
 
@@ -517,7 +514,6 @@ async def register_user(
                 "display_name": user.display_name,
                 "faction_alignment": user.faction_alignment,
                 "karma_score": user.karma_score,
-                "vault_number": user.vault_number,
                 "wasteland_location": user.wasteland_location,
                 "is_oauth_user": False,
                 "is_verified": user.is_verified,
@@ -609,7 +605,6 @@ async def login_user(
                 "faction_alignment": user.faction_alignment,
                 "karma_score": user.karma_score,
                 "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
-                "vault_number": user.vault_number,
                 "wasteland_location": user.wasteland_location,
                 "profile_picture_url": user.profile_picture_url,
                 "is_oauth_user": bool(user.oauth_provider),

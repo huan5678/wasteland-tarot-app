@@ -52,7 +52,7 @@ export const SUIT_CONFIG: Record<SuitType, SuitMetadata> = {
     name_en: 'Nuka-Cola Bottles (Cups)',
     description: '代表情感、關係與內在體驗',
     card_count: 14,
-    iconName: 'glass', // 🥤 → Glass: 代表液體容器,符合「杯」的象徵意義
+    iconName: 'drinks-2-line', // 🥤 → Drinks 2 Line: 代表飲料瓶,符合 Nuka-Cola 的視覺意象
     icon: '🥤', // 向後相容
   },
   [SuitType.COMBAT_WEAPONS]: {

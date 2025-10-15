@@ -49,14 +49,16 @@ export async function initWebVitals() {
   webVitalsInitialized = true
 
   try {
-    const { onCLS, onFID, onLCP, onFCP, onTTFB, onINP } = await import('web-vitals')
+    const webVitals = await import('web-vitals')
+
+    // web-vitals v4 removed onFID and uses onINP instead
+    const { onCLS, onLCP, onFCP, onTTFB, onINP } = webVitals
 
     onCLS(metric => handleMetric('CLS', metric))
-    onFID(metric => handleMetric('FID', metric))
     onLCP(metric => handleMetric('LCP', metric))
     onFCP(metric => handleMetric('FCP', metric))
     onTTFB(metric => handleMetric('TTFB', metric))
-    if (onINP) onINP(metric => handleMetric('INP', metric))
+    onINP(metric => handleMetric('INP', metric))
 
     // eslint-disable-next-line no-console
     console.info('[Metrics] Web Vitals monitoring initialized')

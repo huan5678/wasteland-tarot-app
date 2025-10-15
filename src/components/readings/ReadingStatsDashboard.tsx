@@ -4,10 +4,10 @@ import { useReadingsStore, ReadingStatistics } from '@/lib/readingsStore'
 import { PixelIcon } from '@/components/ui/icons'
 
 export function ReadingStatsDashboard() {
-  const { calculateStatistics, getReadingsByPeriod, readings, categories } = useReadingsStore()
+  const { getReadingsByPeriod, readings, categories } = useReadingsStore()
   const [selectedPeriod, setSelectedPeriod] = useState<'week' | 'month' | 'year'>('month')
 
-  const stats = useMemo(() => calculateStatistics(), [calculateStatistics])
+  const stats = useMemo(() => useReadingsStore.getState().calculateStatistics(), [readings])
   const periodReadings = useMemo(() => getReadingsByPeriod(selectedPeriod), [getReadingsByPeriod, selectedPeriod])
 
   // Calculate additional insights
@@ -68,9 +68,25 @@ export function ReadingStatsDashboard() {
 
   // Chart data for popular spreads
   const spreadChartData = useMemo(() => {
-    const maxCount = Math.max(...Object.values(stats.readings_by_spread))
+    const spreadNameMap: Record<string, string> = {
+      'single_wasteland': '單張廢土牌',
+      'vault_tec_spread': 'Vault-Tec 牌陣',
+      'wasteland_survival': '廢土生存',
+      'wasteland_survival_spread': '廢土生存牌陣',
+      'brotherhood_council': '兄弟會議會',
+      'brotherhood_council_spread': '兄弟會議會牌陣',
+      'custom_spread': '自訂牌陣',
+      'raider_chaos': '掠奪者混亂',
+      'raider_chaos_spread': '掠奪者混亂牌陣',
+      'ncr_strategic': 'NCR 戰略',
+      'ncr_strategic_spread': 'NCR 戰略牌陣',
+      'celtic_cross': '凱爾特十字',
+      'horseshoe': '馬蹄鐵',
+    }
+
+    const maxCount = Math.max(...Object.values(stats.readings_by_spread), 1)
     return Object.entries(stats.readings_by_spread).map(([spread, count]) => ({
-      name: spread === 'single' ? '單張' : spread === 'three_card' ? '三張' : spread === 'celtic_cross' ? '凱爾特十字' : spread,
+      name: spreadNameMap[spread] || spread,
       count,
       percentage: maxCount > 0 ? (count / maxCount) * 100 : 0
     })).sort((a, b) => b.count - a.count)
@@ -90,14 +106,6 @@ export function ReadingStatsDashboard() {
       displayMonth: new Date(month + '-01').toLocaleDateString('zh-TW', { month: 'short' })
     }))
   }, [stats.readings_by_month])
-
-  // Top tags data
-  const topTagsData = useMemo(() => {
-    return Object.entries(stats.most_used_tags)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([tag, count]) => ({ tag, count }))
-  }, [stats.most_used_tags])
 
   // Top cards data
   const topCardsData = useMemo(() => {
@@ -136,7 +144,7 @@ export function ReadingStatsDashboard() {
             {stats.total_readings}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            < PixelIcon name="spade" className="w-4 h-4" />
+            < PixelIcon name="file-list" className="w-4 h-4" />
             總占卜次數
           </div>
         </div>
@@ -156,7 +164,7 @@ export function ReadingStatsDashboard() {
             {stats.reading_streak}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            < PixelIcon name="flame" className="w-4 h-4" />
+            < PixelIcon name="fire" className="w-4 h-4" />
             連續天數
           </div>
         </div>
@@ -166,7 +174,7 @@ export function ReadingStatsDashboard() {
             {periodReadings.length}
           </div>
           <div className="text-pip-boy-green/70 text-sm flex items-center justify-center gap-1">
-            < PixelIcon name="trending-up" className="w-4 h-4" />
+            < PixelIcon name="arrow-up" className="w-4 h-4" />
             {selectedPeriod === 'week' ? '本週' : selectedPeriod === 'month' ? '本月' : '今年'}占卜
           </div>
         </div>
@@ -175,7 +183,7 @@ export function ReadingStatsDashboard() {
       {/* Insights Panel */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
         <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          < PixelIcon name="target" className="w-5 h-5" />
+          < PixelIcon name="focus" className="w-5 h-5" />
           智能洞察
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -204,7 +212,7 @@ export function ReadingStatsDashboard() {
         {/* Spread Type Distribution */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            < PixelIcon name="bar-chart-3" className="w-5 h-5" />
+            < PixelIcon name="bar-chart" className="w-5 h-5" />
             牌陣使用分佈
           </h3>
           <div className="space-y-3">
@@ -257,35 +265,10 @@ export function ReadingStatsDashboard() {
           </div>
         </div>
 
-        {/* Top Tags */}
-        <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-          <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            < PixelIcon name="hash" className="w-5 h-5" />
-            熱門標籤
-          </h3>
-          <div className="space-y-2">
-            {topTagsData.length > 0 ? (
-              topTagsData.map((item, index) => (
-                <div key={item.tag} className="flex items-center justify-between p-2 bg-pip-boy-green/10">
-                  <div className="flex items-center gap-2">
-                    <div className="text-pip-boy-green/60 text-xs w-4">#{index + 1}</div>
-                    <div className="text-sm text-pip-boy-green">{item.tag}</div>
-                  </div>
-                  <div className="numeric text-sm text-pip-boy-green font-bold tabular-nums">{item.count}</div>
-                </div>
-              ))
-            ) : (
-              <div className="text-center text-pip-boy-green/60 text-sm py-4">
-                尚無標籤數據
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Top Cards */}
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
           <h3 className="font-bold text-pip-boy-green mb-4 flex items-center gap-2">
-            < PixelIcon name="award" className="w-5 h-5" />
+            < PixelIcon name="trophy" className="w-5 h-5" />
             常見卡牌
           </h3>
           <div className="space-y-2">
@@ -311,7 +294,7 @@ export function ReadingStatsDashboard() {
       {/* Additional Stats */}
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
         <h3 className="font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-          < PixelIcon name="clock" className="w-5 h-5" />
+          < PixelIcon name="time" className="w-5 h-5" />
           其他統計
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -324,10 +307,6 @@ export function ReadingStatsDashboard() {
             <div className="text-pip-boy-green font-bold">
               {stats.last_reading_date ? new Date(stats.last_reading_date).toLocaleDateString() : '無'}
             </div>
-          </div>
-          <div>
-            <div className="text-pip-boy-green/70">使用標籤數</div>
-            <div className="text-pip-boy-green font-bold numeric tabular-nums">{Object.keys(stats.most_used_tags).length}</div>
           </div>
           <div>
             <div className="text-pip-boy-green/70">不同卡牌數</div>

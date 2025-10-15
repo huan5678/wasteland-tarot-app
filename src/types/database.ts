@@ -203,7 +203,6 @@ export interface User {
   avatar_url?: string;
   faction_alignment: FactionAlignment;
   karma_score: number;
-  vault_number?: number;
   wasteland_location?: string;
   is_active: boolean;
   is_verified: boolean;
@@ -404,7 +403,6 @@ export interface CompletedReading {
   accuracy_rating?: number;  // 1-5 rating
   helpful_rating?: number;  // 1-5 rating
   user_feedback?: string;
-  tags?: string[];  // JSONB array
   likes_count?: number;
   shares_count?: number;
   comments_count?: number;

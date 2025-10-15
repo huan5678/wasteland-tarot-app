@@ -267,6 +267,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
             <input
               id="password"
               type="password"
+              autoComplete="current-password"
               aria-required="true"
               className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入存取密碼..."

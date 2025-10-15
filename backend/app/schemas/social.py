@@ -58,7 +58,6 @@ class SharedReading(BaseModel):
     # 社群元數據
     title: Optional[str] = Field(None, description="使用者提供的分享標題")
     description: Optional[str] = Field(None, description="使用者對占卜的描述")
-    tags: List[str] = Field(default_factory=list, description="使用者套用的標籤")
 
     # 社群統計
     social_stats: SocialStats = Field(default_factory=SocialStats)
@@ -84,7 +83,6 @@ class SharedReading(BaseModel):
                 "shared_interpretation": "The cards suggest focusing on new opportunities and maintaining positive relationships",
                 "cards_revealed": ["past", "present", "future"],
                 "title": "Great guidance for the week ahead!",
-                "tags": ["weekly-guidance", "positive", "career"],
                 "social_stats": {
                     "likes_count": 23,
                     "comments_count": 7,
@@ -177,7 +175,6 @@ class ShareReadingRequest(BaseModel):
     description: Optional[str] = Field(None, max_length=300, description="Description of why sharing")
     cards_to_reveal: List[str] = Field(..., description="Which card positions to show")
     include_full_interpretation: bool = Field(default=False, description="Include full interpretation")
-    tags: List[str] = Field(default_factory=list, description="Tags for categorization")
     allow_comments: bool = Field(default=True, description="Allow comments")
 
     @field_validator('cards_to_reveal')
@@ -191,7 +188,6 @@ class CommunityFeed(BaseModel):
     """Community feed response"""
     shared_readings: List[SharedReading] = Field(..., description="Recent shared readings")
     featured_content: List[SharedReading] = Field(..., description="Featured community content")
-    trending_tags: List[str] = Field(..., description="Currently trending tags")
     community_stats: Dict[str, int] = Field(..., description="Overall community statistics")
 
 
@@ -199,7 +195,6 @@ class FeedFilters(BaseModel):
     """Filters for community feed"""
     character_voice: Optional[CharacterVoice] = Field(None, description="Filter by character voice")
     karma_alignment: Optional[KarmaAlignment] = Field(None, description="Filter by karma alignment")
-    tags: Optional[List[str]] = Field(None, description="Filter by tags")
     min_likes: Optional[int] = Field(None, ge=0, description="Minimum number of likes")
     date_from: Optional[datetime] = Field(None, description="Show content from this date")
     date_to: Optional[datetime] = Field(None, description="Show content until this date")

@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useAuthStore } from '@/lib/authStore'
+import { useAudioStore } from '@/lib/audio/audioStore'
 import { PixelIcon } from '@/components/ui/icons'
 
 interface UserProfile {
   username: string
   email: string
-  vault_number: string
   joinDate: string
   karmaLevel: string
   totalReadings: number
@@ -29,6 +29,12 @@ export default function ProfilePage() {
   const oauthProvider = useAuthStore(s => s.oauthProvider)
   const profilePicture = useAuthStore(s => s.profilePicture)
 
+  // 音效系統狀態
+  const sfxVolume = useAudioStore(s => s.volumes.sfx)
+  const sfxMuted = useAudioStore(s => s.muted.sfx)
+  const setVolume = useAudioStore(s => s.setVolume)
+  const toggleMute = useAudioStore(s => s.toggleMute)
+
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
@@ -46,7 +52,6 @@ export default function ProfilePage() {
       const mockProfile: UserProfile = {
         username: user?.username || 'VaultDweller111',
         email: 'dweller@vault-tec.com',
-        vault_number: user?.vault_number || '111',
         joinDate: '2023-10-01T00:00:00Z',
         karmaLevel: '善業流浪者',
         totalReadings: 24,
@@ -207,7 +212,7 @@ export default function ProfilePage() {
                   {user?.name || profile.username}
                 </h2>
                 <p className="text-pip-boy-green/70 text-sm">
-                  Vault {profile.vault_number} 居民
+                  Vault Dweller
                 </p>
 
                 {/* OAuth Badge */}
@@ -268,6 +273,72 @@ export default function ProfilePage() {
                 >
                   <PixelIcon name="scroll" size={16} className="mr-2 inline" decorative />占卜歷史
                 </Link>
+              </div>
+            </div>
+
+            {/* Sound Effects Control */}
+            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 mt-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-pip-boy-green font-bold">音效系統</h3>
+                <button
+                  onClick={() => toggleMute('sfx')}
+                  className="p-1.5 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors"
+                  aria-label={sfxMuted ? '取消靜音' : '靜音'}
+                >
+                  <PixelIcon
+                    name={sfxMuted ? "volume-off" : "volume-up"}
+                    size={16}
+                    aria-label={sfxMuted ? '已靜音' : '音效開啟'}
+                  />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                {/* Volume Slider */}
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-pip-boy-green/70 text-xs">音效音量</label>
+                    <span className="text-pip-boy-green text-xs font-mono">
+                      {sfxMuted ? '靜音' : `${Math.round(sfxVolume * 100)}%`}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={sfxVolume * 100}
+                    onChange={(e) => setVolume('sfx', Number(e.target.value) / 100)}
+                    disabled={sfxMuted}
+                    className="w-full h-2 bg-black border border-pip-boy-green/30 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
+                      [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-pip-boy-green [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-pip-boy-green-dark [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(0,255,136,0.6)]
+                      [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-pip-boy-green [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-pip-boy-green-dark [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(0,255,136,0.6)]"
+                    aria-label="音效音量"
+                  />
+                </div>
+
+                {/* Info Text */}
+                <p className="text-pip-boy-green/50 text-xs leading-relaxed">
+                  控制卡牌翻轉、按鈕點擊等互動音效的音量。音量設定會自動儲存。
+                </p>
+
+                {/* Visual Indicator */}
+                <div className="flex items-center gap-2 pt-2 border-t border-pip-boy-green/20">
+                  <div className="flex-1 flex gap-1">
+                    {[...Array(10)].map((_, i) => (
+                      <div
+                        key={i}
+                        className={`flex-1 h-1.5 rounded-sm transition-all duration-200 ${
+                          i < Math.round(sfxVolume * 10) && !sfxMuted
+                            ? 'bg-pip-boy-green shadow-[0_0_4px_rgba(0,255,136,0.6)]'
+                            : 'bg-pip-boy-green/20'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-pip-boy-green/50 text-xs font-mono min-w-[32px] text-right">
+                    {sfxMuted ? 'OFF' : 'ON'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -380,10 +451,6 @@ export default function ProfilePage() {
                     <div>
                       <p className="text-pip-boy-green/70 text-sm">名稱</p>
                       <p className="text-pip-boy-green">{user?.name || profile.username}</p>
-                    </div>
-                    <div>
-                      <p className="text-pip-boy-green/70 text-sm">Vault 指派</p>
-                      <p className="text-pip-boy-green">Vault {profile.vault_number}</p>
                     </div>
                     <div>
                       <p className="text-pip-boy-green/70 text-sm">Email 信箱</p>

@@ -17,56 +17,8 @@ const nextConfig: NextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Webpack configuration for code splitting
-  webpack: (config, { isServer }) => {
-    // Optimize chunks
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk for node_modules
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /node_modules/,
-              priority: 20,
-            },
-            // Common chunk for shared code
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-            // Separate chunk for React/Next.js framework
-            framework: {
-              name: 'framework',
-              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              priority: 40,
-              reuseExistingChunk: true,
-            },
-            // Libs chunk for other libraries
-            lib: {
-              test: /[\\/]node_modules[\\/]/,
-              name(module: any) {
-                const packageName = module.context.match(
-                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/
-                )?.[1];
-                return `lib.${packageName?.replace('@', '')}`;
-              },
-              priority: 30,
-            },
-          },
-        },
-      };
-    }
-
+  // Webpack configuration
+  webpack: (config) => {
     return config;
   },
 
@@ -112,6 +64,9 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // API Proxy 已改用 Next.js API Route (src/app/api/v1/[...path]/route.ts)
+  // rewrites 不會轉發 Set-Cookie headers，所以改用 API Route middleware
 }
 
 export default nextConfig

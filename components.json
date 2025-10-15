@@ -25,6 +25,7 @@
     "@cult": "https://cult-ui.com/r/{name}.json",
     "@kibo": "https://kibo-ui.com/r/{name}.json",
     "@reui": "https://reui.io/r/{name}.json",
-    "@kokonutui": "https://kokonutui.com/r/{name}.json"
+    "@kokonutui": "https://kokonutui.com/r/{name}.json",
+    "@ncdai": "https://chanhdai.com/r/{name}.json"
   }
 }

@@ -26,22 +26,20 @@ export function SpreadSelector({ value, onChange }: Props) {
         onChange={e => { const v = e.target.value; onChange(v); import('@/lib/actionTracker').then(m=>m.track('spread:select',{spread:v})) }}
         className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm"
       >
-        <option value="single_wasteland">單張廢土指引 (內建)</option>
-        <option value="vault_tec_spread">避難所科技三牌陣 (內建)</option>
+        {isLoading && <option value="">載入牌陣中...</option>}
+        {!isLoading && templates.length === 0 && <option value="">尚無可用牌陣模板</option>}
         {sortedTemplates.map(t => (
-          // avoid duplicating internal ones
-          (t.spread_type === 'single_wasteland' || t.spread_type === 'vault_tec_spread') ? null : (
-          <option key={t.id} value={t.spread_type} title={t.description}>
-            {(t.display_name || t.name)} ({t.card_count}){t.difficulty_level ? ` [${t.difficulty_level}]` : ''}{t.tags?.length ? ` - ${t.tags.slice(0,2).join('/')}` : ''}
+          <option key={t.id} value={t.name} title={t.description}>
+            {(t.display_name || t.name)} ({t.card_count}張){t.difficulty_level ? ` [${t.difficulty_level}]` : ''}{t.tags?.length ? ` - ${t.tags.slice(0,2).join('/')}` : ''}
           </option>
-        )))}
+        ))}
       </select>
       {isLoading && <p className="text-xs text-pip-boy-green/60">載入牌陣中...</p>}
       {!isLoading && templates.length === 0 && (
         <p className="text-xs text-pip-boy-green/60">尚無可用牌陣模板</p>
       )}
-      {value && value !== 'single_wasteland' && value !== 'vault_tec_spread' && (()=>{
-        const t = templates.find(t=>t.spread_type===value)
+      {value && (()=>{
+        const t = templates.find(t=>t.name===value)
         if(!t) return null
         return (
           <div className="mt-2 border border-pip-boy-green/30 p-3 bg-pip-boy-green/5 text-xs space-y-1">

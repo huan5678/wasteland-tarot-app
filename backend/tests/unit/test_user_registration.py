@@ -47,13 +47,11 @@ class TestUserServiceCreateUser:
             name="NCR Ranger",
             display_name="廢土遊俠",
             faction_alignment="NCR",
-            vault_number=101,
             wasteland_location="New Vegas"
         )
 
         assert user.display_name == "廢土遊俠"
         assert user.faction_alignment == "NCR"
-        assert user.vault_number == 101
         assert user.wasteland_location == "New Vegas"
 
     async def test_password_hashed_with_bcrypt(self, db_session: AsyncSession):

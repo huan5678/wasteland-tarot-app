@@ -8,15 +8,12 @@ import { PixelIcon } from '@/components/ui/icons'
 import { ReadingHistory } from '@/components/readings/ReadingHistory'
 import { ReadingDetailModal } from '@/components/readings/ReadingDetailModal'
 import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard'
-import { ReadingTemplates } from '@/components/readings/ReadingTemplates'
-import { CategoryManager } from '@/components/readings/CategoryManager'
-import { TagsManager } from '@/components/readings/TagsManager'
 
 export default function ReadingsPage() {
   const user = useAuthStore(s => s.user)
   const isLoading = useReadingsStore(s => s.isLoading)
   const [selectedReadingId, setSelectedReadingId] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<'history' | 'stats' | 'templates' | 'manage'>('history')
+  const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history')
 
   useEffect(() => {
     const fetch = async () => {
@@ -60,10 +57,8 @@ export default function ReadingsPage() {
   }
 
   const tabs = [
-    { id: 'history', label: '占卜記錄', icon: 'list' },
-    { id: 'stats', label: '數據統計', icon: 'chart-bar' },
-    { id: 'templates', label: '占卜模板', icon: 'book-open' },
-    { id: 'manage', label: '管理設定', icon: 'settings' },
+    { id: 'history', label: '占卜記錄', icon: 'file-list' },
+    { id: 'stats', label: '數據統計', icon: 'bar-chart' },
   ] as const
 
   const renderTabContent = () => {
@@ -72,19 +67,6 @@ export default function ReadingsPage() {
         return <ReadingHistory onSelect={(id) => setSelectedReadingId(id)} />
       case 'stats':
         return <ReadingStatsDashboard />
-      case 'templates':
-        return <ReadingTemplates />
-      case 'manage':
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="space-y-6">
-              <CategoryManager />
-            </div>
-            <div className="space-y-6">
-              <TagsManager mode="manage" />
-            </div>
-          </div>
-        )
       default:
         return <ReadingHistory onSelect={(id) => setSelectedReadingId(id)} />
     }

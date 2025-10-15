@@ -55,9 +55,9 @@ export function getCardImageUrl(card: TarotCard): string {
   const suitFolder = SUIT_FOLDER_MAP[card.suit]
 
   if (!suitFolder) {
-    // 未知 suit: 返回 fallback 圖片
+    // 未知 suit: 返回 fallback 圖片（使用第一張卡背）
     console.warn(`[getCardImageUrl] Unknown suit: ${card.suit}. Using fallback image.`)
-    return `${baseUrl}/card-backs/default.png`
+    return `${baseUrl}/card-backs/01.png`
   }
 
   // Minor Arcana: 編號補零為兩位數
@@ -124,7 +124,7 @@ export function isValidCardImagePath(card: TarotCard): boolean {
  * @returns Fallback 圖片路徑
  */
 export function getFallbackImageUrl(): string {
-  return '/assets/cards/card-backs/default.png'
+  return '/assets/cards/card-backs/01.png'
 }
 
 /**

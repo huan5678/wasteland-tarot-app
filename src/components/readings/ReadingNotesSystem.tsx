@@ -12,7 +12,7 @@ const NOTE_TYPES = [
   {
     id: 'note',
     name: '一般筆記',
-    icon: FileText,
+    icon: 'note',
     color: 'text-pip-boy-green',
     bgColor: 'bg-pip-boy-green/5',
     borderColor: 'border-pip-boy-green/30',
@@ -21,7 +21,7 @@ const NOTE_TYPES = [
   {
     id: 'insight',
     name: '深層洞察',
-    icon: Lightbulb,
+    icon: 'lightbulb',
     color: 'text-yellow-400',
     bgColor: 'bg-yellow-400/5',
     borderColor: 'border-yellow-400/30',
@@ -30,7 +30,7 @@ const NOTE_TYPES = [
   {
     id: 'reflection',
     name: '內在反思',
-    icon: Heart,
+    icon: 'heart',
     color: 'text-pink-400',
     bgColor: 'bg-pink-400/5',
     borderColor: 'border-pink-400/30',
@@ -39,7 +39,7 @@ const NOTE_TYPES = [
   {
     id: 'follow_up',
     name: '後續追蹤',
-    icon: Clock,
+    icon: 'clock',
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/5',
     borderColor: 'border-blue-400/30',
@@ -168,7 +168,6 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
             <label className="block text-pip-boy-green text-sm font-bold">筆記類型</label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {NOTE_TYPES.map(type => {
-                const Icon = type.icon
                 const isSelected = formData.type === type.id
                 return (
                   <button
@@ -181,7 +180,12 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-1">
-                      <Icon className={`w-4 h-4 ${isSelected ? type.color : 'text-pip-boy-green/60'}`} />
+                      <PixelIcon
+                        name={type.icon}
+                        size={16}
+                        className={isSelected ? type.color : 'text-pip-boy-green/60'}
+                        decorative
+                      />
                       <span className={`text-sm ${isSelected ? type.color : 'text-pip-boy-green/80'}`}>
                         {type.name}
                       </span>
@@ -241,12 +245,10 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
           const notesOfType = groupedNotes[noteType.id] || []
           if (notesOfType.length === 0) return null
 
-          const Icon = noteType.icon
-
           return (
             <div key={noteType.id} className="space-y-2">
               <div className="flex items-center gap-2">
-                <Icon className={`w-5 h-5 ${noteType.color}`} />
+                <PixelIcon name={noteType.icon} size={20} className={noteType.color} decorative />
                 <h4 className={`font-bold ${noteType.color}`}>
                   {noteType.name}
                 </h4>
@@ -265,7 +267,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <Icon className={`w-4 h-4 ${noteType.color}`} />
+                          <PixelIcon name={noteType.icon} size={16} className={noteType.color} decorative />
                           <span className="text-xs text-pip-boy-green/60">
                             {new Date(note.created_at).toLocaleString()}
                             {note.updated_at && note.updated_at !== note.created_at && (
@@ -279,14 +281,14 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
                             className="p-1 text-pip-boy-green/60 hover:text-pip-boy-green"
                             title="編輯筆記"
                           >
-                            < PixelIcon name="edit-2" className="w-4 h-4" />
+                            <PixelIcon name="edit" size={16} decorative />
                           </button>
                           <button
                             onClick={() => handleDelete(note.id)}
                             className="p-1 text-pip-boy-green/60 hover:text-red-400"
                             title="刪除筆記"
                           >
-                            < PixelIcon name="trash-2" className="w-4 h-4" />
+                            <PixelIcon name="trash" size={16} decorative />
                           </button>
                         </div>
                       </div>
@@ -331,10 +333,9 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
           {NOTE_TYPES.map(type => {
             const count = groupedNotes[type.id]?.length || 0
             if (count === 0) return null
-            const Icon = type.icon
             return (
               <div key={type.id} className="flex items-center gap-1">
-                <Icon className={`w-3 h-3 ${type.color}`} />
+                <PixelIcon name={type.icon} size={12} className={type.color} decorative />
                 <span>{count}</span>
               </div>
             )

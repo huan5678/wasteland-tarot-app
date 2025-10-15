@@ -23,6 +23,7 @@ from sqlalchemy import select, and_, func
 import logging
 
 from app.db.session import get_db
+from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.core.exceptions import (
     CardAlreadyExistsError,
@@ -115,7 +116,7 @@ def format_error_response(
 async def create_bingo_card(
     card_data: BingoCardCreate,
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> BingoCardResponse:
     """
     建立使用者的賓果卡
@@ -137,7 +138,7 @@ async def create_bingo_card(
 
         # Create card for current user
         card = await card_service.create_card(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             numbers=card_data.numbers,
             month_year=None  # Defaults to current month
         )
@@ -146,7 +147,7 @@ async def create_bingo_card(
         response = card_service.card_to_response(card)
 
         logger.info(
-            f"Created bingo card for user {current_user['id']} - "
+            f"Created bingo card for user {current_user.id} - "
             f"card_id: {card.id}, month: {card.month_year.strftime('%Y-%m')}"
         )
 
@@ -202,7 +203,7 @@ async def create_bingo_card(
 )
 async def get_bingo_card(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> BingoCardResponse:
     """
     取得使用者的賓果卡
@@ -222,12 +223,12 @@ async def get_bingo_card(
 
         # Get user's card for current month
         card = await card_service.get_user_card(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             month_year=None  # Current month
         )
 
         if not card:
-            raise NoCardFoundError(user_id=current_user["id"])
+            raise NoCardFoundError(user_id=current_user.id)
 
         response = card_service.card_to_response(card)
         return response
@@ -277,7 +278,7 @@ async def get_bingo_card(
 )
 async def get_bingo_status(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> BingoStatusResponse:
     """
     取得使用者的賓果遊戲狀態
@@ -295,7 +296,7 @@ async def get_bingo_status(
 
         # Get comprehensive status
         status_data = await claim_service.get_user_status(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             month_year=None  # Current month
         )
 
@@ -315,7 +316,7 @@ async def get_bingo_status(
         )
 
     except Exception as e:
-        logger.error(f"Error getting status for user {current_user['id']}: {e}")
+        logger.error(f"Error getting status for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -354,7 +355,7 @@ async def get_bingo_status(
 )
 async def claim_daily_number(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> ClaimResponse:
     """
     領取每日號碼
@@ -377,7 +378,7 @@ async def claim_daily_number(
 
         # Claim daily number (defaults to today)
         result = await claim_service.claim_daily_number(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             claim_date=None  # Today
         )
 
@@ -393,7 +394,7 @@ async def claim_daily_number(
         )
 
         logger.info(
-            f"User {current_user['id']} claimed number {result.daily_number} - "
+            f"User {current_user.id} claimed number {result.daily_number} - "
             f"lines: {result.line_count}, reward: {result.has_reward}"
         )
 
@@ -469,7 +470,7 @@ async def claim_daily_number(
 )
 async def get_daily_number(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> DailyNumberResponse:
     """
     取得今日的每日號碼
@@ -546,7 +547,7 @@ async def get_daily_number(
 )
 async def get_line_status(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> LineCheckResult:
     """
     取得使用者的連線狀態
@@ -570,7 +571,7 @@ async def get_line_status(
             select(UserBingoCard)
             .where(
                 and_(
-                    UserBingoCard.user_id == current_user["id"],
+                    UserBingoCard.user_id == current_user.id,
                     UserBingoCard.month_year == month_year
                 )
             )
@@ -578,7 +579,7 @@ async def get_line_status(
         card = result.scalar_one_or_none()
 
         if not card:
-            raise NoCardFoundError(user_id=current_user["id"])
+            raise NoCardFoundError(user_id=current_user.id)
 
         # Check lines
         line_count, line_types = await line_service.check_lines(
@@ -643,7 +644,7 @@ async def get_line_status(
 async def get_bingo_history(
     month: str = Path(..., description="月份 (YYYY-MM)", example="2025-09"),
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> BingoHistoryResponse:
     """
     取得指定月份的歷史記錄
@@ -679,7 +680,7 @@ async def get_bingo_history(
             select(UserBingoCardHistory)
             .where(
                 and_(
-                    UserBingoCardHistory.user_id == current_user["id"],
+                    UserBingoCardHistory.user_id == current_user.id,
                     UserBingoCardHistory.month_year == month_date
                 )
             )
@@ -701,7 +702,7 @@ async def get_bingo_history(
             select(UserNumberClaimHistory.number)
             .where(
                 and_(
-                    UserNumberClaimHistory.user_id == current_user["id"],
+                    UserNumberClaimHistory.user_id == current_user.id,
                     UserNumberClaimHistory.card_id == card_history.id
                 )
             )
@@ -721,7 +722,7 @@ async def get_bingo_history(
             select(BingoRewardHistory)
             .where(
                 and_(
-                    BingoRewardHistory.user_id == current_user["id"],
+                    BingoRewardHistory.user_id == current_user.id,
                     BingoRewardHistory.month_year == month_date
                 )
             )
@@ -784,7 +785,7 @@ async def get_bingo_history(
 )
 async def get_rewards(
     db: AsyncSession = Depends(get_db),
-    current_user: Dict[str, Any] = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ) -> List[RewardResponse]:
     """
     取得使用者的所有獎勵記錄
@@ -800,7 +801,7 @@ async def get_rewards(
         # Query all rewards for user
         result = await db.execute(
             select(BingoReward)
-            .where(BingoReward.user_id == current_user["id"])
+            .where(BingoReward.user_id == current_user.id)
             .order_by(BingoReward.issued_at.desc())
         )
         rewards = result.scalars().all()

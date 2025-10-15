@@ -5,7 +5,7 @@ import { createMockTarotCard } from '@/test/mocks/data'
 const mockCard = createMockTarotCard({
   id: 1,
   name: '愚者',
-  suit: '大阿爾克那',
+  suit: 'major_arcana', // 修正：使用 API 枚舉值
   meaning_upright: '新的開始、純真、自發性、自由精神',
   meaning_reversed: '魯莽、愚蠢、冒險、輕率',
   image_url: '/cards/fool.jpg',

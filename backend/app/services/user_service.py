@@ -2,6 +2,7 @@
 User Service - Business logic for user management in Wasteland Tarot
 """
 
+import logging
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -27,6 +28,8 @@ from app.core.exceptions import (
     InvalidTokenError,
     OAuthUserCannotLoginError
 )
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -99,7 +102,6 @@ class UserService:
             display_name=kwargs.get("display_name", name),
             faction_alignment=kwargs.get("faction_alignment", FactionAlignment.VAULT_DWELLER.value),
             karma_score=kwargs.get("karma_score", 50),
-            vault_number=kwargs.get("vault_number"),
             wasteland_location=kwargs.get("wasteland_location"),
             is_active=True,
             is_verified=False
@@ -131,7 +133,6 @@ class UserService:
         """Get user by email"""
         result = await self.db.execute(
             select(User)
-            .options(selectinload(User.profile), selectinload(User.preferences))
             .where(User.email == email)
         )
         return result.scalar_one_or_none()
@@ -154,8 +155,6 @@ class UserService:
             await self.db.refresh(user)
 
         profile = user.profile
-        if "vault_number" in profile_data:
-            profile.vault_number = profile_data["vault_number"]
         if "wasteland_location" in profile_data:
             profile.wasteland_location = profile_data["wasteland_location"]
         if "preferred_voice" in profile_data:
@@ -225,7 +224,6 @@ class UserService:
             "accuracy_rate": accuracy_rate,
             "community_points": user.community_points,
             "experience_level": user.experience_level,
-            "vault_number": user.vault_number,
             "favorite_cards": [],  # Would be calculated from reading history
             "achievements": user.profile.get_achievements() if user.profile else []
         }
@@ -354,7 +352,9 @@ class UserService:
         - 4.7: 使用通用錯誤訊息
         """
         # 使用 email 查詢使用者
+        logger.info(f"Authenticating user: {email}")
         user = await self.get_user_by_email(email)
+        logger.info(f"User found: {user.email if user else 'None'}")
 
         # 不存在的 email：返回通用錯誤訊息（不洩露帳號是否存在）
         if not user:
@@ -381,7 +381,10 @@ class UserService:
             raise AccountInactiveError()
 
         # 驗證密碼
-        if not verify_password(password, user.password_hash):
+        logger.info(f"Verifying password for user: {email}")
+        password_verified = verify_password(password, user.password_hash)
+        logger.info(f"Password verified: {password_verified}")
+        if not password_verified:
             # 記錄失敗登入
             user.failed_login_attempts += 1
             user.last_failed_login = datetime.utcnow()
@@ -501,7 +504,6 @@ class AuthenticationService:
                 "display_name": user.display_name,
                 "faction_alignment": user.faction_alignment,
                 "karma_score": user.karma_score,
-                "vault_number": user.vault_number,
                 "wasteland_location": user.wasteland_location,
                 "is_verified": user.is_verified
             },

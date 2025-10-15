@@ -11,6 +11,7 @@ from supabase import Client
 from app.core.supabase import get_supabase_client
 from app.core.dependencies import get_current_user
 from app.models.music import QuotaResponse, MusicParameters
+from app.models.user import User
 from app.services import AIService
 
 logger = logging.getLogger(__name__)
@@ -77,10 +78,10 @@ class GenerateMusicResponse(BaseModel):
 async def generate_music(
     data: GenerateMusicRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> GenerateMusicResponse:
-    """AI 音樂生成"""
-    user_id = UUID(current_user["id"])
+    """AI 音樂生成（參數解析）"""
+    user_id = UUID(current_user.id)
     service = AIService(supabase)
 
     result = await service.generate_music_parameters(
@@ -116,10 +117,10 @@ async def generate_music(
 )
 async def get_quota(
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> QuotaResponse:
     """查詢配額"""
-    user_id = UUID(current_user["id"])
+    user_id = UUID(current_user.id)
     service = AIService(supabase)
 
     return await service.get_user_quota(user_id=user_id)

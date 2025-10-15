@@ -162,7 +162,6 @@ export const UserSchema = z.object({
   display_name: z.string().optional(),
   faction_alignment: z.string().optional(),
   karma_score: z.number().optional(),
-  vault_number: z.number().optional(),
   experience_level: z.string().optional(),
   total_readings: z.number().optional(),
   created_at: z.string(),
@@ -191,7 +190,6 @@ export interface RegisterPayload {
   email: string
   password: string
   display_name?: string
-  vault_number?: number
 }
 
 export interface LoginPayload {

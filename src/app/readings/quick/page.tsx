@@ -52,7 +52,7 @@ export default function QuickReadingPage() {
   const initializeCardPool = useCallback((): DetailedTarotCard[] => {
     // 篩選大阿爾克納
     const majorArcana = enhancedWastelandCards.filter(
-      (card) => card.suit === '大阿爾克那'
+      (card) => card.suit === 'major_arcana' // 修正：使用 API 枚舉值
     )
 
     if (majorArcana.length === 0) {
@@ -100,7 +100,7 @@ export default function QuickReadingPage() {
 
         // 重建卡牌池
         const allMajorArcana = enhancedWastelandCards.filter(
-          (card) => card.suit === '大阿爾克那'
+          (card) => card.suit === 'major_arcana' // 修正：使用 API 枚舉值
         )
 
         const restoredCardPool = savedData.cardPoolIds

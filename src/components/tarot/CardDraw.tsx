@@ -5,12 +5,15 @@
 
 'use client'
 
-import React, { useState, useCallback } from 'react'
-import { TarotCardWithDailyBack } from './TarotCardWithDailyBack'
+import React, { useState, useCallback, useEffect } from 'react'
+import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
 import { CardDetailModal, DetailedTarotCard } from './CardDetailModal'
 import { mockTarotCards } from '@/test/mocks/data'
 import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
 import { PixelIcon } from '@/components/ui/icons'
+import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider'
+import { getLayout } from '@/lib/spreadLayouts'
+import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
 
 interface TarotCardWithPosition {
   id: number
@@ -28,6 +31,7 @@ interface CardDrawProps {
   spreadType: string
   positionsMeta?: { id: string; label: string }[]
   onCardsDrawn: (cards: TarotCardWithPosition[]) => void
+  onDrawingStateChange?: (isDrawing: boolean) => void
   isLoading?: boolean
   enablePositionSelection?: boolean
   enableRedraw?: boolean
@@ -37,6 +41,7 @@ interface CardDrawProps {
 export function CardDraw({
   spreadType,
   onCardsDrawn,
+  onDrawingStateChange,
   positionsMeta,
   isLoading = false,
   enablePositionSelection = false,
@@ -47,16 +52,90 @@ export function CardDraw({
   const [drawnCards, setDrawnCards] = useState<TarotCardWithPosition[]>([])
   const [selectedPositions, setSelectedPositions] = useState<number[]>([])
   const [revealCount, setRevealCount] = useState(0)
-  const [manualRevealMode, setManualRevealMode] = useState(false)
+  const [revealedCards, setRevealedCards] = useState<Set<number>>(new Set()) // 記錄哪些卡片已翻開
+  const [manualRevealMode, setManualRevealMode] = useState(true) // 預設為手動翻卡模式
   const [error, setError] = useState<string | null>(null)
   const [selectedCard, setSelectedCard] = useState<DetailedTarotCard | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobileCardIndex, setMobileCardIndex] = useState(0)
+
+  // 取得每日隨機卡背
+  const { cardBackPath } = useDailyCardBackContext()
+
+  // 取得 spread templates
+  const templates = useSpreadTemplatesStore(s => s.templates)
+
+  // 響應式偵測
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
+  // 手動模式：當所有卡片都翻完後，自動進入 Step 3
+  useEffect(() => {
+    if (manualRevealMode && drawnCards.length > 0 && revealedCards.size === drawnCards.length) {
+      // 延遲 500ms 讓使用者看到「全部翻開完成」的訊息
+      const timer = setTimeout(() => {
+        onCardsDrawn(drawnCards)
+      }, 500)
+
+      return () => clearTimeout(timer)
+    }
+  }, [manualRevealMode, drawnCards, revealedCards, onCardsDrawn])
+
+  // 自動模式：當切換到自動模式且有未翻開的卡片時，開始自動翻牌
+  useEffect(() => {
+    if (!manualRevealMode && drawnCards.length > 0 && revealedCards.size < drawnCards.length) {
+      const interval = setInterval(() => {
+        setRevealedCards(prev => {
+          const newRevealed = new Set(prev)
+          // 找到下一張未翻開的卡片
+          for (let i = 0; i < drawnCards.length; i++) {
+            if (!newRevealed.has(i)) {
+              newRevealed.add(i)
+              // 同步更新 revealCount 用於顯示進度
+              setRevealCount(newRevealed.size)
+              break
+            }
+          }
+
+          // 全部翻完後自動進入 Step 3
+          if (newRevealed.size >= drawnCards.length) {
+            clearInterval(interval)
+            setTimeout(() => onCardsDrawn(drawnCards), 500)
+          }
+
+          return newRevealed
+        })
+      }, Math.max(250, animationDuration / (drawnCards.length * 2)))
+
+      return () => clearInterval(interval)
+    }
+  }, [manualRevealMode, drawnCards, revealedCards.size, animationDuration, onCardsDrawn])
 
   const getCardCount = () => {
-    if (spreadType === 'single' || spreadType === 'single_wasteland') return 1
+    // 優先使用 positionsMeta 的長度（從 layout 傳來的實際位置數量）
+    if (positionsMeta && positionsMeta.length > 0) {
+      return positionsMeta.length
+    }
+
+    // Fallback: 根據 spread type 返回預設數量
+    if (spreadType === 'single' || spreadType === 'single_wasteland' || spreadType === 'single_wasteland_reading') return 1
     if (spreadType === 'three_card' || spreadType === 'vault_tec_spread') return 3
+    if (spreadType === 'wasteland_survival' || spreadType === 'wasteland_survival_spread') return 5
+    if (spreadType === 'raider_chaos' || spreadType === 'raider_chaos_spread' || spreadType === 'custom_spread') return 4
+    if (spreadType === 'ncr_strategic' || spreadType === 'ncr_strategic_spread') return 6
+    if (spreadType === 'brotherhood_council' || spreadType === 'brotherhood_council_spread') return 7
     if (spreadType === 'celtic_cross') return 10
     if (spreadType === 'horseshoe') return 7
+
+    // 最後的 fallback
     return 1
   }
 
@@ -73,6 +152,7 @@ export function CardDraw({
     if (isLoading || isDrawing) return
 
     setIsDrawing(true)
+    onDrawingStateChange?.(true)
     setError(null)
 
     try {
@@ -92,27 +172,33 @@ export function CardDraw({
 
       setDrawnCards(cardsWithPositions)
       setRevealCount(0)
+      setRevealedCards(new Set()) // 重置已翻開的卡片
       if (!manualRevealMode) {
         const interval = setInterval(()=> {
           setRevealCount(rc => {
-            if (rc + 1 >= cardsWithPositions.length) { clearInterval(interval); return cardsWithPositions.length }
+            if (rc + 1 >= cardsWithPositions.length) {
+              clearInterval(interval)
+              // 自動模式：全部翻完後自動進入 Step 3
+              setTimeout(() => onCardsDrawn(cardsWithPositions), 500)
+              return cardsWithPositions.length
+            }
             return rc + 1
           })
         }, Math.max(250, animationDuration / (cardsWithPositions.length * 2)))
       }
+      // 手動模式：不自動呼叫 onCardsDrawn，等待使用者全部翻完
 
       // Complete drawing animation
       await new Promise(resolve => setTimeout(resolve, animationDuration / 2))
-
-      onCardsDrawn(cardsWithPositions)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '抽牌失敗'
       setError(errorMessage)
       console.error('Card drawing error:', err)
     } finally {
       setIsDrawing(false)
+      onDrawingStateChange?.(false)
     }
-  }, [spreadType, onCardsDrawn, isLoading, isDrawing, animationDuration, manualRevealMode])
+  }, [spreadType, onCardsDrawn, onDrawingStateChange, isLoading, isDrawing, animationDuration, manualRevealMode])
 
   const handlePositionClick = (positionIndex: number) => {
     if (isLoading || selectedPositions.includes(positionIndex)) return
@@ -166,24 +252,25 @@ export function CardDraw({
         key={index}
         data-testid={`position-${index}`}
         className={`
-          w-32 h-48 border-2 border-dashed border-gray-400 rounded-lg
+          w-40 h-60 border-2 border-dashed border-pip-boy-green/40 rounded-lg
           flex items-center justify-center cursor-pointer
-          transition-all duration-300 hover:border-blue-500
-          ${selectedPositions.includes(index) ? 'border-blue-500 bg-blue-50' : ''}
+          transition-all duration-300 hover:border-pip-boy-green
+          ${selectedPositions.includes(index) ? 'border-pip-boy-green bg-pip-boy-green/10' : ''}
         `}
         onClick={() => handlePositionClick(index)}
         aria-disabled={selectedPositions.includes(index)}
       >
         {drawnCards[index] ? (
-          <TarotCardWithDailyBack
+          <CardThumbnailFlippable
             card={drawnCards[index]}
             isRevealed={true}
             position={drawnCards[index].position}
-            size="small"
+            size="medium"
             onClick={handleCardClick}
+            cardBackUrl={cardBackPath}
           />
         ) : (
-          <div className="text-gray-500 text-sm text-center">
+          <div className="text-pip-boy-green text-sm text-center">
             <div>位置 {index + 1}</div>
             <div>點擊抽牌</div>
           </div>
@@ -201,89 +288,205 @@ export function CardDraw({
   const renderDrawnCards = () => {
     if (drawnCards.length === 0) return null
 
-    // Calculate optimal spacing based on card count and container width
-    const getCardSpacing = () => {
-      const cardCount = drawnCards.length
-      if (cardCount === 1) return 'gap-0'
-      if (cardCount <= 3) return 'gap-6'
-      if (cardCount <= 5) return 'gap-4'
-      return 'gap-2'
-    }
+    // Get layout for current spread
+    const template = templates.find(t => t.name === spreadType)
+    const layout = getLayout(spreadType, template)
 
     // Calculate stagger delay for sequential animations
     const getAnimationDelay = (index: number) => {
       return index * 150 // 150ms stagger
     }
 
+    // Mobile: Carousel 模式
+    if (isMobile) {
+      return (
+        <div className="space-y-6">
+          {/* Carousel Container */}
+          <div className="relative w-full">
+            <div className="overflow-hidden py-8">
+              <div className="flex transition-transform duration-300" style={{ transform: `translateX(-${mobileCardIndex * 100}%)` }}>
+                {drawnCards.map((card, index) => {
+                  const revealed = revealedCards.has(index)
+                  const animationDelay = getAnimationDelay(index)
+
+                  return (
+                    <div
+                      key={`${card.id}-${index}`}
+                      className="w-full flex-shrink-0 flex flex-col items-center justify-center px-4"
+                      onClick={() => {
+                        if (!revealed && manualRevealMode) {
+                          setRevealedCards(prev => {
+                            const newRevealed = new Set(prev)
+                            newRevealed.add(index)
+                            setRevealCount(newRevealed.size)
+                            return newRevealed
+                          })
+                        }
+                      }}
+                    >
+                      <CardThumbnailFlippable
+                        card={card}
+                        isRevealed={revealed}
+                        position={card.position}
+                        size="large"
+                        onClick={undefined}  // Disable modal in Step 2 - only allow in Step 3
+                        cardBackUrl={cardBackPath}
+                        animationDelay={animationDelay}
+                        positionLabel={(card as any)._position_meta || `位置 ${index+1}`}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            <button
+              onClick={() => setMobileCardIndex(Math.max(0, mobileCardIndex - 1))}
+              disabled={mobileCardIndex === 0}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors"
+            >
+              <PixelIcon name="chevron-left" size={20} decorative />
+            </button>
+            <button
+              onClick={() => setMobileCardIndex(Math.min(drawnCards.length - 1, mobileCardIndex + 1))}
+              disabled={mobileCardIndex === drawnCards.length - 1}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center border-2 border-pip-boy-green bg-black/80 text-pip-boy-green disabled:opacity-30 disabled:cursor-not-allowed hover:bg-pip-boy-green hover:text-black transition-colors"
+            >
+              <PixelIcon name="chevron-right" size={20} decorative />
+            </button>
+
+            {/* Position Indicator */}
+            <div className="flex justify-center gap-2 mt-4">
+              {drawnCards.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setMobileCardIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    index === mobileCardIndex ? 'bg-pip-boy-green w-6' : 'bg-pip-boy-green/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Enhanced control panel */}
+          <div className="flex items-center justify-center gap-4 p-4 bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg">
+          <button
+            onClick={()=> setManualRevealMode(m=>!m)}
+            className={`
+              px-4 py-2 text-sm border border-pip-boy-green/50
+              text-pip-boy-green hover:bg-pip-boy-green/10 hover:border-pip-boy-green/70
+              transition-all duration-200 rounded focus:outline-none focus:ring-2 focus:ring-pip-boy-green/30
+              ${manualRevealMode ? 'bg-pip-boy-green/10' : ''}
+            `}
+          >
+            {manualRevealMode ? '切換至自動模式' : '切換至手動模式'}
+          </button>
+
+          {manualRevealMode && revealedCards.size < drawnCards.length && drawnCards.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
+              <PixelIcon name="info" className="w-4 h-4" decorative />
+              <span>點擊卡背翻牌 ({revealedCards.size}/{drawnCards.length})</span>
+            </div>
+          )}
+
+          {revealedCards.size === drawnCards.length && drawnCards.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green animate-pulse">
+              <PixelIcon name="star" className="w-4 h-4" decorative />
+              <span>全部翻開完成</span>
+            </div>
+          )}
+        </div>
+        </div>
+      )
+    }
+
+    // Desktop: Layout 模式（類似 SpreadLayoutPreview）
+    const cardCount = drawnCards.length
+
+    // Dynamic sizing based on card count (matching SpreadLayoutPreview logic)
+    const getCardSize = (): 'small' | 'medium' | 'large' => {
+      if (cardCount <= 3) return 'medium'  // 160×240px for 1-3 cards
+      if (cardCount <= 5) return 'small'   // 128×192px for 4-5 cards
+      return 'small'                        // 128×192px for 6+ cards
+    }
+
+    // Calculate total element size (card + label + gap)
+    // CardThumbnailFlippable structure: card + gap-3 (12px) + label (~16px text-xs)
+    const getElementDimensions = () => {
+      const cardSize = getCardSize()
+      const dimensions = {
+        small: { cardW: 128, cardH: 192, labelH: 16, gap: 12 },   // w-32 h-48
+        medium: { cardW: 160, cardH: 240, labelH: 18, gap: 12 },  // w-40 h-60
+        large: { cardW: 192, cardH: 288, labelH: 20, gap: 12 }    // w-48 h-72
+      }
+      const d = dimensions[cardSize]
+      return {
+        width: d.cardW,
+        height: d.cardH + d.gap + d.labelH,  // Total height including label
+        cardHeight: d.cardH
+      }
+    }
+
+    const getContainerHeight = () => {
+      // Account for full element height (card + gap + label)
+      // Small card: 192 + 12 + 16 = 220px total
+      // Medium card: 240 + 12 + 18 = 270px total
+      // Container should be ~3x this to prevent overlap
+
+      if (cardCount <= 3) return 'h-[750px]'  // Medium cards need more space
+      if (cardCount <= 5) return 'h-[650px]'  // Small cards with 5 positions
+      return 'h-[700px]'                      // Small cards with 6-7 positions (increased)
+    }
+
     return (
-      <div className="space-y-6">
-        <div data-testid="drawn-cards" className={`flex ${getCardSpacing()} justify-center items-start mt-6 flex-wrap`}>
+      <div className="w-full space-y-6">
+        {/* Spread Layout Container */}
+        <div className={`w-full ${getContainerHeight()} relative mx-auto max-w-7xl`}>
           {drawnCards.map((card, index) => {
-            const revealed = index < revealCount
+            const revealed = revealedCards.has(index)
+            const layoutPos = layout[index]
+            if (!layoutPos) return null
+
             const animationDelay = getAnimationDelay(index)
+            const cardSize = getCardSize()
 
             return (
               <div
                 key={`${card.id}-${index}`}
                 data-testid={`drawn-card-${index}`}
                 className={`
-                  flex flex-col items-center gap-3 transition-all duration-700 ease-out
-                  ${revealed ? 'animate-card-position opacity-100' : 'opacity-30'}
+                  absolute
+                  ${revealed ? 'opacity-100' : 'opacity-30 cursor-pointer'}
                 `}
                 style={{
-                  animationDelay: `${animationDelay}ms`,
-                  transform: revealed ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.9)'
+                  left: `${layoutPos.x * 100}%`,
+                  top: `${layoutPos.y * 100}%`,
+                  transform: `translate(-50%, -50%)`,
+                  transition: 'opacity 0.3s ease-out',
+                }}
+                onClick={() => {
+                  if (!revealed && manualRevealMode) {
+                    setRevealedCards(prev => {
+                      const newRevealed = new Set(prev)
+                      newRevealed.add(index)
+                      setRevealCount(newRevealed.size)
+                      return newRevealed
+                    })
+                  }
                 }}
               >
-                <TarotCardWithDailyBack
+                <CardThumbnailFlippable
                   card={card}
                   isRevealed={revealed}
                   position={card.position}
-                  size="medium"
-                  showKeywords={revealed}
-                  flipStyle="kokonut"
-                  onClick={handleCardClick}
+                  size={cardSize}
+                  onClick={undefined}  // Disable modal in Step 2 - only allow in Step 3
+                  cardBackUrl={cardBackPath}
                   animationDelay={animationDelay}
-                  showGlow={revealed && index === revealCount - 1}
-                  isSelectable={!revealed && manualRevealMode}
-                  isSelected={revealed}
-                  enableHaptic={true}
-                  cardIndex={index}
-                  totalCards={drawnCards.length}
-                  showProgress={!revealed && manualRevealMode}
-                  onLongPress={(card) => {
-                    // Show card details on long press
-                    handleCardClick(card)
-                  }}
-                  onSwipe={(direction, card) => {
-                    if (direction === 'up' && !revealed && manualRevealMode) {
-                      setRevealCount(c => Math.min(c + 1, drawnCards.length))
-                    }
-                  }}
+                  positionLabel={(card as any)._position_meta || `位置 ${index+1}`}
                 />
-
-                {/* Manual reveal button */}
-                {!revealed && manualRevealMode && (
-                  <button
-                    onClick={()=> setRevealCount(c=> Math.min(c+1, drawnCards.length))}
-                    className={`
-                      mt-1 px-3 py-1 text-xs border border-pip-boy-green/40
-                      text-pip-boy-green/70 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/60
-                      hover:text-pip-boy-green transition-all duration-200
-                      focus:outline-none focus:ring-2 focus:ring-pip-boy-green/30
-                    `}
-                  >
-                    翻牌
-                  </button>
-                )}
-
-                {/* Position label */}
-                <div className={`
-                  text-center text-xs transition-all duration-300
-                  ${revealed ? 'text-pip-boy-green' : 'text-pip-boy-green/50'}
-                `}>
-                  {(card as any)._position_meta || `位置 ${index+1}`}
-                </div>
               </div>
             )
           })}
@@ -300,26 +503,19 @@ export function CardDraw({
               ${manualRevealMode ? 'bg-pip-boy-green/10' : ''}
             `}
           >
-            {manualRevealMode ? '自動翻牌模式' : '手動翻牌模式'}
+            {manualRevealMode ? '切換至自動模式' : '切換至手動模式'}
           </button>
 
-          {manualRevealMode && revealCount < drawnCards.length && drawnCards.length > 0 && (
-            <button
-              onClick={()=> setRevealCount(c=> Math.min(c+1, drawnCards.length))}
-              className={`
-                px-4 py-2 text-sm bg-pip-boy-green text-wasteland-dark font-bold
-                hover:bg-pip-boy-green/90 transition-all duration-200 rounded
-                focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
-                shadow-lg hover:shadow-xl transform hover:scale-105
-              `}
-            >
-              翻下一張 ({revealCount + 1}/{drawnCards.length})
-            </button>
+          {manualRevealMode && revealedCards.size < drawnCards.length && drawnCards.length > 0 && (
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
+              <PixelIcon name="info" className="w-4 h-4" decorative />
+              <span>點擊卡背翻牌 ({revealedCards.size}/{drawnCards.length})</span>
+            </div>
           )}
 
-          {revealCount === drawnCards.length && drawnCards.length > 0 && (
+          {revealedCards.size === drawnCards.length && drawnCards.length > 0 && (
             <div className="flex items-center gap-2 text-sm text-pip-boy-green animate-pulse">
-              <Star className="w-4 h-4" />
+              <PixelIcon name="star" className="w-4 h-4" decorative />
               <span>全部翻開完成</span>
             </div>
           )}
@@ -333,53 +529,36 @@ export function CardDraw({
       {/* Error Display */}
       {error && (
         <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 rounded flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4" />
+          <PixelIcon name="alert-triangle" className="w-4 h-4" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Enhanced Card Deck */}
-      {!enablePositionSelection && (
-        <div className="relative">
-          <div
-            data-testid="card-deck"
-            className={`
-              relative w-40 h-60 bg-gradient-to-br from-purple-900 to-indigo-900
-              rounded-lg border-2 border-gold-400 cursor-pointer group
-              transition-all duration-400 ease-out
-              ${isDrawing ? 'animate-card-draw scale-105' : 'hover:animate-card-hover hover:shadow-2xl hover:shadow-gold-400/20'}
-              ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
-              focus:outline-none focus:ring-4 focus:ring-gold-400/30
-            `}
-            onClick={drawCards}
-            tabIndex={0}
-            onKeyDown={(e) => e.key === 'Enter' && !isLoading && !isDrawing && drawCards()}
-            aria-disabled={isLoading || isDrawing}
-            role="button"
-            aria-label="點擊抽牌"
-          >
-          {/* Enhanced Deck Stack Effect with improved depth */}
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-800 to-indigo-800 rounded-lg transform translate-x-1 translate-y-1 -z-10 transition-transform duration-300 group-hover:translate-x-2 group-hover:translate-y-2" />
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-lg transform translate-x-2 translate-y-2 -z-20 transition-transform duration-300 group-hover:translate-x-4 group-hover:translate-y-4" />
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-lg transform translate-x-3 translate-y-3 -z-30 transition-transform duration-300 group-hover:translate-x-6 group-hover:translate-y-6 opacity-60" />
-
-          {/* Deck Content */}
-          <div className="flex items-center justify-center h-full text-gold-400">
-            <div className="text-center">
-              <Star className={`
-                w-16 h-16 mb-4 mx-auto text-pip-boy-green transition-all duration-300
-                ${isDrawing ? 'animate-spin' : 'group-hover:scale-110 group-hover:text-gold-400'}
-              `} />
-              <div className="text-lg font-serif">
-                {isDrawing ? '抽牌中...' : '點擊抽牌'}
-              </div>
-              <div className="text-sm opacity-75 mt-2">
-                {spreadType === 'single' ? '單張牌' : '三張牌'}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Draw Button */}
+      {!enablePositionSelection && drawnCards.length === 0 && (
+        <button
+          data-testid="card-deck"
+          onClick={drawCards}
+          disabled={isLoading || isDrawing}
+          className={`
+            w-full max-w-md mx-auto py-4 px-6
+            bg-pip-boy-green text-wasteland-dark font-bold text-lg
+            border-2 border-pip-boy-green
+            hover:bg-pip-boy-green/90 hover:shadow-lg hover:shadow-pip-boy-green/20
+            disabled:opacity-50 disabled:cursor-not-allowed
+            transition-all duration-300
+            flex items-center justify-center gap-3
+            focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
+          `}
+        >
+          <PixelIcon
+            name="sparkles"
+            size={24}
+            className={isDrawing ? 'animate-spin' : ''}
+            decorative
+          />
+          <span>{isDrawing ? '抽牌中...' : `開始抽牌（${getCardCount()} 張）`}</span>
+        </button>
       )}
 
       {/* Position Selection Mode */}
@@ -387,18 +566,6 @@ export function CardDraw({
 
       {/* Regular Card Display Mode */}
       {!enablePositionSelection && renderDrawnCards()}
-
-      {/* Redraw Button */}
-      {enableRedraw && drawnCards.length > 0 && (
-        <button
-          data-testid="redraw-button"
-          className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          onClick={handleRedraw}
-          disabled={isDrawing || isLoading}
-        >
-          重新抽牌
-        </button>
-      )}
 
       {/* Card Detail Modal */}
       <CardDetailModal

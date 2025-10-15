@@ -139,6 +139,12 @@ export const REMIX_ICON_MAPPING: Record<string, string> = {
  * @returns Full RemixIcon class name (e.g., 'ri-home-line')
  */
 export function getRemixIconClassName(name: string, remixVariant: 'line' | 'fill' = 'line'): string {
+  // Safety check: if name is undefined or empty, return a default icon
+  if (!name || typeof name !== 'string') {
+    console.warn('PixelIcon: Invalid name provided, using fallback icon "star"');
+    return `ri-star-${remixVariant}`;
+  }
+
   // If already in correct format (ri-{name}-{style}), return as is
   if (name.startsWith('ri-') && (name.endsWith('-line') || name.endsWith('-fill'))) {
     return name;

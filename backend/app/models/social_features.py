@@ -91,7 +91,6 @@ class UserAchievement(BaseModel):
     # Metadata
     difficulty_rating = Column(Float, default=1.0)  # 1.0 to 5.0
     estimated_time_hours = Column(Integer)  # Estimated time to complete
-    tags = Column(JSON, default=list)
     prerequisites = Column(JSON, default=list)  # Other achievements required first
 
     # Relationships
@@ -152,7 +151,6 @@ class UserAchievement(BaseModel):
             "difficulty_rating": self.difficulty_rating,
             "estimated_time_hours": self.estimated_time_hours,
             "estimated_completion": self.get_estimated_completion_date().isoformat() if self.get_estimated_completion_date() else None,
-            "tags": self.tags,
             "prerequisites": self.prerequisites,
             "is_close_to_completion": self.is_close_to_completion(),
             "created_at": self.created_at.isoformat() if self.created_at else None

@@ -12,6 +12,7 @@ from supabase import Client
 
 from app.core.supabase import get_supabase_client
 from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.schemas.music import (
     PlaylistCreate,
     PlaylistUpdate,
@@ -52,10 +53,10 @@ router = APIRouter()
 async def create_playlist(
     data: PlaylistCreate,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> PlaylistResponse:
     """建立播放清單 (Task 2.4)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 插入播放清單
@@ -110,10 +111,9 @@ async def create_playlist(
 )
 async def get_user_playlists(
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> List[PlaylistResponse]:
-    """獲取使用者所有播放清單 (Task 2.4)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 查詢播放清單
@@ -199,10 +199,9 @@ async def get_user_playlists(
 async def get_playlist(
     playlist_id: str,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> PlaylistResponse:
-    """獲取播放清單詳情 (Task 2.4)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 查詢播放清單
@@ -300,10 +299,9 @@ async def update_playlist(
     playlist_id: str,
     data: PlaylistUpdate,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> PlaylistResponse:
-    """更新播放清單 (Task 2.4)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查播放清單是否存在且擁有
@@ -390,10 +388,10 @@ async def update_playlist(
 async def delete_playlist(
     playlist_id: str,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     """刪除播放清單 (Task 2.4)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查播放清單是否存在且擁有
@@ -457,10 +455,10 @@ async def add_pattern_to_playlist(
     playlist_id: str,
     data: AddPatternRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     """加入 Pattern 到播放清單 (Task 2.5)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查播放清單是否存在且擁有
@@ -557,10 +555,9 @@ async def remove_pattern_from_playlist(
     playlist_id: str,
     pattern_id: str,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> None:
-    """從播放清單移除 Pattern (Task 2.5)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查播放清單是否存在且擁有
@@ -650,10 +647,10 @@ async def update_pattern_position(
     pattern_id: str,
     data: UpdatePatternPositionRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> None:
     """調整 Pattern 順序 (Task 2.5)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 檢查播放清單是否存在且擁有
@@ -761,10 +758,10 @@ async def update_pattern_position(
 async def import_guest_playlist(
     request: ImportGuestPlaylistRequest,
     supabase: Client = Depends(get_supabase_client),
-    current_user: dict = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ) -> ImportGuestPlaylistResponse:
     """匯入訪客播放清單 (Task 2.6)"""
-    user_id = current_user["id"]
+    user_id = current_user.id
 
     try:
         # 驗證所有 Pattern ID 存在

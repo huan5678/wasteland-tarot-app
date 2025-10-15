@@ -10,7 +10,6 @@ interface ReadingTemplate {
   question: string
   spread_type: string
   category_id?: string
-  tags: string[]
   icon: string
   color: string
   created_at: string
@@ -37,7 +36,6 @@ const DEFAULT_TEMPLATES: ReadingTemplate[] = [
     question: '今天我需要關注什麼？',
     spread_type: 'single',
     category_id: 'daily',
-    tags: ['每日', '指引'],
     icon: '🌟',
     color: '#10B981',
     created_at: '2024-01-01T00:00:00Z'
@@ -49,7 +47,6 @@ const DEFAULT_TEMPLATES: ReadingTemplate[] = [
     question: '我的感情生活現在如何？接下來會有什麼變化？',
     spread_type: 'three_card',
     category_id: 'relationship',
-    tags: ['愛情', '關係', '感情'],
     icon: '💕',
     color: '#F59E0B',
     created_at: '2024-01-01T00:00:00Z'
@@ -61,7 +58,6 @@ const DEFAULT_TEMPLATES: ReadingTemplate[] = [
     question: '我的事業發展方向是什麼？有什麼需要注意的？',
     spread_type: 'three_card',
     category_id: 'career',
-    tags: ['事業', '工作', '發展'],
     icon: '💼',
     color: '#3B82F6',
     created_at: '2024-01-01T00:00:00Z'
@@ -73,7 +69,6 @@ const DEFAULT_TEMPLATES: ReadingTemplate[] = [
     question: '我現在需要在哪些方面成長？',
     spread_type: 'single',
     category_id: 'personal',
-    tags: ['成長', '自我提升'],
     icon: '🌱',
     color: '#10B981',
     created_at: '2024-01-01T00:00:00Z'
@@ -84,7 +79,6 @@ const DEFAULT_TEMPLATES: ReadingTemplate[] = [
     description: '幫助做出重要決定',
     question: '關於這個決定，我需要考慮什麼？',
     spread_type: 'three_card',
-    tags: ['決定', '選擇', '思考'],
     icon: '⚖️',
     color: '#8B5CF6',
     created_at: '2024-01-01T00:00:00Z'
@@ -115,7 +109,6 @@ export function ReadingTemplates() {
       question: formData.question.trim(),
       spread_type: formData.spread_type || 'single',
       category_id: formData.category_id,
-      tags: formData.tags || [],
       icon: formData.icon || '📝',
       color: formData.color || '#10B981',
       created_at: editingTemplate?.created_at || new Date().toISOString()
@@ -158,7 +151,6 @@ export function ReadingTemplates() {
       description: '',
       question: '',
       spread_type: 'single',
-      tags: [],
       icon: '📝',
       color: '#10B981'
     })
@@ -171,7 +163,6 @@ export function ReadingTemplates() {
       template: template.id,
       question: template.question,
       spread_type: template.spread_type,
-      tags: template.tags.join(','),
       category: template.category_id || ''
     })
 
@@ -405,19 +396,6 @@ export function ReadingTemplates() {
                       <div className="text-xs text-pip-boy-green/70 mb-1">問題:</div>
                       <div className="text-sm text-pip-boy-green italic">"{template.question}"</div>
                     </div>
-
-                    {template.tags.length > 0 && (
-                      <div>
-                        <div className="text-xs text-pip-boy-green/70 mb-1">標籤:</div>
-                        <div className="flex flex-wrap gap-1">
-                          {template.tags.map(tag => (
-                            <span key={tag} className="px-2 py-0.5 bg-pip-boy-green/20 border border-pip-boy-green/30 text-pip-boy-green text-xs">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
 
                     <button
                       onClick={(e) => { e.stopPropagation(); handleUseTemplate(template) }}

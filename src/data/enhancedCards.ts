@@ -10,7 +10,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '0',
     name: '廢土流浪者',
     description: '一個剛從地下避難所走出，面對嚴酷廢土的身影。',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：大阿爾克那 → major_arcana
     card_number: 0,
     image_url: '/assets/cards/major-arcana/00.png',
     upright_meaning: '新的開始、純真、潛力、在廢土中的全新起點',
@@ -34,7 +34,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '1',
     name: '廢土魔法師',
     description: '一個掌握前戰爭科技的神秘人物,能夠操控廢土的力量。',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：大阿爾克那 → major_arcana
     card_number: 1,
     image_url: '/assets/cards/major-arcana/01.png',
     upright_meaning: '技能、意志力、創造、科技掌控、廢土求生能力',
@@ -58,7 +58,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '2',
     name: '避難所監督',
     description: '控制避難所的權威人物，代表秩序與控制。',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：大阿爾克那 → major_arcana
     card_number: 4,
     image_url: '/assets/cards/major-arcana/04.png',
     upright_meaning: '權威、結構、秩序、領導力、穩定',
@@ -82,7 +82,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '3',
     name: '神秘商人',
     description: '廢土中神出鬼沒的商人，擁有稀有物品和古老智慧。',
-    suit: '大阿爾克那',
+    suit: 'major_arcana', // 修正：大阿爾克那 → major_arcana
     card_number: 2,
     image_url: '/assets/cards/major-arcana/02.png',
     upright_meaning: '直覺、隱藏知識、神秘智慧、內在聲音',
@@ -106,7 +106,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '4',
     name: '瓶蓋王牌',
     description: '後末日世界的通用貨幣，象徵著財富與機會。',
-    suit: '小阿爾克那',
+    suit: 'bottle_caps', // 修正：小阿爾克那 → bottle_caps (Minor Arcana)
     card_number: 1,
     image_url: '/cards/bottle-cap.png',
     upright_meaning: '新的財務機會、物質開始、繁榮、貿易成功',
@@ -130,7 +130,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     id: '5',
     name: '輻射蟑螂',
     description: '變異的蟑螂，象徵著生存能力和適應性。',
-    suit: '小阿爾克那',
+    suit: 'bottle_caps', // 修正：小阿爾克那 → bottle_caps (Minor Arcana)
     card_number: 2,
     image_url: '/cards/radroach.png',
     upright_meaning: '生存、適應性、堅持、韌性、克服困難',
@@ -174,6 +174,7 @@ export function enhanceCardWithWastelandData(basicCard: any): DetailedTarotCard 
   return {
     ...basicCard,
     id: basicCard.id.toString(),
+    image_url: basicCard.image_url || '/cards/placeholder.png',
     upright_meaning: basicCard.meaning_upright,
     reversed_meaning: basicCard.meaning_reversed,
     description: `${basicCard.name}是${basicCard.suit}中的重要卡牌，在廢土世界中具有特殊意義。`,
@@ -187,11 +188,12 @@ export function enhanceCardWithWastelandData(basicCard: any): DetailedTarotCard 
 }
 
 function getElementFromSuit(suit: string): string {
-  if (suit === '大阿爾克那') return '精神'
-  if (suit.includes('權杖')) return '火'
-  if (suit.includes('聖杯')) return '水'
-  if (suit.includes('寶劍')) return '風'
-  if (suit.includes('錢幣')) return '土'
+  // 修正：使用 API 枚舉值而非中文名稱
+  if (suit === 'major_arcana') return '精神'
+  if (suit === 'radiation_rods') return '火' // 權杖 (Wands)
+  if (suit === 'nuka_cola_bottles') return '水' // 聖杯 (Cups)
+  if (suit === 'combat_weapons') return '風' // 寶劍 (Swords)
+  if (suit === 'bottle_caps') return '土' // 錢幣 (Pentacles)
   return '未知'
 }
 

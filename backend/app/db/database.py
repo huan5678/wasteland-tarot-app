@@ -7,6 +7,7 @@ from sqlalchemy.pool import NullPool
 from sqlalchemy import event
 from app.config import settings
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,14 @@ connect_args = {
         "search_path": "public",
     },
     "command_timeout": 30,
+    "statement_cache_size": 0,  # Disable statement cache for Supabase (PgBouncer)
     "prepared_statement_cache_size": 0,  # Disable prepared statements for Supabase
+    # Generate unique prepared statement names to avoid PgBouncer conflicts
+    "prepared_statement_name_func": lambda: f"__pstmt_{uuid.uuid4().hex[:8]}__"
 }
 
 # Create async engine with Supabase PostgreSQL optimizations
+# Add prepared_statement_name_func to fully disable prepared statements for PgBouncer
 engine = create_async_engine(
     settings.database_url,
     echo=settings.debug,
@@ -28,7 +33,9 @@ engine = create_async_engine(
     pool_size=5 if settings.environment == "production" else 10,
     max_overflow=0,  # No overflow for Supabase to avoid connection limits
     poolclass=NullPool if settings.environment == "testing" else None,
-    connect_args=connect_args
+    connect_args=connect_args,
+    # Critical fix for Supabase PgBouncer: disable prepared statement caching entirely
+    execution_options={"compiled_cache": None}
 )
 
 # Add event listener for connection testing

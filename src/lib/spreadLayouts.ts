@@ -163,20 +163,70 @@ export const defaultLayouts: Record<string, SpreadPosition[]> = {
     { id: 'future', label: '未來', x: 0.75, y: 0.5, animationDelay: 300 }
   ],
   wasteland_survival: [
-    { id: 'you', label: '自己', x: 0.5, y: 0.2, scale: 1.05, zIndex: 10, animationDelay: 0 },
-    { id: 'threat', label: '威脅', x: 0.2, y: 0.5, rotation: -15, animationDelay: 150 },
-    { id: 'resource', label: '資源', x: 0.8, y: 0.5, rotation: 15, animationDelay: 300 },
-    { id: 'ally', label: '同盟', x: 0.35, y: 0.8, animationDelay: 450 },
-    { id: 'outcome', label: '結果', x: 0.65, y: 0.8, scale: 1.1, zIndex: 5, animationDelay: 600 }
+    { id: 'you', label: '自己', x: 0.5, y: 0.15, scale: 1.05, zIndex: 10, animationDelay: 0 },
+    { id: 'threat', label: '威脅', x: 0.15, y: 0.5, rotation: -15, animationDelay: 150 },
+    { id: 'resource', label: '資源', x: 0.85, y: 0.5, rotation: 15, animationDelay: 300 },
+    { id: 'ally', label: '同盟', x: 0.3, y: 0.85, animationDelay: 450 },
+    { id: 'outcome', label: '結果', x: 0.7, y: 0.85, scale: 1.1, zIndex: 5, animationDelay: 600 }
   ],
   brotherhood_council: [
-    { id: 'one', label: '1', x: 0.2, y: 0.3, animationDelay: 0 },
-    { id: 'two', label: '2', x: 0.5, y: 0.25, scale: 1.05, zIndex: 5, animationDelay: 100 },
-    { id: 'three', label: '3', x: 0.8, y: 0.3, animationDelay: 200 },
-    { id: 'four', label: '4', x: 0.2, y: 0.6, animationDelay: 300 },
-    { id: 'five', label: '5', x: 0.5, y: 0.55, scale: 1.05, zIndex: 5, animationDelay: 400 },
-    { id: 'six', label: '6', x: 0.8, y: 0.6, animationDelay: 500 },
-    { id: 'seven', label: '7', x: 0.5, y: 0.85, scale: 1.1, zIndex: 10, animationDelay: 600 }
+    { id: 'one', label: '戰略', x: 0.12, y: 0.2, animationDelay: 0 },
+    { id: 'two', label: '科技', x: 0.5, y: 0.15, scale: 1.05, zIndex: 5, animationDelay: 100 },
+    { id: 'three', label: '情報', x: 0.88, y: 0.2, animationDelay: 200 },
+    { id: 'four', label: '資源', x: 0.12, y: 0.55, animationDelay: 300 },
+    { id: 'five', label: '核心', x: 0.5, y: 0.5, scale: 1.05, zIndex: 5, animationDelay: 400 },
+    { id: 'six', label: '防禦', x: 0.88, y: 0.55, animationDelay: 500 },
+    { id: 'seven', label: '結論', x: 0.5, y: 0.88, scale: 1.1, zIndex: 10, animationDelay: 600 }
+  ],
+  raider_chaos: [
+    { id: 'chaos', label: '混亂', x: 0.25, y: 0.4, rotation: -25, animationDelay: 0 },
+    { id: 'opportunity', label: '機會', x: 0.75, y: 0.35, rotation: 15, animationDelay: 150 },
+    { id: 'survival', label: '生存', x: 0.35, y: 0.7, rotation: 10, animationDelay: 300 },
+    { id: 'wild_card', label: '未知', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
+  ],
+  raider_chaos_spread: [
+    { id: 'chaos', label: '混亂', x: 0.25, y: 0.4, rotation: -25, animationDelay: 0 },
+    { id: 'opportunity', label: '機會', x: 0.75, y: 0.35, rotation: 15, animationDelay: 150 },
+    { id: 'survival', label: '生存', x: 0.35, y: 0.7, rotation: 10, animationDelay: 300 },
+    { id: 'wild_card', label: '未知', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
+  ],
+  custom_spread: [
+    { id: 'chaos', label: '混亂', x: 0.25, y: 0.4, rotation: -25, animationDelay: 0 },
+    { id: 'opportunity', label: '機會', x: 0.75, y: 0.35, rotation: 15, animationDelay: 150 },
+    { id: 'survival', label: '生存', x: 0.35, y: 0.7, rotation: 10, animationDelay: 300 },
+    { id: 'wild_card', label: '未知', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
+  ],
+  ncr_strategic: [
+    { id: 'situation', label: '形勢', x: 0.22, y: 0.15, animationDelay: 0 },
+    { id: 'opinion', label: '民意', x: 0.78, y: 0.15, animationDelay: 100 },
+    { id: 'resources', label: '資源', x: 0.12, y: 0.5, animationDelay: 200 },
+    { id: 'strategy', label: '戰略', x: 0.5, y: 0.5, scale: 1.05, zIndex: 5, animationDelay: 300 },
+    { id: 'long_term', label: '長期', x: 0.88, y: 0.5, animationDelay: 400 },
+    { id: 'benefit', label: '共和', x: 0.5, y: 0.85, scale: 1.1, zIndex: 10, animationDelay: 500 }
+  ],
+  ncr_strategic_spread: [
+    { id: 'situation', label: '形勢', x: 0.22, y: 0.15, animationDelay: 0 },
+    { id: 'opinion', label: '民意', x: 0.78, y: 0.15, animationDelay: 100 },
+    { id: 'resources', label: '資源', x: 0.12, y: 0.5, animationDelay: 200 },
+    { id: 'strategy', label: '戰略', x: 0.5, y: 0.5, scale: 1.05, zIndex: 5, animationDelay: 300 },
+    { id: 'long_term', label: '長期', x: 0.88, y: 0.5, animationDelay: 400 },
+    { id: 'benefit', label: '共和', x: 0.5, y: 0.85, scale: 1.1, zIndex: 10, animationDelay: 500 }
+  ],
+  wasteland_survival_spread: [
+    { id: 'you', label: '自己', x: 0.5, y: 0.15, scale: 1.05, zIndex: 10, animationDelay: 0 },
+    { id: 'threat', label: '威脅', x: 0.15, y: 0.5, rotation: -15, animationDelay: 150 },
+    { id: 'resource', label: '資源', x: 0.85, y: 0.5, rotation: 15, animationDelay: 300 },
+    { id: 'ally', label: '同盟', x: 0.3, y: 0.85, animationDelay: 450 },
+    { id: 'outcome', label: '結果', x: 0.7, y: 0.85, scale: 1.1, zIndex: 5, animationDelay: 600 }
+  ],
+  brotherhood_council_spread: [
+    { id: 'one', label: '戰略', x: 0.12, y: 0.2, animationDelay: 0 },
+    { id: 'two', label: '科技', x: 0.5, y: 0.15, scale: 1.05, zIndex: 5, animationDelay: 100 },
+    { id: 'three', label: '情報', x: 0.88, y: 0.2, animationDelay: 200 },
+    { id: 'four', label: '資源', x: 0.12, y: 0.55, animationDelay: 300 },
+    { id: 'five', label: '核心', x: 0.5, y: 0.5, scale: 1.05, zIndex: 5, animationDelay: 400 },
+    { id: 'six', label: '防禦', x: 0.88, y: 0.55, animationDelay: 500 },
+    { id: 'seven', label: '結論', x: 0.5, y: 0.88, scale: 1.1, zIndex: 10, animationDelay: 600 }
   ],
   celtic_cross: [
     { id: '1', label: '現況', x: 0.5, y: 0.5, scale: 1.1, zIndex: 10, animationDelay: 0 },
@@ -202,12 +252,39 @@ export const defaultLayouts: Record<string, SpreadPosition[]> = {
 }
 
 // Get layout with responsive support
+// Priority: API template.positions.layout > hardcoded defaultLayouts
 export function getLayout(
   spreadType: string,
   template?: SpreadTemplate,
   deviceType: 'desktop' | 'tablet' | 'mobile' = 'desktop'
 ) {
-  const baseLayout = defaultLayouts[spreadType] || defaultLayouts['single_wasteland']
+  let baseLayout: SpreadPosition[]
+
+  // Try to use API positions with layout data
+  if (template?.positions && Array.isArray(template.positions)) {
+    const apiPositions = template.positions
+      .filter((pos: any) => pos.layout) // Only positions with layout data
+      .map((pos: any) => ({
+        id: pos.name?.toLowerCase().replace(/\s+/g, '_') || `pos${pos.number}`,
+        label: pos.chinese_name || pos.name || `位置 ${pos.number}`,
+        x: pos.layout.x || 0.5,
+        y: pos.layout.y || 0.5,
+        rotation: pos.layout.rotation || 0,
+        scale: pos.layout.scale || 1.0,
+        zIndex: pos.layout.zIndex || 1,
+        animationDelay: pos.layout.animationDelay || (pos.number - 1) * 100
+      }))
+
+    if (apiPositions.length > 0) {
+      baseLayout = apiPositions
+    } else {
+      // Fallback to hardcoded layouts
+      baseLayout = defaultLayouts[spreadType] || defaultLayouts['single_wasteland']
+    }
+  } else {
+    // Fallback to hardcoded layouts
+    baseLayout = defaultLayouts[spreadType] || defaultLayouts['single_wasteland']
+  }
 
   if (deviceType === 'desktop') {
     return baseLayout

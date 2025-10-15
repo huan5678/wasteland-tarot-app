@@ -11,6 +11,8 @@ from sqlalchemy import select, func, and_, desc
 import logging
 
 from app.db.session import get_db
+from app.models.user import User
+from app.core.dependencies import get_current_user
 from app.schemas.social import (
     SharedReading,
     Comment,
@@ -229,14 +231,11 @@ async def share_reading(
             "allow_comments": True
         }
     ),
-    db: AsyncSession = Depends(get_db)
-    # current_user: dict = Depends(get_current_user)  # Auth placeholder
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ) -> SharedReading:
     """Share a reading publicly with the community."""
     try:
-        # Placeholder user
-        current_user = {"id": "demo-user", "username": "DemoUser"}
-
         # Validate that user owns the reading (simplified)
         # In production, verify reading ownership and privacy settings
 
@@ -244,8 +243,8 @@ async def share_reading(
         shared_reading = SharedReading(
             id=f"share-{len(share_request.reading_id)}",  # Mock ID generation
             reading_id=share_request.reading_id,
-            user_id=current_user["id"],
-            username=current_user["username"],
+            user_id=current_user.id,
+            username=current_user.name,
             question="What should I focus on this week?",  # Would come from actual reading
             character_voice_used=CharacterVoice.PIP_BOY,  # Would come from actual reading
             karma_context=KarmaAlignment.NEUTRAL,  # Would come from actual reading
@@ -261,7 +260,7 @@ async def share_reading(
             is_featured=False
         )
 
-        logger.info(f"Reading {share_request.reading_id} shared by {current_user['username']}")
+        logger.info(f"Reading {share_request.reading_id} shared by {current_user.name}")
         return shared_reading
 
     except Exception as e:
@@ -366,13 +365,11 @@ The Future holds the New Dawn card - your efforts will contribute to something g
 async def like_shared_reading(
     shared_reading_id: str = Path(..., description="Shared reading ID"),
     unlike: bool = Query(default=False, description="Set to true to unlike"),
-    db: AsyncSession = Depends(get_db)
-    # current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     """Like or unlike a shared reading."""
     try:
-        current_user = {"id": "demo-user", "username": "DemoUser"}
-
         # In production, this would:
         # 1. Verify the shared reading exists
         # 2. Check if user already liked it
@@ -380,7 +377,7 @@ async def like_shared_reading(
         # 4. Update like count
 
         action = "unliked" if unlike else "liked"
-        logger.info(f"User {current_user['username']} {action} shared reading {shared_reading_id}")
+        logger.info(f"User {current_user.name} {action} shared reading {shared_reading_id}")
 
     except Exception as e:
         logger.error(f"Error processing like action: {str(e)}")
@@ -425,20 +422,18 @@ async def create_comment(
             "parent_comment_id": None
         }
     ),
-    db: AsyncSession = Depends(get_db)
-    # current_user: dict = Depends(get_current_user)
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ) -> Comment:
     """Create a new comment on community content."""
     try:
-        current_user = {"id": "demo-user", "username": "DemoUser"}
-
         # Create comment (mock implementation)
         comment = Comment(
             id=f"comment-{datetime.now().timestamp()}",
             content_type=comment_request.content_type,
             content_id=comment_request.content_id,
-            user_id=current_user["id"],
-            username=current_user["username"],
+            user_id=current_user.id,
+            username=current_user.name,
             comment_text=comment_request.comment_text,
             parent_comment_id=comment_request.parent_comment_id,
             likes_count=0,
@@ -450,7 +445,7 @@ async def create_comment(
             is_hidden=False
         )
 
-        logger.info(f"Comment created by {current_user['username']} on {comment_request.content_type} {comment_request.content_id}")
+        logger.info(f"Comment created by {current_user.name} on {comment_request.content_type} {comment_request.content_id}")
         return comment
 
     except Exception as e:

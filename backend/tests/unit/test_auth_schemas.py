@@ -27,7 +27,6 @@ class TestUserRegistrationRequest:
         assert request.name == "Vault Dweller"
         assert request.display_name is None
         assert request.faction_alignment is None
-        assert request.vault_number is None
 
     def test_valid_registration_with_optional_fields(self):
         """測試包含可選欄位的有效註冊資料"""
@@ -38,7 +37,6 @@ class TestUserRegistrationRequest:
             "name": "NCR Ranger",
             "display_name": "廢土遊俠",
             "faction_alignment": "NCR",
-            "vault_number": 101,
             "wasteland_location": "New Vegas"
         }
 
@@ -46,7 +44,6 @@ class TestUserRegistrationRequest:
 
         assert request.display_name == "廢土遊俠"
         assert request.faction_alignment == "NCR"
-        assert request.vault_number == 101
         assert request.wasteland_location == "New Vegas"
 
     def test_password_too_short(self):

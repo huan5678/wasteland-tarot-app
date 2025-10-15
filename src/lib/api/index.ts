@@ -9,3 +9,6 @@ export type { ApiClientConfig, RequestConfig } from './client'
 
 // Services
 export { cardsAPI, readingsAPI, authAPI, bingoAPI, passkeyAPI, healthAPI } from './services'
+
+// Sessions - export the default API object
+export { default as sessionsAPI } from './sessions'

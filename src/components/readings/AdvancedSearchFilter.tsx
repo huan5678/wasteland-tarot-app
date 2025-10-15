@@ -17,16 +17,13 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
 
   // Extract available options from existing readings
   const availableOptions = useMemo(() => {
-    const allTags = new Set<string>()
     const spreadTypes = new Set<string>()
 
     readings.forEach(reading => {
-      reading.tags?.forEach(tag => allTags.add(tag))
       spreadTypes.add(reading.spread_type)
     })
 
     return {
-      tags: Array.from(allTags).sort(),
       spreadTypes: Array.from(spreadTypes).sort(),
       accuracyRatings: [1, 2, 3, 4, 5]
     }
@@ -53,18 +50,6 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
     setFilters({})
   }
 
-  const removeTag = (tagToRemove: string) => {
-    updateFilters({
-      tags: filters.tags?.filter(tag => tag !== tagToRemove)
-    })
-  }
-
-  const addTag = (tag: string) => {
-    updateFilters({
-      tags: [...(filters.tags || []), tag]
-    })
-  }
-
   const toggleAccuracyRating = (rating: number) => {
     const current = filters.accuracyRating || []
     const updated = current.includes(rating)
@@ -77,7 +62,6 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
   // Count active filters
   const activeFilterCount = useMemo(() => {
     let count = 0
-    if (filters.tags?.length) count++
     if (filters.category) count++
     if (filters.spreadType) count++
     if (filters.isFavorite !== undefined) count++
@@ -129,7 +113,7 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                 {activeFilterCount}
               </span>
             )}
-            <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+            <PixelIcon name="chevron-down" className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
           </button>
 
           {/* Clear All Button */}
@@ -260,45 +244,6 @@ export function AdvancedSearchFilter({ onSearchResults, onFiltersChange }: Props
                 </div>
               )}
             </div>
-          </div>
-
-          {/* Tag Filter */}
-          <div className="space-y-2">
-            <label className="block text-pip-boy-green text-sm font-bold">標籤</label>
-            <div className="flex flex-wrap gap-2">
-              {availableOptions.tags.map(tag => {
-                const isSelected = filters.tags?.includes(tag)
-                return (
-                  <button
-                    key={tag}
-                    onClick={() => isSelected ? removeTag(tag) : addTag(tag)}
-                    className={`px-2 py-1 border text-xs flex items-center gap-1 transition-colors
-                      ${isSelected
-                        ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
-                        : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
-                      }`}
-                  >
-                    < PixelIcon name="tag" className="w-3 h-3" />
-                    {tag}
-                    {isSelected && < PixelIcon name="x" className="w-3 h-3" />}
-                  </button>
-                )
-              })}
-            </div>
-
-            {filters.tags && filters.tags.length > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-pip-boy-green/70 text-xs">標籤匹配模式:</span>
-                <select
-                  value={filters.tagMode || 'any'}
-                  onChange={(e) => updateFilters({ tagMode: e.target.value as 'any' | 'all' })}
-                  className="px-2 py-1 bg-black border border-pip-boy-green/30 text-pip-boy-green text-xs"
-                >
-                  <option value="any">任一標籤</option>
-                  <option value="all">所有標籤</option>
-                </select>
-              </div>
-            )}
           </div>
 
           {/* Quick Toggle Filters */}

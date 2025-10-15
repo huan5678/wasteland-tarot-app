@@ -42,7 +42,6 @@ class User(BaseModel):
     # Wasteland-specific Attributes
     faction_alignment = Column(String(50), default=FactionAlignment.VAULT_DWELLER.value)
     karma_score = Column(Integer, default=50)  # 0-100 scale
-    vault_number = Column(Integer)
     wasteland_location = Column(String(100))
     experience_level = Column(String(50), default="Novice Survivor")
 
@@ -249,7 +248,6 @@ class UserProfile(BaseModel):
 
     # Wasteland Character Info
     preferred_voice = Column(String(50), default=CharacterVoice.PIP_BOY.value)
-    vault_number = Column(Integer)
     wasteland_location = Column(String(100))
     favorite_faction = Column(String(50))
     experience_level = Column(String(50), default="Novice Survivor")
@@ -319,7 +317,6 @@ class UserProfile(BaseModel):
         return {
             "user_id": self.user_id,
             "preferred_voice": self.preferred_voice,
-            "vault_number": self.vault_number,
             "wasteland_location": self.wasteland_location,
             "favorite_faction": self.favorite_faction,
             "experience_level": self.experience_level,

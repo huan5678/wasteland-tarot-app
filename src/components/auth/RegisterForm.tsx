@@ -11,13 +11,22 @@ import { useRouter } from 'next/navigation'
 import { PixelIcon } from '@/components/ui/icons'
 import { useOAuth } from '@/hooks/useOAuth'
 import { authAPI } from '@/lib/api'
+import { useAuthStore } from '@/lib/authStore'
 import { toast } from 'sonner'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 
 interface FormData {
   email: string
   password: string
   confirmPassword: string
   name: string
+  faction_alignment: string
 }
 
 interface FormErrors {
@@ -34,12 +43,14 @@ interface RegisterFormProps {
 export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
   const router = useRouter()
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
+  const { setUser } = useAuthStore()
 
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     confirmPassword: '',
     name: '',
+    faction_alignment: 'vault_dweller', // 預設為 Vault Dweller
   })
 
   const [errors, setErrors] = useState<FormErrors>({})
@@ -110,7 +121,11 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
         password: formData.password,
         confirm_password: formData.confirmPassword,
         name: formData.name,
+        faction_alignment: formData.faction_alignment,
       })
+
+      // 更新 authStore 狀態
+      setUser(data.user, data.token_expires_at)
 
       // 註冊成功後自動登入（後端會設定 httpOnly cookies）
       toast.success('註冊成功', { description: `歡迎加入，${formData.name}!` })
@@ -225,6 +240,78 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
                 <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.name}
               </p>
             )}
+          </div>
+
+          {/* Faction Alignment Field */}
+          <div className="mb-4">
+            <label
+              htmlFor="faction_alignment"
+              className="block text-pip-boy-green text-sm mb-2"
+            >
+              陣營選擇
+            </label>
+            <Select
+              value={formData.faction_alignment}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, faction_alignment: value }))}
+              disabled={isFormDisabled}
+            >
+              <SelectTrigger
+                id="faction_alignment"
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/5 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50 data-[placeholder]:text-pip-boy-green/50"
+              >
+                <SelectValue placeholder="選擇你的陣營..." />
+              </SelectTrigger>
+              <SelectContent className="bg-wasteland-dark border-2 border-pip-boy-green">
+                <SelectItem
+                  value="vault_dweller"
+                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="home" size={16} decorative />
+                    <span>Vault Dweller（避難所居民）</span>
+                  </div>
+                </SelectItem>
+                <SelectItem
+                  value="brotherhood"
+                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="shield" size={16} decorative />
+                    <span>Brotherhood of Steel（鋼鐵兄弟會）</span>
+                  </div>
+                </SelectItem>
+                <SelectItem
+                  value="ncr"
+                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="flag" size={16} decorative />
+                    <span>NCR（新加州共和國）</span>
+                  </div>
+                </SelectItem>
+                <SelectItem
+                  value="legion"
+                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="sword" size={16} decorative />
+                    <span>Caesar's Legion（凱撒軍團）</span>
+                  </div>
+                </SelectItem>
+                <SelectItem
+                  value="raiders"
+                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="skull" size={16} decorative />
+                    <span>Raiders（掠奪者）</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-pip-boy-green/60 text-xs">
+              選擇你的陣營將影響卡牌解讀和福利
+            </p>
           </div>
 
           {/* Password Field */}

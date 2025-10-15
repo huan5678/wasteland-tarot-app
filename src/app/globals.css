@@ -763,6 +763,8 @@
     color: var(--color-pip-boy-green);
     /* 全域字體設定 */
     font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* 防止 Sheet 滑入時產生水平捲軸 */
+    overflow-x: hidden;
   }
 
   /* 確保所有文字元素繼承字體 */

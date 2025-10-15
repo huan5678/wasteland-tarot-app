@@ -18,6 +18,7 @@ from app.schemas.sessions import (
     SessionUpdateSchema,
     SessionResponseSchema,
     SessionMetadataSchema,
+    SessionCompleteSchema,
     OfflineSessionSchema,
     ConflictResolutionSchema,
 )
@@ -57,7 +58,7 @@ async def create_session(
     - **question**: 使用者的問題
     - **session_state**: 會話當前狀態（已抽取的卡牌等）
     """
-    # Override user_id with authenticated user
+    # Override user_id with authenticated user (current_user is a dict, not a User object)
     session_data.user_id = current_user.id
 
     service = SessionService(db)
@@ -164,7 +165,7 @@ async def get_session(
             )
 
         # Verify ownership
-        if session.user_id != current_user.id:
+        if str(session.user_id) != str(current_user.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="您沒有權限存取此會話"
@@ -222,7 +223,16 @@ async def update_session(
                 detail=f"找不到會話 ID: {session_id}"
             )
 
-        if session.user_id != current_user.id:
+        # Debug logging for permission check
+        session_user_id = str(session.user_id)
+        current_user_id = str(current_user.id)
+
+        if session_user_id != current_user_id:
+            from app.core.logging import logger
+            logger.warning(
+                f"Permission denied: Session user_id={session_user_id} "
+                f"does not match current_user.id={current_user_id}"
+            )
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="您沒有權限修改此會話"
@@ -290,7 +300,7 @@ async def delete_session(
                 detail=f"找不到會話 ID: {session_id}"
             )
 
-        if session.user_id != current_user.id:
+        if str(session.user_id) != str(current_user.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="您沒有權限刪除此會話"
@@ -330,6 +340,7 @@ async def delete_session(
 )
 async def complete_session(
     session_id: str,
+    complete_data: SessionCompleteSchema,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -350,14 +361,25 @@ async def complete_session(
                 detail=f"找不到會話 ID: {session_id}"
             )
 
-        if session.user_id != current_user.id:
+        if str(session.user_id) != str(current_user.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="您沒有權限完成此會話"
             )
 
+        # Prepare reading metadata
+        reading_metadata = {
+            'character_voice': complete_data.character_voice,
+            'karma_context': complete_data.karma_context,
+            'faction_influence': complete_data.faction_influence
+        }
+
         # Complete session
-        result = await service.complete_session(session_id)
+        result = await service.complete_session(
+            session_id,
+            interpretation=complete_data.interpretation,
+            reading_metadata=reading_metadata
+        )
 
         return result
 
@@ -484,7 +506,7 @@ async def resolve_conflict(
                 detail=f"找不到會話 ID: {resolution_data.session_id}"
             )
 
-        if session.user_id != current_user.id:
+        if str(session.user_id) != str(current_user.id):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="您沒有權限解決此會話的衝突"

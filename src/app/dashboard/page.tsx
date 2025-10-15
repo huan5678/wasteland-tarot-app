@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { readingsAPI, cardsAPI } from '@/lib/api'
 import { PixelIcon } from '@/components/ui/icons'
@@ -17,6 +18,7 @@ interface Reading {
 }
 
 export default function DashboardPage() {
+  const router = useRouter()
   const user = useAuthStore(s => s.user)
   const [recentReadings, setRecentReadings] = useState<Reading[]>([])
   const [stats, setStats] = useState({
@@ -48,7 +50,7 @@ export default function DashboardPage() {
             id: reading.id,
             date: reading.created_at,
             question: reading.question,
-            cards: reading.cards_drawn,
+            cards: reading.cards_drawn || [],  // Ensure cards is always an array
             spread_type: reading.spread_type as 'single' | 'three_card',
             interpretation: reading.interpretation || ''
           }))
@@ -151,7 +153,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
               <div className="text-2xl font-bold text-pip-boy-green">{stats.totalReadings}</div>
               <div className="text-pip-boy-green/70 text-xs">占卜總數</div>
@@ -165,11 +167,6 @@ export default function DashboardPage() {
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
               <div className="text-2xl font-bold text-pip-boy-green">{stats.daysInVault}</div>
               <div className="text-pip-boy-green/70 text-xs">服務天數</div>
-            </div>
-
-            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
-              <div className="text-sm font-bold text-pip-boy-green">Vault {user?.vault_number || '111'}</div>
-              <div className="text-pip-boy-green/70 text-xs">分配</div>
             </div>
           </div>
         </div>
@@ -237,9 +234,10 @@ export default function DashboardPage() {
             <div className="space-y-4">
               {recentReadings.length > 0 ? (
                 recentReadings.map((reading) => (
-                  <div
+                  <button
                     key={reading.id}
-                    className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200"
+                    onClick={() => router.push(`/readings/${reading.id}`)}
+                    className="w-full text-left border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-sm font-bold text-pip-boy-green">
@@ -255,7 +253,7 @@ export default function DashboardPage() {
                     </p>
 
                     <div className="flex gap-2 mb-3">
-                      {reading.cards.slice(0, 3).map((card, index) => (
+                      {(reading.cards || []).slice(0, 3).map((card, index) => (
                         <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
                           <PixelIcon name="spade" size={16} decorative />
                         </div>
@@ -265,7 +263,7 @@ export default function DashboardPage() {
                     <p className="text-pip-boy-green/70 text-xs line-clamp-2">
                       {reading.interpretation}
                     </p>
-                  </div>
+                  </button>
                 ))
               ) : (
                 <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 text-center">

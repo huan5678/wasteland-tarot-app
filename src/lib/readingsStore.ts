@@ -23,7 +23,6 @@ export interface ReadingStatistics {
   favorite_readings: number
   readings_by_spread: Record<string, number>
   readings_by_month: Record<string, number>
-  most_used_tags: Record<string, number>
   most_used_cards: Record<string, number>
   average_interpretation_length: number
   reading_streak: number
@@ -43,7 +42,6 @@ export interface Reading {
   created_at?: string
   updated_at?: string
   is_favorite?: boolean
-  tags?: string[]
   notes?: string // Basic notes (legacy)
   detailed_notes?: ReadingNote[] // Enhanced notes system
   category_id?: string
@@ -94,7 +92,6 @@ interface ReadingsState {
 
   // Advanced search and filtering
   searchReadings: (query: string, filters?: SearchFilters) => Reading[]
-  getReadingsByTag: (tags: string[], mode: 'any' | 'all') => Reading[]
   getReadingsByCategory: (categoryId: string) => Reading[]
 
   // Utility functions
@@ -104,8 +101,6 @@ interface ReadingsState {
 }
 
 export interface SearchFilters {
-  tags?: string[]
-  tagMode?: 'any' | 'all'
   category?: string
   spreadType?: string
   dateRange?: { start: Date; end: Date }
@@ -183,14 +178,16 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
       if (!force && !isLoading && lastFetched && Date.now() - lastFetched < CACHE_TTL) return
       set({ isLoading: true, error: null })
       try {
-        const data = await readingsAPI.getUserReadings(userId)
+        const response = await readingsAPI.getUserReadings(userId)
+        // API 回傳格式: { readings: Reading[], total_count, page, page_size, has_more }
+        const readings = response.readings || []
         const map: Record<string, Reading> = {}
-        data.forEach(r => { map[r.id] = r })
+        readings.forEach(r => { map[r.id] = r })
 
         // Save to localStorage for offline access
-        saveToLocalStorage(data)
+        saveToLocalStorage(readings)
 
-        set({ readings: data, byId: map, isLoading: false, lastFetched: Date.now() })
+        set({ readings, byId: map, isLoading: false, lastFetched: Date.now() })
       } catch (e: any) {
         // On API failure, try to use localStorage data
         const localReadings = loadFromLocalStorage()
@@ -252,7 +249,7 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         }
 
         // Save to localStorage
-        saveToLocalStorage(newState.readings, get().categories)
+        saveToLocalStorage(newState.readings)
 
         set(newState)
         return offlineReading
@@ -270,7 +267,7 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         }
 
         // Save to localStorage
-        saveToLocalStorage(newState.readings, get().categories)
+        saveToLocalStorage(newState.readings)
 
         set(newState)
         return updated
@@ -310,7 +307,7 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         delete newState.byId[id]
 
         // Save to localStorage
-        saveToLocalStorage(newState.readings, get().categories)
+        saveToLocalStorage(newState.readings)
 
         set(newState)
         return true
@@ -332,7 +329,7 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
           byId: { ...state.byId, [id]: optimisticReading }
         }
         // Save to localStorage
-        saveToLocalStorage(newState.readings, get().categories)
+        saveToLocalStorage(newState.readings)
         return newState
       })
 
@@ -467,7 +464,6 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         favorite_readings: readings.filter(r => r.is_favorite).length,
         readings_by_spread: {},
         readings_by_month: {},
-        most_used_tags: {},
         most_used_cards: {},
         average_interpretation_length: 0,
         reading_streak: get().getReadingStreak(),
@@ -487,13 +483,6 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         }
       })
 
-      // Calculate tag usage
-      readings.forEach(r => {
-        r.tags?.forEach(tag => {
-          stats.most_used_tags[tag] = (stats.most_used_tags[tag] || 0) + 1
-        })
-      })
-
       // Calculate card usage
       readings.forEach(r => {
         r.cards_drawn?.forEach(card => {
@@ -509,7 +498,6 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         stats.average_interpretation_length = Math.round(totalLength / interpretations.length)
       }
 
-      set({ statistics: stats })
       return stats
     },
 
@@ -577,25 +565,12 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
           r.question.toLowerCase().includes(q) ||
           (r.interpretation || '').toLowerCase().includes(q) ||
           (r.notes || '').toLowerCase().includes(q) ||
-          r.detailed_notes?.some(note => note.content.toLowerCase().includes(q)) ||
-          r.tags?.some(tag => tag.toLowerCase().includes(q))
+          r.detailed_notes?.some(note => note.content.toLowerCase().includes(q))
         )
       }
 
       // Apply filters
       if (filters) {
-        if (filters.tags && filters.tags.length > 0) {
-          filtered = filtered.filter(r => {
-            if (!r.tags) return false
-            const readingTags = r.tags.map(t => t.toLowerCase())
-            const filterTags = filters.tags!.map(t => t.toLowerCase())
-
-            return filters.tagMode === 'all'
-              ? filterTags.every(tag => readingTags.includes(tag))
-              : filterTags.some(tag => readingTags.includes(tag))
-          })
-        }
-
         if (filters.category) {
           filtered = filtered.filter(r => r.category_id === filters.category)
         }
@@ -637,19 +612,6 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
       return filtered
     },
 
-    getReadingsByTag: (tags: string[], mode: 'any' | 'all') => {
-      const readings = get().readings.filter(r => !r.archived)
-      return readings.filter(r => {
-        if (!r.tags || r.tags.length === 0) return false
-        const readingTags = r.tags.map(t => t.toLowerCase())
-        const filterTags = tags.map(t => t.toLowerCase())
-
-        return mode === 'all'
-          ? filterTags.every(tag => readingTags.includes(tag))
-          : filterTags.some(tag => readingTags.includes(tag))
-      })
-    },
-
     getReadingsByCategory: (categoryId: string) => {
       const readings = get().readings.filter(r => !r.archived)
       return readings.filter(r => r.category_id === categoryId)
@@ -667,7 +629,7 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         // CSV format
         const headers = [
           'ID', 'Question', 'Spread Type', 'Created At', 'Is Favorite',
-          'Category', 'Tags', 'Cards', 'Interpretation'
+          'Category', 'Cards', 'Interpretation'
         ]
 
         const rows = readingsToExport.map(r => [
@@ -677,7 +639,6 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
           r.created_at || '',
           r.is_favorite ? 'Yes' : 'No',
           r.category_id || '',
-          (r.tags || []).join(';'),
           r.cards_drawn?.map(c => c.name).join(';') || '',
           `"${(r.interpretation || '').replace(/"/g, '""')}"`
         ])
