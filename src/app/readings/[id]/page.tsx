@@ -3,7 +3,7 @@
  *
  * 顯示單一占卜記錄的完整資訊，包含：
  * - 占卜問題與時間
- * - 所有抽到的卡牌
+ * - 所有抽到的卡牌（可點擊查看詳情）
  * - 解讀結果
  * - 其他元資料（角色聲音、業力背景、派系影響）
  */
@@ -14,7 +14,9 @@ import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { readingsAPI } from '@/lib/api'
 import { PixelIcon } from '@/components/ui/icons'
+import { ReadingCardDetail } from '@/components/readings/ReadingCardDetail'
 import type { Reading } from '@/lib/api'
+import type { ReadingCard } from '@/components/readings/ReadingCardDetail'
 
 export default function ReadingDetailPage() {
   const router = useRouter()
@@ -24,6 +26,8 @@ export default function ReadingDetailPage() {
   const [reading, setReading] = useState<Reading | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCard, setSelectedCard] = useState<ReadingCard | null>(null)
+  const [isCardDetailOpen, setIsCardDetailOpen] = useState(false)
 
   useEffect(() => {
     const fetchReading = async () => {
@@ -65,6 +69,39 @@ export default function ReadingDetailPage() {
       'past_present_future': '過去現在未來',
     }
     return typeMap[type] || type
+  }
+
+  const handleCardClick = (card: any, index: number) => {
+    // 將卡牌資料轉換為 ReadingCard 格式，直接使用後端提供的 position_meaning
+    const readingCard: ReadingCard = {
+      id: card.card_id || card.id || `card-${index}`,
+      name: card.name || card.card_name || '未知卡牌',
+      suit: card.suit || 'Unknown',
+      image_url: card.image_url || '',
+      is_reversed: card.is_reversed || false,
+      position: card.position,
+      upright_meaning: card.upright_meaning,
+      reversed_meaning: card.reversed_meaning,
+      meaning_upright: card.meaning_upright,
+      meaning_reversed: card.meaning_reversed,
+      description: card.description,
+      keywords: card.keywords,
+      fallout_reference: card.fallout_reference,
+      character_voice_interpretations: card.character_voice_interpretations,
+      radiation_factor: card.radiation_factor,
+      karma_alignment: card.karma_alignment,
+      symbolism: card.symbolism,
+      element: card.element,
+      astrological_association: card.astrological_association,
+      card_number: card.card_number || card.number,
+      // 占卜情境資訊 - 直接使用後端提供的資料
+      position_in_reading: card.position_name || card.position_in_reading || `位置 ${index + 1}`,
+      position_meaning: card.position_meaning || '', // 從後端取得，不硬編碼
+      card_index: index
+    }
+
+    setSelectedCard(readingCard)
+    setIsCardDetailOpen(true)
   }
 
   if (isLoading) {
@@ -145,29 +182,49 @@ export default function ReadingDetailPage() {
         <div className="mb-6">
           <h2 className="text-xl font-bold uppercase tracking-wider mb-4 flex items-center gap-2">
             <PixelIcon name="spade" sizePreset="sm" variant="primary" decorative />
-            抽到的卡牌
+            抽到的卡牌（點擊查看詳情）
           </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {(reading.cards_drawn || []).map((card: any, index: number) => (
-              <div
+              <button
                 key={index}
-                className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200"
+                onClick={() => handleCardClick(card, index)}
+                className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 hover:scale-105 transition-all duration-200 text-left group cursor-pointer"
               >
-                <div className="aspect-[2/3] bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex flex-col items-center justify-center mb-3">
-                  <PixelIcon name="spade" sizePreset="lg" variant="primary" decorative />
-                  <span className="text-xs text-pip-boy-green/70 mt-2">
-                    位置 {index + 1}
-                  </span>
+                <div className="aspect-[2/3] bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex flex-col items-center justify-center mb-3 relative overflow-hidden">
+                  {card.image_url ? (
+                    <img
+                      src={card.image_url}
+                      alt={card.name || '卡牌'}
+                      className={`w-full h-full object-cover ${card.is_reversed ? 'rotate-180' : ''}`}
+                    />
+                  ) : (
+                    <>
+                      <PixelIcon name="spade" sizePreset="lg" variant="primary" decorative />
+                      <span className="text-xs text-pip-boy-green/70 mt-2">
+                        {card.position_name || `位置 ${index + 1}`}
+                      </span>
+                    </>
+                  )}
+                  {/* Hover 效果 */}
+                  <div className="absolute inset-0 bg-pip-boy-green/0 group-hover:bg-pip-boy-green/20 transition-colors flex items-center justify-center">
+                    <PixelIcon
+                      name="eye"
+                      sizePreset="lg"
+                      className="opacity-0 group-hover:opacity-100 transition-opacity text-pip-boy-green"
+                      decorative
+                    />
+                  </div>
                 </div>
 
                 <div className="text-center">
                   <p className="text-sm font-bold text-pip-boy-green mb-1">
                     {card.name || card.card_name || '未知卡牌'}
                   </p>
-                  {card.position && (
+                  {(card.position_name || card.position) && (
                     <p className="text-xs text-pip-boy-green/70">
-                      {card.position}
+                      {card.position_name || card.position}
                     </p>
                   )}
                   {card.is_reversed && (
@@ -176,7 +233,7 @@ export default function ReadingDetailPage() {
                     </span>
                   )}
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -243,6 +300,18 @@ export default function ReadingDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* Card Detail Modal */}
+      <ReadingCardDetail
+        card={selectedCard}
+        isOpen={isCardDetailOpen}
+        onClose={() => setIsCardDetailOpen(false)}
+        readingType={reading?.spread_type}
+        readingQuestion={reading?.question}
+        totalCards={reading?.cards_drawn?.length || 0}
+        enableAudio={true}
+        showQuickActions={true}
+      />
     </div>
   )
 }
