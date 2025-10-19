@@ -29,22 +29,6 @@
       "purpose": "any"
     }
   ],
-  "screenshots": [
-    {
-      "src": "/assets/screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "廢土塔羅首頁（桌面版）"
-    },
-    {
-      "src": "/assets/screenshot-mobile.png",
-      "sizes": "750x1334",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "廢土塔羅首頁（手機版）"
-    }
-  ],
   "shortcuts": [
     {
       "name": "開始占卜",

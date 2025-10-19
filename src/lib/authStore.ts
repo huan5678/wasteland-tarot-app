@@ -20,6 +20,20 @@ interface AuthState {
   setOAuthUser: (user: User) => void
   // 通用設定使用者方法
   setUser: (user: User, tokenExpiresAt?: number) => void
+  // Token 驗證方法
+  checkTokenValidity: () => boolean
+  startTokenExpiryMonitor: () => void
+  stopTokenExpiryMonitor: () => void
+  // Token 延長方法
+  extendTokenByActivity: (activityDuration: number) => Promise<void>
+  extendTokenByLoyalty: () => Promise<void>
+  checkLoyaltyStatus: () => Promise<{
+    is_eligible: boolean
+    login_days_count: number
+    login_dates: string[]
+    extension_available: boolean
+    current_streak: number
+  }>
 }
 
 // Token 儲存在 httpOnly cookies 中，由後端管理
@@ -78,6 +92,11 @@ function clearAuthState(): void {
   if (typeof window === 'undefined') return
   localStorage.removeItem(AUTH_STATE_KEY)
 }
+
+/**
+ * Token 過期監控定時器 ID
+ */
+let tokenExpiryTimerId: NodeJS.Timeout | null = null
 
 export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   user: null,
@@ -189,6 +208,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         isInitialized: true,
         error: null
       })
+
+      // 啟動 token 過期監控
+      get().startTokenExpiryMonitor()
     } catch (error: any) {
       apiCompleted = true
       clearInterval(progressInterval)
@@ -259,6 +281,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         error: null
       })
 
+      // 啟動 token 過期監控
+      get().startTokenExpiryMonitor()
+
       // 追蹤登入事件
       import('@/lib/actionTracker').then(m => m.track('app:login', { user: res.user?.id }))
     } catch (e: any) {
@@ -274,9 +299,13 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    * - 呼叫後端 /api/v1/auth/logout 清除 httpOnly cookies
    * - 清除 localStorage 登入狀態
    * - 清除 authStore 狀態
+   * - 停止 token 過期監控
    */
   logout: async () => {
     try {
+      // 停止 token 過期監控
+      get().stopTokenExpiryMonitor()
+
       // 呼叫後端 logout API（會清除 httpOnly cookies）
       await authAPI.logout()
     } catch (e) {
@@ -318,6 +347,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    * - 移除 token 參數（不再需要，後端已設定 httpOnly cookies）
    * - 移除 localStorage token 儲存
    * - 僅更新 authStore 狀態
+   * - 啟動 token 過期監控
    */
   setOAuthUser: (user: User) => {
     set({
@@ -329,6 +359,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       isLoading: false,
       isInitialized: true
     })
+
+    // 啟動 token 過期監控
+    get().startTokenExpiryMonitor()
 
     // 追蹤 OAuth 登入事件
     import('@/lib/actionTracker').then(m => m.track('app:oauth-login', {
@@ -361,6 +394,157 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       isLoading: false,
       isInitialized: true
     })
+
+    // 啟動 token 過期監控
+    get().startTokenExpiryMonitor()
+  },
+
+  /**
+   * 檢查 Token 有效性
+   *
+   * @returns true 表示 token 有效，false 表示過期或不存在
+   */
+  checkTokenValidity: () => {
+    return isAuthStateValid()
+  },
+
+  /**
+   * 啟動 Token 過期監控
+   *
+   * 每 60 秒檢查一次 token 狀態：
+   * - 如果 token 過期且使用者仍在登入狀態，自動登出
+   */
+  startTokenExpiryMonitor: () => {
+    // 只在瀏覽器環境執行
+    if (typeof window === 'undefined') return
+
+    // 清除舊的定時器（避免重複）
+    if (tokenExpiryTimerId) {
+      clearInterval(tokenExpiryTimerId)
+    }
+
+    // 每 60 秒檢查一次
+    tokenExpiryTimerId = setInterval(() => {
+      const state = get()
+
+      // 如果使用者已登入，檢查 token 是否過期
+      if (state.user && !isAuthStateValid()) {
+        console.warn('Token expired, logging out user')
+
+        // 自動登出
+        get().logout()
+      }
+    }, 60 * 1000) // 60 秒
+  },
+
+  /**
+   * 停止 Token 過期監控
+   */
+  stopTokenExpiryMonitor: () => {
+    if (tokenExpiryTimerId) {
+      clearInterval(tokenExpiryTimerId)
+      tokenExpiryTimerId = null
+    }
+  },
+
+  /**
+   * 延長 Token（活躍度模式）
+   *
+   * @param activityDuration - 活躍時長（秒）
+   * @throws 如果未登入、活躍時間不足、達到延長上限等
+   */
+  extendTokenByActivity: async (activityDuration: number) => {
+    const state = get()
+
+    // 檢查登入狀態
+    if (!state.user) {
+      throw new Error('未登入，無法延長 Token')
+    }
+
+    try {
+      // 呼叫後端 API
+      const response = await authAPI.extendToken({
+        extension_type: 'activity',
+        activity_duration: activityDuration,
+      })
+
+      // 更新 localStorage 中的 token 過期時間
+      if (response.token_expires_at) {
+        saveAuthState(response.token_expires_at)
+      }
+
+      console.log(`✅ Token 延長成功：${response.extended_minutes} 分鐘`)
+    } catch (error: any) {
+      console.error('❌ Token 延長失敗:', error.message || error)
+      throw error
+    }
+  },
+
+  /**
+   * 延長 Token（忠誠度模式）
+   *
+   * 需滿足條件：7 天內登入 3 天以上
+   * @throws 如果未登入、不符合忠誠度條件、今日已領取等
+   */
+  extendTokenByLoyalty: async () => {
+    const state = get()
+
+    // 檢查登入狀態
+    if (!state.user) {
+      throw new Error('未登入，無法延長 Token')
+    }
+
+    try {
+      // 呼叫後端 API
+      const response = await authAPI.extendToken({
+        extension_type: 'loyalty',
+      })
+
+      // 更新 localStorage 中的 token 過期時間
+      if (response.token_expires_at) {
+        saveAuthState(response.token_expires_at)
+      }
+
+      // 如果有獎勵，更新使用者資料
+      if (response.rewards && state.user) {
+        set({
+          user: {
+            ...state.user,
+            karma_score: (state.user.karma_score || 0) + response.rewards.karma_bonus,
+          }
+        })
+      }
+
+      console.log(`✅ 忠誠度 Token 延長成功：${response.extended_minutes} 分鐘`)
+      if (response.rewards) {
+        console.log(`🎁 獲得獎勵：Karma +${response.rewards.karma_bonus}, 徽章：${response.rewards.badge_unlocked}`)
+      }
+    } catch (error: any) {
+      console.error('❌ 忠誠度 Token 延長失敗:', error.message || error)
+      throw error
+    }
+  },
+
+  /**
+   * 檢查忠誠度狀態
+   *
+   * @returns 忠誠度資訊（是否符合資格、登入天數、連續天數等）
+   */
+  checkLoyaltyStatus: async () => {
+    const state = get()
+
+    // 檢查登入狀態
+    if (!state.user) {
+      throw new Error('未登入，無法查詢忠誠度狀態')
+    }
+
+    try {
+      const status = await authAPI.getLoyaltyStatus()
+      return status
+    } catch (error: any) {
+      console.error('❌ 查詢忠誠度狀態失敗:', error.message || error)
+      throw error
+    }
   }
 }), {
   name: 'auth-store',

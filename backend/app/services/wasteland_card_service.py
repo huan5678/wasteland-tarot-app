@@ -141,21 +141,23 @@ class WastelandCardService:
         )
         return result.scalars().all()
 
-    async def draw_cards_with_radiation_shuffle(
+    async def draw_cards_with_pure_randomness(
         self,
         num_cards: int = 1,
-        radiation_factor: float = 0.5,
         user_id: Optional[str] = None
     ) -> List[WastelandCard]:
-        """Draw cards using radiation-influenced shuffle
+        """Draw cards using pure random selection without any user-data influence
 
         Args:
             num_cards: Number of cards to draw
-            radiation_factor: Influence of radiation on randomness (0.0-1.0)
-            user_id: Optional user ID for personalized drawing and validation
+            user_id: Optional user ID for validation only (does NOT affect randomness)
+
+        Note:
+            This method ensures completely objective randomness.
+            User data (karma, faction, etc.) is NOT used for card selection.
+            It is only used for AI interpretation style later.
         """
-        # Validate user if provided
-        user = None
+        # Validate user if provided (for permission check only)
         if user_id:
             user = await self._get_user_with_validation(user_id)
 
@@ -168,19 +170,12 @@ class WastelandCardService:
         if not all_cards:
             return []
 
-        # Apply user-personalized radiation factor if authenticated
-        if user:
-            # Adjust radiation factor based on user's karma
-            karma_modifier = self._calculate_karma_radiation_modifier(user)
-            radiation_factor = min(1.0, radiation_factor * karma_modifier)
+        # Pure random selection using Python's random.sample (Fisher-Yates internally)
+        # NO user data influence - completely objective
+        if num_cards > len(all_cards):
+            num_cards = len(all_cards)
 
-        # Apply radiation shuffle
-        shuffled_cards = RadiationRandomnessEngine.wasteland_fisher_yates_shuffle(
-            all_cards, radiation_factor
-        )
-
-        # Return requested number of cards
-        drawn_cards = shuffled_cards[:num_cards]
+        drawn_cards = random.sample(all_cards, k=num_cards)
 
         # Update draw statistics
         for card in drawn_cards:

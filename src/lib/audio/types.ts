@@ -15,13 +15,29 @@ export type AudioEffect = 'reverb' | '8bit' | 'radio' | 'distortion';
 
 /**
  * 角色語音類型
+ * 支援全部 14 個 Fallout 角色
  */
 export type CharacterVoice =
+  // 通用角色
   | 'pip_boy'
-  | 'mr_handy'
+  | 'vault_dweller'
+  | 'wasteland_trader'
+  | 'codsworth'
+  // 廢土生物與掠奪者
+  | 'super_mutant'
+  | 'ghoul'
+  | 'raider'
+  // 鋼鐵兄弟會
   | 'brotherhood_scribe'
-  | 'vault_overseer'
-  | 'wasteland_wanderer';
+  | 'brotherhood_paladin'
+  // NCR
+  | 'ncr_ranger'
+  // 凱薩軍團
+  | 'legion_centurion'
+  // Fallout 4 陣營角色
+  | 'minuteman'
+  | 'railroad_agent'
+  | 'institute_scientist';
 
 /**
  * 音效優先級

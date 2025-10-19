@@ -383,8 +383,10 @@ export type HackernoonIconSize = 12 | 16 | 24 | 48;
  * 支援兩種圖示系統：
  * 1. pixelarticons (舊系統，保留向後相容)
  * 2. @hackernoon/pixel-icon-library (新系統) ⭐
+ *
+ * 擴展自 HTMLAttributes 以支援所有標準 HTML 屬性（如 data-testid）
  */
-export interface PixelIconProps {
+export interface PixelIconProps extends Omit<React.HTMLAttributes<HTMLElement>, 'onClick' | 'onMouseEnter' | 'onMouseLeave'> {
   /**
    * 圖示名稱（pixelarticons 套件中的檔案名稱）
    *

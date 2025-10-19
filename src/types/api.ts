@@ -122,12 +122,124 @@ export type PaginatedCardsResponse = z.infer<typeof PaginatedCardsResponseSchema
 // Reading Types
 // ============================================================================
 
-export const ReadingSchema = z.object({
+// CardPosition Schema (對應後端 CardPosition)
+export const CardPositionSchema = z.object({
+  position_number: z.number(),
+  position_name: z.string(),
+  position_meaning: z.string(),
+  card_id: z.string(),
+  is_reversed: z.boolean(),
+  draw_order: z.number(),
+  radiation_influence: z.number().default(0),
+  // Complete card data (included when fetching reading details)
+  card: TarotCardSchema.optional().nullable(),
+  position_interpretation: z.string().optional().nullable(),
+  card_significance: z.string().optional().nullable(),
+  connection_to_question: z.string().optional().nullable(),
+  user_resonance: z.number().optional().nullable(),
+  interpretation_confidence: z.number().optional().nullable(),
+})
+
+export type CardPosition = z.infer<typeof CardPositionSchema>
+
+// SpreadTemplate Schema (對應後端 SpreadTemplate)
+export const SpreadTemplateSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  display_name: z.string(),
+  description: z.string(),
+  spread_type: z.string(),
+  card_count: z.number(),
+  positions: z.array(z.object({
+    number: z.number(),
+    name: z.string(),
+    meaning: z.string(),
+  })),
+  difficulty_level: z.string(),
+  faction_preference: z.string().optional().nullable(),
+  radiation_sensitivity: z.number().default(0.5),
+  vault_origin: z.number().optional().nullable(),
+  usage_count: z.number().default(0),
+  average_rating: z.number().default(0),
+  is_active: z.boolean().default(true),
+  is_premium: z.boolean().default(false),
+})
+
+export type SpreadTemplate = z.infer<typeof SpreadTemplateSchema>
+
+// ReadingSession Schema (新的資料結構，對應後端 ReadingSession)
+export const ReadingSessionSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+
+  // Reading content
+  question: z.string(),
+  focus_area: z.string().optional().nullable(),
+  context_notes: z.string().optional().nullable(),
+
+  // Configuration
+  spread_template: SpreadTemplateSchema.optional().nullable(),
+  spread_template_id: z.string().optional().nullable(),
+  spread_type: z.string().optional().nullable(),
+  character_voice_used: z.string(),
+  karma_context: z.string(),
+  faction_influence: z.string().optional().nullable(),
+  radiation_factor: z.number(),
+
+  // Card positions
+  card_positions: z.array(CardPositionSchema),
+
+  // Interpretations
+  overall_interpretation: z.string().optional().nullable(),
+  summary_message: z.string().optional().nullable(),
+  prediction_confidence: z.number().optional().nullable(),
+  energy_reading: z.record(z.unknown()).optional().nullable(),
+
+  // AI Interpretation Tracking
+  ai_interpretation_requested: z.boolean().optional().nullable(),
+  ai_interpretation_at: z.string().optional().nullable(),
+  ai_interpretation_provider: z.string().optional().nullable(),
+
+  // Session metadata
+  session_duration: z.number().optional().nullable(),
+  start_time: z.string().optional().nullable(),
+  end_time: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
+
+  // User experience
+  mood_before: z.string().optional().nullable(),
+  mood_after: z.string().optional().nullable(),
+
+  // Privacy and sharing
+  privacy_level: z.string(),
+  allow_public_sharing: z.boolean().default(false),
+  is_favorite: z.boolean().default(false),
+
+  // User feedback
+  user_satisfaction: z.number().optional().nullable(),
+  accuracy_rating: z.number().optional().nullable(),
+  helpful_rating: z.number().optional().nullable(),
+  user_feedback: z.string().optional().nullable(),
+
+  // Social features
+  likes_count: z.number().default(0),
+  shares_count: z.number().default(0),
+  comments_count: z.number().default(0),
+
+  // Timestamps
+  created_at: z.string(),
+  updated_at: z.string().optional().nullable(),
+})
+
+export type ReadingSession = z.infer<typeof ReadingSessionSchema>
+
+// Legacy Reading Schema (舊的資料結構，向後相容)
+export const LegacyReadingSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   question: z.string(),
   spread_type: z.string(),
-  cards_drawn: z.array(z.any()),
+  cards_drawn: z.array(z.unknown()),
   interpretation: z.string().optional(),
   character_voice: z.string().optional(),
   karma_context: z.string().optional(),
@@ -136,18 +248,33 @@ export const ReadingSchema = z.object({
   updated_at: z.string().optional(),
 })
 
-export type Reading = z.infer<typeof ReadingSchema>
+export type LegacyReading = z.infer<typeof LegacyReadingSchema>
 
-export const ReadingArraySchema = z.array(ReadingSchema)
+// 統一的 Reading 型別（支援新舊兩種結構）
+export type Reading = ReadingSession | LegacyReading
+
+// 型別守衛
+export function isReadingSession(reading: Reading): reading is ReadingSession {
+  return 'card_positions' in reading && Array.isArray(reading.card_positions)
+}
+
+export function isLegacyReading(reading: Reading): reading is LegacyReading {
+  return 'cards_drawn' in reading && Array.isArray(reading.cards_drawn)
+}
+
+export const ReadingArraySchema = z.array(z.union([ReadingSessionSchema, LegacyReadingSchema]))
 
 export interface CreateReadingPayload {
   question: string
-  spread_type: string
-  cards_drawn: any[]
-  interpretation?: string
-  character_voice?: string
-  karma_context?: string
+  spread_template_id: string
+  character_voice: string
+  karma_context: string
   faction_influence?: string
+  radiation_factor?: number
+  focus_area?: string
+  context_notes?: string
+  privacy_level?: string
+  allow_public_sharing?: boolean
 }
 
 // ============================================================================
@@ -165,6 +292,8 @@ export const UserSchema = z.object({
   experience_level: z.string().optional(),
   total_readings: z.number().optional(),
   created_at: z.string(),
+  // 權限相關欄位
+  is_admin: z.boolean().optional().default(false),
   // OAuth 相關欄位
   isOAuthUser: z.boolean().optional(),
   oauthProvider: z.string().nullable().optional(),

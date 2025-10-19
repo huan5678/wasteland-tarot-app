@@ -5,6 +5,7 @@ Handles Supabase connection and SQLAlchemy session management
 
 import logging
 from typing import AsyncGenerator, Optional
+import uuid
 import asyncpg
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -41,6 +42,7 @@ else:
         connect_args={
             "statement_cache_size": 0,  # Disable asyncpg statement cache (CRITICAL for Transaction mode)
             "prepared_statement_cache_size": 0,  # Additional safety
+            "prepared_statement_name_func": lambda: f"__pstmt_{uuid.uuid4().hex[:8]}__",  # Generate unique prepared statement names
             "server_settings": {
                 "jit": "off",  # Disable JIT compilation
             }

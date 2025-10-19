@@ -181,6 +181,169 @@ async def get_cards(
         raise HTTPException(status_code=500, detail="取得卡牌失敗")
 
 
+async def _draw_cards_impl(
+    count: int = Query(default=1, ge=1, le=10, description="要抽取的卡牌數量"),
+    suit: Optional[WastelandSuit] = Query(None, description="指定花色（僅從此花色抽牌）"),
+    exclude_major_arcana: bool = Query(default=False, description="排除大阿爾克那卡牌"),
+    allow_duplicates: bool = Query(default=False, description="允許多張抽牌中出現重複卡牌"),
+    db: AsyncSession = Depends(get_db)
+) -> List[WastelandCard]:
+    """
+    使用完全客觀的隨機演算法抽取卡牌。
+
+    不受任何使用者數據（業力、派系等）影響，
+    確保每張卡牌被抽到的機率完全相同。
+
+    支援從特定花色抽牌，適用於專門的占卜類型。
+
+    未來可擴展為 POST 端點以記錄抽牌歷史。
+    """
+    try:
+        # Build base query
+        query = select(WastelandCardModel)
+
+        # Apply filters
+        conditions = []
+
+        # Suit filter (inclusion - only cards from this suit)
+        if suit:
+            conditions.append(WastelandCardModel.suit == suit.value)
+
+        # Exclusion filter (cannot use with suit parameter)
+        if exclude_major_arcana:
+            if suit and suit.value == "major_arcana":
+                raise HTTPException(
+                    status_code=422,
+                    detail="無法同時指定 suit=major_arcana 和 exclude_major_arcana=true"
+                )
+            conditions.append(WastelandCardModel.suit != "major_arcana")
+
+        if conditions:
+            query = query.where(and_(*conditions))
+
+        # Get available cards
+        result = await db.execute(query)
+        available_cards = list(result.scalars().all())
+
+        if len(available_cards) < count and not allow_duplicates:
+            raise HTTPException(
+                status_code=422,
+                detail=f"沒有足夠的唯一卡牌。需要：{count}，可用：{len(available_cards)}"
+            )
+
+        # Pure random selection using random.sample (Fisher-Yates internally)
+        if allow_duplicates:
+            # Random choice with replacement
+            selected_cards = random.choices(available_cards, k=count)
+        else:
+            # Random sample without replacement
+            selected_cards = random.sample(available_cards, k=count)
+
+        # Update statistics
+        for card in selected_cards:
+            card.draw_frequency += 1
+            card.total_appearances += 1
+
+        # Commit statistics updates
+        await db.commit()
+
+        # Convert to Pydantic models
+        result_cards = [WastelandCard(**card.to_dict()) for card in selected_cards]
+
+        return result_cards
+
+    except Exception as e:
+        logger.error(f"Error drawing cards: {str(e)}")
+        raise HTTPException(status_code=500, detail="抽取隨機卡牌失敗")
+
+
+# Main endpoint with full path (RESTful resource naming)
+@router.get(
+    "/draws",
+    response_model=List[WastelandCard],
+    summary="抽取隨機卡牌",
+    description="""
+    **從廢土塔羅牌組中抽取隨機卡牌**
+
+    此端點代表「抽牌結果」資源，符合 RESTful 設計原則。
+
+    使用完全客觀的隨機演算法抽取卡牌：
+
+    - **純隨機抽取**：不受任何使用者數據影響
+    - **Fisher-Yates 洗牌**：使用標準演算法確保均勻分布
+    - **花色篩選**：可指定只從特定花色抽取（如 major_arcana、nuka_cola_bottles）
+    - **排除篩選**：可選擇排除大阿爾克那
+    - **多張卡牌**：一次最多抽取 10 張卡牌
+
+    注意：業力、派系等參數僅用於 AI 解牌時的風格調整，
+    不影響卡牌抽取的隨機性。
+
+    **未來擴展計畫**：
+    - POST /api/v1/cards/draws - 創建並記錄抽牌（含用戶問題、session）
+    - GET /api/v1/cards/draws/{id} - 查詢歷史抽牌記錄
+    - GET /api/v1/cards/draws?user_id={id} - 查詢用戶抽牌歷史
+    - DELETE /api/v1/cards/draws/{id} - 刪除抽牌記錄
+    """,
+    response_description="隨機選擇的卡牌清單",
+    responses={
+        200: {
+            "description": "成功抽取卡牌",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "7bc189ee-b2f9-4ed0-85ee-83183e337923",
+                            "name": "可樂瓶六",
+                            "suit": "nuka_cola_bottles",
+                            "number": 6,
+                            "upright_meaning": "情感和諧與滿足",
+                            "radiation_level": 0.5,
+                            "is_major_arcana": False
+                        }
+                    ]
+                }
+            }
+        },
+        422: {"description": "沒有足夠的卡牌可供抽取"},
+        500: {"description": "伺服器內部錯誤"}
+    }
+)
+async def draw_cards_plural(
+    count: int = Query(default=1, ge=1, le=10, description="要抽取的卡牌數量"),
+    suit: Optional[WastelandSuit] = Query(None, description="指定花色（僅從此花色抽牌）"),
+    exclude_major_arcana: bool = Query(default=False, description="排除大阿爾克那卡牌"),
+    allow_duplicates: bool = Query(default=False, description="允許多張抽牌中出現重複卡牌"),
+    db: AsyncSession = Depends(get_db)
+) -> List[WastelandCard]:
+    """RESTful endpoint for drawing cards (plural resource)."""
+    return await _draw_cards_impl(count, suit, exclude_major_arcana, allow_duplicates, db)
+
+
+# Backwards compatibility alias (singular)
+@router.get(
+    "/draw",
+    response_model=List[WastelandCard],
+    summary="抽取隨機卡牌（別名）",
+    description="""
+    **向後相容的別名端點**
+
+    此端點與 `/draws` 完全相同，僅為保持向後相容性而保留。
+    建議新程式碼使用 `/draws` 端點。
+    """,
+    response_description="隨機選擇的卡牌清單",
+    include_in_schema=False  # Hide from Swagger to avoid confusion
+)
+async def draw_cards_singular(
+    count: int = Query(default=1, ge=1, le=10, description="要抽取的卡牌數量"),
+    suit: Optional[WastelandSuit] = Query(None, description="指定花色（僅從此花色抽牌）"),
+    exclude_major_arcana: bool = Query(default=False, description="排除大阿爾克那卡牌"),
+    allow_duplicates: bool = Query(default=False, description="允許多張抽牌中出現重複卡牌"),
+    db: AsyncSession = Depends(get_db)
+) -> List[WastelandCard]:
+    """Backwards compatibility alias for draw_cards."""
+    return await _draw_cards_impl(count, suit, exclude_major_arcana, allow_duplicates, db)
+
+
 @router.get(
     "/{card_id}",
     response_model=WastelandCard,
@@ -212,7 +375,7 @@ async def get_cards(
     }
 )
 async def get_card(
-    card_id: str = Path(..., description="唯一卡牌識別碼", example="wanderer-001"),
+    card_id: str = Path(..., description="唯一卡牌識別碼 (UUID)", example="550e8400-e29b-41d4-a716-446655440000"),
     include_stats: bool = Query(default=True, description="包含使用統計"),
     include_interpretations: bool = Query(default=True, description="包含角色解讀"),
     db: AsyncSession = Depends(get_db)
@@ -224,7 +387,7 @@ async def get_card(
     派系意義和使用統計。
     """
     try:
-        # Query for the specific card
+        # Query for the specific card by UUID
         query = select(WastelandCardModel).where(WastelandCardModel.id == card_id)
         result = await db.execute(query)
         card_data = result.scalar_one_or_none()
@@ -368,126 +531,6 @@ async def advanced_search(
     except Exception as e:
         logger.error(f"Error in advanced search: {str(e)}")
         raise HTTPException(status_code=500, detail="進階搜尋失敗")
-
-
-@router.get(
-    "/random",
-    response_model=List[WastelandCard],
-    summary="抽取隨機卡牌",
-    description="""
-    **從廢土塔羅牌組中抽取隨機卡牌**
-
-    模擬抽取隨機卡牌並受各種影響：
-
-    - **業力影響**：業力對齊影響卡牌選擇概率
-    - **派系偏好**：派系陣營偏移卡牌選擇
-    - **輻射因子**：環境輻射影響隨機性
-    - **排除篩選**：排除大阿爾克那或特定花色
-    - **多張卡牌**：一次最多抽取 10 張卡牌
-
-    使用考慮 Fallout 背景設定和使用者情境的精密隨機化，
-    提供更沉浸式的占卜體驗。
-    """,
-    response_description="隨機選擇的卡牌清單"
-)
-async def get_random_cards(
-    count: int = Query(default=1, ge=1, le=10, description="要抽取的卡牌數量"),
-    exclude_major_arcana: bool = Query(default=False, description="排除大阿爾克那卡牌"),
-    karma_influence: Optional[KarmaAlignment] = Query(None, description="業力對齊影響"),
-    faction_preference: Optional[FactionAlignment] = Query(None, description="派系偏好"),
-    radiation_factor: float = Query(default=0.5, ge=0.0, le=1.0, description="輻射影響（0-1）"),
-    allow_duplicates: bool = Query(default=False, description="允許多張抽牌中出現重複卡牌"),
-    db: AsyncSession = Depends(get_db)
-) -> List[WastelandCard]:
-    """
-    使用廢土影響抽取隨機卡牌。
-
-    實作受業力和派系影響的隨機化，
-    以選擇更符合主題的卡牌。
-    """
-    try:
-        # Check radiation levels
-        if radiation_factor > 0.9:
-            raise RadiationOverloadError(radiation_factor)
-
-        # Build base query
-        query = select(WastelandCardModel)
-
-        # Apply exclusion filters
-        conditions = []
-        if exclude_major_arcana:
-            conditions.append(WastelandCardModel.suit != "major_arcana")
-
-        if conditions:
-            query = query.where(and_(*conditions))
-
-        # Get available cards
-        result = await db.execute(query)
-        available_cards = list(result.scalars().all())
-
-        if len(available_cards) < count and not allow_duplicates:
-            raise HTTPException(
-                status_code=422,
-                detail=f"沒有足夠的唯一卡牌。需要：{count}，可用：{len(available_cards)}"
-            )
-
-        # Apply influences to card weights
-        card_weights = []
-        for card in available_cards:
-            weight = 1.0
-
-            # Karma influence
-            if karma_influence:
-                if hasattr(card, f"{karma_influence.value}_karma_interpretation") and \
-                   getattr(card, f"{karma_influence.value}_karma_interpretation"):
-                    weight *= 1.5
-
-            # Faction influence
-            if faction_preference:
-                faction_field = f"{faction_preference.value}_significance"
-                if hasattr(card, faction_field) and getattr(card, faction_field):
-                    weight *= 1.3
-
-            # Radiation influence (adds randomness)
-            radiation_modifier = 1.0 + (random.random() - 0.5) * radiation_factor
-            weight *= radiation_modifier
-
-            card_weights.append(weight)
-
-        # Select random cards
-        selected_cards = []
-        remaining_cards = list(zip(available_cards, card_weights))
-
-        for _ in range(count):
-            if not remaining_cards:
-                break
-
-            # Weighted random selection
-            cards, weights = zip(*remaining_cards)
-            selected_card = random.choices(cards, weights=weights, k=1)[0]
-            selected_cards.append(selected_card)
-
-            # Update statistics
-            selected_card.draw_frequency += 1
-            selected_card.total_appearances += 1
-
-            # Remove card if no duplicates allowed
-            if not allow_duplicates:
-                remaining_cards = [(c, w) for c, w in remaining_cards if c != selected_card]
-
-        # Commit statistics updates
-        await db.commit()
-
-        # Convert to Pydantic models
-        result_cards = [WastelandCard(**card.to_dict()) for card in selected_cards]
-
-        return result_cards
-
-    except RadiationOverloadError:
-        raise
-    except Exception as e:
-        logger.error(f"Error drawing random cards: {str(e)}")
-        raise HTTPException(status_code=500, detail="抽取隨機卡牌失敗")
 
 
 @router.post(

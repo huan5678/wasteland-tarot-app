@@ -36,7 +36,6 @@ class UserAnalyticsService:
             analytics = UserAnalytics(
                 user_id=user_id,
                 most_drawn_cards=[],
-                card_study_time={},
                 favorited_cards=[],
                 preferred_themes=[],
                 reading_times=[],
@@ -396,15 +395,6 @@ class UserAnalyticsService:
         """Get spread recommendation based on question analysis"""
         engine = RecommendationEngine(self.db)
         return engine.recommend_spread_by_question(user_id, question)
-
-    def get_cards_for_study(
-        self,
-        user_id: str,
-        limit: int = 5
-    ) -> List[Dict[str, Any]]:
-        """Get card recommendations for study"""
-        engine = RecommendationEngine(self.db)
-        return engine.recommend_cards_for_study(user_id, limit)
 
     def get_interpretation_style_recommendation(
         self,

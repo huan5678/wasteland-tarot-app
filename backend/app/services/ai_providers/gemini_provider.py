@@ -135,6 +135,10 @@ class GeminiProvider(AIProvider):
             # Gemini combines system and user prompts
             combined_prompt = f"{system_prompt}\n\n{user_prompt}"
 
+            # Debug logging
+            logger.info(f"Gemini prompt length: {len(combined_prompt)} chars")
+            logger.info(f"Gemini prompt preview: {combined_prompt[:200]}...")
+
             # Configure generation parameters
             generation_config = genai.types.GenerationConfig(
                 max_output_tokens=max_tokens,
@@ -142,16 +146,57 @@ class GeminiProvider(AIProvider):
                 **kwargs
             )
 
-            # Generate content with streaming
-            response = await self.client.generate_content_async(
-                combined_prompt,
-                generation_config=generation_config,
-                stream=True
-            )
+            # Configure safety settings to be more permissive for tarot content
+            safety_settings = {
+                genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+            }
 
-            async for chunk in response:
-                if chunk.text:
-                    yield chunk.text
+            # Try streaming first
+            try:
+                response = await self.client.generate_content_async(
+                    combined_prompt,
+                    generation_config=generation_config,
+                    safety_settings=safety_settings,
+                    stream=True
+                )
+
+                async for chunk in response:
+                    if chunk.text:
+                        yield chunk.text
+
+            except StopAsyncIteration:
+                # Fallback to non-streaming if streaming fails
+                logger.warning("Streaming failed, falling back to non-streaming mode")
+                try:
+                    logger.info("Calling non-streaming API...")
+                    response = await self.client.generate_content_async(
+                        combined_prompt,
+                        generation_config=generation_config,
+                        safety_settings=safety_settings,
+                        stream=False
+                    )
+                    logger.info("Non-streaming API call completed")
+
+                    if response.candidates:
+                        candidate = response.candidates[0]
+                        logger.info(f"Non-streaming finish_reason: {candidate.finish_reason.name if hasattr(candidate.finish_reason, 'name') else candidate.finish_reason}")
+
+                        if candidate.content and candidate.content.parts:
+                            logger.info(f"Non-streaming has {len(candidate.content.parts)} parts")
+                            for part in candidate.content.parts:
+                                if hasattr(part, 'text') and part.text:
+                                    logger.info(f"Yielding part text: {len(part.text)} chars")
+                                    yield part.text
+                        else:
+                            logger.error("No content parts in non-streaming response")
+                    else:
+                        logger.error("No candidates in non-streaming response")
+                except Exception as e:
+                    logger.error(f"Non-streaming also failed: {e}", exc_info=True)
+                    return
 
         except google_exceptions.ResourceExhausted as e:
             logger.error(f"Gemini rate limit exceeded: {e}")

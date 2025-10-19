@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
+from sqlalchemy.orm import selectinload
 import uuid
 import logging
 
@@ -19,6 +20,7 @@ from app.models.reading_enhanced import (
     SpreadTemplate as SpreadTemplateModel
 )
 from app.models.wasteland_card import WastelandCard as WastelandCardModel
+from app.core.faction_voice_mapping import filter_character_voices_by_faction
 from app.schemas.readings import (
     ReadingSession,
     ReadingCreate,
@@ -187,7 +189,7 @@ async def create_reading(
         for position_data, card in zip(spread_positions, drawn_cards):
             # Create card position
             card_position = ReadingCardPositionModel(
-                reading_session_id=reading_id,
+                completed_reading_id=reading_id,
                 card_id=card.id,
                 position_number=position_data.get("number", 1),
                 position_name=position_data.get("name", "Unknown"),
@@ -358,8 +360,10 @@ async def get_readings(
 ) -> ReadingListResponse:
     """取得使用者的占卜歷史記錄，並支援篩選與分頁。"""
     try:
-        # Build query
-        query = select(ReadingSessionModel).where(
+        # Build query with eager loading of spread_template relationship
+        query = select(ReadingSessionModel).options(
+            selectinload(ReadingSessionModel.spread_template)
+        ).where(
             ReadingSessionModel.user_id == current_user.id
         )
 
@@ -419,6 +423,54 @@ async def get_readings(
         readings = []
         for reading in readings_data:
             try:
+                # Get spread template data from loaded relationship or create fallback
+                if reading.spread_template:
+                    spread_template_data = SpreadTemplate(**reading.spread_template.to_dict())
+                else:
+                    # Fallback for readings without spread_template
+                    # Try to find matching template by spread_template_id or card count
+                    fallback_template = None
+
+                    if reading.spread_template_id:
+                        # Try to fetch the template by ID
+                        template_query = select(SpreadTemplateModel).where(
+                            SpreadTemplateModel.id == reading.spread_template_id
+                        )
+                        template_result = await db.execute(template_query)
+                        fallback_template = template_result.scalar_one_or_none()
+
+                    # If not found, try to match by card count
+                    if not fallback_template:
+                        # Count card positions for this reading
+                        card_count_query = select(func.count()).select_from(ReadingCardPositionModel).where(
+                            ReadingCardPositionModel.completed_reading_id == reading.id
+                        )
+                        card_count_result = await db.execute(card_count_query)
+                        actual_card_count = card_count_result.scalar() or 0
+
+                        # Try to find a template with matching card count
+                        if actual_card_count > 0:
+                            matching_template_query = select(SpreadTemplateModel).where(
+                                SpreadTemplateModel.card_count == actual_card_count
+                            ).limit(1)
+                            matching_template_result = await db.execute(matching_template_query)
+                            fallback_template = matching_template_result.scalar_one_or_none()
+
+                    # Use found template or create generic fallback
+                    if fallback_template:
+                        spread_template_data = SpreadTemplate(**fallback_template.to_dict())
+                    else:
+                        spread_template_data = SpreadTemplate(
+                            id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                            name="custom_spread",
+                            display_name="未知牌陣",
+                            description="找不到牌陣模板",
+                            spread_type="custom_spread",
+                            card_count=0,
+                            positions=[],
+                            difficulty_level="beginner"
+                        )
+
                 # Use Pydantic's model_validate with from_attributes=True
                 # This properly converts SQLAlchemy model to Pydantic model
                 reading_dict = {
@@ -427,16 +479,7 @@ async def get_readings(
                     "question": reading.question,
                     "focus_area": reading.focus_area,
                     "context_notes": reading.context_notes,
-                    "spread_template": SpreadTemplate(
-                        id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                        name="placeholder",
-                        display_name="Placeholder Spread",
-                        description="Spread template",
-                        spread_type="vault_tec_spread",
-                        card_count=3,
-                        positions=[],
-                        difficulty_level="beginner"
-                    ),
+                    "spread_template": spread_template_data,
                     "character_voice_used": CharacterVoice(reading.character_voice_used),
                     "karma_context": KarmaAlignment(reading.karma_context),
                     "faction_influence": reading.faction_influence,
@@ -526,6 +569,95 @@ async def get_reading(
         if str(reading.user_id) != str(current_user.id) and reading.privacy_level == "private":
             raise HTTPException(status_code=403, detail="Access denied to private reading")
 
+        # Fetch card positions if requested
+        card_positions_data = []
+        if include_cards:
+            # JOIN WastelandCardModel to get complete card information
+            card_positions_query = (
+                select(ReadingCardPositionModel)
+                .options(selectinload(ReadingCardPositionModel.card))
+                .where(ReadingCardPositionModel.completed_reading_id == reading_id)
+                .order_by(ReadingCardPositionModel.draw_order)
+            )
+
+            card_positions_result = await db.execute(card_positions_query)
+            card_positions = card_positions_result.scalars().all()
+
+            # 獲取當前用戶的陣營，用於過濾角色聲音
+            user_faction = current_user.faction_alignment if hasattr(current_user, 'faction_alignment') else 'independent'
+
+            card_positions_data = []
+            for pos in card_positions:
+                if pos.card:
+                    card_dict = pos.card.to_dict()
+                    # 根據用戶陣營過濾角色聲音解讀
+                    if 'character_voices' in card_dict and card_dict['character_voices']:
+                        card_dict['character_voices'] = filter_character_voices_by_faction(
+                            card_dict['character_voices'],
+                            user_faction
+                        )
+
+                    card_position = CardPosition(
+                        position_number=pos.position_number,
+                        position_name=pos.position_name,
+                        position_meaning=pos.position_meaning,
+                        card_id=str(pos.card_id),  # Convert UUID to string
+                        is_reversed=pos.is_reversed,
+                        draw_order=pos.draw_order,
+                        radiation_influence=pos.radiation_influence,
+                        # Include full card data with filtered character voices
+                        card=WastelandCard(**card_dict),
+                        position_interpretation=pos.position_interpretation,
+                        card_significance=pos.card_significance,
+                        connection_to_question=pos.connection_to_question,
+                        user_resonance=pos.user_resonance,
+                        interpretation_confidence=pos.interpretation_confidence
+                    )
+                else:
+                    card_position = CardPosition(
+                        position_number=pos.position_number,
+                        position_name=pos.position_name,
+                        position_meaning=pos.position_meaning,
+                        card_id=str(pos.card_id),
+                        is_reversed=pos.is_reversed,
+                        draw_order=pos.draw_order,
+                        radiation_influence=pos.radiation_influence,
+                        card=None,
+                        position_interpretation=pos.position_interpretation,
+                        card_significance=pos.card_significance,
+                        connection_to_question=pos.connection_to_question,
+                        user_resonance=pos.user_resonance,
+                        interpretation_confidence=pos.interpretation_confidence
+                    )
+
+                card_positions_data.append(card_position)
+
+        # Fetch spread template
+        spread_template_data = None
+
+        if reading.spread_template_id:
+            spread_query = select(SpreadTemplateModel).where(
+                SpreadTemplateModel.id == reading.spread_template_id
+            )
+            spread_result = await db.execute(spread_query)
+            spread_template = spread_result.scalar_one_or_none()
+
+            if spread_template:
+                spread_template_data = SpreadTemplate(**spread_template.to_dict())
+
+        # Fallback if no spread template found
+        if not spread_template_data:
+            spread_template_data = SpreadTemplate(
+                id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                name="custom_spread",
+                display_name="Unknown Spread",
+                description="Spread template not found",
+                spread_type="custom_spread",
+                card_count=0,
+                positions=[],
+                difficulty_level="beginner"
+            )
+
         # Convert to response model properly
         reading_dict = {
             "id": str(reading.id),
@@ -533,25 +665,20 @@ async def get_reading(
             "question": reading.question,
             "focus_area": reading.focus_area,
             "context_notes": reading.context_notes,
-            "spread_template": SpreadTemplate(
-                id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                name="placeholder",
-                display_name="Placeholder Spread",
-                description="Spread template",
-                spread_type="vault_tec_spread",
-                card_count=3,
-                positions=[],
-                difficulty_level="beginner"
-            ),
+            "spread_template": spread_template_data,
             "character_voice_used": CharacterVoice(reading.character_voice_used),
             "karma_context": KarmaAlignment(reading.karma_context),
             "faction_influence": reading.faction_influence,
             "radiation_factor": reading.radiation_factor,
-            "card_positions": [],  # TODO: Fetch card positions
+            "card_positions": card_positions_data,
             "overall_interpretation": reading.overall_interpretation,
             "summary_message": reading.summary_message,
             "prediction_confidence": reading.prediction_confidence,
             "energy_reading": reading.energy_reading,
+            # AI Interpretation Tracking
+            "ai_interpretation_requested": reading.ai_interpretation_requested,
+            "ai_interpretation_at": reading.ai_interpretation_at,
+            "ai_interpretation_provider": reading.ai_interpretation_provider,
             "session_duration": reading.session_duration,
             "start_time": reading.start_time,
             "end_time": reading.end_time,
@@ -574,6 +701,278 @@ async def get_reading(
     except Exception as e:
         logger.error(f"Error retrieving reading {reading_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve reading")
+
+
+@router.patch(
+    "/{reading_id}",
+    response_model=ReadingSession,
+    summary="更新占卜記錄",
+    description="""
+    **更新特定占卜記錄的資訊**
+
+    可更新的欄位：
+    - 隱私設定（privacy_level, allow_public_sharing）
+    - 使用者回饋（user_satisfaction, accuracy_rating, helpful_rating, user_feedback）
+    - AI 解讀結果（overall_interpretation, summary_message, prediction_confidence）
+    - 最愛標記（is_favorite）
+    - 心情狀態（mood_after）
+
+    **重要限制：AI 解讀只能請求一次**
+    - 當 ai_interpretation_requested 為 True 時，無法再次更新 AI 解讀欄位
+    - 首次儲存 AI 解讀時會自動設定 ai_interpretation_requested = True
+
+    適用於：
+    - 儲存 AI 生成的解讀結果
+    - 更新使用者回饋與評分
+    - 修改隱私設定
+    - 標記最愛占卜
+    """,
+    responses={
+        200: {"description": "占卜記錄已成功更新"},
+        403: {"description": "無權更新此占卜記錄或 AI 解讀已使用"},
+        404: {"description": "找不到占卜記錄"},
+        422: {"description": "無效的更新資料"},
+        500: {"description": "更新失敗"}
+    }
+)
+async def update_reading(
+    reading_id: str = Path(..., description="占卜會話 ID"),
+    update_data: ReadingUpdate = Body(..., description="要更新的欄位"),
+    db: AsyncSession = Depends(get_db),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """更新占卜記錄，包含 AI 解讀功能的一次性限制。"""
+    try:
+        # Get reading session
+        query = select(ReadingSessionModel).where(ReadingSessionModel.id == reading_id)
+        result = await db.execute(query)
+        reading = result.scalar_one_or_none()
+
+        if not reading:
+            raise ReadingNotFoundError(reading_id)
+
+        # Check if user has permission to update
+        if str(reading.user_id) != str(current_user.id):
+            raise HTTPException(
+                status_code=403,
+                detail="You don't have permission to update this reading"
+            )
+
+        # Check AI interpretation one-time limit
+        is_updating_ai_interpretation = any([
+            update_data.overall_interpretation is not None,
+            update_data.summary_message is not None,
+            update_data.prediction_confidence is not None,
+            update_data.ai_interpretation_requested is not None
+        ])
+
+        if is_updating_ai_interpretation and reading.ai_interpretation_requested:
+            raise HTTPException(
+                status_code=403,
+                detail="AI interpretation has already been requested for this reading. Cannot update AI interpretation fields."
+            )
+
+        # Update fields (only update provided fields)
+        update_dict = update_data.model_dump(exclude_unset=True)
+
+        for field, value in update_dict.items():
+            if hasattr(reading, field):
+                setattr(reading, field, value)
+
+        # If updating AI interpretation, mark as requested and set timestamp + provider
+        if is_updating_ai_interpretation and not reading.ai_interpretation_requested:
+            reading.ai_interpretation_requested = True
+            reading.ai_interpretation_at = datetime.now()
+
+            # Save AI provider information if provided
+            if update_data.ai_interpretation_provider:
+                reading.ai_interpretation_provider = update_data.ai_interpretation_provider
+            else:
+                # Default to openai if not specified
+                reading.ai_interpretation_provider = "openai"
+
+        await db.commit()
+        await db.refresh(reading)
+
+        # Fetch full reading with relationships to return complete ReadingSession
+        # (Reuse the logic from get_reading endpoint)
+
+        # Fetch card positions
+        card_positions_query = (
+            select(ReadingCardPositionModel)
+            .options(selectinload(ReadingCardPositionModel.card))
+            .where(ReadingCardPositionModel.completed_reading_id == reading_id)
+            .order_by(ReadingCardPositionModel.draw_order)
+        )
+        card_positions_result = await db.execute(card_positions_query)
+        card_positions = card_positions_result.scalars().all()
+
+        card_positions_data = [
+            CardPosition(
+                position_number=pos.position_number,
+                position_name=pos.position_name,
+                position_meaning=pos.position_meaning,
+                card_id=str(pos.card_id),  # Convert UUID to string
+                is_reversed=pos.is_reversed,
+                draw_order=pos.draw_order,
+                radiation_influence=pos.radiation_influence,
+                # Include full card data
+                card=WastelandCard(**pos.card.to_dict()) if pos.card else None,
+                position_interpretation=pos.position_interpretation,
+                card_significance=pos.card_significance,
+                connection_to_question=pos.connection_to_question,
+                user_resonance=pos.user_resonance,
+                interpretation_confidence=pos.interpretation_confidence
+            ) for pos in card_positions
+        ]
+
+        # Fetch spread template
+        spread_template_data = None
+
+        if reading.spread_template_id:
+            spread_query = select(SpreadTemplateModel).where(
+                SpreadTemplateModel.id == reading.spread_template_id
+            )
+            spread_result = await db.execute(spread_query)
+            spread_template = spread_result.scalar_one_or_none()
+
+            if spread_template:
+                spread_template_data = SpreadTemplate(**spread_template.to_dict())
+
+        # Fallback if no spread template found
+        if not spread_template_data:
+            spread_template_data = SpreadTemplate(
+                id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                name="custom_spread",
+                display_name="Unknown Spread",
+                description="Spread template not found",
+                spread_type="custom_spread",
+                card_count=0,
+                positions=[],
+                difficulty_level="beginner"
+            )
+
+        # Convert to response model
+        reading_dict = {
+            "id": str(reading.id),
+            "user_id": str(reading.user_id),
+            "question": reading.question,
+            "focus_area": reading.focus_area,
+            "context_notes": reading.context_notes,
+            "spread_template": spread_template_data,
+            "character_voice_used": CharacterVoice(reading.character_voice_used),
+            "karma_context": KarmaAlignment(reading.karma_context),
+            "faction_influence": reading.faction_influence,
+            "radiation_factor": reading.radiation_factor,
+            "card_positions": card_positions_data,
+            "overall_interpretation": reading.overall_interpretation,
+            "summary_message": reading.summary_message,
+            "prediction_confidence": reading.prediction_confidence,
+            "energy_reading": reading.energy_reading,
+            # AI Interpretation Tracking
+            "ai_interpretation_requested": reading.ai_interpretation_requested,
+            "ai_interpretation_at": reading.ai_interpretation_at,
+            "ai_interpretation_provider": reading.ai_interpretation_provider,
+            "session_duration": reading.session_duration,
+            "start_time": reading.start_time,
+            "end_time": reading.end_time,
+            "privacy_level": PrivacyLevel(reading.privacy_level) if reading.privacy_level else PrivacyLevel.PRIVATE,
+            "allow_public_sharing": reading.allow_public_sharing,
+            "is_favorite": reading.is_favorite,
+            "user_satisfaction": reading.user_satisfaction,
+            "accuracy_rating": reading.accuracy_rating,
+            "helpful_rating": reading.helpful_rating,
+            "likes_count": reading.likes_count,
+            "shares_count": reading.shares_count,
+            "comments_count": reading.comments_count,
+            "created_at": reading.created_at,
+            "updated_at": reading.updated_at
+        }
+
+        logger.info(f"Updated reading {reading_id} for user {current_user.id}")
+        return ReadingSession(**reading_dict)
+
+    except ReadingNotFoundError:
+        raise
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating reading {reading_id}: {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to update reading")
+
+
+@router.delete(
+    "/{reading_id}",
+    status_code=204,
+    summary="刪除占卜記錄",
+    description="""
+    **刪除特定的占卜會話記錄**
+
+    永久刪除占卜記錄，包含：
+    - 占卜會話資料
+    - 所有關聯的卡牌位置
+    - 解讀與筆記
+
+    注意：此操作無法復原
+
+    適用於：
+    - 移除不需要的占卜記錄
+    - 清理個人歷史記錄
+    - 資料管理
+    """,
+    responses={
+        204: {"description": "占卜記錄已成功刪除"},
+        403: {"description": "無權刪除此占卜記錄"},
+        404: {"description": "找不到占卜記錄"},
+        500: {"description": "刪除失敗"}
+    }
+)
+async def delete_reading(
+    reading_id: str = Path(..., description="占卜會話 ID"),
+    db: AsyncSession = Depends(get_db),
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """刪除特定的占卜記錄。"""
+    try:
+        # Get reading session
+        query = select(ReadingSessionModel).where(ReadingSessionModel.id == reading_id)
+        result = await db.execute(query)
+        reading = result.scalar_one_or_none()
+
+        if not reading:
+            raise ReadingNotFoundError(reading_id)
+
+        # Check if user has permission to delete
+        if str(reading.user_id) != str(current_user.id):
+            raise HTTPException(status_code=403, detail="You don't have permission to delete this reading")
+
+        # Delete associated card positions first (due to foreign key constraints)
+        delete_positions_query = select(ReadingCardPositionModel).where(
+            ReadingCardPositionModel.completed_reading_id == reading_id
+        )
+        positions_result = await db.execute(delete_positions_query)
+        positions = positions_result.scalars().all()
+
+        for position in positions:
+            await db.delete(position)
+
+        # Delete the reading session
+        await db.delete(reading)
+        await db.commit()
+
+        logger.info(f"Deleted reading {reading_id} for user {current_user.id}")
+        # Return 204 No Content (FastAPI automatically returns empty response for 204)
+        return
+
+    except ReadingNotFoundError:
+        raise
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting reading {reading_id}: {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete reading")
 
 
 @router.post(
@@ -809,7 +1208,7 @@ async def search_readings(
             # Count cards
             cards_result = await db.execute(
                 select(func.count()).select_from(ReadingCardPositionModel).where(
-                    ReadingCardPositionModel.reading_session_id == reading.id
+                    ReadingCardPositionModel.completed_reading_id == reading.id
                 )
             )
             cards_count = cards_result.scalar() or 0

@@ -84,6 +84,7 @@ export const PixelIcon: React.FC<PixelIconProps> = ({
   onMouseEnter,
   onMouseLeave,
   remixVariant = 'line',
+  ...rest
 }) => {
   /**
    * 無障礙屬性
@@ -148,6 +149,7 @@ export const PixelIcon: React.FC<PixelIconProps> = ({
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
       {...a11yProps}
+      {...rest}
     />
   );
 };

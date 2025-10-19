@@ -11,11 +11,14 @@ import { GlobalErrorDisplay } from "@/components/common/GlobalErrorDisplay";
 import { ClientLayout } from '@/components/layout/ClientLayout';
 import { MetricsInitializer } from '@/components/system/MetricsInitializer';
 import { AudioInitializer } from '@/components/system/AudioInitializer';
+import { ActivityTrackerInitializer } from '@/components/system/ActivityTrackerInitializer';
+import { LoyaltyRewardInitializer } from '@/components/system/LoyaltyRewardInitializer';
 import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
 import { MusicPlayerInitializer } from '@/components/system/MusicPlayerInitializer';
 import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
 import { FontLoadMonitor } from '@/components/system/FontLoadMonitor';
 import { DailyCardBackProvider } from '@/components/providers/DailyCardBackProvider';
+import { NotificationProvider } from '@/components/providers/NotificationProvider';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
@@ -72,11 +75,18 @@ export default function RootLayout({
             <AnalyticsProvider>
               <MetricsInitializer />
               <AudioInitializer />
+              {/* ActivityTrackerInitializer: 自動追蹤使用者活躍度，累積 30 分鐘後延長 token */}
+              <ActivityTrackerInitializer />
               {/* FontLoadMonitor: 開發環境字體載入監控 */}
               <FontLoadMonitor />
-              {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
-              {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
-              <TiltConfigProvider>
+              {/* NotificationProvider: 全域通知系統（忠誠度獎勵等） */}
+              <NotificationProvider>
+                {/* LoyaltyRewardInitializer: 每日登入忠誠度檢查與獎勵通知 */}
+                {/* 必須在 NotificationProvider 內部才能使用 useNotification hook */}
+                <LoyaltyRewardInitializer />
+                {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
+                {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
+                <TiltConfigProvider>
                 {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
                 <DailyCardBackProvider>
                   <GlobalErrorDisplay />
@@ -93,6 +103,7 @@ export default function RootLayout({
                   <MusicPlayerDrawer />
                 </DailyCardBackProvider>
               </TiltConfigProvider>
+              </NotificationProvider>
             </AnalyticsProvider>
           </ZustandAuthInitializer>
         </ErrorBoundary>

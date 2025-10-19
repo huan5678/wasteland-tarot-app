@@ -15,6 +15,8 @@ import {
 export function Header() {
   const user = useAuthStore(s => s.user)
   const logout = useAuthStore(s => s.logout)
+  const startTokenExpiryMonitor = useAuthStore(s => s.startTokenExpiryMonitor)
+  const stopTokenExpiryMonitor = useAuthStore(s => s.stopTokenExpiryMonitor)
   const router = useRouter()
   const pathname = usePathname()
   const [currentTime, setCurrentTime] = useState<string>('')
@@ -38,6 +40,22 @@ export function Header() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // 啟動 Token 過期監控（僅在已登入時）
+  useEffect(() => {
+    if (user) {
+      // 使用者已登入，啟動監控
+      startTokenExpiryMonitor()
+    } else {
+      // 使用者未登入，停止監控
+      stopTokenExpiryMonitor()
+    }
+
+    // Cleanup: 元件卸載時停止監控
+    return () => {
+      stopTokenExpiryMonitor()
+    }
+  }, [user, startTokenExpiryMonitor, stopTokenExpiryMonitor])
 
   const handleLogout = () => {
     logout()
@@ -66,6 +84,7 @@ export function Header() {
         { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館', badge: false },
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
         { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案', badge: false },
+        ...(user.is_admin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台', badge: false }] : []),
       ]
     : [
         { href: '/auth', label: '啟動終端機', icon: 'door-open', ariaLabel: '啟動終端機', badge: false },
@@ -89,7 +108,7 @@ export function Header() {
             {user && (
               <>
                 <span className="hidden sm:inline">|</span>
-                <span className="truncate max-w-[100px] sm:max-w-none">Vault Dweller：{user.username}</span>
+                <span className="truncate max-w-[100px] sm:max-w-none">Vault Dweller：{user.name}</span>
               </>
             )}
           </div>

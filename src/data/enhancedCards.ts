@@ -164,25 +164,29 @@ export function enhanceCardWithWastelandData(basicCard: any): DetailedTarotCard 
       ...enhanced,
       ...basicCard,
       position: basicCard.position,
-      // Prefer enhanced data but fallback to basic
-      upright_meaning: enhanced.upright_meaning || basicCard.meaning_upright,
-      reversed_meaning: enhanced.reversed_meaning || basicCard.meaning_reversed,
+      // Prefer enhanced data but fallback to basic (支援新舊欄位名稱)
+      upright_meaning: enhanced.upright_meaning || basicCard.upright_meaning || basicCard.meaning_upright || '未知含義',
+      reversed_meaning: enhanced.reversed_meaning || basicCard.reversed_meaning || basicCard.meaning_reversed || '未知含義',
     }
   }
 
   // Fallback: create enhanced version from basic card
+  // 支援新舊兩種欄位命名
+  const uprightMeaning = basicCard.upright_meaning || basicCard.meaning_upright || '未知含義'
+  const reversedMeaning = basicCard.reversed_meaning || basicCard.meaning_reversed || '未知含義'
+
   return {
     ...basicCard,
     id: basicCard.id.toString(),
     image_url: basicCard.image_url || '/cards/placeholder.png',
-    upright_meaning: basicCard.meaning_upright,
-    reversed_meaning: basicCard.meaning_reversed,
-    description: `${basicCard.name}是${basicCard.suit}中的重要卡牌，在廢土世界中具有特殊意義。`,
-    symbolism: `${basicCard.name}象徵著${basicCard.meaning_upright}的深層含義，在廢土的嚴酷環境中指引著生存者的道路。`,
+    upright_meaning: uprightMeaning,
+    reversed_meaning: reversedMeaning,
+    description: `${basicCard.name || '未知卡牌'}是${basicCard.suit || '未知花色'}中的重要卡牌，在廢土世界中具有特殊意義。`,
+    symbolism: `${basicCard.name || '未知卡牌'}象徵著${uprightMeaning}的深層含義，在廢土的嚴酷環境中指引著生存者的道路。`,
     element: getElementFromSuit(basicCard.suit),
     radiation_factor: Math.random() * 0.8,
     karma_alignment: 'NEUTRAL' as const,
-    fallout_reference: `這張卡牌在廢土世界中代表著${basicCard.meaning_upright}的重要性。`,
+    fallout_reference: `這張卡牌在廢土世界中代表著${uprightMeaning}的重要性。`,
     character_voice_interpretations: generateCharacterVoices(basicCard)
   }
 }
@@ -198,13 +202,19 @@ function getElementFromSuit(suit: string): string {
 }
 
 function generateCharacterVoices(card: any): { [voice: string]: string } {
-  const meaning = card.position === 'upright' ? card.meaning_upright : card.meaning_reversed
+  // 支援新舊兩種欄位命名，並提供預設值
+  const meaning = card.position === 'upright'
+    ? (card.upright_meaning || card.meaning_upright || '未知含義')
+    : (card.reversed_meaning || card.meaning_reversed || '未知含義')
+
+  const cardName = card.name || '未知卡牌'
+  const cardSuit = card.suit || '未知花色'
 
   return {
-    'PIP_BOY': `檢測到塔羅卡牌：${card.name}。分析結果：${meaning}。建議依據此指導行動。`,
-    'GHOUL': `${card.name}，啊？這張破舊的卡片說的是${meaning}。在這廢土上，這倒是有些道理。`,
-    'SUPER_MUTANT': `${card.name.toUpperCase()}！這張紙片說${meaning.toUpperCase()}！小人類相信紙片！`,
-    'RAIDER': `${card.name}？聽起來像是廢話，但如果說的是${meaning}，那可能有些用處。`,
-    'BROTHERHOOD_SCRIBE': `記錄：${card.name}，${card.suit}。解釋：${meaning}。建議整合到戰術分析中。`
+    'PIP_BOY': `檢測到塔羅卡牌：${cardName}。分析結果：${meaning}。建議依據此指導行動。`,
+    'GHOUL': `${cardName}，啊？這張破舊的卡片說的是${meaning}。在這廢土上，這倒是有些道理。`,
+    'SUPER_MUTANT': `${cardName.toUpperCase()}！這張紙片說${meaning.substring(0, 50).toUpperCase()}！小人類相信紙片！`,
+    'RAIDER': `${cardName}？聽起來像是廢話，但如果說的是${meaning}，那可能有些用處。`,
+    'BROTHERHOOD_SCRIBE': `記錄：${cardName}，${cardSuit}。解釋：${meaning}。建議整合到戰術分析中。`
   }
 }

@@ -26,6 +26,14 @@ export interface ReadingSession {
   updated_at: string
   last_accessed_at?: string
 
+  // AI Interpretation (NEW)
+  overall_interpretation?: string
+  summary_message?: string
+  prediction_confidence?: number
+  ai_interpretation_requested?: boolean
+  ai_interpretation_at?: string
+  ai_interpretation_provider?: string
+
   // Sync state (client-side only)
   _offline?: boolean
   _pending_sync?: boolean
@@ -59,10 +67,12 @@ export interface SessionState {
 export interface CardDraw {
   card_id: string
   card_name: string
-  position: number
-  position_meaning: string
-  orientation: 'upright' | 'reversed'
+  suit: string
+  position: 'upright' | 'reversed'  // Card orientation (upright/reversed)
   drawn_at: string
+  // Position metadata (牌位資訊)
+  positionName?: string      // e.g., "過去", "現在", "未來"
+  positionMeaning?: string   // e.g., "過去的影響與根源"
 }
 
 /**

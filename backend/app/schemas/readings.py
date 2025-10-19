@@ -46,6 +46,9 @@ class CardPosition(BaseModel):
     draw_order: int = Field(..., description="卡牌抽取順序")
     radiation_influence: float = Field(default=0.0, ge=0.0, le=1.0, description="輻射對此卡牌的影響")
 
+    # Complete card data (included when fetching reading details)
+    card: Optional[WastelandCard] = Field(None, description="完整的卡牌資訊（僅在詳情頁包含）")
+
     # Interpretation for this position
     position_interpretation: Optional[str] = Field(None, description="此牌位的專屬解讀")
     card_significance: Optional[str] = Field(None, description="此卡牌在此牌位的重要性")
@@ -178,6 +181,11 @@ class ReadingSession(BaseModel):
     prediction_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="預測的信心度")
     energy_reading: Optional[Dict[str, Any]] = Field(None, description="情緒/能量分析")
 
+    # AI Interpretation Tracking
+    ai_interpretation_requested: Optional[bool] = Field(None, description="是否已請求 AI 解讀")
+    ai_interpretation_at: Optional[datetime] = Field(None, description="AI 解讀請求時間")
+    ai_interpretation_provider: Optional[str] = Field(None, description="AI 服務提供者")
+
     # Session metadata
     session_duration: Optional[int] = Field(None, description="會話持續時間（秒）")
     start_time: Optional[datetime] = Field(None, description="占卜開始時間")
@@ -247,6 +255,14 @@ class ReadingUpdate(BaseModel):
     helpful_rating: Optional[int] = Field(None, ge=1, le=5)
     user_feedback: Optional[str] = Field(None, max_length=1000)
     mood_after: Optional[str] = None
+
+    # AI Interpretation fields
+    overall_interpretation: Optional[str] = Field(None, description="AI 生成的整體解讀")
+    summary_message: Optional[str] = Field(None, description="AI 生成的摘要訊息")
+    prediction_confidence: Optional[float] = Field(None, ge=0.0, le=1.0, description="預測信心度")
+    ai_interpretation_requested: Optional[bool] = Field(None, description="是否已請求 AI 解讀")
+    ai_interpretation_at: Optional[datetime] = Field(None, description="AI 解讀請求時間")
+    ai_interpretation_provider: Optional[str] = Field(None, description="AI 服務提供者")
 
 
 class ReadingListParams(BaseModel):

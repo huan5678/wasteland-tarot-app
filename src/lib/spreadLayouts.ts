@@ -153,6 +153,103 @@ export function generateResponsivePositions(
 }
 
 // Basic predefined layouts (normalized coordinates 0..1)
+// Position meanings for each spread type
+export const spreadPositionMeanings: Record<string, Array<{ name: string; meaning: string }>> = {
+  single_wasteland: [
+    { name: '核心', meaning: '今日的生存建議與核心指引' }
+  ],
+  vault_tec_spread: [
+    { name: '過去', meaning: '過去的影響與根源' },
+    { name: '現在', meaning: '當前的情況與挑戰' },
+    { name: '未來', meaning: '未來的發展與可能性' }
+  ],
+  wasteland_survival: [
+    { name: '自己', meaning: '你在這個情境中的位置' },
+    { name: '威脅', meaning: '面臨的挑戰與危機' },
+    { name: '資源', meaning: '可用的工具與機會' },
+    { name: '同盟', meaning: '支持與協助' },
+    { name: '結果', meaning: '最終的發展方向' }
+  ],
+  brotherhood_council: [
+    { name: '戰略', meaning: '整體策略方向' },
+    { name: '科技', meaning: '知識與技術面向' },
+    { name: '情報', meaning: '資訊與洞察' },
+    { name: '資源', meaning: '可用資源狀況' },
+    { name: '核心', meaning: '核心議題與焦點' },
+    { name: '防禦', meaning: '保護與防範措施' },
+    { name: '結論', meaning: '最終建議與方向' }
+  ],
+  raider_chaos: [
+    { name: '混亂', meaning: '不確定與變數' },
+    { name: '機會', meaning: '可能的突破口' },
+    { name: '生存', meaning: '生存的關鍵要素' },
+    { name: '未知', meaning: '意外的轉折' }
+  ],
+  ncr_strategic: [
+    { name: '形勢', meaning: '當前局勢分析' },
+    { name: '民意', meaning: '外部觀點與反饋' },
+    { name: '資源', meaning: '可動用的力量' },
+    { name: '戰略', meaning: '行動方案' },
+    { name: '長期', meaning: '長遠影響' },
+    { name: '共和', meaning: '共同利益與結果' }
+  ],
+  // Aliases
+  single_wasteland_reading: [
+    { name: '核心', meaning: '今日的生存建議與核心指引' }
+  ],
+  raider_chaos_spread: [
+    { name: '混亂', meaning: '不確定與變數' },
+    { name: '機會', meaning: '可能的突破口' },
+    { name: '生存', meaning: '生存的關鍵要素' },
+    { name: '未知', meaning: '意外的轉折' }
+  ],
+  ncr_strategic_spread: [
+    { name: '形勢', meaning: '當前局勢分析' },
+    { name: '民意', meaning: '外部觀點與反饋' },
+    { name: '資源', meaning: '可動用的力量' },
+    { name: '戰略', meaning: '行動方案' },
+    { name: '長期', meaning: '長遠影響' },
+    { name: '共和', meaning: '共同利益與結果' }
+  ],
+  wasteland_survival_spread: [
+    { name: '自己', meaning: '你在這個情境中的位置' },
+    { name: '威脅', meaning: '面臨的挑戰與危機' },
+    { name: '資源', meaning: '可用的工具與機會' },
+    { name: '同盟', meaning: '支持與協助' },
+    { name: '結果', meaning: '最終的發展方向' }
+  ],
+  brotherhood_council_spread: [
+    { name: '戰略', meaning: '整體策略方向' },
+    { name: '科技', meaning: '知識與技術面向' },
+    { name: '情報', meaning: '資訊與洞察' },
+    { name: '資源', meaning: '可用資源狀況' },
+    { name: '核心', meaning: '核心議題與焦點' },
+    { name: '防禦', meaning: '保護與防範措施' },
+    { name: '結論', meaning: '最終建議與方向' }
+  ],
+  celtic_cross: [
+    { name: '現況', meaning: '當前情況' },
+    { name: '挑戰', meaning: '面臨的阻礙' },
+    { name: '過去', meaning: '過往影響' },
+    { name: '未來', meaning: '即將發生' },
+    { name: '顯意識', meaning: '意識層面' },
+    { name: '潛意識', meaning: '潛在因素' },
+    { name: '自我', meaning: '自我認知' },
+    { name: '環境', meaning: '外部環境' },
+    { name: '盼望/恐懼', meaning: '內心期待與擔憂' },
+    { name: '最終結果', meaning: '最終發展' }
+  ],
+  horseshoe: [
+    { name: '過去', meaning: '過往影響' },
+    { name: '現在', meaning: '當前狀況' },
+    { name: '未來', meaning: '未來發展' },
+    { name: '建議', meaning: '行動建議' },
+    { name: '外在影響', meaning: '外部因素' },
+    { name: '希望與恐懼', meaning: '內心期待與擔憂' },
+    { name: '結果', meaning: '最終結果' }
+  ]
+}
+
 export const defaultLayouts: Record<string, SpreadPosition[]> = {
   single_wasteland: [
     { id: 'pos1', label: '核心', x: 0.5, y: 0.5, scale: 1.1, zIndex: 10, animationDelay: 0 }

@@ -461,3 +461,39 @@ class CounterError(WastelandTarotException):
             message=message,
             error_code="COUNTER_ERROR"
         )
+
+
+# Token Extension 例外
+
+class TokenExtensionError(WastelandTarotException):
+    """當 Token 延長操作失敗時拋出"""
+
+    def __init__(self, message: str = "Token 延長失敗"):
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message=message,
+            error_code="TOKEN_EXTENSION_ERROR"
+        )
+
+
+class MaxLifetimeExceededError(WastelandTarotException):
+    """當 Token 已達最大生命週期（7天）時拋出"""
+
+    def __init__(self, message: str = None):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            message=message or "Token 已達最大生命週期（7天），請重新登入",
+            error_code="MAX_LIFETIME_EXCEEDED"
+        )
+
+
+class RateLimitExceededError(WastelandTarotException):
+    """當 Token 延長次數超過速率限制時拋出"""
+
+    def __init__(self, message: str = None, limit: int = 10, period: str = "24小時"):
+        super().__init__(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            message=message or f"Token 延長次數已達上限（{period}內最多 {limit} 次）",
+            error_code="RATE_LIMIT_EXCEEDED",
+            details={"limit": limit, "period": period}
+        )

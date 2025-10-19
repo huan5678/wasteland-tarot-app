@@ -163,36 +163,6 @@ class RecommendationEngine:
 
     # ==================== Card Recommendations ====================
 
-    def recommend_cards_for_study(
-        self,
-        user_id: str,
-        limit: int = 5
-    ) -> List[Dict[str, Any]]:
-        """Recommend cards for user to study"""
-        analytics = self.db.query(UserAnalytics).filter(
-            UserAnalytics.user_id == user_id
-        ).first()
-
-        if not analytics:
-            return []
-
-        recommendations = []
-
-        # Recommend cards that appear frequently but user hasn't studied
-        most_drawn = analytics.most_drawn_cards or []
-        card_study_time = analytics.card_study_time or {}
-
-        for card_id in most_drawn[:limit]:
-            study_time = card_study_time.get(card_id, 0)
-            if study_time < 60:  # Less than 1 minute studied
-                recommendations.append({
-                    "card_id": card_id,
-                    "reason": "You draw this card often but haven't studied it much",
-                    "confidence": 0.85
-                })
-
-        return recommendations
-
     def recommend_cards_for_exploration(
         self,
         user_id: str,
@@ -362,15 +332,6 @@ class RecommendationEngine:
             all_recommendations.append({
                 "type": "spread",
                 "data": spread_time,
-                "priority": 2
-            })
-
-        # Card study recommendations
-        study_cards = self.recommend_cards_for_study(user_id, limit=3)
-        for rec in study_cards:
-            all_recommendations.append({
-                "type": "card_study",
-                "data": rec,
                 "priority": 2
             })
 

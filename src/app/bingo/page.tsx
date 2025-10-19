@@ -97,7 +97,7 @@ export default function BingoPage() {
             </p>
             {user && (
               <p className="text-gray-400 text-sm mt-2">
-                歡迎回來, <span className="text-amber-400">{user.username}</span>
+                歡迎回來, <span className="text-amber-400">{user.name}</span>
               </p>
             )}
           </motion.div>

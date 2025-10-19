@@ -299,6 +299,11 @@ class CompletedReading(BaseModel):
     shares_count = Column(Integer, default=0)
     comments_count = Column(Integer, default=0)
 
+    # AI Interpretation Tracking
+    ai_interpretation_requested = Column(Boolean, default=False, nullable=False)
+    ai_interpretation_at = Column(DateTime(timezone=True), nullable=True)
+    ai_interpretation_provider = Column(String(50), nullable=True)  # "openai", "anthropic", etc.
+
     # Relationships
     user = relationship("User", back_populates="readings")
     spread_template = relationship("SpreadTemplate")

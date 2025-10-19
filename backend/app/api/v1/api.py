@@ -7,6 +7,7 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth,
+    users,
     cards,
     readings,
     readings_stream,
@@ -21,6 +22,11 @@ from app.api.v1.endpoints import (
     music,
     playlists,
     ai,
+    characters,
+    factions,
+    card_interpretations,
+    audio,
+    test_ai,
 )
 from app.api import oauth
 
@@ -32,6 +38,12 @@ api_router = APIRouter()
 api_router.include_router(
     auth.router,
     tags=["🔐 認證"]
+)
+
+# User profile endpoints
+api_router.include_router(
+    users.router,
+    tags=["👤 用戶資料"]
 )
 
 api_router.include_router(
@@ -62,6 +74,25 @@ api_router.include_router(
     voices.router,
     prefix="/voices",
     tags=["🎭 Character Voices"]
+)
+
+# Character Voice System Management (Normalized)
+api_router.include_router(
+    characters.router,
+    prefix="/characters",
+    tags=["🎭 角色管理"]
+)
+
+api_router.include_router(
+    factions.router,
+    prefix="/factions",
+    tags=["🏰 陣營管理"]
+)
+
+api_router.include_router(
+    card_interpretations.router,
+    prefix="/interpretations",
+    tags=["📝 卡牌解讀管理"]
 )
 
 api_router.include_router(
@@ -117,6 +148,20 @@ api_router.include_router(
     ai.router,
     prefix="/ai",
     tags=["🤖 AI Music Generation"]
+)
+
+# Audio/TTS endpoints
+api_router.include_router(
+    audio.router,
+    prefix="/audio",
+    tags=["🔊 TTS Audio"]
+)
+
+# Test AI Interpretation endpoints
+api_router.include_router(
+    test_ai.router,
+    prefix="/test-ai",
+    tags=["🧪 AI Testing"]
 )
 
 api_router.include_router(

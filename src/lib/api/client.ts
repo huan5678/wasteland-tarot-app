@@ -63,7 +63,15 @@ export class ApiClient {
   private defaultHeaders: HeadersInit
 
   constructor(config: ApiClientConfig = {}) {
-    this.baseURL = config.baseURL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+    // CRITICAL: Use empty string in browser to route through Next.js API proxy
+    // This ensures cookies are properly set and CORS is handled
+    // Only use direct backend URL in server-side (SSR) context
+    const isBrowser = typeof window !== 'undefined'
+    const defaultBaseURL = isBrowser
+      ? '' // Browser: use relative path → Next.js proxy at /api/v1/[...path]
+      : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000' // SSR: direct backend
+
+    this.baseURL = config.baseURL !== undefined ? config.baseURL : defaultBaseURL
     this.defaultTimeout = config.timeout || 30000 // 30 seconds
     this.defaultRetries = config.retries || 3
     this.defaultRetryDelay = config.retryDelay || 500

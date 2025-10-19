@@ -6,6 +6,7 @@
 import type { CharacterVoice, SpeechOptions, VoiceConfig } from './types';
 import { DEFAULT_VOICE_CONFIGS } from './constants';
 import { logger } from '../logger';
+import { getVoiceSelector, VoiceSelector } from './VoiceSelector';
 
 export class SpeechEngine {
   private static instance: SpeechEngine;
@@ -14,9 +15,11 @@ export class SpeechEngine {
   private voiceConfigs: Map<CharacterVoice, VoiceConfig> = new Map();
   private isSupported: boolean = false;
   private availableVoices: SpeechSynthesisVoice[] = [];
+  private voiceSelector: VoiceSelector;
 
   private constructor() {
     this.initializeVoiceConfigs();
+    this.voiceSelector = getVoiceSelector();
   }
 
   /**
@@ -33,7 +36,7 @@ export class SpeechEngine {
    * 初始化語音合成
    * 需求 2.6: IF 瀏覽器不支援 THEN 系統 SHALL 顯示錯誤並隱藏按鈕
    */
-  initialize(): boolean {
+  async initialize(): Promise<boolean> {
     if (typeof window === 'undefined') {
       return false;
     }
@@ -50,10 +53,15 @@ export class SpeechEngine {
     // 載入可用語音
     this.loadVoices();
 
+    // 初始化智能語音選擇器
+    await this.voiceSelector.initialize();
+
     // 監聽語音列表變化（某些瀏覽器異步載入）
     if (this.synthesis.onvoiceschanged !== undefined) {
       this.synthesis.onvoiceschanged = () => {
         this.loadVoices();
+        // 重新初始化語音選擇器
+        this.voiceSelector.initialize();
       };
     }
 
@@ -112,14 +120,28 @@ export class SpeechEngine {
         utterance.rate = voiceConfig.rate;
         utterance.volume = options.volume ?? voiceConfig.volume;
 
-        // 嘗試匹配指定的語音
+        // 優先順序 1: 手動指定的語音名稱（voiceName）
+        let selectedVoice: SpeechSynthesisVoice | null = null;
         if (voiceConfig.voiceName) {
-          const voice = this.availableVoices.find(v =>
+          selectedVoice = this.availableVoices.find(v =>
             v.name.includes(voiceConfig.voiceName!)
-          );
-          if (voice) {
-            utterance.voice = voice;
+          ) || null;
+          if (selectedVoice) {
+            logger.info(`[SpeechEngine] Using manually specified voice: ${selectedVoice.name}`);
           }
+        }
+
+        // 優先順序 2: 智能選擇語音（VoiceSelector）
+        if (!selectedVoice && options.voice) {
+          selectedVoice = this.voiceSelector.selectBestVoice(options.voice);
+          if (selectedVoice) {
+            logger.info(`[SpeechEngine] Using intelligently selected voice: ${selectedVoice.name}`);
+          }
+        }
+
+        // 設定選定的語音
+        if (selectedVoice) {
+          utterance.voice = selectedVoice;
         }
       } else {
         utterance.volume = options.volume ?? 1.0;
@@ -204,6 +226,13 @@ export class SpeechEngine {
    */
   getAvailableVoices(): SpeechSynthesisVoice[] {
     return this.availableVoices;
+  }
+
+  /**
+   * 獲取 VoiceSelector 實例（用於 UI 互動）
+   */
+  getVoiceSelector(): VoiceSelector {
+    return this.voiceSelector;
   }
 
   /**

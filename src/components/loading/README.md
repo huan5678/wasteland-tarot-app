@@ -1,344 +1,292 @@
-# AsciiDonutLoading Component
+# Loading Components
 
-A Fallout-themed loading screen featuring an animated 3D ASCII donut (torus) with automatic performance optimization and accessibility support.
+ASCII 動畫 loading 元件系統，支援多種動畫類型和進度條顯示。
 
-## Features
+## 架構
 
-- **3D Rendering**: Real-time 3D torus rendering using mathematical transformations
-- **Performance Optimized**: Auto-degrades to static mode when FPS drops below 15
-- **Accessible**: Full ARIA support and `prefers-reduced-motion` compliance
-- **Customizable**: Configurable size, rotation speed, and ASCII character set
-- **Fallout Aesthetic**: Pip-Boy green color scheme with monospace font
-
-## Quick Start
-
-### Basic Usage
-
-```tsx
-import { AsciiDonutLoading } from '@/components/loading/AsciiDonutLoading';
-
-function MyLoadingScreen() {
-  return <AsciiDonutLoading />;
-}
+```
+AsciiLoading (統一介面)
+├── AsciiDonutAnimation (純動畫)
+├── AsciiNukaColaAnimation (純動畫)
+└── LoadingProgressBar (進度條)
 ```
 
-### Custom Message
+### 元件層級
+
+#### 1. **AsciiLoading** - 統一 Loading 元件 ✨ 推薦使用
+
+完整的 loading 畫面，包含動畫、進度條和訊息。
+
+**使用範例：**
 
 ```tsx
-<AsciiDonutLoading message="LOADING VAULT-TEC DATA..." />
-```
+import { AsciiLoading } from '@/components/loading/AsciiLoading'
 
-### Custom Configuration
+// Nuka-Cola 瓶子動畫 (預設)
+<AsciiLoading
+  type="bottle"
+  message="LOADING NUKA-COLA..."
+  progress={50}
+/>
 
-```tsx
-<AsciiDonutLoading
-  config={{
-    width: 60,
-    height: 20,
-    thetaSpacing: 0.1,
-    phiSpacing: 0.03,
-    luminanceChars: '.:-=+*#%@',
-  }}
+// 甜甜圈動畫
+<AsciiLoading
+  type="donut"
+  message="LOADING VAULT DATA..."
+  progress={75}
+/>
+
+// 無進度條
+<AsciiLoading
+  type="bottle"
+  message="INITIALIZING..."
 />
 ```
 
-### Force Static Fallback
-
-```tsx
-<AsciiDonutLoading forceFallback={true} />
-```
-
-## Props
+**Props：**
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `message` | `string` | `"INITIALIZING VAULT RESIDENT STATUS..."` | Loading message text |
-| `forceFallback` | `boolean` | `false` | Force static fallback mode |
-| `config` | `Partial<DonutRendererConfig>` | `DEFAULT_DONUT_CONFIG` | Custom renderer configuration |
+| `type` | `'donut' \| 'bottle'` | `'bottle'` | 動畫類型 |
+| `message` | `string` | `'LOADING...'` | 載入訊息 |
+| `progress` | `number` | `0` | 進度 (0-100)，0 時不顯示進度條 |
+| `forceFallback` | `boolean` | `false` | 強制使用靜態模式 |
+| `useWebGL` | `boolean` | `true` | 使用 WebGL 加速 |
 
-## Configuration Options
+---
 
-### DonutRendererConfig
+#### 2. **LoadingProgressBar** - 獨立進度條元件
 
-```typescript
-interface DonutRendererConfig {
-  width: number;           // ASCII output width (characters)
-  height: number;          // ASCII output height (lines)
-  R1: number;              // Torus cross-section radius
-  R2: number;              // Torus center distance
-  K1: number;              // Perspective projection distance
-  K2: number;              // Observer distance
-  thetaSpacing: number;    // Theta angle step (density control)
-  phiSpacing: number;      // Phi angle step (density control)
-  luminanceChars: string;  // ASCII brightness character set
-}
-```
+Pip-Boy 風格的進度條，可單獨使用。
 
-### Default Configuration
-
-```typescript
-export const DEFAULT_DONUT_CONFIG: DonutRendererConfig = {
-  width: 80,
-  height: 24,
-  R1: 1,
-  R2: 2,
-  K1: 30,
-  K2: 5,
-  thetaSpacing: 0.07,
-  phiSpacing: 0.02,
-  luminanceChars: '.,-~:;=!*#$@',
-};
-```
-
-### Low Performance Configuration
-
-For devices with limited resources:
-
-```typescript
-export const LOW_PERFORMANCE_CONFIG: Partial<DonutRendererConfig> = {
-  width: 60,
-  height: 18,
-  thetaSpacing: 0.14,  // 2x step size = lower density
-  phiSpacing: 0.04,    // 2x step size = lower density
-};
-```
-
-## Performance
-
-### Target FPS
-- **Default**: 24 FPS
-- **Auto-degradation**: Switches to static mode when FPS < 15
-- **Frame Skipping**: Uses `requestAnimationFrame` with time-based frame limiting
-
-### Optimization Features
-1. **Trigonometric Caching**: Pre-computes `sin(angleA)`, `cos(angleA)`, etc.
-2. **Z-buffer Algorithm**: Efficient depth testing for correct occlusion
-3. **Frame Skipping**: Only renders when sufficient time has elapsed
-4. **FPS Monitoring**: Tracks performance every 60 frames
-5. **Lazy Degradation**: Auto-switches to static fallback on low FPS
-
-### Performance Metrics
-
-Development mode shows FPS counter (removed in production):
+**使用範例：**
 
 ```tsx
-{process.env.NODE_ENV !== 'production' && currentFPS > 0 && (
-  <p className="font-mono text-pip-boy-green/50 text-xs mt-2">
-    FPS: {currentFPS.toFixed(1)}
-  </p>
-)}
+import { LoadingProgressBar } from '@/components/loading/LoadingProgressBar'
+
+<LoadingProgressBar progress={65} />
 ```
 
-## Accessibility
+**Props：**
 
-### ARIA Attributes
-- `role="status"`: Indicates loading status to screen readers
-- `aria-live="polite"`: Announces changes without interrupting
-- `aria-label="Loading animation"`: Labels the animation element
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `progress` | `number` | required | 進度 (0-100) |
+| `className` | `string` | `''` | 自訂 CSS class |
 
-### Motion Preferences
-Automatically detects and respects `prefers-reduced-motion`:
+---
 
-```typescript
-const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-if (mediaQuery.matches) {
-  setUseFallback(true);  // Switch to static mode
-}
+#### 3. **AsciiDonutAnimation** - 純甜甜圈動畫
+
+僅包含動畫，無容器、訊息或進度條。適合需要自訂布局的場景。
+
+**使用範例：**
+
+```tsx
+import { AsciiDonutAnimation } from '@/components/loading/AsciiDonutAnimation'
+
+<div className="my-custom-container">
+  <AsciiDonutAnimation useWebGL={true} />
+  <p>Custom message here</p>
+</div>
 ```
 
-### Keyboard Navigation
-- No focus traps
-- Does not interfere with keyboard navigation
-- Screen reader friendly
+---
 
-## Mathematical Background
+#### 4. **AsciiNukaColaAnimation** - 純 Nuka-Cola 瓶子動畫
 
-### Torus Parametric Equations
+僅包含動畫，無容器、訊息或進度條。適合需要自訂布局的場景。
 
-The donut (torus) is defined by two circles:
+**使用範例：**
 
-```
-circle_x = R2 + R1 * cos(theta)
-circle_y = R1 * sin(theta)
-```
+```tsx
+import { AsciiNukaColaAnimation } from '@/components/loading/AsciiNukaColaAnimation'
 
-Where:
-- `R1`: Radius of the torus cross-section (tube)
-- `R2`: Distance from the torus center to the tube center
-- `theta`: Angle around the cross-section (0 to 2π)
-- `phi`: Angle around the torus (0 to 2π)
-
-### 3D Rotation
-
-Points are rotated using rotation matrices:
-
-1. **X-axis rotation** (angleA):
-   ```
-   [ 1    0         0      ]
-   [ 0    cos(A)   -sin(A) ]
-   [ 0    sin(A)    cos(A) ]
-   ```
-
-2. **Z-axis rotation** (angleB):
-   ```
-   [ cos(B)  -sin(B)   0 ]
-   [ sin(B)   cos(B)   0 ]
-   [ 0        0        1 ]
-   ```
-
-### Perspective Projection
-
-3D coordinates are projected to 2D screen space:
-
-```typescript
-screenX = (width / 2) + (K1 * (1/z) * x)
-screenY = (height / 2) - (K1 * (1/z) * y)
+<div className="my-custom-container">
+  <AsciiNukaColaAnimation useWebGL={true} />
+  <p>Custom message here</p>
+</div>
 ```
 
-Where:
-- `K1`: Projection distance (larger = more perspective)
-- `z`: Depth coordinate
-- `1/z`: Inverse depth (used for z-buffer)
+---
 
-### Lighting (Lambertian Reflectance)
+#### 5. **AsciiDonutLoading** - 完整甜甜圈 Loading (舊版)
 
-Surface brightness is calculated using dot product:
+⚠️ **保留用於向後兼容**，新專案推薦使用 `AsciiLoading`。
 
-```typescript
-luminance = (N · L + 1) / 2
-```
+包含動畫、進度條、訊息和容器的完整 loading 畫面。
 
-Where:
-- `N`: Surface normal vector
-- `L`: Light direction vector `(0, 0.7071, -0.7071)`
-- Result normalized to [0, 1]
+---
 
-## Testing
+#### 6. **AsciiNukaColaLoading** - 完整 Nuka-Cola Loading (舊版)
 
-### Unit Tests
+⚠️ **保留用於向後兼容**，新專案推薦使用 `AsciiLoading`。
 
-```bash
-# Run all tests
-bun test
+包含動畫、訊息和容器的完整 loading 畫面（原本不支援進度條）。
 
-# Run specific test file
-bun test src/components/loading/__tests__/AsciiDonutLoading.test.tsx
+---
 
-# Run with coverage
-bun test --coverage
-```
+## 效能特性
 
-### Test Files
-- `src/lib/__tests__/donutConfig.test.ts` (15 tests)
-- `src/lib/__tests__/donutRenderer.test.ts` (16 tests)
-- `src/components/loading/__tests__/AsciiDonutLoading.test.tsx` (16 tests)
-- `src/components/providers/__tests__/ZustandAuthProvider.test.tsx` (6 tests)
+### 自動降級策略
 
-**Total**: 53 tests, all passing ✓
+1. **WebGL 模式** (預設，60 FPS)
+   - GPU 加速渲染
+   - 偵測到效能問題 (< 20 FPS) 自動降級到 CPU 模式
 
-## File Structure
+2. **CPU 模式** (24 FPS)
+   - 純 JavaScript 渲染
+   - 偵測到效能問題 (< 15 FPS) 自動降級到靜態模式
 
-```
-src/
-├── components/
-│   ├── loading/
-│   │   ├── AsciiDonutLoading.tsx        # Main component
-│   │   ├── __tests__/
-│   │   │   └── AsciiDonutLoading.test.tsx
-│   │   └── README.md                     # This file
-│   └── providers/
-│       ├── ZustandAuthProvider.tsx       # Integration example
-│       └── __tests__/
-│           └── ZustandAuthProvider.test.tsx
-└── lib/
-    ├── donutConfig.ts                    # Configuration management
-    ├── donutRenderer.ts                  # Core 3D rendering engine
-    └── __tests__/
-        ├── donutConfig.test.ts
-        └── donutRenderer.test.ts
-```
+3. **靜態模式**
+   - 預渲染的 ASCII art
+   - 無動畫，最低效能需求
 
-## Integration Example
+### 無障礙支援
 
-### With Auth Provider
+- 遵守 `prefers-reduced-motion` 媒體查詢
+- ARIA 屬性（`role="status"`, `aria-live="polite"`）
+- 頁面可見性 API 支援（切換分頁時暫停動畫）
+
+---
+
+## 實際應用範例
+
+### 首頁初始化 Loading
 
 ```tsx
 // src/components/providers/ZustandAuthProvider.tsx
-import { AsciiDonutLoading } from '@/components/loading/AsciiDonutLoading';
+import { AsciiLoading } from '@/components/loading/AsciiLoading'
 
-export function ZustandAuthInitializer({ children }: { children: React.ReactNode }) {
-  const initialize = useAuthStore(s => s.initialize);
-  const isInitialized = useAuthStore(s => s.isInitialized);
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-
-  if (!isInitialized) {
-    return <AsciiDonutLoading message="INITIALIZING VAULT RESIDENT STATUS..." />;
-  }
-
-  return <>{children}</>;
+if (isHomePage) {
+  return (
+    <AsciiLoading
+      type="bottle"
+      message="INITIALIZING VAULT RESIDENT STATUS..."
+      progress={progress}
+    />
+  )
 }
 ```
 
-### With Suspense
+### 資料載入 Loading
 
 ```tsx
-import { Suspense } from 'react';
-import { AsciiDonutLoading } from '@/components/loading/AsciiDonutLoading';
+const [loading, setLoading] = useState(true)
+const [progress, setProgress] = useState(0)
 
-function App() {
+if (loading) {
   return (
-    <Suspense fallback={<AsciiDonutLoading />}>
-      <YourAsyncComponent />
-    </Suspense>
-  );
+    <AsciiLoading
+      type="donut"
+      message="LOADING VAULT DATA..."
+      progress={progress}
+    />
+  )
 }
 ```
 
-## Browser Support
+### 自訂布局
 
-- ✅ Chrome/Edge (latest)
-- ✅ Firefox (latest)
-- ✅ Safari (latest)
-- ✅ Mobile browsers (iOS Safari, Chrome Android)
-- ✅ Respects `prefers-reduced-motion`
+```tsx
+<div className="custom-loading-layout">
+  <h1>Vault-Tec Terminal</h1>
+  <AsciiNukaColaAnimation />
+  <LoadingProgressBar progress={80} />
+  <p>Loading wasteland data...</p>
+</div>
+```
 
-## Troubleshooting
+---
 
-### Low FPS / Stuttering
+## 遷移指南
 
-1. **Check CPU Usage**: The animation is CPU-intensive
-2. **Enable Fallback**: Set `forceFallback={true}` for static mode
-3. **Reduce Density**: Increase `thetaSpacing` and `phiSpacing`
-4. **Reduce Size**: Decrease `width` and `height`
+### 從 AsciiDonutLoading 遷移
 
-### Not Animating
+**舊寫法：**
+```tsx
+<AsciiDonutLoading
+  message="Loading..."
+  progress={50}
+/>
+```
 
-1. **Check `forceFallback`**: Should be `false` (default)
-2. **Check `prefers-reduced-motion`**: Browser setting may disable animation
-3. **Check Console**: Look for FPS degradation warnings
+**新寫法：**
+```tsx
+<AsciiLoading
+  type="donut"
+  message="Loading..."
+  progress={50}
+/>
+```
 
-### Accessibility Issues
+### 從 AsciiNukaColaLoading 遷移
 
-1. **Screen Reader**: Ensure `aria-live` is not overridden
-2. **Focus Management**: Component should not trap focus
-3. **Motion Sickness**: Fallback mode activates for `prefers-reduced-motion`
+**舊寫法：**
+```tsx
+<AsciiNukaColaLoading
+  message="Loading..."
+/>
+```
+
+**新寫法：**
+```tsx
+<AsciiLoading
+  type="bottle"
+  message="Loading..."
+  progress={0}  // 可選，預設 0 不顯示進度條
+/>
+```
+
+---
+
+## 技術實作細節
+
+### WebGL 渲染
+
+- **Donut**: 使用 `WebGLQuadDonutRendererV2` + `DonutRotationController`
+- **Bottle**: 使用 `WebGLQuadNukaColaRenderer` + ray-marching SDF
+
+### CPU 渲染
+
+- **Donut**: 使用 `DonutRenderer` (parametric torus equations)
+- **Bottle**: 使用 `NukaColaRenderer` (bottle geometry with sections)
+
+### 動畫控制
+
+- `requestAnimationFrame` 驅動動畫循環
+- FPS 追蹤和自動降級
+- 頁面可見性 API 整合（避免背景執行）
+
+---
+
+## 檔案結構
+
+```
+src/components/loading/
+├── AsciiLoading.tsx              # 統一介面 (推薦)
+├── LoadingProgressBar.tsx        # 進度條元件
+├── AsciiDonutAnimation.tsx       # 純甜甜圈動畫
+├── AsciiNukaColaAnimation.tsx    # 純 Nuka-Cola 動畫
+├── AsciiDonutLoading.tsx         # 完整甜甜圈 (舊版)
+├── AsciiNukaColaLoading.tsx      # 完整 Nuka-Cola (舊版)
+└── README.md                     # 本文件
+```
+
+---
+
+## 開發建議
+
+1. **預設使用 `AsciiLoading`**：提供統一介面和最佳實踐
+2. **需要自訂布局時使用純動畫元件**：`AsciiDonutAnimation` / `AsciiNukaColaAnimation`
+3. **進度條可選**：`progress={0}` 或不傳 `progress` prop 時不顯示進度條
+4. **效能測試**：在低階裝置測試自動降級功能
+5. **無障礙測試**：確保 `prefers-reduced-motion` 正常運作
+
+---
 
 ## Credits
 
-- **Algorithm**: Based on [a1k0n's donut.c](https://www.a1k0n.net/2011/07/20/donut-math.html)
-- **Design**: Fallout/Pip-Boy aesthetic
+- **Donut Algorithm**: Based on [a1k0n's donut.c](https://www.a1k0n.net/2011/07/20/donut-math.html)
+- **Bottle Design**: Nuka-Cola bottle from Fallout series
 - **Implementation**: Wasteland Tarot Team
-
-## License
-
-MIT License (see project root)
-
-## Related Files
-
-- [DonutRenderer Source](../../lib/donutRenderer.ts)
-- [DonutConfig Source](../../lib/donutConfig.ts)
-- [Component Source](./AsciiDonutLoading.tsx)
-- [Tasks Document](../../../.kiro/specs/ascii-donut-loading/tasks.md)

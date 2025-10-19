@@ -1,6 +1,6 @@
 """
 OpenAI Provider Implementation
-Uses GPT-4 models for tarot interpretation
+Supports both GPT-4 (Chat Completions API) and GPT-5 (Responses API)
 """
 
 import logging
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class OpenAIProvider(AIProvider):
-    """OpenAI GPT-4 provider implementation"""
+    """OpenAI provider supporting both GPT-4 and GPT-5 series models"""
 
     def __init__(
         self,
@@ -26,7 +26,7 @@ class OpenAIProvider(AIProvider):
 
         Args:
             api_key: OpenAI API key
-            model: Model name (gpt-4o, gpt-4o-mini, etc.)
+            model: Model name (gpt-4o, gpt-4o-mini, gpt-5, gpt-5-mini, gpt-5-nano)
             organization: Optional organization ID
         """
         self.api_key = api_key
@@ -34,7 +34,15 @@ class OpenAIProvider(AIProvider):
         self.organization = organization
         self.client: Optional[AsyncOpenAI] = None
 
+        # Detect if this is a GPT-5 series model
+        self.is_gpt5 = self._is_gpt5_model(model)
+
         self._initialize_client()
+
+    def _is_gpt5_model(self, model: str) -> bool:
+        """Check if model is GPT-5 series (uses Responses API)"""
+        gpt5_models = ["gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-5-chat-latest"]
+        return any(model.startswith(gpt5_model) for gpt5_model in gpt5_models)
 
     def _initialize_client(self) -> None:
         """Initialize OpenAI client"""
@@ -44,7 +52,8 @@ class OpenAIProvider(AIProvider):
                 kwargs["organization"] = self.organization
 
             self.client = AsyncOpenAI(**kwargs)
-            logger.info(f"OpenAI provider initialized successfully with model {self.model}")
+            api_type = "Responses API" if self.is_gpt5 else "Chat Completions API"
+            logger.info(f"OpenAI provider initialized successfully with model {self.model} ({api_type})")
         except Exception as e:
             logger.error(f"Failed to initialize OpenAI client: {e}")
             self.client = None
@@ -64,7 +73,7 @@ class OpenAIProvider(AIProvider):
             system_prompt: System instructions
             user_prompt: User message
             max_tokens: Maximum tokens in response
-            temperature: Response randomness (0-2 for OpenAI)
+            temperature: Response randomness (0-2, ignored for GPT-5)
             **kwargs: Additional OpenAI-specific parameters
 
         Returns:
@@ -75,24 +84,45 @@ class OpenAIProvider(AIProvider):
             return None
 
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=max_tokens,
-                temperature=temperature,
-                **kwargs
-            )
+            if self.is_gpt5:
+                # GPT-5 Responses API
+                # Combine system and user prompts into single input
+                combined_input = f"{system_prompt}\n\n{user_prompt}"
 
-            if response.choices and len(response.choices) > 0:
-                content = response.choices[0].message.content
-                if content:
-                    return content.strip()
+                response = await self.client.responses.create(
+                    model=self.model,
+                    input=combined_input,
+                    reasoning={"effort": kwargs.get("reasoning_effort", "minimal")},
+                    text={"verbosity": kwargs.get("text_verbosity", "low")},
+                    max_output_tokens=max_tokens
+                )
 
-            logger.warning("OpenAI returned empty response")
-            return None
+                # Extract output text from response
+                if hasattr(response, 'output_text') and response.output_text:
+                    return response.output_text.strip()
+
+                logger.warning("OpenAI GPT-5 returned empty response")
+                return None
+            else:
+                # GPT-4 Chat Completions API
+                response = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_completion_tokens=max_tokens,
+                    temperature=temperature,
+                    **kwargs
+                )
+
+                if response.choices and len(response.choices) > 0:
+                    content = response.choices[0].message.content
+                    if content:
+                        return content.strip()
+
+                logger.warning("OpenAI GPT-4 returned empty response")
+                return None
 
         except RateLimitError as e:
             logger.error(f"OpenAI rate limit exceeded: {e}")
@@ -122,7 +152,7 @@ class OpenAIProvider(AIProvider):
             system_prompt: System instructions
             user_prompt: User message
             max_tokens: Maximum tokens in response
-            temperature: Response randomness (0-2 for OpenAI)
+            temperature: Response randomness (0-2, ignored for GPT-5)
             **kwargs: Additional OpenAI-specific parameters
 
         Yields:
@@ -133,23 +163,46 @@ class OpenAIProvider(AIProvider):
             return
 
         try:
-            stream = await self.client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=True,
-                **kwargs
-            )
+            if self.is_gpt5:
+                # GPT-5 Responses API with streaming
+                combined_input = f"{system_prompt}\n\n{user_prompt}"
 
-            async for chunk in stream:
-                if chunk.choices and len(chunk.choices) > 0:
-                    delta = chunk.choices[0].delta
-                    if delta.content:
-                        yield delta.content
+                stream = await self.client.responses.create(
+                    model=self.model,
+                    input=combined_input,
+                    reasoning={"effort": kwargs.get("reasoning_effort", "minimal")},
+                    text={"verbosity": kwargs.get("text_verbosity", "low")},
+                    max_output_tokens=max_tokens,
+                    stream=True
+                )
+
+                async for chunk in stream:
+                    # GPT-5 streaming returns delta with text content
+                    if hasattr(chunk, 'delta') and hasattr(chunk.delta, 'text'):
+                        if chunk.delta.text:
+                            yield chunk.delta.text
+                    # Fallback: check for direct text attribute
+                    elif hasattr(chunk, 'text') and chunk.text:
+                        yield chunk.text
+            else:
+                # GPT-4 Chat Completions API with streaming
+                stream = await self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_completion_tokens=max_tokens,
+                    temperature=temperature,
+                    stream=True,
+                    **kwargs
+                )
+
+                async for chunk in stream:
+                    if chunk.choices and len(chunk.choices) > 0:
+                        delta = chunk.choices[0].delta
+                        if delta.content:
+                            yield delta.content
 
         except RateLimitError as e:
             logger.error(f"OpenAI rate limit exceeded: {e}")
@@ -186,10 +239,25 @@ class OpenAIProvider(AIProvider):
         Returns:
             Estimated cost in USD
         """
-        # GPT-4o pricing (as of 2024)
-        # Input: $2.50 per 1M tokens
-        # Output: $10.00 per 1M tokens
-        if "gpt-4o-mini" in self.model:
+        # GPT-5 pricing (estimated, as of 2025)
+        if "gpt-5-nano" in self.model:
+            # GPT-5-nano: High-throughput, lowest cost
+            input_cost = 200 * 0.10 / 1_000_000
+            output_cost = 400 * 0.40 / 1_000_000
+            return input_cost + output_cost  # ~$0.00018
+        elif "gpt-5-mini" in self.model:
+            # GPT-5-mini: Balanced cost and capability
+            input_cost = 200 * 0.20 / 1_000_000
+            output_cost = 400 * 0.80 / 1_000_000
+            return input_cost + output_cost  # ~$0.00036
+        elif "gpt-5" in self.model:
+            # GPT-5: Full reasoning model
+            input_cost = 200 * 3.00 / 1_000_000
+            output_cost = 400 * 12.00 / 1_000_000
+            return input_cost + output_cost  # ~$0.0054
+
+        # GPT-4 pricing (as of 2024)
+        elif "gpt-4o-mini" in self.model:
             # GPT-4o-mini: $0.15/$0.60 per 1M tokens
             input_cost = 200 * 0.15 / 1_000_000
             output_cost = 400 * 0.60 / 1_000_000

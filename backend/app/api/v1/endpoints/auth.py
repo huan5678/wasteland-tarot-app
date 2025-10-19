@@ -4,7 +4,8 @@
 提供 JWT token 驗證、刷新、登出、註冊、登入等認證相關功能
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, field_validator
@@ -191,7 +192,8 @@ async def verify_access_token(
             "is_oauth_user": bool(user.oauth_provider),
             "oauth_provider": user.oauth_provider,
             "karma_score": user.karma_score,
-            "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment)
+            "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
+            "is_admin": user.is_admin if hasattr(user, 'is_admin') else False
         },
         is_valid=True
     )
@@ -432,6 +434,7 @@ async def get_current_user(
             "is_oauth_user": bool(user.oauth_provider),
             "is_verified": user.is_verified,
             "is_active": user.is_active,
+            "is_admin": user.is_admin if hasattr(user, 'is_admin') else False,
             "created_at": user.created_at.isoformat() if user.created_at else None
         },
         statistics=statistics,
@@ -500,6 +503,18 @@ async def register_user(
         )
 
         logger.info(f"User registered successfully: {user.email}")
+
+        # 自動追蹤今日登入（註冊即視為首次登入）
+        try:
+            from app.services.token_extension_service import TokenExtensionService
+            token_service = TokenExtensionService(db)
+            await token_service.track_daily_login(user.id)
+        except Exception as track_error:
+            logger.warning(f"Failed to track login for new user {user.id}: {str(track_error)}")
+
+        # 設定 token 絕對過期時間
+        user.token_absolute_expiry = datetime.utcnow() + timedelta(days=7)
+        await db.commit()
 
         # 解碼 access token 取得過期時間
         token_payload = verify_token(access_token)
@@ -591,6 +606,20 @@ async def login_user(
 
         logger.info(f"User logged in successfully: {user.email}")
 
+        # 自動追蹤今日登入（用於忠誠度計算）
+        try:
+            from app.services.token_extension_service import TokenExtensionService
+            token_service = TokenExtensionService(db)
+            await token_service.track_daily_login(user.id)
+        except Exception as track_error:
+            # 追蹤失敗不影響登入流程
+            logger.warning(f"Failed to track login for user {user.id}: {str(track_error)}")
+
+        # 設定 token 絕對過期時間（如果尚未設定）
+        if not user.token_absolute_expiry:
+            user.token_absolute_expiry = datetime.utcnow() + timedelta(days=7)
+            await db.commit()
+
         # 解碼 access token 取得過期時間
         token_payload = verify_token(access_token)
         token_expires_at = token_payload.get("exp") if token_payload else None
@@ -610,6 +639,7 @@ async def login_user(
                 "is_oauth_user": bool(user.oauth_provider),
                 "is_verified": user.is_verified,
                 "is_active": user.is_active,
+                "is_admin": user.is_admin if hasattr(user, 'is_admin') else False,
                 "created_at": user.created_at.isoformat() if user.created_at else None
             },
             token_expires_at=token_expires_at
@@ -645,3 +675,280 @@ async def login_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="登入失敗，請稍後再試"
         )
+
+
+# Token Extension Endpoints
+
+
+class ExtendTokenRequest(BaseModel):
+    """Token 延長請求"""
+    extension_type: str  # 'activity' or 'loyalty'
+    activity_duration: Optional[int] = None  # Required for activity type (in seconds)
+
+
+class ExtendTokenResponse(BaseModel):
+    """Token 延長回應"""
+    success: bool
+    message: str
+    extended_minutes: int
+    token_expires_at: int
+    rewards: Optional[Dict[str, Any]] = None  # For loyalty extensions
+
+
+class LoyaltyStatusResponse(BaseModel):
+    """忠誠度狀態回應"""
+    is_eligible: bool
+    login_days_count: int
+    login_dates: List[str]
+    current_streak: int
+    extension_available: bool
+
+
+class TrackLoginResponse(BaseModel):
+    """登入追蹤回應"""
+    login_date: str
+    is_new_day: bool
+    consecutive_days: int
+    loyalty_check_triggered: bool
+
+
+@router.post("/extend-token", response_model=ExtendTokenResponse)
+async def extend_token(
+    request: ExtendTokenRequest,
+    response: Response,
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    延長 Token 有效期限
+
+    支援兩種延長方式：
+    1. activity: 活躍度延長（30分鐘活躍 → 延長30分鐘）
+    2. loyalty: 忠誠度延長（7天內3日登入 → 延長至7天）
+
+    需求對應：
+    - 活躍度延長：累計30分鐘真實活躍時間
+    - 忠誠度延長：7天內有3日上線
+    - 安全限制：最大生命週期7天，速率限制10次/24小時
+
+    Args:
+        request: 延長請求（包含延長類型和活躍時長）
+        response: FastAPI Response 物件用於更新 cookies
+        access_token: 從 cookie 提取的 access token
+        db: 資料庫 session
+
+    Returns:
+        ExtendTokenResponse: 包含新的過期時間和獎勵資訊
+
+    Raises:
+        HTTPException: 401 - 未認證
+        HTTPException: 400 - 參數錯誤或不符合條件
+        HTTPException: 403 - 達到最大生命週期
+        HTTPException: 429 - 超過速率限制
+    """
+    from app.services.token_extension_service import TokenExtensionService
+    from app.core.exceptions import (
+        TokenExtensionError,
+        MaxLifetimeExceededError,
+        RateLimitExceededError
+    )
+
+    # 檢查認證
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+
+    # 驗證 token
+    payload = verify_token(access_token)
+    if not payload or payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token"
+        )
+
+    user_id = payload.get("sub")
+    current_expiry = payload.get("exp")
+
+    if not user_id or not current_expiry:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    service = TokenExtensionService(db)
+
+    try:
+        if request.extension_type == "activity":
+            # Activity-based extension
+            if request.activity_duration is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="activity_duration is required for activity extension"
+                )
+
+            result = await service.extend_token_by_activity(
+                user_id=user_id,
+                current_expiry=current_expiry,
+                activity_duration=request.activity_duration
+            )
+
+        elif request.extension_type == "loyalty":
+            # Loyalty-based extension
+            result = await service.extend_token_by_loyalty(
+                user_id=user_id,
+                current_expiry=current_expiry
+            )
+
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid extension_type: {request.extension_type}. Must be 'activity' or 'loyalty'"
+            )
+
+        # Generate new tokens with updated expiry
+        new_access_token = create_access_token(
+            data={"sub": user_id, "email": payload.get("email")},
+            expires_delta=timedelta(seconds=result["new_expiry"] - int(datetime.utcnow().timestamp()))
+        )
+        new_refresh_token = create_refresh_token(data={"sub": user_id})
+
+        # Update cookies
+        access_cookie_settings = get_access_token_cookie_settings()
+        refresh_cookie_settings = get_refresh_token_cookie_settings()
+
+        response.set_cookie(**access_cookie_settings, value=new_access_token)
+        response.set_cookie(**refresh_cookie_settings, value=new_refresh_token)
+
+        logger.info(f"Token extended for user {user_id}: type={request.extension_type}, minutes={result['extended_minutes']}")
+
+        return ExtendTokenResponse(
+            success=True,
+            message="Token extended successfully",
+            extended_minutes=result["extended_minutes"],
+            token_expires_at=result["new_expiry"],
+            rewards=result.get("rewards")
+        )
+
+    except TokenExtensionError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except MaxLifetimeExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(e)
+        )
+    except RateLimitExceededError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Token extension failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token extension failed"
+        )
+
+
+@router.get("/loyalty-status", response_model=LoyaltyStatusResponse)
+async def get_loyalty_status(
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    查詢使用者忠誠度狀態
+
+    返回使用者是否符合忠誠度延長資格（7天內3日登入）
+
+    Args:
+        access_token: 從 cookie 提取的 access token
+        db: 資料庫 session
+
+    Returns:
+        LoyaltyStatusResponse: 忠誠度狀態資訊
+
+    Raises:
+        HTTPException: 401 - 未認證
+    """
+    from app.services.token_extension_service import TokenExtensionService
+
+    # 檢查認證
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+
+    # 驗證 token
+    payload = verify_token(access_token)
+    if not payload or payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token"
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    service = TokenExtensionService(db)
+    eligibility = await service.check_loyalty_eligibility(user_id)
+
+    return LoyaltyStatusResponse(**eligibility)
+
+
+@router.post("/track-login", response_model=TrackLoginResponse)
+async def track_login(
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    追蹤使用者每日登入
+
+    記錄使用者今日登入，用於忠誠度計算
+
+    Args:
+        access_token: 從 cookie 提取的 access token
+        db: 資料庫 session
+
+    Returns:
+        TrackLoginResponse: 登入追蹤資訊
+
+    Raises:
+        HTTPException: 401 - 未認證
+    """
+    from app.services.token_extension_service import TokenExtensionService
+
+    # 檢查認證
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+
+    # 驗證 token
+    payload = verify_token(access_token)
+    if not payload or payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token"
+        )
+
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    service = TokenExtensionService(db)
+    result = await service.track_daily_login(user_id)
+
+    return TrackLoginResponse(**result)

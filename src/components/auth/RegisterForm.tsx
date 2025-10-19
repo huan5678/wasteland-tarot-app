@@ -13,6 +13,7 @@ import { useOAuth } from '@/hooks/useOAuth'
 import { authAPI } from '@/lib/api'
 import { useAuthStore } from '@/lib/authStore'
 import { toast } from 'sonner'
+import { useFactions } from '@/hooks/useCharacterVoices'
 import {
   Select,
   SelectContent,
@@ -45,6 +46,9 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
   const { setUser } = useAuthStore()
 
+  // ✅ 使用 API 載入陣營資料
+  const { factions, isLoading: isLoadingFactions } = useFactions()
+
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
@@ -56,6 +60,22 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // ✅ 陣營圖示映射（保留原本的映射邏輯）
+  const getFactionIcon = (factionKey: string): string => {
+    const iconMap: Record<string, string> = {
+      independent: 'user',
+      vault_dweller: 'home',
+      brotherhood: 'shield',
+      minutemen: 'timer',
+      railroad: 'subway',
+      institute: 'beaker',
+      ncr: 'flag',
+      legion: 'sword',
+      raiders: 'skull',
+    }
+    return iconMap[factionKey] || 'user'
+  }
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -262,51 +282,28 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
                 <SelectValue placeholder="選擇你的陣營..." />
               </SelectTrigger>
               <SelectContent className="bg-wasteland-dark border-2 border-pip-boy-green">
-                <SelectItem
-                  value="vault_dweller"
-                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <PixelIcon name="home" size={16} decorative />
-                    <span>Vault Dweller（避難所居民）</span>
+                {isLoadingFactions ? (
+                  <div className="p-3 text-pip-boy-green/70 text-sm text-center">
+                    載入陣營資料中...
                   </div>
-                </SelectItem>
-                <SelectItem
-                  value="brotherhood"
-                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <PixelIcon name="shield" size={16} decorative />
-                    <span>Brotherhood of Steel（鋼鐵兄弟會）</span>
-                  </div>
-                </SelectItem>
-                <SelectItem
-                  value="ncr"
-                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <PixelIcon name="flag" size={16} decorative />
-                    <span>NCR（新加州共和國）</span>
-                  </div>
-                </SelectItem>
-                <SelectItem
-                  value="legion"
-                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <PixelIcon name="sword" size={16} decorative />
-                    <span>Caesar's Legion（凱撒軍團）</span>
-                  </div>
-                </SelectItem>
-                <SelectItem
-                  value="raiders"
-                  className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                >
-                  <div className="flex items-center gap-2">
-                    <PixelIcon name="skull" size={16} decorative />
-                    <span>Raiders（掠奪者）</span>
-                  </div>
-                </SelectItem>
+                ) : (
+                  factions.map((faction) => (
+                    <SelectItem
+                      key={faction.id}
+                      value={faction.key}
+                      className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2">
+                        <PixelIcon
+                          name={getFactionIcon(faction.key)}
+                          size={16}
+                          decorative
+                        />
+                        <span>{faction.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
             <p className="mt-1 text-pip-boy-green/60 text-xs">

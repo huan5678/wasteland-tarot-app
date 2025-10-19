@@ -14,6 +14,8 @@ from .user import (
     User,
     UserProfile,
     UserPreferences,
+    UserLoginHistory,
+    TokenExtensionHistory,
 )
 from .reading_enhanced import (
     SpreadTemplate,
@@ -59,6 +61,17 @@ from .bingo import (
 from .credential import (
     Credential,
 )
+from .character_voice import (
+    Character,
+    Faction,
+    FactionCharacter,
+    CardInterpretation,
+)
+from .audio_file import (
+    AudioFile,
+    AudioType,
+    GenerationStatus,
+)
 
 __all__ = [
     "Base",
@@ -69,10 +82,17 @@ __all__ = [
     "KarmaAlignment",
     "CharacterVoice",
     "FactionAlignment",
+    # Character Voice System Models
+    "Character",
+    "Faction",
+    "FactionCharacter",
+    "CardInterpretation",
     # User Models
     "User",
     "UserProfile",
     "UserPreferences",
+    "UserLoginHistory",
+    "TokenExtensionHistory",
     # Enhanced Reading Models (Completed Readings)
     "SpreadTemplate",
     "InterpretationTemplate",
@@ -109,4 +129,8 @@ __all__ = [
     "BingoRewardHistory",
     # WebAuthn/Passkey Models
     "Credential",
+    # Audio/TTS Models
+    "AudioFile",
+    "AudioType",
+    "GenerationStatus",
 ]

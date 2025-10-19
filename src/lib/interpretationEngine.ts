@@ -9,7 +9,15 @@ function formatCardLine(card: any, label?: string) {
   const posLabel = card.position === 'upright' ? '正位' : '逆位'
   const name = card.name || '未知'
   const meta = card.position_meta || card.position_meta === '' ? card.position_meta : (card._position_meta || label)
-  const meaning = card.meaning || card.meaning_upright || card.meaning_reversed || ''
+
+  // 根據 position 選擇正確的意義，支援新舊兩種欄位命名
+  let meaning = ''
+  if (card.position === 'upright') {
+    meaning = card.upright_meaning || card.meaning_upright || card.meaning || ''
+  } else {
+    meaning = card.reversed_meaning || card.meaning_reversed || card.meaning || ''
+  }
+
   return `${meta ? meta + ' ' : ''}${name} (${posLabel}) - ${meaning.split('\n')[0]}`
 }
 

@@ -296,7 +296,7 @@ test.describe('完整占卜功能測試', () => {
     console.log('🧪 測試: 錯誤處理')
 
     // 模擬網路錯誤
-    await page.route('**/api/v1/cards/draw-random*', route => route.abort('failed'))
+    await page.route('**/api/v1/cards/random*', route => route.abort('failed'))
 
     await page.goto(`${FRONTEND_URL}/readings/new`)
     await page.waitForLoadState('networkidle')

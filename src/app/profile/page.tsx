@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useAuthStore } from '@/lib/authStore'
 import { useAudioStore } from '@/lib/audio/audioStore'
 import { PixelIcon } from '@/components/ui/icons'
+import { profileAPI } from '@/lib/api/services'
+import { useFactions } from '@/hooks/useCharacterVoices'
 
 interface UserProfile {
   username: string
@@ -35,39 +37,82 @@ export default function ProfilePage() {
   const setVolume = useAudioStore(s => s.setVolume)
   const toggleMute = useAudioStore(s => s.toggleMute)
 
+  // ✅ 使用 API 載入陣營資料
+  const { factions, isLoading: isLoadingFactions } = useFactions()
+
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({})
   const [isSaving, setIsSaving] = useState(false)
 
+  // ✅ 輔助函式：根據 faction key 取得顯示名稱
+  const getFactionLabel = (factionKey: string): string => {
+    if (!factions || factions.length === 0) return factionKey
+    const faction = factions.find(f => f.key === factionKey)
+    return faction?.name || factionKey
+  }
+
   useEffect(() => {
     const loadProfile = async () => {
+      if (!user?.id) return
+
       setIsLoading(true)
 
-      // Simulate API loading delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-
-      // Mock profile data
-      const mockProfile: UserProfile = {
-        username: user?.username || 'VaultDweller111',
-        email: 'dweller@vault-tec.com',
-        joinDate: '2023-10-01T00:00:00Z',
-        karmaLevel: '善業流浪者',
-        totalReadings: 24,
-        favoriteCard: '愚者',
-        faction: 'Minutemen',
-        pipBoyModel: '3000 Mark IV',
-        notificationPreferences: {
-          dailyReadings: true,
-          weeklyInsights: false,
-          systemUpdates: true
+      try {
+        // Construct profile from user data and readings stats
+        // Note: We could add a dedicated /api/v1/users/profile endpoint in the future
+        const userProfile: UserProfile = {
+          username: user.username || user.name || 'Vault Dweller',
+          email: user.email || 'dweller@vault-tec.com',
+          joinDate: user.created_at || new Date().toISOString(),
+          karmaLevel: user.experience_level || '新手流浪者', // From user data
+          totalReadings: user.total_readings || 0, // From user data
+          favoriteCard: user.favorite_card_suit || '未知', // From user data
+          faction: user.faction_alignment || 'independent', // ✅ 從用戶資料讀取
+          pipBoyModel: '3000 Mark IV', // Default value
+          notificationPreferences: {
+            dailyReadings: true,
+            weeklyInsights: false,
+            systemUpdates: true
+          }
         }
-      }
 
-      setProfile(mockProfile)
-      setEditForm(mockProfile)
-      setIsLoading(false)
+        // Optionally fetch reading statistics to populate totalReadings and favoriteCard
+        // Uncomment when readings stats endpoint is ready:
+        // try {
+        //   const stats = await readingsAPI.getStats(user.id)
+        //   userProfile.totalReadings = stats.total_readings
+        //   userProfile.favoriteCard = stats.most_common_card
+        // } catch (err) {
+        //   console.warn('Failed to fetch reading stats:', err)
+        // }
+
+        setProfile(userProfile)
+        setEditForm(userProfile)
+      } catch (error) {
+        console.error('Failed to load profile:', error)
+        // Fallback to basic user data
+        const fallbackProfile: UserProfile = {
+          username: user.username || user.name || 'Vault Dweller',
+          email: user.email || '',
+          joinDate: user.created_at || new Date().toISOString(),
+          karmaLevel: user.experience_level || '新手居民',
+          totalReadings: user.total_readings || 0,
+          favoriteCard: user.favorite_card_suit || '未知',
+          faction: user.faction_alignment || 'independent', // ✅ 從用戶資料讀取
+          pipBoyModel: '3000 Mark IV',
+          notificationPreferences: {
+            dailyReadings: true,
+            weeklyInsights: false,
+            systemUpdates: true
+          }
+        }
+        setProfile(fallbackProfile)
+        setEditForm(fallbackProfile)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     if (user) {
@@ -89,17 +134,31 @@ export default function ProfilePage() {
 
     setIsSaving(true)
 
-    // Simulate API save delay
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    try {
+      // 調用後端 API 更新 profile
+      const response = await profileAPI.updateProfile({
+        faction_alignment: editForm.faction,
+        // 未來可擴展其他欄位
+        // display_name: editForm.username,
+        // bio: editForm.bio,
+        // wasteland_location: editForm.location,
+      })
 
-    // Update profile with form data
-    const updatedProfile = { ...profile, ...editForm }
-    setProfile(updatedProfile)
-    setIsEditing(false)
-    setIsSaving(false)
+      // 更新成功後更新本地狀態
+      const updatedProfile = { ...profile, ...editForm }
+      setProfile(updatedProfile)
+      setEditForm(updatedProfile)
+      setIsEditing(false)
 
-    // TODO: Send to backend API
-    console.log('Profile updated:', updatedProfile)
+      console.log('Profile updated successfully:', response.message)
+      // TODO: Show success toast
+    } catch (error) {
+      console.error('Failed to save profile:', error)
+      // TODO: Show error toast
+      alert('儲存失敗，請稍後再試')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleInputChange = (field: keyof UserProfile, value: any) => {
@@ -402,12 +461,17 @@ export default function ProfilePage() {
                       value={editForm.faction || ''}
                       onChange={(e) => handleInputChange('faction', e.target.value)}
                       className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
+                      disabled={isLoadingFactions}
                     >
-                      <option value="None">Independent</option>
-                      <option value="Minutemen">Minutemen</option>
-                      <option value="Brotherhood of Steel">Brotherhood of Steel</option>
-                      <option value="Railroad">Railroad</option>
-                      <option value="Institute">Institute</option>
+                      {isLoadingFactions ? (
+                        <option value="">載入陣營資料中...</option>
+                      ) : (
+                        factions.map((faction) => (
+                          <option key={faction.id} value={faction.key}>
+                            {faction.name}
+                          </option>
+                        ))
+                      )}
                     </select>
                   </div>
 
@@ -462,7 +526,7 @@ export default function ProfilePage() {
                     </div>
                     <div>
                       <p className="text-pip-boy-green/70 text-sm">陣營歸屬</p>
-                      <p className="text-pip-boy-green">{profile.faction}</p>
+                      <p className="text-pip-boy-green">{getFactionLabel(profile.faction)}</p>
                     </div>
                     <div>
                       <p className="text-pip-boy-green/70 text-sm">Pip-Boy 型號</p>

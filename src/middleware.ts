@@ -23,6 +23,11 @@ const protectedRoutes = [
   '/settings',
 ]
 
+// 定義需要管理員權限的路由
+const adminRoutes = [
+  '/admin',
+]
+
 // 定義公開路由（已登入使用者不應訪問）
 const publicRoutes = [
   '/auth/login',
@@ -110,6 +115,36 @@ export async function middleware(request: NextRequest) {
   // 驗證 token（透過後端 API）
   const { isValid, user } = await verifyTokenWithBackend(request)
 
+  // 檢查是否為管理員路由
+  const isAdminRoute = adminRoutes.some(route =>
+    pathname.startsWith(route)
+  )
+
+  // 管理員路由：需要登入 + 管理員權限
+  if (isAdminRoute) {
+    if (!isValid) {
+      // 未登入，重導向至登入頁
+      const response = NextResponse.redirect(new URL('/auth/login', request.url))
+      response.cookies.delete('access_token')
+      response.cookies.delete('refresh_token')
+
+      const returnUrl = encodeURIComponent(pathname + request.nextUrl.search)
+      const loginUrl = new URL('/auth/login', request.url)
+      loginUrl.searchParams.set('returnUrl', returnUrl)
+
+      return NextResponse.redirect(loginUrl)
+    }
+
+    // 已登入但非管理員，重導向至 dashboard
+    if (!user?.is_admin) {
+      console.warn(`Non-admin user attempted to access admin route: ${pathname}`)
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+
+    // 管理員，允許訪問
+    return NextResponse.next()
+  }
+
   // 受保護路由：需要登入
   if (isProtectedRoute && !isValid) {
     // 清除無效的 cookies
@@ -144,6 +179,6 @@ export const config = {
      * - public folder
      * - api routes (handled separately)
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

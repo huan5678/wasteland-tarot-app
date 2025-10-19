@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, or_, func
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.models.reading_session import ReadingSession
 from app.models.session_event import SessionEvent
@@ -302,6 +303,8 @@ class SessionService:
                 session.selected_cards = new_session_state.get("cards_drawn", session.selected_cards)
                 session.current_position = new_session_state.get("current_position", session.current_position)
             session.session_data = current_session_data
+            # CRITICAL FIX: Mark JSONB field as modified for SQLAlchemy change tracking
+            flag_modified(session, "session_data")
 
         # Apply remaining updates
         for field, value in update_dict.items():
@@ -417,10 +420,18 @@ class SessionService:
         session_state = session.session_data.get("session_state", {}) if session.session_data else {}
         cards_drawn = session_state.get("cards_drawn", [])
 
+        # DEBUG: Log the cards_drawn data
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"[complete_session] Session {session_id}: Found {len(cards_drawn)} cards_drawn")
+        for idx, card in enumerate(cards_drawn):
+            logger.info(f"[complete_session] Card {idx}: {card}")
+
         # Build reading data WITHOUT cards_drawn field (normalized design)
         reading_data = {
             "user_id": session.user_id,
             "question": session.question,
+            # NOTE: spread_type is tracked via spread_template_id, not directly in CompletedReading
             "overall_interpretation": interpretation or session_state.get("interpretation", ""),
             # Extract optional fields from reading_metadata
             "spread_template_id": reading_metadata.get("spread_template_id") if reading_metadata else None,
@@ -472,14 +483,38 @@ class SessionService:
                     is_reversed = False
                     position_number = idx
                     position_name = None
+                    position_meaning = None
                     extra_fields = {}
                 elif isinstance(card_data, dict):
-                    # card_data expected format: {"card_id": "uuid", "position": 0, "is_reversed": false}
-                    # or simplified: {"id": "uuid", "isReversed": false}
+                    # card_data expected format from frontend:
+                    # {
+                    #   "card_id": "uuid",
+                    #   "card_name": "...",
+                    #   "suit": "...",
+                    #   "position": "upright" | "reversed",  ← THIS IS CARD ORIENTATION, NOT POSITION NUMBER!
+                    #   "positionName": "自己",
+                    #   "positionMeaning": "你在這個情境中的位置"
+                    # }
                     card_id = card_data.get("card_id") or card_data.get("id")
-                    is_reversed = card_data.get("is_reversed", False) or card_data.get("isReversed", False)
-                    position_number = card_data.get("position", idx)
-                    position_name = card_data.get("position_name")
+
+                    # Check card orientation from both "position" (string) and "is_reversed" (boolean)
+                    position_str = card_data.get("position")  # "upright" | "reversed"
+                    is_reversed_bool = card_data.get("is_reversed") or card_data.get("isReversed")
+
+                    # Determine is_reversed: prioritize boolean, fallback to string check
+                    if is_reversed_bool is not None:
+                        is_reversed = bool(is_reversed_bool)
+                    elif position_str:
+                        is_reversed = position_str.lower() == "reversed"
+                    else:
+                        is_reversed = False
+
+                    # position_number is ALWAYS the index in the spread (0, 1, 2, ...)
+                    position_number = idx
+
+                    # position_name and position_meaning from spread template
+                    position_name = card_data.get("position_name") or card_data.get("positionName")
+                    position_meaning = card_data.get("position_meaning") or card_data.get("positionMeaning")
                     # Extract optional fields
                     extra_fields = {
                         "position_interpretation": card_data.get("position_interpretation"),
@@ -534,7 +569,8 @@ class SessionService:
                     completed_reading_id=reading.id,
                     card_id=resolved_card_id,  # Use resolved UUID
                     position_number=position_number,
-                    position_name=position_name,
+                    position_name=position_name or f"Position {position_number + 1}",  # Fallback if not provided
+                    position_meaning=position_meaning or "",  # Required field
                     is_reversed=is_reversed,
                     draw_order=idx,
                     # Optional fields (only for dict format)
@@ -757,6 +793,8 @@ class SessionService:
                 "spread_config": client_data.spread_config,
                 "session_state": client_data.session_state,
             }
+            # CRITICAL FIX: Mark JSONB field as modified for SQLAlchemy change tracking
+            flag_modified(server_session, "session_data")
             # Update selected_cards and current_position
             server_session.selected_cards = client_data.session_state.get("cards_drawn", [])
             server_session.current_position = client_data.session_state.get("current_position", 0)

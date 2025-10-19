@@ -25,21 +25,43 @@ class KarmaAlignment(str, Enum):
 
 
 class CharacterVoice(str, Enum):
-    """Character interpretation voices"""
+    """Character interpretation voices - 完整角色列表（涵蓋所有陣營）"""
+    # 通用角色
     PIP_BOY = "pip_boy"
     VAULT_DWELLER = "vault_dweller"
     WASTELAND_TRADER = "wasteland_trader"
-    SUPER_MUTANT = "super_mutant"
     CODSWORTH = "codsworth"
+    # 廢土生物與掠奪者
+    SUPER_MUTANT = "super_mutant"
+    GHOUL = "ghoul"
+    RAIDER = "raider"
+    # 鋼鐵兄弟會
+    BROTHERHOOD_SCRIBE = "brotherhood_scribe"
+    BROTHERHOOD_PALADIN = "brotherhood_paladin"
+    # NCR
+    NCR_RANGER = "ncr_ranger"
+    # 凱薩軍團
+    LEGION_CENTURION = "legion_centurion"
+    # Fallout 4 陣營角色
+    MINUTEMAN = "minuteman"
+    RAILROAD_AGENT = "railroad_agent"
+    INSTITUTE_SCIENTIST = "institute_scientist"
 
 
 class FactionAlignment(str, Enum):
-    """Wasteland faction alignments"""
+    """Wasteland faction alignments - 完整陣營列表（合併 Fallout 3/4/NV）"""
+    # 經典陣營 (Fallout 3/NV)
+    VAULT_DWELLER = "vault_dweller"
     BROTHERHOOD = "brotherhood"
     NCR = "ncr"
     LEGION = "legion"
     RAIDERS = "raiders"
-    VAULT_DWELLER = "vault_dweller"
+    # Fallout 4 陣營
+    MINUTEMEN = "minutemen"
+    RAILROAD = "railroad"
+    INSTITUTE = "institute"
+    # 獨立派
+    INDEPENDENT = "independent"
 
 
 class WastelandCard(BaseModel):

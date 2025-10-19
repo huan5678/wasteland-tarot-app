@@ -5,21 +5,29 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { readingsAPI, cardsAPI } from '@/lib/api'
 import { PixelIcon } from '@/components/ui/icons'
-import { StudyCardsRecommendation } from '@/components/recommendations/StudyCardsRecommendation'
 import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
+import { useActivityTracker } from '@/hooks/useActivityTracker'
+import ActivityProgressCard from '@/components/activity/ActivityProgressCard'
 
 interface Reading {
   id: string
   date: string
   question: string
   cards: any[]
-  spread_type: 'single' | 'three_card'
+  spread_type: string
+  spread_template?: {
+    id: string
+    name: string
+    display_name: string
+    spread_type: string
+  }
   interpretation: string
 }
 
 export default function DashboardPage() {
   const router = useRouter()
   const user = useAuthStore(s => s.user)
+  const { isActive, activeTime, progress } = useActivityTracker()
   const [recentReadings, setRecentReadings] = useState<Reading[]>([])
   const [stats, setStats] = useState({
     totalReadings: 0,
@@ -51,7 +59,8 @@ export default function DashboardPage() {
             date: reading.created_at,
             question: reading.question,
             cards: reading.cards_drawn || [],  // Ensure cards is always an array
-            spread_type: reading.spread_type as 'single' | 'three_card',
+            spread_type: reading.spread_type,
+            spread_template: reading.spread_template,  // Preserve spread_template data
             interpretation: reading.interpretation || ''
           }))
 
@@ -152,6 +161,15 @@ export default function DashboardPage() {
             </p>
           </div>
 
+          {/* Activity Progress Card - Token 延長系統 */}
+          <div className="mb-6">
+            <ActivityProgressCard
+              isActive={isActive}
+              activeTime={activeTime}
+              progress={progress}
+            />
+          </div>
+
           {/* Quick Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
@@ -216,16 +234,8 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Study Cards Recommendation */}
-        <StudyCardsRecommendation className="mb-8" />
-
-        {/* Incomplete Sessions */}
-        <div className="mb-8">
-          <IncompleteSessionsList />
-        </div>
-
         {/* Recent Readings */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           <div>
             <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
               <PixelIcon name="scroll-text" size={20} className="mr-2" decorative />最近占卜
@@ -241,7 +251,7 @@ export default function DashboardPage() {
                   >
                     <div className="flex justify-between items-start mb-3">
                       <h3 className="text-sm font-bold text-pip-boy-green">
-                        {reading.spread_type === 'single' ? '單張牌' : '三張牌'} 占卜
+                        {reading.spread_template?.display_name || '占卜'}
                       </h3>
                       <span className="text-xs text-pip-boy-green/70">
                         {formatDate(reading.date)}
@@ -358,6 +368,11 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Incomplete Sessions */}
+        <div className="mb-8">
+          <IncompleteSessionsList />
         </div>
       </div>
     </div>

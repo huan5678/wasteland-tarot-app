@@ -6,60 +6,45 @@
  * 2. Next.js rewrites don't forward Set-Cookie headers
  * 3. We need to proxy ALL requests through Next.js to maintain same-origin policy
  *
+ * WORKAROUND for Next.js 15 catch-all route DELETE bug:
+ * - DELETE method doesn't work in catch-all dynamic routes [...path]
+ * - Using unified handler that checks request.method instead
+ *
  * @see https://nextjs.org/docs/app/building-your-application/routing/route-handlers
+ * @see https://github.com/vercel/next.js/issues/57261
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
-export async function GET(
+// Configure runtime
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
+/**
+ * Unified request handler for all HTTP methods
+ * This is a workaround for Next.js 15 bug where DELETE doesn't work in catch-all routes
+ */
+async function handleRequest(
   request: NextRequest,
   { params }: { params: Promise<{ path: string[] }> }
 ) {
   const { path } = await params
-  return proxyRequest(request, path, 'GET')
+  const method = request.method
+
+  console.log(`[Unified Handler] ${method} request for path:`, path)
+
+  return proxyRequest(request, path, method)
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params
-  return proxyRequest(request, path, 'POST')
-}
-
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params
-  return proxyRequest(request, path, 'PUT')
-}
-
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params
-  return proxyRequest(request, path, 'PATCH')
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params
-  return proxyRequest(request, path, 'DELETE')
-}
-
-export async function OPTIONS(
-  request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> }
-) {
-  const { path } = await params
-  return proxyRequest(request, path, 'OPTIONS')
-}
+// Export all HTTP method handlers pointing to the unified handler
+export const GET = handleRequest
+export const POST = handleRequest
+export const PUT = handleRequest
+export const PATCH = handleRequest
+export const DELETE = handleRequest
+export const OPTIONS = handleRequest
 
 /**
  * Proxy request to FastAPI backend

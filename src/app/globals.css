@@ -99,9 +99,24 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-out,
   .animate-wiggle,
-  .animate-float {
+  .animate-float,
+  .animate-shimmer {
     animation: none;
   }
+}
+
+/* Shimmer Animation - 進度條載入效果 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s linear infinite;
 }
 
 /* === TAILWIND CSS V4 THEME CONFIGURATION === */

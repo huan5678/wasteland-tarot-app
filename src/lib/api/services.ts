@@ -24,7 +24,7 @@ import {
   TarotCardSchema,
   TarotCardArraySchema,
   PaginatedCardsResponseSchema,
-  ReadingSchema,
+  ReadingSessionSchema,
   ReadingArraySchema,
   UserSchema,
   AuthResponseSchema,
@@ -81,7 +81,7 @@ export const cardsAPI = {
    * 隨機抽取卡牌
    */
   async drawRandom(count: number = 1): Promise<TarotCard[]> {
-    const data = await apiClient.get(`/api/v1/cards/draw-random?count=${count}`)
+    const data = await apiClient.get(`/api/v1/cards/random?count=${count}`)
     return validateResponse<TarotCard[]>(data, TarotCardArraySchema)
   },
 
@@ -110,7 +110,7 @@ export const readingsAPI = {
    */
   async create(payload: CreateReadingPayload): Promise<Reading> {
     const data = await apiClient.post('/api/v1/readings/', payload)
-    return validateResponse<Reading>(data, ReadingSchema)
+    return validateResponse<Reading>(data, ReadingSessionSchema)
   },
 
   /**
@@ -126,7 +126,7 @@ export const readingsAPI = {
    */
   async getById(id: string): Promise<Reading> {
     const data = await apiClient.get(`/api/v1/readings/${id}`)
-    return validateResponse<Reading>(data, ReadingSchema)
+    return validateResponse<Reading>(data, ReadingSessionSchema)
   },
 
   /**
@@ -134,7 +134,7 @@ export const readingsAPI = {
    */
   async update(id: string, updateData: Partial<Reading>): Promise<Reading> {
     const data = await apiClient.put(`/api/v1/readings/${id}`, updateData)
-    return validateResponse<Reading>(data, ReadingSchema)
+    return validateResponse<Reading>(data, ReadingSessionSchema)
   },
 
   /**
@@ -142,6 +142,14 @@ export const readingsAPI = {
    */
   async delete(id: string): Promise<void> {
     await apiClient.delete(`/api/v1/readings/${id}`)
+  },
+
+  /**
+   * 部分更新占卜 (PATCH)
+   */
+  async patch(id: string, patchData: Partial<Reading>): Promise<Reading> {
+    const data = await apiClient.patch(`/api/v1/readings/${id}`, patchData)
+    return validateResponse<Reading>(data, ReadingSessionSchema)
   },
 }
 
@@ -312,5 +320,33 @@ export const healthAPI = {
   async check(): Promise<HealthCheck> {
     const data = await apiClient.get('/health')
     return validateResponse<HealthCheck>(data, HealthCheckSchema)
+  },
+}
+
+// ============================================================================
+// Profile API - 用戶資料管理
+// ============================================================================
+
+export const profileAPI = {
+  /**
+   * 取得當前用戶的完整 Profile
+   */
+  async getProfile(): Promise<{ message: string; user: User }> {
+    const data = await apiClient.get('/api/v1/users/me/profile')
+    return data as { message: string; user: User }
+  },
+
+  /**
+   * 更新當前用戶的 Profile
+   * @param updates - 要更新的欄位
+   */
+  async updateProfile(updates: {
+    display_name?: string
+    bio?: string
+    faction_alignment?: string
+    wasteland_location?: string
+  }): Promise<{ message: string; user: User }> {
+    const data = await apiClient.patch('/api/v1/users/me/profile', updates)
+    return data as { message: string; user: User }
   },
 }

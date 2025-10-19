@@ -316,6 +316,10 @@ class SessionCompleteSchema(BaseModel):
         default=None,
         description="AI-generated interpretation text"
     )
+    spread_template_id: Optional[str] = Field(
+        default=None,
+        description="UUID of the spread template used for this reading"
+    )
     character_voice: Optional[str] = Field(
         default='pip-boy',
         description="Character voice used for interpretation"
@@ -333,6 +337,7 @@ class SessionCompleteSchema(BaseModel):
         json_schema_extra = {
             "example": {
                 "interpretation": "The cards reveal a journey of transformation...",
+                "spread_template_id": "11111111-1111-1111-1111-111111111111",
                 "character_voice": "pip-boy",
                 "karma_context": "neutral",
                 "faction_influence": "vault-tec"

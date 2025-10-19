@@ -6,7 +6,6 @@ import { ExportShareTools } from './ExportShareTools'
 import { useState, useEffect } from 'react'
 import { useReadingsStore } from '@/lib/readingsStore'
 import { CardDetailModal, DetailedTarotCard } from '@/components/tarot/CardDetailModal'
-import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
 import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
 
 interface Props {

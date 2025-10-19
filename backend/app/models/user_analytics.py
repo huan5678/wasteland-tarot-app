@@ -36,7 +36,6 @@ class UserAnalytics(Base):
 
     # Card preferences
     most_drawn_cards = Column(JSON, default=list)  # List of card IDs with frequency
-    card_study_time = Column(Integer, default=0)  # seconds spent on card library
     favorited_cards = Column(JSON, default=list)  # List of card IDs
 
     # Engagement metrics
@@ -77,7 +76,6 @@ class UserAnalytics(Base):
             "favorite_character_voice": self.favorite_character_voice,
             "avg_question_length": self.avg_question_length,
             "most_drawn_cards": self.most_drawn_cards,
-            "card_study_time": self.card_study_time,
             "favorited_cards": self.favorited_cards,
             "shares_count": self.shares_count,
             "notes_count": self.notes_count,

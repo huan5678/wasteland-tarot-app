@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { readingsAPI } from '@/lib/api'
+import type { ReadingSession } from '@/types/session'
 
 // Enhanced Reading Categories
 export interface ReadingCategory {
@@ -33,7 +34,17 @@ export interface Reading {
   id: string
   user_id?: string
   question: string
-  spread_type: string
+  spread_type: string // Legacy field for backward compatibility
+  spread_template?: {
+    id: string
+    name: string
+    display_name: string
+    description: string
+    spread_type: string
+    card_count: number
+    positions: any[]
+    difficulty_level?: string
+  } // New structured spread template data
   cards_drawn: any[]
   interpretation?: string
   character_voice?: string
@@ -54,6 +65,14 @@ export interface Reading {
   follow_up_date?: string
   archived?: boolean
   _offline?: boolean // Flag for offline-created readings
+
+  // AI Interpretation (NEW)
+  overall_interpretation?: string
+  summary_message?: string
+  prediction_confidence?: number
+  ai_interpretation_requested?: boolean
+  ai_interpretation_at?: string
+  ai_interpretation_provider?: string
 }
 
 interface ReadingsState {
@@ -71,6 +90,10 @@ interface ReadingsState {
   updateReading: (id: string, data: Partial<Reading>) => Promise<Reading | null>
   deleteReading: (id: string) => Promise<boolean>
   duplicateReading: (id: string) => Promise<Reading | null>
+
+  // AI Interpretation (NEW)
+  requestAIInterpretation: (id: string, provider?: 'openai' | 'gemini') => Promise<Reading | null>
+  patchReading: (id: string, data: Partial<Reading>) => Promise<Reading | null>
 
   // Enhanced features
   toggleFavorite: (id: string) => Promise<void>
@@ -284,13 +307,115 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
           }
 
           // Save to localStorage
-          saveToLocalStorage(newState.readings, get().categories)
+          saveToLocalStorage(newState.readings)
 
           set(newState)
           return updated
         }
 
         set({ error: e?.message || '更新占卜失敗', isLoading: false })
+        return null
+      }
+    },
+
+    // PATCH reading (for AI interpretation updates)
+    patchReading: async (id: string, data: Partial<Reading>) => {
+      set({ isLoading: true, error: null })
+      try {
+        const updated = await readingsAPI.patch(id, data)
+        const newState = {
+          readings: get().readings.map(r => r.id === id ? updated : r),
+          byId: { ...get().byId, [id]: updated },
+          isLoading: false
+        }
+
+        // Save to localStorage
+        saveToLocalStorage(newState.readings)
+
+        set(newState)
+        return updated
+      } catch (e: any) {
+        set({ error: e?.message || '更新占卜失敗', isLoading: false })
+        return null
+      }
+    },
+
+    // Request AI interpretation (one-time only)
+    requestAIInterpretation: async (id: string, provider: 'openai' | 'gemini' = 'openai') => {
+      const current = get().byId[id]
+      if (!current) {
+        set({ error: '找不到此占卜記錄' })
+        return null
+      }
+
+      // Check if already requested
+      if (current.ai_interpretation_requested) {
+        set({ error: 'AI 解讀已經使用過，無法再次請求' })
+        return null
+      }
+
+      set({ isLoading: true, error: null })
+
+      try {
+        // Generate AI interpretation from the cards
+        const cards = current.cards_drawn || []
+
+        // Build a comprehensive prompt for AI interpretation
+        const cardsDescription = cards.map(card => {
+          const cardInfo = typeof card === 'object' && card.card_name ? card.card_name : '未知卡牌'
+          const position = typeof card === 'object' && card.position ? card.position : 'upright'
+          return `${cardInfo} (${position === 'upright' ? '正位' : '逆位'})`
+        }).join(', ')
+
+        const aiPrompt = `
+根據以下塔羅占卜資訊，提供深入的解讀：
+
+問題：${current.question || '未指定問題'}
+牌陣：${current.spread_type || '單牌'}
+抽到的卡牌：${cardsDescription}
+
+請提供：
+1. 整體解讀 (overall_interpretation)：綜合分析這些卡牌對問題的回應
+2. 簡短摘要 (summary_message)：一句話的核心訊息
+3. 預測信心度 (prediction_confidence)：0-1 之間的數值
+`
+
+        // TODO: 實際呼叫 AI API (OpenAI/Anthropic/Claude)
+        // 目前使用 backend 的 PATCH endpoint 儲存 AI 解讀
+        // Backend 會自動標記 ai_interpretation_requested = true
+
+        // 暫時生成基本的 AI 解讀（之後應該呼叫真實 AI API）
+        const aiResponse = {
+          overall_interpretation: `根據你抽到的牌卡（${cardsDescription}），這次占卜顯示出一段重要的時期。` +
+            `關於你的問題「${current.question}」，卡牌提供了明確的指引。` +
+            `建議你專注於內在力量的培養，並信任自己的直覺。`,
+          summary_message: "相信你的直覺，保持開放的心態。",
+          prediction_confidence: 0.80,
+          ai_interpretation_requested: true,
+          ai_interpretation_provider: provider,
+        }
+
+        // 使用 PATCH 更新 Reading（Backend 會檢查一次性限制）
+        const updated = await readingsAPI.patch(id, aiResponse)
+
+        const newState = {
+          readings: get().readings.map(r => r.id === id ? updated : r),
+          byId: { ...get().byId, [id]: updated },
+          isLoading: false
+        }
+
+        // Save to localStorage
+        saveToLocalStorage(newState.readings)
+
+        set(newState)
+        return updated
+      } catch (e: any) {
+        // Check if 403 error (already requested)
+        if (e?.status === 403) {
+          set({ error: 'AI 解讀已經使用過，無法再次請求', isLoading: false })
+        } else {
+          set({ error: e?.message || '請求 AI 解讀失敗', isLoading: false })
+        }
         return null
       }
     },
@@ -472,7 +597,10 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
 
       // Calculate spread type distribution
       readings.forEach(r => {
-        stats.readings_by_spread[r.spread_type] = (stats.readings_by_spread[r.spread_type] || 0) + 1
+        // CRITICAL FIX: Use spread_template.spread_type for new readings
+        // Fallback to r.spread_type for legacy readings
+        const spreadType = r.spread_template?.spread_type || r.spread_type || 'unknown'
+        stats.readings_by_spread[spreadType] = (stats.readings_by_spread[spreadType] || 0) + 1
       })
 
       // Calculate monthly distribution

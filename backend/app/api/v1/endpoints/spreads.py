@@ -161,7 +161,7 @@ async def get_spreads(
         )
 
     except Exception as e:
-        logger.error(f"Error retrieving spreads: {str(e)}")
+        logger.error(f"Error retrieving spreads: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="取得牌陣失敗")
 
 
@@ -214,7 +214,7 @@ async def get_spread(
     except SpreadNotFoundError:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving spread {spread_id}: {str(e)}")
+        logger.error(f"Error retrieving spread {spread_id}: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="取得牌陣失敗")
 
 
@@ -347,7 +347,7 @@ async def get_spread_recommendations(
         return recommendations[:recommendation_request.count]
 
     except Exception as e:
-        logger.error(f"Error generating recommendations: {str(e)}")
+        logger.error(f"Error generating recommendations: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="產生推薦失敗")
 
 
@@ -423,7 +423,7 @@ async def get_popular_spreads(
         )
 
     except Exception as e:
-        logger.error(f"Error retrieving popular spreads: {str(e)}")
+        logger.error(f"Error retrieving popular spreads: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="取得熱門牌陣失敗")
 
 
@@ -511,7 +511,7 @@ async def get_spread_stats(
         )
 
     except Exception as e:
-        logger.error(f"Error retrieving spread stats: {str(e)}")
+        logger.error(f"Error retrieving spread stats: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="取得牌陣統計失敗")
 
 
@@ -606,5 +606,5 @@ async def validate_spread(
         )
 
     except Exception as e:
-        logger.error(f"Error validating spread template: {str(e)}")
+        logger.error(f"Error validating spread template: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="驗證牌陣模板失敗")

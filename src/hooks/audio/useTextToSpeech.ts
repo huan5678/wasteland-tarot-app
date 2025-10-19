@@ -17,8 +17,11 @@ export function useTextToSpeech() {
 
   // 初始化檢測支援
   useEffect(() => {
-    const supported = speechEngine.initialize();
-    setIsSupported(supported);
+    const initializeSpeech = async () => {
+      const supported = await speechEngine.initialize();
+      setIsSupported(supported);
+    };
+    initializeSpeech();
   }, []);
 
   // 監聽播放狀態

@@ -8,6 +8,7 @@ import { readingsAPI } from '@/lib/api'
 import { SpreadSelector } from '@/components/readings/SpreadSelector'
 import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview'
 import { toCanonical } from '@/lib/spreadMapping'
+import { spreadPositionMeanings } from '@/lib/spreadLayouts'
 import { SpreadInteractiveDraw } from '@/components/readings/SpreadInteractiveDraw'
 import { useAuthStore } from '@/lib/authStore'
 import { useRouter } from 'next/navigation'
@@ -18,17 +19,18 @@ import { useAutoSave, useSessionChangeTracker } from '@/hooks/useAutoSave'
 import { AutoSaveIndicator } from '@/components/session/AutoSaveIndicator'
 import { CardDetailModal } from '@/components/tarot/CardDetailModal'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
-import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
+import { enhanceCardBasic } from '@/hooks/useCardEnhancement'
 import type { SessionState } from '@/types/session'
 import commonQuestionsData from '@/data/commonTarotQuestions.json'
 
 interface TarotCardWithPosition {
-  id: number
+  id: number  // Display ID (for UI compatibility)
+  uuid?: string  // Backend UUID (for API calls and storage)
   name: string
   suit: string
   number?: number
-  meaning_upright: string
-  meaning_reversed: string
+  upright_meaning: string
+  reversed_meaning: string
   image_url: string
   keywords: string[]
   position: 'upright' | 'reversed'
@@ -119,17 +121,59 @@ export default function NewReadingPage() {
           if (sessionState) {
             // Restore cards if they exist
             if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
-              const restoredCards: TarotCardWithPosition[] = sessionState.cards_drawn.map((card) => ({
-                id: parseInt(card.card_id),
-                name: card.card_name,
-                suit: card.suit || '',
-                position: card.position as 'upright' | 'reversed',
-                meaning_upright: '',
-                meaning_reversed: '',
-                image_url: '',
-                keywords: [],
-              }))
-              setDrawnCards(restoredCards)
+              // Fetch full card data from API based on card_ids
+              const fetchFullCards = async () => {
+                try {
+                  const { cardsAPI } = await import('@/lib/api/services')
+                  const cardPromises = sessionState.cards_drawn!.map(async (card) => {
+                    try {
+                      // Fetch full card data from API using UUID
+                      const fullCard = await cardsAPI.getById(card.card_id)
+                      return {
+                        ...fullCard,
+                        // Keep both UUID (for storage) and number ID (for UI compatibility)
+                        uuid: fullCard.id,  // Backend UUID
+                        id: fullCard.number || parseInt(fullCard.id.split('-')[0], 16) % 1000,  // Display ID
+                        position: card.position as 'upright' | 'reversed',
+                      }
+                    } catch (error) {
+                      console.error(`Failed to fetch card ${card.card_id}:`, error)
+                      // Fallback to minimal data if API fails
+                      return {
+                        uuid: card.card_id,  // Preserve UUID for retry
+                        id: parseInt(card.card_id.split('-')[0], 16) % 1000,
+                        name: card.card_name,
+                        suit: card.suit || '',
+                        position: card.position as 'upright' | 'reversed',
+                        upright_meaning: '',
+                        reversed_meaning: '',
+                        image_url: '',
+                        keywords: [],
+                      }
+                    }
+                  })
+
+                  const fullCards = await Promise.all(cardPromises)
+                  setDrawnCards(fullCards as TarotCardWithPosition[])
+                } catch (error) {
+                  console.error('Failed to restore cards:', error)
+                  // Fallback to basic restore without full data
+                  const restoredCards: TarotCardWithPosition[] = sessionState.cards_drawn!.map((card) => ({
+                    uuid: card.card_id,  // ✅ Preserve UUID for future retries
+                    id: 0,  // ✅ Placeholder display ID (will be replaced when API succeeds)
+                    name: card.card_name,
+                    suit: card.suit || '',
+                    position: card.position as 'upright' | 'reversed',
+                    upright_meaning: '',
+                    reversed_meaning: '',
+                    image_url: '',
+                    keywords: [],
+                  }))
+                  setDrawnCards(restoredCards)
+                }
+              }
+
+              fetchFullCards()
             }
 
             // Restore interpretation progress
@@ -139,11 +183,9 @@ export default function NewReadingPage() {
 
             // Determine current step based on state
             if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
-              if (sessionState.interpretation_progress?.completed) {
-                setStep('results')
-              } else {
-                setStep('drawing')
-              }
+              // If cards are drawn, always go to results page
+              // (interpretation will continue loading there if not completed)
+              setStep('results')
             } else {
               setStep('setup')
             }
@@ -198,7 +240,7 @@ export default function NewReadingPage() {
 
     const sessionState: SessionState = {
       cards_drawn: drawnCards.map((card) => ({
-        card_id: card.id.toString(),
+        card_id: card.uuid || card.id.toString(),  // ✅ Use UUID if available, fallback to number ID
         card_name: card.name,
         suit: card.suit,
         position: card.position,
@@ -225,14 +267,21 @@ export default function NewReadingPage() {
   // Update session state when relevant data changes
   useEffect(() => {
     if (activeSession && (drawnCards.length > 0 || interpretation)) {
+      // Get position meanings for current spread type
+      const canonicalSpreadType = toCanonical(spreadType)
+      const positions = spreadPositionMeanings[canonicalSpreadType] || []
+
       // Update the active session in the store to trigger auto-save
       const sessionState: SessionState = {
-        cards_drawn: drawnCards.map((card) => ({
-          card_id: card.id.toString(),
+        cards_drawn: drawnCards.map((card, index) => ({
+          card_id: card.uuid || card.id.toString(),  // Use UUID if available, fallback to number ID
           card_name: card.name,
           suit: card.suit,
           position: card.position,
           drawn_at: new Date().toISOString(),
+          // Add position metadata
+          positionName: positions[index]?.name || `位置 ${index + 1}`,
+          positionMeaning: positions[index]?.meaning || ''
         })),
         current_card_index: drawnCards.length,
         interpretation_progress: {
@@ -249,7 +298,7 @@ export default function NewReadingPage() {
         question: question,
       })
     }
-  }, [drawnCards, interpretation, isGeneratingInterpretation])
+  }, [drawnCards, interpretation, isGeneratingInterpretation, spreadType])
 
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -291,49 +340,24 @@ export default function NewReadingPage() {
   const generateInterpretation = async (cards: TarotCardWithPosition[]) => {
     setIsGeneratingInterpretation(true)
 
-    // Simulate AI interpretation generation
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    try {
+      // Use interpretation engine for all spread types
+      const { generateInterpretation: generateInterp } = await import('@/lib/interpretationEngine')
+      const interpretation = generateInterp({ spreadType, question, cards })
+      setInterpretation(interpretation)
+    } catch (error) {
+      console.error('Failed to generate interpretation:', error)
+      // Fallback to basic interpretation if engine fails
+      const fallbackInterpretation = cards.map((card, index) => {
+        const positionLabel = `位置 ${index + 1}`
+        const meaning = card.position === 'upright' ? card.upright_meaning : card.reversed_meaning
+        return `**${positionLabel}: ${card.name} (${card.position === 'upright' ? '正位' : '逆位'})**\n${meaning}`
+      }).join('\n\n')
 
-    // Mock interpretation based on cards
-    let mockInterpretation = ''
-
-    // Use interpretation engine for all spread types
-    const gen = (require('@/lib/interpretationEngine') as any).generateInterpretation({ spreadType, question, cards })
-    setInterpretation(gen)
-    setIsGeneratingInterpretation(false)
-    return
-
-    if (spreadType === 'single') {
-      const card = cards[0]
-      mockInterpretation = `The ${card.name} appears ${card.position} in response to your question about "${question}".
-
-${card.position === 'upright' ? card.meaning_upright : card.meaning_reversed}
-
-This card suggests that you should focus on ${card.keywords.slice(0, 3).join(', ')}.
-
-In the context of the wasteland, this guidance can help you navigate the challenges ahead with wisdom and confidence.`
-    } else {
-      mockInterpretation = `Your three-card spread reveals a comprehensive answer to your question about "${question}":
-
-**Past/Foundation (${cards[0].name} - ${cards[0].position}):**
-${cards[0].position === 'upright' ? cards[0].meaning_upright : cards[0].meaning_reversed}
-
-**Present/Challenge (${cards[1].name} - ${cards[1].position}):**
-${cards[1].position === 'upright' ? cards[1].meaning_upright : cards[1].meaning_reversed}
-
-**Future/Outcome (${cards[2].name} - ${cards[2].position}):**
-${cards[2].position === 'upright' ? cards[2].meaning_upright : cards[2].meaning_reversed}
-
-**Overall Message:**
-The cards indicate a journey of transformation in the wasteland. Trust in your abilities and remain adaptable to the changing circumstances around you.`
+      setInterpretation(fallbackInterpretation + '\n\n請稍後再試以獲得更詳細的解讀。')
+    } finally {
+      setIsGeneratingInterpretation(false)
     }
-
-    setInterpretation(mockInterpretation)
-    // Future: could call interpretationEngine for dynamic logic
-    // Example (disabled now):
-    // const gen = generateInterpretation({ spreadType, question, cards })
-    // setInterpretation(gen)
-    setIsGeneratingInterpretation(false)
   }
 
   const handleSaveReading = async () => {
@@ -359,9 +383,73 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
     console.log('[handleSaveReading] Calling completeSession with id:', activeSession.id)
 
     try {
+      // CRITICAL FIX: Force save session with cards_drawn BEFORE completing
+      console.log('[handleSaveReading] Force saving session with cards_drawn...')
+      console.log('[handleSaveReading] drawnCards count:', drawnCards.length)
+      console.log('[handleSaveReading] activeSession.id:', activeSession.id)
+
+      // Get position meanings for current spread type
+      const canonicalSpreadType = toCanonical(spreadType)
+      const positions = spreadPositionMeanings[canonicalSpreadType] || []
+
+      // Prepare session state with cards_drawn
+      const sessionState: SessionState = {
+        cards_drawn: drawnCards.map((card, index) => ({
+          card_id: card.uuid || card.id.toString(),  // Use UUID if available, fallback to number ID
+          card_name: card.name,
+          suit: card.suit,
+          position: card.position,
+          drawn_at: new Date().toISOString(),
+          // Add position metadata
+          positionName: positions[index]?.name || `位置 ${index + 1}`,
+          positionMeaning: positions[index]?.meaning || ''
+        })),
+        current_card_index: drawnCards.length,
+        interpretation_progress: {
+          started: interpretation.length > 0,
+          completed: !isGeneratingInterpretation && interpretation.length > 0,
+          text: interpretation,
+        },
+      }
+
+      console.log('[handleSaveReading] Prepared session_state:', sessionState)
+      console.log('[handleSaveReading] cards_drawn count in session_state:', sessionState.cards_drawn.length)
+      console.log('[handleSaveReading] First card in cards_drawn:', sessionState.cards_drawn[0])
+
+      // CRITICAL: Directly call updateSession API with explicit session_state
+      try {
+        console.log('[handleSaveReading] Calling updateSession API...')
+        const updatedSession = await updateSession(activeSession.id, {
+          session_state: sessionState,
+          question: question,
+        })
+        console.log('[handleSaveReading] updateSession SUCCESS:', updatedSession)
+        console.log('[handleSaveReading] Updated session.session_state.cards_drawn:', updatedSession.session_state?.cards_drawn)
+      } catch (updateError) {
+        console.error('[handleSaveReading] updateSession FAILED:', updateError)
+        toast.error('保存會話失敗', { description: '無法更新會話資料' })
+        throw updateError  // Re-throw to stop execution
+      }
+
+      console.log('[handleSaveReading] Session saved successfully, now calling completeSession')
+
+      // CRITICAL FIX: Fetch spread templates and find matching template ID
+      const { useSpreadTemplatesStore } = await import('@/lib/spreadTemplatesStore')
+      await useSpreadTemplatesStore.getState().fetchAll()
+      const spreadTemplates = useSpreadTemplatesStore.getState().templates
+
+      // Find the template matching our spread type
+      const matchingTemplate = spreadTemplates.find(t => t.spread_type === canonicalSpreadType)
+      const spreadTemplateId = matchingTemplate?.id
+
+      console.log('[handleSaveReading] canonicalSpreadType:', canonicalSpreadType)
+      console.log('[handleSaveReading] matchingTemplate:', matchingTemplate)
+      console.log('[handleSaveReading] spreadTemplateId:', spreadTemplateId)
+
       // Complete the session (creates Reading record internally)
       const result = await completeSession(activeSession.id, {
         interpretation: interpretation,
+        spread_template_id: spreadTemplateId,  // ✅ NOW PASSING spread_template_id!
         character_voice: 'pip-boy',
         karma_context: 'neutral',
         faction_influence: 'vault-tec'
@@ -386,6 +474,12 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         cards: drawnCards.length,
         reading_id: result.reading_id
       }))
+
+      // CRITICAL FIX: Refresh readings store so new reading appears immediately
+      console.log('[handleSaveReading] Refreshing readings store...')
+      const { useReadingsStore } = await import('@/lib/readingsStore')
+      await useReadingsStore.getState().fetchUserReadings(user.id, true) // force refresh
+      console.log('[handleSaveReading] Readings refreshed successfully')
 
       // Show success message and redirect
       toast.success('占卜已保存', { description: '你的占卜結果已成功儲存至 Vault' })
@@ -413,8 +507,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
 
   // Handle card click to show detail modal
   const handleCardClick = (card: TarotCardWithPosition) => {
-    // Enhance card data with Wasteland information
-    const enhancedCard = enhanceCardWithWastelandData(card)
+    // ✅ Enhance card data with basic information (API will load interpretations)
+    const enhancedCard = enhanceCardBasic(card)
     setSelectedCardForDetail(enhancedCard)
     setIsCardModalOpen(true)
   }
@@ -572,8 +666,7 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                 <PixelIcon name="card-stack" size={20} className="mr-2" decorative />你的卡牌
               </h3>
 
-              <div className="flex justify-center mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+              <div className="flex flex-wrap justify-center items-center gap-6 mb-6">
                 {drawnCards.map((card, index) => {
                   // 取得位置標籤
                   const positionLabel = (card as any)._position_meta ||
@@ -598,11 +691,10 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
                     </div>
                   )
                 })}
-                </div>
               </div>
             </div>
 
-            {/* Interpretation */}
+            {/* Pip-Boy Interpretation */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
               <h3 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
                 <PixelIcon name="android" size={16} className="mr-2" decorative />Pip-Boy 解讀
@@ -657,8 +749,8 @@ The cards indicate a journey of transformation in the wasteland. Trust in your a
         isGuestMode={!user}
         showBookmark={!!user}
         showShare={true}
-        showStudyMode={!!user}
         showPersonalNotes={!!user}
+        factionInfluence="vault-tec"
       />
     </div>
   )

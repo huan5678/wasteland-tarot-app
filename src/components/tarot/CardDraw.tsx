@@ -8,20 +8,20 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
 import { CardDetailModal, DetailedTarotCard } from './CardDetailModal'
-import { mockTarotCards } from '@/test/mocks/data'
-import { enhanceCardWithWastelandData } from '@/data/enhancedCards'
+import { cardsAPI } from '@/lib/api'
+import { enhanceCardBasic } from '@/hooks/useCardEnhancement'
 import { PixelIcon } from '@/components/ui/icons'
 import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider'
 import { getLayout } from '@/lib/spreadLayouts'
 import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
 
 interface TarotCardWithPosition {
-  id: number
+  id: string | number  // Support both UUID strings (from API) and numeric IDs (legacy)
   name: string
   suit: string
   number?: number
-  meaning_upright: string
-  meaning_reversed: string
+  upright_meaning: string
+  reversed_meaning: string
   image_url: string
   keywords: string[]
   position: 'upright' | 'reversed'
@@ -139,15 +139,6 @@ export function CardDraw({
     return 1
   }
 
-  const shuffleCards = (cards: any[]): any[] => {
-    const shuffled = [...cards]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-    return shuffled
-  }
-
   const drawCards = useCallback(async () => {
     if (isLoading || isDrawing) return
 
@@ -159,12 +150,12 @@ export function CardDraw({
       // Simulate drawing animation delay
       await new Promise(resolve => setTimeout(resolve, animationDuration / 2))
 
-      const shuffledDeck = shuffleCards(mockTarotCards)
+      // Use real API to draw cards
       const cardCount = getCardCount()
-      const selectedCards = shuffledDeck.slice(0, cardCount)
+      const apiCards = await cardsAPI.drawRandom(cardCount)
 
       // Add position (upright/reversed) and meta label
-      const cardsWithPositions: TarotCardWithPosition[] = selectedCards.map((card, idx) => ({
+      const cardsWithPositions: TarotCardWithPosition[] = apiCards.map((card, idx) => ({
         ...card,
         position: Math.random() > 0.5 ? 'upright' : 'reversed',
         _position_meta: positionsMeta?.[idx]?.label || `位置 ${idx+1}`
@@ -200,30 +191,36 @@ export function CardDraw({
     }
   }, [spreadType, onCardsDrawn, onDrawingStateChange, isLoading, isDrawing, animationDuration, manualRevealMode])
 
-  const handlePositionClick = (positionIndex: number) => {
+  const handlePositionClick = async (positionIndex: number) => {
     if (isLoading || selectedPositions.includes(positionIndex)) return
 
     setSelectedPositions(prev => [...prev, positionIndex])
 
-    // Draw single card for this position
-    const shuffledDeck = shuffleCards(mockTarotCards)
-    const card = shuffledDeck[0]
-    const cardWithPosition: TarotCardWithPosition = {
-      ...card,
-      position: Math.random() > 0.5 ? 'upright' : 'reversed'
-    }
+    try {
+      // Draw single card for this position using real API
+      const apiCards = await cardsAPI.drawRandom(1)
+      const card = apiCards[0]
+      const cardWithPosition: TarotCardWithPosition = {
+        ...card,
+        position: Math.random() > 0.5 ? 'upright' : 'reversed'
+      }
 
-    setDrawnCards(prev => {
-      const newCards = [...prev]
-      newCards[positionIndex] = cardWithPosition
-      return newCards
-    })
+      setDrawnCards(prev => {
+        const newCards = [...prev]
+        newCards[positionIndex] = cardWithPosition
+        return newCards
+      })
 
-    // If all positions filled, call onCardsDrawn
-    if (selectedPositions.length + 1 === getCardCount()) {
-      const finalCards = [...drawnCards]
-      finalCards[positionIndex] = cardWithPosition
-      onCardsDrawn(finalCards)
+      // If all positions filled, call onCardsDrawn
+      if (selectedPositions.length + 1 === getCardCount()) {
+        const finalCards = [...drawnCards]
+        finalCards[positionIndex] = cardWithPosition
+        onCardsDrawn(finalCards)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '抽牌失敗'
+      setError(errorMessage)
+      console.error('Position card drawing error:', err)
     }
   }
 
@@ -235,8 +232,8 @@ export function CardDraw({
   }
 
   const handleCardClick = (card: any) => {
-    // Use enhanced card data for rich modal display
-    const detailedCard = enhanceCardWithWastelandData(card)
+    // ✅ Use basic enhanced card data (API will load interpretations)
+    const detailedCard = enhanceCardBasic(card)
     setSelectedCard(detailedCard)
     setIsModalOpen(true)
   }

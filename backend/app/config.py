@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     # Redis Configuration (Optional for caching)
     redis_url: Optional[str] = Field(None, env="REDIS_URL")
 
+    # Google Cloud TTS Configuration (Optional)
+    google_cloud_credentials_json: Optional[str] = Field(None, env="GOOGLE_CLOUD_CREDENTIALS_JSON")
+    google_tts_language_code: Optional[str] = Field("zh-TW", env="GOOGLE_TTS_LANGUAGE_CODE")
+    google_tts_voice_name: Optional[str] = Field("zh-TW-Standard-A", env="GOOGLE_TTS_VOICE_NAME")
+    supabase_storage_bucket: str = Field("audio-files", env="SUPABASE_STORAGE_BUCKET")
+
     # Logging
     log_level: str = Field("INFO", env="LOG_LEVEL")
     enable_json_logging: bool = Field(False, env="ENABLE_JSON_LOGGING")

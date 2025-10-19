@@ -1,18 +1,26 @@
 'use client'
 import React, { useMemo, useState, useCallback, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useReadingsStore } from '@/lib/readingsStore'
 import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
 import { PixelIcon } from '@/components/ui/icons'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { toDisplay } from '@/lib/spreadMapping'
 
 interface Props { onSelect?: (id: string) => void }
 
 export function ReadingHistory({ onSelect }: Props) {
+  const router = useRouter()
   const readings = useReadingsStore(s => s.readings)
   const toggleFavorite = useReadingsStore(s => s.toggleFavorite)
+  const deleteReading = useReadingsStore(s => s.deleteReading)
   const { templates, byId: templatesById, fetchAll } = useSpreadTemplatesStore()
   const [filter, setFilter] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'date' | 'question'>('date')
   const [search, setSearch] = useState('')
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [readingToDelete, setReadingToDelete] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Fetch spread templates on mount
   useEffect(() => {
@@ -82,7 +90,8 @@ export function ReadingHistory({ onSelect }: Props) {
       if (matchingTemplate) {
         return formatDisplayName(matchingTemplate)
       }
-      return reading.spread_type
+      // 使用 spreadMapping 取得顯示名稱
+      return toDisplay(reading.spread_type)
     }
 
     // 4. 根據卡牌數量生成名稱
@@ -191,6 +200,32 @@ export function ReadingHistory({ onSelect }: Props) {
 
   const formatDate = (d: string) => new Date(d).toLocaleString()
 
+  // 打開刪除確認對話框
+  const handleDeleteClick = (e: React.MouseEvent, readingId: string) => {
+    e.stopPropagation() // 防止觸發卡片點擊
+    setReadingToDelete(readingId)
+    setDeleteDialogOpen(true)
+  }
+
+  // 確認刪除
+  const confirmDelete = async () => {
+    if (!readingToDelete) return
+
+    setIsDeleting(true)
+    try {
+      const success = await deleteReading(readingToDelete)
+      if (success) {
+        // 成功刪除後的追蹤
+        import('@/lib/actionTracker').then(m => m.track('reading:delete', { id: readingToDelete }))
+      }
+    } catch (error) {
+      console.error('Delete error:', error)
+    } finally {
+      setIsDeleting(false)
+      setReadingToDelete(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -215,7 +250,7 @@ export function ReadingHistory({ onSelect }: Props) {
       </div>
       <div className="space-y-3">
         {filtered.map(r => (
-          <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={()=>{ onSelect?.(r.id); import('@/lib/actionTracker').then(m=>m.track('reading:view_detail',{id:r.id})) }}>
+          <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={()=>{ router.push(`/readings/${r.id}`); import('@/lib/actionTracker').then(m=>m.track('reading:view_detail',{id:r.id})) }}>
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
                 <div className="text-2xl">{getSpreadIcons(r)}</div>
@@ -225,11 +260,15 @@ export function ReadingHistory({ onSelect }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={(e)=>{e.stopPropagation(); toggleFavorite(r.id).then(()=>import('@/lib/actionTracker').then(m=>m.track('reading:toggle_favorite',{id:r.id,value:!r.is_favorite})))}} className={"text-xs "+(r.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/40 hover:text-yellow-400') }>< PixelIcon name="star" className="w-4 h-4" /></button>
-                <button onClick={(e)=>{e.stopPropagation(); const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`reading-${r.id}.json`; a.click(); }} className="text-pip-boy-green/60 hover:text-pip-boy-green">< PixelIcon name="save" className="w-4 h-4" /></button>
+                <button onClick={(e)=>{e.stopPropagation(); toggleFavorite(r.id).then(()=>import('@/lib/actionTracker').then(m=>m.track('reading:toggle_favorite',{id:r.id,value:!r.is_favorite})))}} className={"text-xs "+(r.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/40 hover:text-yellow-400') } title={r.is_favorite ? '取消收藏' : '加入收藏'}>< PixelIcon name="star" className="w-4 h-4" /></button>
+                <button onClick={(e)=>{e.stopPropagation(); const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`reading-${r.id}.json`; a.click(); }} className="text-pip-boy-green/60 hover:text-pip-boy-green" title="匯出 JSON">< PixelIcon name="save" className="w-4 h-4" /></button>
+                <button onClick={(e) => handleDeleteClick(e, r.id)} className="text-red-400/60 hover:text-red-400" title="刪除占卜">< PixelIcon name="trash" className="w-4 h-4" /></button>
               </div>
             </div>
-            <div className="mt-2 text-xs text-pip-boy-green/70 line-clamp-2">{(r as any).overall_interpretation || (r as any).interpretation}</div>
+            {/* 使用者的問題 */}
+            <p className="mt-2 text-pip-boy-green/80 text-sm italic">
+              "{r.question}"
+            </p>
           </div>
         ))}
         {filtered.length === 0 && (
@@ -239,6 +278,19 @@ export function ReadingHistory({ onSelect }: Props) {
           </div>
         )}
       </div>
+
+      {/* 刪除確認對話框 */}
+      <ConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="刪除占卜記錄"
+        description="確定要刪除這筆占卜記錄嗎？此操作無法復原，所有相關的卡牌和解讀資料都將被永久刪除。"
+        confirmText="刪除"
+        cancelText="取消"
+        variant="destructive"
+        isLoading={isDeleting}
+      />
     </div>
   )
 }

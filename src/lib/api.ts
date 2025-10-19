@@ -7,8 +7,26 @@
  * - API_BASE_URL 設為空字串，使用相對路徑（/api/v1/...）
  */
 
+// Import types first
+import type {
+  Reading,
+  ReadingSession,
+  LegacyReading,
+  TarotCard as WastelandCard,
+  User as APIUser,
+  SpreadTemplate,
+} from '@/types/api'
+import { isReadingSession, isLegacyReading } from '@/types/api'
+import { useErrorStore } from './errorStore'
+import { timedFetch } from './metrics'
+
+// Re-export types for backward compatibility
+export type { Reading, ReadingSession, LegacyReading }
+export { isReadingSession, isLegacyReading }
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
 
+// Legacy interface for backward compatibility
 interface TarotCard {
   id: string
   name: string
@@ -24,20 +42,6 @@ interface TarotCard {
   pip_boy_analysis?: string
   wasteland_humor?: string
   nuka_cola_reference?: string
-}
-
-interface Reading {
-  id: string
-  user_id: string
-  question: string
-  spread_type: string
-  cards_drawn: any[]
-  interpretation?: string
-  character_voice?: string
-  karma_context?: string
-  faction_influence?: string
-  created_at: string
-  updated_at?: string
 }
 
 interface User {
@@ -65,9 +69,6 @@ class APIError extends Error {
     this.name = 'APIError'
   }
 }
-
-import { useErrorStore } from './errorStore'
-import { timedFetch } from './metrics'
 
 // Global token refresh lock to prevent concurrent refresh requests
 let refreshTokenPromise: Promise<boolean> | null = null
@@ -159,6 +160,10 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
             })
 
             if (retryResponse.ok) {
+              // 204 No Content responses have no body
+              if (retryResponse.status === 204) {
+                return undefined as T
+              }
               return retryResponse.json()
             } else {
               // Retry also failed - token might be expired
@@ -166,8 +171,24 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               throw new APIError(retryError.detail || `HTTP ${retryResponse.status}`, retryResponse.status)
             }
           } else {
-            // Refresh failed - redirect to login
+            // Refresh failed - clear auth state and redirect to login
             if (typeof window !== 'undefined') {
+              // Clear localStorage auth state
+              localStorage.removeItem('auth-store')
+
+              // Dynamically import authStore to avoid circular dependencies
+              import('@/lib/authStore').then(({ useAuthStore }) => {
+                // Clear Zustand store state
+                useAuthStore.setState({
+                  user: null,
+                  isOAuthUser: false,
+                  oauthProvider: null,
+                  profilePicture: null
+                })
+              }).catch(err => {
+                console.error('Failed to clear auth store:', err)
+              })
+
               const currentPath = window.location.pathname
               if (currentPath !== '/auth/login' && !currentPath.startsWith('/auth')) {
                 window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentPath)}`
@@ -186,15 +207,22 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
         throw new APIError(errorData.detail || `HTTP ${response.status}`, response.status)
       }
 
+      // 204 No Content responses have no body
+      if (response.status === 204) {
+        return undefined as T
+      }
+
       return response.json()
     } catch (err: any) {
       lastError = err
       if (attempt >= maxRetries || (err instanceof APIError && err.status < 500)) {
-        // push to error store，但排除預期的未登入情況
-        // 如果是 /api/v1/auth/me 端點的 401 錯誤，這是正常的未登入狀態，不需要顯示錯誤
+        // push to error store，但排除預期的錯誤情況
+        // 1. /api/v1/auth/me 端點的 401 錯誤 - 正常的未登入狀態
+        // 2. 404 Not Found - 資源不存在，由頁面組件處理跳轉
         const isAuthCheckEndpoint = endpoint === '/api/v1/auth/me'
         const isUnauthorized = err instanceof APIError && err.status === 401
-        const shouldNotDisplayError = isAuthCheckEndpoint && isUnauthorized
+        const isNotFound = err instanceof APIError && err.status === 404
+        const shouldNotDisplayError = (isAuthCheckEndpoint && isUnauthorized) || isNotFound
 
         if (!shouldNotDisplayError) {
           try {
@@ -217,35 +245,38 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
 // Cards API
 export const cardsAPI = {
-  // 獲取所有卡牌
-  getAll: (): Promise<TarotCard[]> =>
-    apiRequest<TarotCard[]>('/api/v1/cards/'),
+  // 獲取所有卡牌（支援分頁回應）
+  getAll: async (options?: { limit?: number }): Promise<TarotCard[]> => {
+    const pageSize = options?.limit || 100 // 預設取得 100 張卡片
+    const response = await apiRequest<{
+      cards: TarotCard[]
+      total_count: number
+      page: number
+      page_size: number
+      has_more: boolean
+    }>(`/api/v1/cards/?page=1&page_size=${pageSize}`)
+    return response.cards
+  },
 
   // 根據 ID 獲取卡牌
   getById: (id: string): Promise<TarotCard> =>
     apiRequest<TarotCard>(`/api/v1/cards/${id}`),
 
-  // 隨機抽取卡牌
+  // 抽取隨機卡牌（使用 RESTful 端點）
   drawRandom: (count: number = 1): Promise<TarotCard[]> =>
-    apiRequest<TarotCard[]>(`/api/v1/cards/draw-random?count=${count}`),
+    apiRequest<TarotCard[]>(`/api/v1/cards/draws?count=${count}`),
 
   // 根據花色獲取卡牌
   getBySuit: (suit: string): Promise<TarotCard[]> =>
     apiRequest<TarotCard[]>(`/api/v1/cards/?suit=${suit}`),
 }
 
+import type { CreateReadingPayload } from '@/types/api'
+
 // Readings API
 export const readingsAPI = {
   // 創建新占卜
-  create: (readingData: {
-    question: string
-    spread_type: string
-    cards_drawn: any[]
-    interpretation?: string
-    character_voice?: string
-    karma_context?: string
-    faction_influence?: string
-  }): Promise<Reading> =>
+  create: (readingData: CreateReadingPayload): Promise<Reading> =>
     apiRequest<Reading>('/api/v1/readings/', {
       method: 'POST',
       body: JSON.stringify(readingData),
@@ -259,11 +290,35 @@ export const readingsAPI = {
   getById: (id: string): Promise<Reading> =>
     apiRequest<Reading>(`/api/v1/readings/${id}`),
 
-  // 更新占卜
+  // 更新占卜 (完整更新)
   update: (id: string, updateData: Partial<Reading>): Promise<Reading> =>
     apiRequest<Reading>(`/api/v1/readings/${id}`, {
       method: 'PUT',
       body: JSON.stringify(updateData),
+    }),
+
+  // 部分更新占卜 (包含 AI 解讀)
+  patch: (id: string, updateData: Partial<ReadingSession>): Promise<ReadingSession> =>
+    apiRequest<ReadingSession>(`/api/v1/readings/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updateData),
+    }),
+
+  // 儲存 AI 解讀結果
+  saveAIInterpretation: (
+    id: string,
+    interpretation: {
+      overall_interpretation: string
+      summary_message?: string
+      prediction_confidence?: number
+    }
+  ): Promise<ReadingSession> =>
+    apiRequest<ReadingSession>(`/api/v1/readings/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        ...interpretation,
+        ai_interpretation_requested: true,
+      }),
     }),
 
   // 刪除占卜
@@ -324,6 +379,37 @@ export const authAPI = {
     apiRequest('/api/v1/auth/logout', {
       method: 'POST',
     }),
+
+  // 延長 Token（活躍度或忠誠度）
+  extendToken: (data: {
+    extension_type: 'activity' | 'loyalty'
+    activity_duration?: number // 活躍時長（秒），activity 類型必填
+  }): Promise<{
+    success: boolean
+    message: string
+    extended_minutes: number
+    token_expires_at: number
+    rewards?: {
+      karma_bonus: number
+      badge_unlocked: string
+    }
+  }> =>
+    apiRequest('/api/v1/auth/extend-token', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  // 取得忠誠度狀態
+  getLoyaltyStatus: (): Promise<{
+    is_eligible: boolean
+    login_days_count: number
+    login_dates: string[]
+    extension_available: boolean
+    current_streak: number
+  }> =>
+    apiRequest('/api/v1/auth/loyalty-status', {
+      method: 'GET',
+    }),
 }
 
 // Health check
@@ -334,7 +420,6 @@ export const healthAPI = {
 
 // Sessions API (Reading Save & Resume)
 import type {
-  ReadingSession,
   SessionListResponse,
   SessionCreateRequest,
   SessionUpdateRequest,
@@ -412,7 +497,19 @@ export const sessionsAPI = {
 }
 
 export const spreadTemplatesAPI = {
-  getAll: (): Promise<any[]> => apiRequest<any[]>('/api/v1/spreads'),
+  getAll: (): Promise<SpreadTemplate[]> => apiRequest<SpreadTemplate[]>('/api/v1/spreads/'),
+}
+
+// Interpretations API
+export const interpretationsAPI = {
+  // 獲取解讀統計摘要
+  getStats: (): Promise<{
+    total_interpretations: number
+    active_interpretations: number
+    inactive_interpretations: number
+    cards_with_interpretations: number
+    characters_with_interpretations: number
+  }> => apiRequest('/api/v1/interpretations/stats/summary'),
 }
 
 export type { TarotCard, Reading, User, APIError }

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { LoadingSpinner } from '@/components/ui/pipboy/LoadingSpinner'
-import { AsciiDonutLoading } from '@/components/loading/AsciiDonutLoading'
+import { AsciiLoading } from '@/components/loading/AsciiLoading'
 
 export function ZustandAuthInitializer({ children }: { children: React.ReactNode }) {
   const initialize = useAuthStore(s => s.initialize)
@@ -25,20 +25,36 @@ export function ZustandAuthInitializer({ children }: { children: React.ReactNode
   }, [initialize, mounted])
 
   // Prevent hydration mismatch by always showing loading on initial render
-  if (!mounted || !isInitialized) {
-    // 首頁使用 AsciiDonutLoading，其他頁面使用 LoadingSpinner
+  // SSR 時 mounted = false，所以總是顯示 loading
+  // 客戶端初次渲染時 mounted = false，也顯示 loading（與 SSR 一致）
+  // 只有在 mounted = true 之後才檢查 isInitialized
+  if (!mounted) {
+    // 在 SSR 和客戶端初次渲染時，總是顯示相同的 loading 畫面
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black z-50" suppressHydrationWarning>
+        <LoadingSpinner
+          size="lg"
+          text="INITIALIZING VAULT RESIDENT STATUS..."
+          centered
+        />
+      </div>
+    )
+  }
+
+  // mounted = true 之後，才根據頁面路徑和初始化狀態決定顯示內容
+  if (!isInitialized) {
     const isHomePage = pathname === '/'
 
     if (isHomePage) {
       return (
-        <AsciiDonutLoading
+        <AsciiLoading
+          type="bottle"
           message="INITIALIZING VAULT RESIDENT STATUS..."
           progress={progress}
         />
       )
     }
 
-    // 其他頁面使用簡單的 LoadingSpinner
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black z-50" suppressHydrationWarning>
         <LoadingSpinner

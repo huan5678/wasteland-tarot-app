@@ -111,9 +111,15 @@ class UserService:
         await self.db.commit()
         await self.db.refresh(user)
 
-        # TODO: 建立預設 profile 和 preferences (暫時跳過以避免 schema 問題)
-        # await self._create_default_profile(user.id)
-        # await self._create_default_preferences(user.id)
+        # Create default profile and preferences for new user
+        try:
+            await self._create_default_profile(user.id)
+            await self._create_default_preferences(user.id)
+            await self.db.commit()
+        except Exception as e:
+            logger.error(f"Failed to create default profile/preferences for user {user.id}: {e}")
+            # Don't fail registration if profile creation fails
+            pass
 
         return user
 
@@ -197,13 +203,43 @@ class UserService:
         limit: int = 10,
         offset: int = 0
     ) -> List[Dict[str, Any]]:
-        """Get user's reading history"""
-        # TODO: Fix Reading model import and implement properly
-        # For now return empty list to allow API to start
-        return []
+        """Get user's reading history with full details"""
+        from app.models.reading_enhanced import CompletedReading as Reading
+
+        # Query user's completed readings
+        result = await self.db.execute(
+            select(Reading)
+            .where(Reading.user_id == user_id)
+            .order_by(desc(Reading.created_at))
+            .limit(limit)
+            .offset(offset)
+        )
+        readings = result.scalars().all()
+
+        # Convert to dictionaries
+        reading_history = []
+        for reading in readings:
+            reading_dict = {
+                "id": str(reading.id),
+                "question": reading.question,
+                "spread_type": reading.spread_template_id,
+                "overall_interpretation": reading.overall_interpretation,
+                "character_voice": reading.character_voice_used,
+                "karma_context": reading.karma_context,
+                "radiation_factor": reading.radiation_factor,
+                "created_at": reading.created_at.isoformat() if reading.created_at else None,
+                "is_favorite": reading.is_favorite,
+                "user_satisfaction": reading.user_satisfaction,
+                "privacy_level": reading.privacy_level
+            }
+            reading_history.append(reading_dict)
+
+        return reading_history
 
     async def get_user_statistics(self, user_id: str) -> Dict[str, Any]:
         """Calculate user statistics"""
+        from app.models.reading_enhanced import CompletedReading as Reading
+
         user = await self.get_user_by_id(user_id)
 
         # Get reading count

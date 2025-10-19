@@ -8,6 +8,7 @@ from fastapi import Depends, HTTPException, status, Header, Cookie, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 import logging
+from functools import lru_cache
 
 from app.db.session import get_db
 from app.models.user import User
@@ -16,6 +17,9 @@ from app.core.security import verify_token
 from app.config import get_settings
 from app.services.ai_interpretation_service import AIInterpretationService
 from app.services.user_service import UserService
+from app.core.supabase import get_supabase_client as _get_supabase_client
+from supabase import Client
+from redis import Redis
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -23,19 +27,17 @@ settings = get_settings()
 # Security scheme for JWT tokens (fallback for Authorization header)
 security = HTTPBearer(auto_error=False)
 
-# AI service singleton
-_ai_service: Optional[AIInterpretationService] = None
-
-
-def get_ai_interpretation_service() -> AIInterpretationService:
+async def get_ai_interpretation_service(
+    db: AsyncSession = Depends(get_db)
+) -> AIInterpretationService:
     """
-    Get AI interpretation service singleton instance.
-    Creates the service on first access.
+    Get AI interpretation service instance with database session dependency.
+    Creates a new instance for each request with the current database session.
+
+    Note: Changed from singleton to request-scoped to support database-driven AI configurations.
+    Each request gets its own service instance with access to the database session.
     """
-    global _ai_service
-    if _ai_service is None:
-        _ai_service = AIInterpretationService(settings)
-    return _ai_service
+    return AIInterpretationService(settings, db)
 
 
 async def get_current_user(
@@ -285,3 +287,37 @@ def get_pagination_params(
     Dependency for pagination parameters with validation.
     """
     return PaginationParams(page=page, page_size=page_size)
+
+
+def get_supabase_client() -> Client:
+    """
+    Get Supabase client instance for dependency injection.
+    """
+    return _get_supabase_client()
+
+
+@lru_cache()
+def get_redis_client() -> Optional[Redis]:
+    """
+    Get Redis client instance for caching (optional).
+
+    Returns:
+        Redis client if REDIS_URL is configured, None otherwise.
+    """
+    if not settings.redis_url:
+        logger.warning("Redis URL not configured, caching disabled")
+        return None
+
+    try:
+        client = Redis.from_url(
+            settings.redis_url,
+            decode_responses=True,
+            socket_connect_timeout=5
+        )
+        # Test connection
+        client.ping()
+        logger.info("Redis connection established")
+        return client
+    except Exception as e:
+        logger.warning(f"Failed to connect to Redis: {e}. Caching disabled.")
+        return None

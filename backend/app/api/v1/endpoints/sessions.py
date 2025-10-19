@@ -369,6 +369,7 @@ async def complete_session(
 
         # Prepare reading metadata
         reading_metadata = {
+            'spread_template_id': complete_data.spread_template_id,
             'character_voice': complete_data.character_voice,
             'karma_context': complete_data.karma_context,
             'faction_influence': complete_data.faction_influence

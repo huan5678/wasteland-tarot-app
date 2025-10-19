@@ -89,37 +89,108 @@ export const CONCURRENT_LOAD_LIMIT = 3;
 /**
  * 角色語音預設配置
  * 需求 2.3: 角色語音參數預設值
+ *
+ * 設計原則：
+ * - pitch: 音高 (0.0-2.0)，低音=威嚴/強壯，高音=年輕/機械
+ * - rate: 語速 (0.1-10.0)，慢速=穩重/笨重，快速=精明/活潑
+ * - volume: 音量 (0.0-1.0)
+ * - effects: 音效處理（radio=電子音、distortion=粗糙音、reverb=回音）
  */
 export const DEFAULT_VOICE_CONFIGS: Record<CharacterVoice, Omit<VoiceConfig, 'character'>> = {
+  // 通用角色
   pip_boy: {
-    pitch: 1.0,
-    rate: 1.0,
+    pitch: 1.0,         // 中性音高，機械感
+    rate: 1.0,          // 正常語速，精確
     volume: 1.0,
-    effects: ['radio'],
+    effects: ['radio'], // 電子音效
   },
-  mr_handy: {
-    pitch: 1.5,
-    rate: 1.2,
-    volume: 1.0,
-    effects: ['radio', 'distortion'],
-  },
-  brotherhood_scribe: {
-    pitch: 0.9,
-    rate: 0.95,
-    volume: 1.0,
-    effects: ['radio'],
-  },
-  vault_overseer: {
-    pitch: 1.1,
-    rate: 0.9,
+  vault_dweller: {
+    pitch: 1.1,         // 稍高音，年輕樂觀
+    rate: 1.05,         // 稍快，活潑好奇
     volume: 1.0,
     effects: [],
   },
-  wasteland_wanderer: {
-    pitch: 0.95,
-    rate: 1.0,
+  wasteland_trader: {
+    pitch: 0.95,        // 稍低音，成熟務實
+    rate: 1.1,          // 較快語速，精明幹練
     volume: 1.0,
-    effects: ['reverb'],
+    effects: [],
+  },
+  codsworth: {
+    pitch: 1.3,         // 較高音，機器人特徵
+    rate: 1.15,         // 稍快，優雅紳士
+    volume: 1.0,
+    effects: ['radio', 'distortion'], // 機器人音效
+  },
+
+  // 廢土生物與掠奪者
+  super_mutant: {
+    pitch: 0.6,         // 極低音，威嚇強大
+    rate: 0.8,          // 慢速，笨重簡單
+    volume: 1.0,
+    effects: ['distortion'], // 粗糙音效
+  },
+  ghoul: {
+    pitch: 0.85,        // 低沉音，歷經滄桑
+    rate: 0.95,         // 稍慢，老成諷刺
+    volume: 1.0,
+    effects: ['distortion'], // 沙啞音效
+  },
+  raider: {
+    pitch: 0.9,         // 低音，粗暴
+    rate: 1.15,         // 快速，急躁無畏
+    volume: 1.0,
+    effects: [],
+  },
+
+  // 鋼鐵兄弟會
+  brotherhood_scribe: {
+    pitch: 1.05,        // 稍高音，學術知性
+    rate: 0.95,         // 稍慢，嚴謹謹慎
+    volume: 1.0,
+    effects: ['radio'], // 通訊音效
+  },
+  brotherhood_paladin: {
+    pitch: 0.9,         // 低沉音，威嚴榮譽
+    rate: 0.9,          // 慢速，穩重紀律
+    volume: 1.0,
+    effects: ['radio'], // 軍事通訊
+  },
+
+  // NCR
+  ncr_ranger: {
+    pitch: 0.95,        // 中低音，專業可靠
+    rate: 1.0,          // 正常語速，堅定
+    volume: 1.0,
+    effects: [],
+  },
+
+  // 凱薩軍團
+  legion_centurion: {
+    pitch: 0.85,        // 低沉音，權威嚴格
+    rate: 0.9,          // 慢速，命令式
+    volume: 1.0,
+    effects: [],
+  },
+
+  // Fallout 4 陣營角色
+  minuteman: {
+    pitch: 1.0,         // 中性音，正義感
+    rate: 1.0,          // 正常語速，保護者
+    volume: 1.0,
+    effects: [],
+  },
+  railroad_agent: {
+    pitch: 1.0,         // 中性音，神秘
+    rate: 0.95,         // 稍慢，謹慎同情
+    volume: 0.9,        // 稍小聲，隱密
+    effects: [],
+  },
+  institute_scientist: {
+    pitch: 1.1,         // 稍高音，知性理性
+    rate: 1.05,         // 稍快，聰明先進
+    volume: 1.0,
+    effects: ['radio'], // 科技感
   },
 } as const;
 

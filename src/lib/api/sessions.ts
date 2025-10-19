@@ -210,15 +210,17 @@ export async function updateSession(
   data: SessionUpdateData,
   expectedUpdatedAt?: string
 ): Promise<SessionResponse> {
-  const body: any = { ...data };
+  // Build URL with query parameter if expectedUpdatedAt is provided
+  let url = `${API_BASE_URL}/api/v1/sessions/${sessionId}`;
   if (expectedUpdatedAt) {
-    body.expected_updated_at = expectedUpdatedAt;
+    const params = new URLSearchParams({ expected_updated_at: expectedUpdatedAt });
+    url += `?${params.toString()}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/sessions/${sessionId}`, {
+  const response = await fetch(url, {
     method: 'PATCH',
     headers: createHeaders(),
-    body: JSON.stringify(body),
+    body: JSON.stringify(data),  // Only include SessionUpdateData in body
   });
 
   return handleResponse<SessionResponse>(response);
@@ -239,6 +241,7 @@ export async function deleteSession(sessionId: string): Promise<boolean> {
 
 export interface SessionCompleteData {
   interpretation?: string;
+  spread_template_id?: string;
   character_voice?: string;
   karma_context?: string;
   faction_influence?: string;

@@ -30,7 +30,7 @@ class ReadingService:
     def __init__(self, db_session: AsyncSession):
         self.db = db_session
         self.card_service = WastelandCardService(db_session)
-        self.ai_service = AIInterpretationService(settings)
+        self.ai_service = AIInterpretationService(settings, db_session)
 
     async def create_reading(self, reading_data: Dict[str, Any]) -> Reading:
         """Create a new reading for authenticated user"""
@@ -48,27 +48,33 @@ class ReadingService:
         # Check daily reading limit
         await self._check_daily_reading_limit(user_id)
 
-        # Draw cards using radiation shuffle
-        drawn_cards = await self.card_service.draw_cards_with_radiation_shuffle(
+        # Draw cards using pure random selection (NO user-data influence)
+        drawn_cards = await self.card_service.draw_cards_with_pure_randomness(
             num_cards=num_cards,
-            radiation_factor=radiation_factor,
             user_id=user_id
         )
 
-        # Generate interpretation
+        # Generate interpretation (user context used ONLY for AI prompt style)
         if isinstance(character_voice, str):
             character_voice = CharacterVoice(character_voice)
         interpretation = await self._generate_interpretation(user, drawn_cards, question, character_voice)
 
-        # Prepare cards data for storage
+        # Prepare cards data for storage with FIXED reversal logic
         cards_data = []
         for card in drawn_cards:
+            # Fixed 33% reversal chance - NO user influence
+            # Pure random, same probability for all users
+            import random
+
+            FIXED_REVERSAL_CHANCE = 0.33  # 33% chance for all cards, all users
+            is_reversed = random.random() < FIXED_REVERSAL_CHANCE
+
             cards_data.append({
                 "id": card.id,
                 "name": card.name,
                 "suit": card.suit.value if card.suit else None,
                 "position": len(cards_data),
-                "reversed": False  # TODO: Implement reversal logic
+                "reversed": is_reversed
             })
 
         # Merge frontend supplied position metadata if provided

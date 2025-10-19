@@ -12,12 +12,6 @@ interface SpreadRecommendation {
   confidence: number
 }
 
-interface CardRecommendation {
-  card_id: string
-  reason: string
-  confidence: number
-}
-
 interface InterpretationStyle {
   style: 'balanced' | 'mystical' | 'practical'
   depth: 'simple' | 'medium' | 'deep'
@@ -70,46 +64,6 @@ export function useSpreadRecommendation(question: string) {
   }, [question, token])
 
   return { recommendation, loading }
-}
-
-/**
- * Hook to get cards recommended for study
- */
-export function useStudyCards(limit: number = 5) {
-  const token = useAuthStore(s => s.token)
-  const [cards, setCards] = useState<CardRecommendation[]>([])
-  const [loading, setLoading] = useState(false)
-
-  const fetchCards = async () => {
-    if (!token) return
-
-    setLoading(true)
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/v1/analytics/recommendations/cards-for-study?limit=${limit}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      )
-
-      if (response.ok) {
-        const data = await response.json()
-        setCards(data.cards || [])
-      }
-    } catch (error) {
-      console.error('Error fetching study cards:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchCards()
-  }, [token, limit])
-
-  return { cards, loading, refetch: fetchCards }
 }
 
 /**

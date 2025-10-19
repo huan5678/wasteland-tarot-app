@@ -1,6 +1,7 @@
 /**
  * Card Share Component
  * Provides multiple sharing options for tarot cards including social media, export, and URL sharing
+ * Fixed version with PixelIcon only
  */
 
 'use client'
@@ -9,6 +10,7 @@ import React, { useState, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { DetailedTarotCard } from './CardDetailModal'
+import { PixelIcon } from '../ui/icons'
 
 export interface ShareOptions {
   includeImage: boolean
@@ -60,51 +62,37 @@ export function CardShare({
 
   // Generate shareable content
   const generateShareContent = useCallback((): ShareData => {
-    const meaning = position === 'reversed' ? 
+    const meaning = position === 'reversed' ?
       (card.reversed_meaning || card.meaning_reversed) :
       (card.upright_meaning || card.meaning_upright)
-    
+
     let text = `🃏 ${card.name}`
-    
+
     if (shareOptions.includeDescription && card.description) {
-      text += `\
-\
-${card.description}`
+      text += `\n\n${card.description}`
     }
-    
+
     if (shareOptions.includeMeaning && meaning) {
-      text += `\
-\
-💫 ${position === 'reversed' ? 'Reversed' : 'Upright'} Meaning:\
-${meaning}`
+      text += `\n\n💫 ${position === 'reversed' ? 'Reversed' : 'Upright'} Meaning:\n${meaning}`
     }
-    
+
     if (shareOptions.includeKeywords && card.keywords?.length) {
-      text += `\
-\
-🔑 Keywords: ${card.keywords.slice(0, 5).join(', ')}`
+      text += `\n\n🔑 Keywords: ${card.keywords.slice(0, 5).join(', ')}`
     }
-    
-    if (shareOptions.includeCharacterVoice && 
-        shareOptions.selectedVoice && 
+
+    if (shareOptions.includeCharacterVoice &&
+        shareOptions.selectedVoice &&
         card.character_voice_interpretations?.[shareOptions.selectedVoice]) {
-      const voiceName = shareOptions.selectedVoice.replace('_', ' ').toLowerCase().replace(/\\b\\w/g, l => l.toUpperCase())
-      text += `\
-\
-🎭 ${voiceName}'s Perspective:\
-${card.character_voice_interpretations[shareOptions.selectedVoice]}`
+      const voiceName = shareOptions.selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+      text += `\n\n🎭 ${voiceName}'s Perspective:\n${card.character_voice_interpretations[shareOptions.selectedVoice]}`
     }
-    
+
     if (shareOptions.customMessage) {
-      text += `\
-\
-✨ ${shareOptions.customMessage}`
+      text += `\n\n✨ ${shareOptions.customMessage}`
     }
-    
-    text += `\
-\
-🌟 Explore the Wasteland Tarot deck!`
-    
+
+    text += `\n\n🌟 Explore the Wasteland Tarot deck!`
+
     return {
       title: `${card.name} - Wasteland Tarot`,
       text,
@@ -129,68 +117,68 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
   // Generate and download image
   const generateCardImage = useCallback(async () => {
     if (!canvasRef.current) return
-    
+
     const canvas = canvasRef.current
     const ctx = canvas.getContext('2d')
     if (!ctx) return
-    
+
     // Set canvas size
     canvas.width = 800
     canvas.height = 1200
-    
+
     // Background
     ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    
+
     // Border
     ctx.strokeStyle = '#00ff41'
     ctx.lineWidth = 4
     ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40)
-    
+
     // Load and draw card image
     try {
       const img = new Image()
       img.crossOrigin = 'anonymous'
-      
+
       return new Promise<void>((resolve, reject) => {
         img.onload = () => {
           // Draw card image
           const imageHeight = 600
           const imageWidth = (img.width / img.height) * imageHeight
           const x = (canvas.width - imageWidth) / 2
-          
+
           ctx.drawImage(img, x, 40, imageWidth, imageHeight)
-          
+
           // Add text content
           ctx.fillStyle = '#00ff41'
           ctx.font = 'bold 48px monospace'
           ctx.textAlign = 'center'
-          
+
           // Card name
           ctx.fillText(card.name, canvas.width / 2, 720)
-          
+
           // Suit
           ctx.font = '24px monospace'
           ctx.fillText(card.suit.replace('_', ' '), canvas.width / 2, 760)
-          
+
           // Meaning
-          const meaning = position === 'reversed' ? 
+          const meaning = position === 'reversed' ?
             (card.reversed_meaning || card.meaning_reversed) :
             (card.upright_meaning || card.meaning_upright)
-            
+
           if (meaning) {
             ctx.font = '20px monospace'
             ctx.textAlign = 'left'
-            
+
             // Word wrap for meaning
             const words = meaning.split(' ')
             const lines: string[] = []
             let currentLine = ''
-            
+
             words.forEach(word => {
               const testLine = currentLine + word + ' '
               const metrics = ctx.measureText(testLine)
-              
+
               if (metrics.width > canvas.width - 80) {
                 lines.push(currentLine)
                 currentLine = word + ' '
@@ -198,25 +186,25 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                 currentLine = testLine
               }
             })
-            
+
             if (currentLine) lines.push(currentLine)
-            
+
             let y = 820
             lines.slice(0, 6).forEach(line => {
               ctx.fillText(line, 40, y)
               y += 30
             })
           }
-          
+
           // Watermark
           ctx.font = '16px monospace'
           ctx.textAlign = 'center'
           ctx.fillStyle = '#00ff41aa'
           ctx.fillText('Wasteland Tarot - Generated with Claude', canvas.width / 2, canvas.height - 40)
-          
+
           resolve()
         }
-        
+
         img.onerror = reject
         img.src = card.image_url
       })
@@ -228,10 +216,10 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
   // Download generated image
   const downloadImage = useCallback(async () => {
     await generateCardImage()
-    
+
     if (canvasRef.current) {
       const link = document.createElement('a')
-      link.download = `${card.name.toLowerCase().replace(/\\s+/g, '-')}-wasteland-tarot.png`
+      link.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-wasteland-tarot.png`
       link.href = canvasRef.current.toDataURL()
       link.click()
     }
@@ -240,16 +228,16 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
   // Native share API
   const nativeShare = useCallback(async () => {
     if (!navigator.share) return
-    
+
     const shareData = generateShareContent()
-    
+
     try {
       await navigator.share({
         title: shareData.title,
         text: shareData.text,
         url: shareData.url
       })
-      
+
       onShare?.('native', shareOptions)
     } catch (error) {
       console.error('Native share failed:', error)
@@ -260,7 +248,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
   const shareToSocial = useCallback((platform: string) => {
     const shareData = generateShareContent()
     let url = ''
-    
+
     switch (platform) {
       case 'twitter':
         url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url || '')}`
@@ -275,36 +263,22 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
         url = `https://t.me/share/url?url=${encodeURIComponent(shareData.url || '')}&text=${encodeURIComponent(shareData.text)}`
         break
     }
-    
+
     if (url) {
       window.open(url, '_blank', 'width=600,height=400')
       onShare?.(platform, shareOptions)
     }
   }, [generateShareContent, shareOptions, onShare])
 
-  // Generate QR code (simplified version)
-  const generateQR = useCallback(async () => {
-    setIsGeneratingQR(true)
-    
-    // In a real implementation, you'd use a QR code library
-    // For now, we'll use a QR code service
-    const shareData = generateShareContent()
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`
-    
-    setTimeout(() => setIsGeneratingQR(false), 1000)
-    
-    return qrUrl
-  }, [generateShareContent])
-
   const shareData = generateShareContent()
 
   const shareMethods = [
-    { id: 'url', label: 'Link', icon: Link2, color: 'text-pip-boy-green' },
-    { id: 'image', label: 'Image', icon: ImageIcon, color: 'text-blue-400' },
-    { id: 'text', label: 'Text', icon: FileText, color: 'text-purple-400' },
-    { id: 'social', label: 'Social', icon: Share2, color: 'text-pink-400' },
-    { id: 'qr', label: 'QR Code', icon: QrCode, color: 'text-cyan-400' },
-    { id: 'export', label: 'Export', icon: Download, color: 'text-orange-400' }
+    { id: 'url', label: 'Link', name: 'link' as const, color: 'text-pip-boy-green' },
+    { id: 'image', label: 'Image', name: 'image' as const, color: 'text-blue-400' },
+    { id: 'text', label: 'Text', name: 'file-text' as const, color: 'text-purple-400' },
+    { id: 'social', label: 'Social', name: 'share' as const, color: 'text-pink-400' },
+    { id: 'qr', label: 'QR Code', name: 'qrcode' as const, color: 'text-cyan-400' },
+    { id: 'export', label: 'Export', name: 'download' as const, color: 'text-orange-400' }
   ]
 
   return (
@@ -349,7 +323,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     : "text-pip-boy-green/60 hover:text-pip-boy-green hover:bg-pip-boy-green/10"
                 )}
               >
-                <method.icon className="w-4 h-4" />
+                <PixelIcon name={method.name} size={16} decorative />
                 {method.label}
               </motion.button>
             )
@@ -392,7 +366,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
               >
                 {Object.keys(card.character_voice_interpretations).map(voice => (
                   <option key={voice} value={voice}>
-                    {voice.replace('_', ' ').toLowerCase().replace(/\\b\\w/g, l => l.toUpperCase())}
+                    {voice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                   </option>
                 ))}
               </select>
@@ -438,9 +412,9 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                       className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
                     >
                       {copyStatus.url ? (
-                        <><CheckCircle className="w-4 h-4" /> Copied!</>
+                        <><PixelIcon name="check-circle" size={16} decorative /> Copied!</>
                       ) : (
-                        <><Copy className="w-4 h-4" /> Copy</>
+                        <><PixelIcon name="copy" size={16} decorative /> Copy</>
                       )}
                     </motion.button>
                   </div>
@@ -453,7 +427,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     whileTap={{ scale: 0.95 }}
                     className="w-full py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Smartphone className="w-5 h-5" />
+                    <PixelIcon name="smartphone" size={20} decorative />
                     Share via Device
                   </motion.button>
                 )}
@@ -478,9 +452,9 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                 >
                   {copyStatus.text ? (
-                    <><CheckCircle className="w-5 h-5" /> Text Copied!</>
+                    <><PixelIcon name="check-circle" size={20} decorative /> Text Copied!</>
                   ) : (
-                    <><Copy className="w-5 h-5" /> Copy Text</>
+                    <><PixelIcon name="copy" size={20} decorative /> Copy Text</>
                   )}
                 </motion.button>
               </div>
@@ -503,7 +477,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     whileTap={{ scale: 0.95 }}
                     className="py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
                   >
-                    <ImageIcon className="w-4 h-4" />
+                    <PixelIcon name="image" size={16} decorative />
                     Generate
                   </motion.button>
                   <motion.button
@@ -512,7 +486,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     whileTap={{ scale: 0.95 }}
                     className="py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                   >
-                    <Download className="w-4 h-4" />
+                    <PixelIcon name="download" size={16} decorative />
                     Download
                   </motion.button>
                 </div>
@@ -523,10 +497,10 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
             {activeMethod === 'social' && (
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { platform: 'twitter', label: 'Twitter', icon: Twitter, color: 'bg-blue-500/20 border-blue-400 text-blue-400' },
-                  { platform: 'facebook', label: 'Facebook', icon: Facebook, color: 'bg-blue-600/20 border-blue-600 text-blue-300' },
-                  { platform: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, color: 'bg-green-500/20 border-green-400 text-green-400' },
-                  { platform: 'telegram', label: 'Telegram', icon: Send, color: 'bg-cyan-500/20 border-cyan-400 text-cyan-400' }
+                  { platform: 'twitter', label: 'Twitter', name: 'message' as const, color: 'bg-blue-500/20 border-blue-400 text-blue-400' },
+                  { platform: 'facebook', label: 'Facebook', name: 'message' as const, color: 'bg-blue-600/20 border-blue-600 text-blue-300' },
+                  { platform: 'whatsapp', label: 'WhatsApp', name: 'message' as const, color: 'bg-green-500/20 border-green-400 text-green-400' },
+                  { platform: 'telegram', label: 'Telegram', name: 'send' as const, color: 'bg-cyan-500/20 border-cyan-400 text-cyan-400' }
                 ].map((social) => (
                   <motion.button
                     key={social.platform}
@@ -538,7 +512,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                       social.color
                     )}
                   >
-                    <social.icon className="w-4 h-4" />
+                    <PixelIcon name={social.name} size={16} decorative />
                     {social.label}
                   </motion.button>
                 ))}
@@ -575,9 +549,9 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
                 >
                   {copyStatus.qr ? (
-                    <><CheckCircle className="w-5 h-5" /> QR URL Copied!</>
+                    <><PixelIcon name="check-circle" size={20} decorative /> QR URL Copied!</>
                   ) : (
-                    <><Copy className="w-5 h-5" /> Copy QR URL</>
+                    <><PixelIcon name="copy" size={20} decorative /> Copy QR URL</>
                   )}
                 </motion.button>
               </div>
@@ -592,7 +566,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a')
                     a.href = url
-                    a.download = `${card.name.toLowerCase().replace(/\\s+/g, '-')}-data.json`
+                    a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.json`
                     a.click()
                     URL.revokeObjectURL(url)
                   }}
@@ -600,19 +574,18 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   whileTap={{ scale: 0.95 }}
                   className="py-3 bg-purple-500/20 border border-purple-400 text-purple-400 rounded hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2"
                 >
-                  <FileText className="w-4 h-4" />
+                  <PixelIcon name="file-text" size={16} decorative />
                   Export as JSON
                 </motion.button>
-                
+
                 <motion.button
                   onClick={() => {
-                    const csvContent = `Name,Suit,Upright Meaning,Reversed Meaning,Keywords,Description\
-"${card.name}","${card.suit}","${(card.upright_meaning || '').replace(/"/g, '""')}","${(card.reversed_meaning || '').replace(/"/g, '""')}","${(card.keywords || []).join('; ')}","${(card.description || '').replace(/"/g, '""')}"`
+                    const csvContent = `Name,Suit,Upright Meaning,Reversed Meaning,Keywords,Description\n"${card.name}","${card.suit}","${(card.upright_meaning || '').replace(/"/g, '""')}","${(card.reversed_meaning || '').replace(/"/g, '""')}","${(card.keywords || []).join('; ')}","${(card.description || '').replace(/"/g, '""')}"`
                     const blob = new Blob([csvContent], { type: 'text/csv' })
                     const url = URL.createObjectURL(blob)
                     const a = document.createElement('a')
                     a.href = url
-                    a.download = `${card.name.toLowerCase().replace(/\\s+/g, '-')}-data.csv`
+                    a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.csv`
                     a.click()
                     URL.revokeObjectURL(url)
                   }}
@@ -620,7 +593,7 @@ ${card.character_voice_interpretations[shareOptions.selectedVoice]}`
                   whileTap={{ scale: 0.95 }}
                   className="py-3 bg-cyan-500/20 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors flex items-center justify-center gap-2"
                 >
-                  <Download className="w-4 h-4" />
+                  <PixelIcon name="download" size={16} decorative />
                   Export as CSV
                 </motion.button>
               </div>

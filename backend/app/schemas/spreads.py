@@ -66,8 +66,8 @@ class SpreadTemplateBase(BaseModel):
     name: str = Field(..., min_length=1, max_length=100, description="內部牌陣名稱", example="vault_tec_spread")
     display_name: str = Field(..., min_length=1, max_length=150, description="使用者友善的顯示名稱", example="Vault-Tec Three Card Spread")
     description: str = Field(..., min_length=10, max_length=1000, description="牌陣描述")
-    spread_type: SpreadType = Field(..., description="牌陣類型")
-    difficulty_level: DifficultyLevel = Field(..., description="難度等級")
+    spread_type: str = Field(..., description="牌陣類型")
+    difficulty_level: str = Field(..., description="難度等級")
 
     # 卡牌配置
     card_count: int = Field(..., ge=1, le=15, description="牌陣的卡牌數量")
@@ -96,7 +96,7 @@ class SpreadTemplateBase(BaseModel):
 class SpreadTemplateCreate(SpreadTemplateBase):
     """建立新牌陣模板的 Schema"""
     # 廢土專屬屬性
-    faction_preference: Optional[FactionAlignment] = Field(None, description="偏好此牌陣的派系")
+    faction_preference: Optional[str] = Field(None, description="偏好此牌陣的派系")
     radiation_sensitivity: float = Field(default=0.5, ge=0.0, le=1.0, description="輻射對此牌陣的影響程度")
     vault_origin: Optional[int] = Field(None, description="此牌陣的起源避難所")
 
@@ -114,7 +114,7 @@ class SpreadTemplate(SpreadTemplateBase):
     id: str = Field(..., description="唯一牌陣模板 ID")
 
     # 廢土專屬屬性
-    faction_preference: Optional[FactionAlignment] = Field(None, description="偏好此牌陣的派系")
+    faction_preference: Optional[str] = Field(None, description="偏好此牌陣的派系")
     radiation_sensitivity: float = Field(default=0.5, description="輻射對此牌陣的影響程度")
     vault_origin: Optional[int] = Field(None, description="此牌陣的起源避難所")
 
@@ -188,7 +188,7 @@ class SpreadTemplateUpdate(BaseModel):
     """更新牌陣模板的 Schema"""
     display_name: Optional[str] = Field(None, min_length=1, max_length=150)
     description: Optional[str] = Field(None, min_length=10, max_length=1000)
-    difficulty_level: Optional[DifficultyLevel] = None
+    difficulty_level: Optional[str] = None
     interpretation_guide: Optional[str] = None
     reading_tips: Optional[List[str]] = None
     background_theme: Optional[str] = None
@@ -201,9 +201,9 @@ class SpreadTemplateUpdate(BaseModel):
 class SpreadSearchParams(BaseModel):
     """搜尋牌陣的參數"""
     query: Optional[str] = Field(None, description="搜尋查詢")
-    spread_type: Optional[SpreadType] = Field(None, description="按牌陣類型篩選")
-    difficulty_level: Optional[DifficultyLevel] = Field(None, description="按難度篩選")
-    faction_preference: Optional[FactionAlignment] = Field(None, description="按派系偏好篩選")
+    spread_type: Optional[str] = Field(None, description="按牌陣類型篩選")
+    difficulty_level: Optional[str] = Field(None, description="按難度篩選")
+    faction_preference: Optional[str] = Field(None, description="按派系偏好篩選")
     min_cards: Optional[int] = Field(None, ge=1, le=15, description="最少卡牌數")
     max_cards: Optional[int] = Field(None, ge=1, le=15, description="最多卡牌數")
     is_premium: Optional[bool] = Field(None, description="篩選進階牌陣")
@@ -257,9 +257,9 @@ class SpreadRecommendation(BaseModel):
 
 class SpreadRecommendationRequest(BaseModel):
     """請求牌陣推薦"""
-    user_experience_level: Optional[DifficultyLevel] = Field(None, description="使用者的經驗等級")
-    karma_alignment: Optional[KarmaAlignment] = Field(None, description="使用者的業力對齊")
-    faction_preference: Optional[FactionAlignment] = Field(None, description="使用者的派系偏好")
+    user_experience_level: Optional[str] = Field(None, description="使用者的經驗等級")
+    karma_alignment: Optional[str] = Field(None, description="使用者的業力對齊")
+    faction_preference: Optional[str] = Field(None, description="使用者的派系偏好")
     available_time: Optional[int] = Field(None, description="可用時間（分鐘）")
     question_type: Optional[str] = Field(None, description="所提問題的類型")
     previous_spreads: Optional[List[str]] = Field(None, description="先前使用過的牌陣 ID")

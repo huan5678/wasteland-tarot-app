@@ -40,7 +40,7 @@ class User(BaseModel):
     avatar_url = Column(String(500))
 
     # Wasteland-specific Attributes
-    faction_alignment = Column(String(50), default=FactionAlignment.VAULT_DWELLER.value)
+    faction_alignment = Column(String(50), default=FactionAlignment.INDEPENDENT.value)  # 新用戶默認為獨立派
     karma_score = Column(Integer, default=50)  # 0-100 scale
     wasteland_location = Column(String(100))
     experience_level = Column(String(50), default="Novice Survivor")
@@ -69,6 +69,11 @@ class User(BaseModel):
     failed_login_attempts = Column(Integer, default=0)
     last_failed_login = Column(DateTime(timezone=True))
     account_locked_until = Column(DateTime(timezone=True))
+
+    # Token Extension & Loyalty (新增欄位)
+    loyalty_badge_unlocked = Column(Boolean, default=False)
+    loyalty_streak_days = Column(Integer, default=0)
+    token_absolute_expiry = Column(DateTime(timezone=True))
 
     # Data Privacy
     data_collection_consent = Column(Boolean, default=True)
@@ -430,4 +435,91 @@ class UserPreferences(BaseModel):
             "large_text_mode": self.large_text_mode,
             "screen_reader_mode": self.screen_reader_mode,
             "reduced_motion": self.reduced_motion
+        }
+
+
+class UserLoginHistory(BaseModel):
+    """
+    User daily login history tracking
+
+    Records each day a user logs in to support loyalty-based token extension.
+    Only tracks unique days, not individual login events.
+    """
+
+    __tablename__ = "user_login_history"
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    login_date = Column(DateTime(timezone=True).with_variant(DateTime, "postgresql"), nullable=False)
+    login_count = Column(Integer, default=1, nullable=False)  # Number of logins on this date
+
+    # Relationships
+    user = relationship("User")
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_login_history_user_date', 'user_id', 'login_date'),
+        Index('uq_user_login_date', 'user_id', 'login_date', unique=True),
+    )
+
+    def __repr__(self):
+        return f"<UserLoginHistory(user_id='{self.user_id}', login_date='{self.login_date}', count={self.login_count})>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation"""
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "login_date": self.login_date.isoformat() if self.login_date else None,
+            "login_count": self.login_count,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
+
+
+class TokenExtensionHistory(BaseModel):
+    """
+    Token extension history tracking
+
+    Records all token extensions (both activity-based and loyalty-based)
+    for auditing and analytics purposes.
+    """
+
+    __tablename__ = "token_extension_history"
+
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    extension_type = Column(String(50), nullable=False)  # 'activity' or 'loyalty'
+    extended_at = Column(DateTime(timezone=True), nullable=False, default=func.now())
+    extended_minutes = Column(Integer, nullable=False)
+    new_expiry_timestamp = Column(Integer, nullable=False)  # Unix timestamp
+    old_expiry_timestamp = Column(Integer, nullable=True)  # Unix timestamp
+    activity_duration = Column(Integer, nullable=True)  # Activity duration in seconds (for activity extensions)
+    extension_metadata = Column(JSON, default=dict)  # Additional metadata (e.g., device info, IP) - renamed from 'metadata' to avoid SQLAlchemy reserved word
+
+    # Relationships
+    user = relationship("User")
+
+    # Indexes
+    __table_args__ = (
+        Index('idx_token_ext_user_type', 'user_id', 'extension_type'),
+        Index('idx_token_ext_date', 'extended_at'),
+        # CHECK constraint to validate extension_type values
+        {'extend_existing': True}
+    )
+
+    def __repr__(self):
+        return f"<TokenExtensionHistory(user_id='{self.user_id}', type='{self.extension_type}', minutes={self.extended_minutes})>"
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation"""
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "extension_type": self.extension_type,
+            "extended_at": self.extended_at.isoformat() if self.extended_at else None,
+            "extended_minutes": self.extended_minutes,
+            "new_expiry_timestamp": self.new_expiry_timestamp,
+            "old_expiry_timestamp": self.old_expiry_timestamp,
+            "activity_duration": self.activity_duration,
+            "extension_metadata": self.extension_metadata,
+            "created_at": self.created_at.isoformat() if self.created_at else None
         }

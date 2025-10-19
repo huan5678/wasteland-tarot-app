@@ -6,19 +6,20 @@ import { useAuthStore } from '@/lib/authStore'
 import { useReadingsStore } from '@/lib/readingsStore'
 import { PixelIcon } from '@/components/ui/icons'
 import { ReadingHistory } from '@/components/readings/ReadingHistory'
-import { ReadingDetailModal } from '@/components/readings/ReadingDetailModal'
 import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard'
 
 export default function ReadingsPage() {
   const user = useAuthStore(s => s.user)
   const isLoading = useReadingsStore(s => s.isLoading)
-  const [selectedReadingId, setSelectedReadingId] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history')
 
+  // CRITICAL FIX: Always fetch readings when page mounts OR when navigating back
+  // This ensures we see newly created readings immediately
   useEffect(() => {
     const fetch = async () => {
       if (!user?.id) return
-      await useReadingsStore.getState().fetchUserReadings(user.id)
+      console.log('[ReadingsPage] Fetching readings for user:', user.id)
+      await useReadingsStore.getState().fetchUserReadings(user.id, true) // force = true
     }
     fetch()
   }, [user])
@@ -64,11 +65,11 @@ export default function ReadingsPage() {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'history':
-        return <ReadingHistory onSelect={(id) => setSelectedReadingId(id)} />
+        return <ReadingHistory />
       case 'stats':
         return <ReadingStatsDashboard />
       default:
-        return <ReadingHistory onSelect={(id) => setSelectedReadingId(id)} />
+        return <ReadingHistory />
     }
   }
 
@@ -120,9 +121,6 @@ export default function ReadingsPage() {
           {renderTabContent()}
         </div>
       </div>
-
-      {/* Reading Detail Modal */}
-      <ReadingDetailModal id={selectedReadingId} onClose={() => setSelectedReadingId(null)} />
     </div>
   )
 }
