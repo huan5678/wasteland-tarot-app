@@ -62,13 +62,15 @@ export default function CardDetailPage() {
   const [isMounted, setIsMounted] = useState(false)
 
   // 相鄰卡牌（傳入簡短路由名稱）
-  const { previousCard, nextCard, isLoading: adjacentLoading } = useAdjacentCards(routeSuit, cardId)
+  const { previousCard, nextCard, currentPage, isLoading: adjacentLoading } = useAdjacentCards(routeSuit, cardId)
 
   // 載入卡牌資料
   useEffect(() => {
     setIsMounted(true)
     // 重要：當 cardId 改變時，立即清空舊卡牌避免閃現錯誤頁面
     setCard(null)
+    // 同時重置圖片錯誤狀態，避免新卡片使用舊的 fallback 圖片
+    setImageError(false)
 
     const loadCard = async () => {
       try {
@@ -165,6 +167,7 @@ export default function CardDetailPage() {
             <PipBoyCard padding="sm" className="w-full max-w-md">
               <div className="relative aspect-[2/3] bg-black overflow-hidden">
                 <Image
+                  key={card.id}
                   src={imageUrl}
                   alt={imageAlt}
                   fill
@@ -202,7 +205,7 @@ export default function CardDetailPage() {
                 )}
 
                 {/* 返回按鈕 */}
-                <Link href={`/cards/${routeSuit}`} className="flex-1">
+                <Link href={`/cards/${routeSuit}${currentPage > 1 ? `?page=${currentPage}` : ''}`} className="flex-1">
                   <PipBoyButton variant="secondary" className="w-full">
                     返回列表
                   </PipBoyButton>

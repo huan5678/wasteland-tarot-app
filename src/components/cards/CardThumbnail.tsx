@@ -119,9 +119,12 @@ export function CardThumbnail({
     setImageError(true)
   }
 
-  // 處理圖片載入成功
-  const handleImageLoad = () => {
-    setImageLoaded(true)
+  // 處理圖片載入成功（圖片完全渲染後才觸發）
+  const handleImageLoadingComplete = () => {
+    // 使用 setTimeout 確保渲染完成後才隱藏 loading
+    setTimeout(() => {
+      setImageLoaded(true)
+    }, 100)
   }
 
   // 處理鍵盤事件
@@ -173,6 +176,19 @@ export function CardThumbnail({
             </div>
           )}
 
+          {/* 載入中旋轉圖示（中央） */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 flex items-center justify-center z-10">
+              <PixelIcon
+                name="loader"
+                animation="spin"
+                variant="primary"
+                sizePreset="lg"
+                decorative
+              />
+            </div>
+          )}
+
           {/* 卡牌圖片 */}
           <Image
             src={imageUrl}
@@ -187,7 +203,7 @@ export function CardThumbnail({
             loading={priority ? undefined : 'lazy'}
             priority={priority}
             onError={handleImageError}
-            onLoad={handleImageLoad}
+            onLoadingComplete={handleImageLoadingComplete}
           />
 
           {/* 黑色半透明覆蓋層 (hover 時淡化) */}
