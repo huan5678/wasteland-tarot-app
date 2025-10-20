@@ -45,9 +45,12 @@ export function getCardImageUrl(card: TarotCard): string {
   const isMajorArcana =
     card.is_major_arcana || card.suit === 'major_arcana' || card.suit === 'major-arcana'
 
+  // 取得卡牌編號（支援 number 或 card_number 欄位）
+  const cardNum = (card as any).number ?? (card as any).card_number ?? (card as any).value ?? 0
+
   if (isMajorArcana) {
     // Major Arcana: 編號補零為兩位數
-    const cardNumber = String(card.number ?? 0).padStart(2, '0')
+    const cardNumber = String(cardNum).padStart(2, '0')
     return `${baseUrl}/major-arcana/${cardNumber}.png`
   }
 
@@ -60,8 +63,8 @@ export function getCardImageUrl(card: TarotCard): string {
     return `${baseUrl}/card-backs/01.png`
   }
 
-  // Minor Arcana: 編號補零為兩位數
-  const cardNumber = String(card.number ?? 1).padStart(2, '0')
+  // Minor Arcana: 編號補零為兩位數（預設為 1 避免 00.png）
+  const cardNumber = String(cardNum || 1).padStart(2, '0')
   return `${baseUrl}/minor-arcana/${suitFolder}/${cardNumber}.png`
 }
 

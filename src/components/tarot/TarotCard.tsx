@@ -336,14 +336,14 @@ export function TarotCard({
             <div className={`
               absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-lg
               border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-              bg-black flex flex-col overflow-hidden relative
+              bg-black overflow-hidden
               ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
               transition-all duration-300
             `}>
               {/* Enhanced indicators */}
               {(onClick || isSelectable) && (
                 <div className={`
-                  absolute top-1 right-1 flex items-center gap-1
+                  absolute top-1 right-1 flex items-center gap-1 z-10
                   ${isHovered || isSelected ? 'opacity-100' : 'opacity-0'}
                   transition-all duration-200
                 `}>
@@ -356,16 +356,20 @@ export function TarotCard({
 
               {/* Shimmer effect for special states */}
               {showGlow && (
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer"></div>
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer z-10"></div>
               )}
-              <div className="flex-1 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full">
+
+              {/* Card Image - 絕對定位佔滿整個卡片 */}
+              <div className="absolute inset-0 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full h-full">
                 {imageError ? (
                   <div className="text-pip-boy-green/60 text-xs">無圖</div>
                 ) : (
                   <img src={card.image_url} alt={card.name} onError={handleImageError} className="object-contain max-h-full" />
                 )}
               </div>
-              <div className="p-2 border-t border-pip-boy-green/30 bg-wasteland-dark/60">
+
+              {/* Card Info - 絕對定位在底部 */}
+              <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-pip-boy-green/30 bg-wasteland-dark/60 z-10">
                 <div className="text-center text-pip-boy-green text-[11px] font-bold leading-tight">{card.name}</div>
                 <div className="text-center text-pip-boy-green/60 text-[10px] line-clamp-2 mt-0.5">{position === 'upright' ? card.meaning_upright : card.meaning_reversed}</div>
               </div>
