@@ -278,6 +278,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         oauthProvider: res.user.oauthProvider || null,
         profilePicture: res.user.profilePicture || null,
         isLoading: false,
+        // 不設定 isInitialized，讓頁面重新載入時重新執行 initialize
         error: null
       })
 
@@ -319,12 +320,13 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         clearAuthState() // 清除登入狀態
       }
 
-      // 清除 store 狀態
+      // 清除 store 狀態（重置 isInitialized 讓下次登入時重新初始化）
       set({
         user: null,
         isOAuthUser: false,
         oauthProvider: null,
         profilePicture: null,
+        isInitialized: false, // 重置初始化狀態
         error: null
       })
 
@@ -548,11 +550,23 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   }
 }), {
   name: 'auth-store',
+  version: 2, // 版本號：變更 persist 結構時遞增，自動清除舊資料
   partialize: (state) => ({
     // 移除 token from persist（不再儲存在 localStorage）
     user: state.user,
     isOAuthUser: state.isOAuthUser,
     oauthProvider: state.oauthProvider,
-    profilePicture: state.profilePicture
-  })
+    profilePicture: state.profilePicture,
+    // 不保存 isInitialized，讓每次頁面載入都重新初始化（確保正確執行 auth 流程）
+    // isLoading: false, // 不保存此狀態（loading 應該每次重新開始）
+  }),
+  migrate: (persistedState: any, version: number) => {
+    // 版本 < 2：清除舊的 isInitialized 資料
+    if (version < 2) {
+      console.log('[AuthStore] Migrating from version', version, 'to 2 - clearing isInitialized')
+      const { isInitialized, ...rest } = persistedState || {}
+      return rest
+    }
+    return persistedState
+  }
 }))

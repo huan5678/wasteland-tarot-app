@@ -127,7 +127,14 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
       // Success - show toast and redirect
       toast.success('登入成功', { description: '歡迎回來!' })
-      router.push('/dashboard')
+
+      // Wait a bit to ensure cookies are set before redirecting
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      console.log('[LoginForm] Redirecting to dashboard...')
+
+      // Use window.location.href for reliable redirect (avoid HMR interference)
+      window.location.href = '/dashboard'
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '登入失敗'
 
