@@ -55,6 +55,9 @@ class Settings(BaseSettings):
         env="BACKEND_CORS_ORIGINS"
     )
 
+    # Frontend URL (for share links)
+    frontend_url: str = Field("http://localhost:3000", env="FRONTEND_URL")
+
     # Redis Configuration (Optional for caching)
     redis_url: Optional[str] = Field(None, env="REDIS_URL")
 
