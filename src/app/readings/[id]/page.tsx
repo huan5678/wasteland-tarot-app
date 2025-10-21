@@ -27,6 +27,7 @@ import { Switch } from '@/components/ui/switch'
 import { filterCharacterVoicesByFaction } from '@/lib/factionVoiceMapping'
 import { useFactions } from '@/hooks/useCharacterVoices'
 import { useCharacters } from '@/hooks/useCharacterVoices'
+import { ShareButton } from '@/components/share/ShareButton'
 
 // Tab 類型定義
 type MainTabType = 'overview' | 'interpretation' | 'metadata' | `card-${number}`
@@ -1179,7 +1180,7 @@ export default function ReadingDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
             onClick={() => router.push('/dashboard')}
             className="px-4 py-3 border-2 border-pip-boy-green bg-transparent text-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200 uppercase text-sm font-bold tracking-wider"
@@ -1189,6 +1190,9 @@ export default function ReadingDetailPage() {
               返回 Dashboard
             </span>
           </button>
+
+          {/* Share Button - 只對已完成的占卜顯示 */}
+          {reading && <ShareButton readingId={reading.id} />}
 
           <button
             onClick={() => setDeleteDialogOpen(true)}
