@@ -222,6 +222,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **playlist-music-player**: User-controlled playlist music system with Fallout Pip-Boy styled player interface, replacing automatic scene-based background music
 - **cubic-11-font-integration**: Apply Cubic_11.woff2 font as the primary typeface across the entire website for consistent typography
 - **pixel-icon-replacement**: Replace lucide-react icon system with pixelarticons package (486 pixel-style icons) for consistent Fallout aesthetic with TypeScript support and accessibility compliance. **⚠️ lucide-react 已完全移除，只使用 PixelIcon**
+- **achievement-system**: Gamification achievement system tracking user progress across reading, social, bingo, and exploration activities with visual badges, titles, and Karma rewards to boost engagement and retention
 
 ## Font Integration (Cubic 11 Pixel Font)
 
