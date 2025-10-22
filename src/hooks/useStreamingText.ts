@@ -1,12 +1,20 @@
 /**
  * useStreamingText Hook
  * Handles Server-Sent Events (SSE) streaming for AI-generated text
- * Provides typewriter effect, skip functionality, and automatic retry
  *
- * 🔵 REFACTOR: Added comprehensive retry mechanism with exponential backoff
+ * Features:
+ * - Typewriter effect with configurable speed
+ * - Skip functionality
+ * - Automatic retry with exponential backoff (P0)
+ * - Typing sound effects with throttling (P1)
+ * - Comprehensive error handling
+ *
+ * @see TDD implementation in useStreamingText.retry.test.ts
+ * @see TDD implementation in useStreamingText.audio.test.ts
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useAudioEffect } from '@/hooks/audio/useAudioEffect'; // 🟢 TDD P1: Audio integration
 
 // 🔵 REFACTOR: Logger helper
 const logger = {
@@ -22,10 +30,14 @@ export interface StreamingTextOptions {
   onComplete?: (fullText: string) => void;
   onError?: (error: Error) => void;
   charsPerSecond?: number; // Target streaming speed
-  // 🟢 TDD: Retry options
+  // 🟢 TDD P0: Retry options
   maxRetries?: number;      // Maximum number of retries (default: 3)
   retryDelay?: number;      // Initial retry delay in ms (default: 1000)
   timeout?: number;         // Request timeout in ms (default: 30000)
+  // 🟢 TDD P1: Audio options
+  enableTypingSound?: boolean;  // Enable typing sound effect (default: false)
+  soundThrottle?: number;       // Sound throttle interval in ms (default: 50)
+  typingSoundVolume?: number;   // Typing sound volume (default: 0.3)
 }
 
 export interface StreamingTextState {
@@ -74,18 +86,26 @@ export function useStreamingText({
   onComplete,
   onError,
   charsPerSecond = 40,
-  // 🟢 TDD: Retry parameters
+  // 🟢 TDD P0: Retry parameters
   maxRetries = 3,
   retryDelay = 1000,
   timeout = 30000,
+  // 🟢 TDD P1: Audio parameters
+  enableTypingSound = false,
+  soundThrottle = 50,
+  typingSoundVolume = 0.3,
 }: StreamingTextOptions): StreamingTextState {
   const [text, setText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  // 🟢 TDD: Retry state
+  // 🟢 TDD P0: Retry state
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+
+  // 🟢 TDD P1: Audio integration
+  const { playSound } = useAudioEffect();
+  const lastSoundTimeRef = useRef<number>(0);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const fullTextRef = useRef<string>('');
@@ -188,6 +208,19 @@ export function useStreamingText({
   }, [charsPerSecond]);
 
   /**
+   * 🟢 TDD P1: Play typing sound with throttling
+   */
+  const playTypingSoundThrottled = useCallback(() => {
+    if (!enableTypingSound) return;
+
+    const now = Date.now();
+    if (now - lastSoundTimeRef.current >= soundThrottle) {
+      playSound('typing', { volume: typingSoundVolume });
+      lastSoundTimeRef.current = now;
+    }
+  }, [enableTypingSound, soundThrottle, typingSoundVolume, playSound]);
+
+  /**
    * Start typewriter effect
    * Made stable with useCallback and no dependencies - uses refs internally
    */
@@ -215,6 +248,9 @@ export function useStreamingText({
         const nextChars = fullText.slice(displayed, displayed + chunkSize);
         displayedCharsRef.current = displayed + nextChars.length;
         setText(fullText.slice(0, displayedCharsRef.current));
+
+        // 🟢 TDD P1: Play typing sound (throttled)
+        playTypingSoundThrottled();
       } else if (isCompleteRef.current && displayed >= fullText.length) {
         // Streaming complete and all text displayed
         if (typewriterIntervalRef.current) {
@@ -223,7 +259,7 @@ export function useStreamingText({
         }
       }
     }, intervalMs);
-  }, []); // No dependencies - fully stable, uses refs internally
+  }, [playTypingSoundThrottled]); // 🟢 TDD P1: Added playTypingSoundThrottled dependency
 
   /**
    * 🟢 TDD: Delay helper for retry backoff

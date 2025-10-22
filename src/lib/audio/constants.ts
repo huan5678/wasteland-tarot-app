@@ -242,7 +242,7 @@ export interface SoundGeneratorConfig {
   id: string;
   type: 'sfx' | 'music' | 'voice';
   priority: 'critical' | 'normal' | 'low';
-  generator: 'button-click' | 'card-flip' | 'pip-boy-beep' | 'terminal-type' | 'vault-door' | 'shuffle' | 'reveal' | 'ui-hover';
+  generator: 'button-click' | 'card-flip' | 'pip-boy-beep' | 'terminal-type' | 'vault-door' | 'shuffle' | 'reveal' | 'ui-hover' | 'typing';
   params: {
     frequency?: number;
     duration?: number;
@@ -347,6 +347,18 @@ export const SOUND_CONFIGS: Record<string, SoundGeneratorConfig> = {
       frequency: 1200,
       duration: 0.05,
       volume: 0.2,
+      waveType: 'sine',
+    },
+  },
+  'typing': {
+    id: 'typing',
+    type: 'sfx',
+    priority: 'low',
+    generator: 'typing',
+    params: {
+      frequency: 1200,
+      duration: 0.03,
+      volume: 0.3,
       waveType: 'sine',
     },
   },
