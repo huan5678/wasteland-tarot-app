@@ -8,6 +8,7 @@ export { AchievementCard } from './AchievementCard'
 export { AchievementGrid } from './AchievementGrid'
 export { AchievementCategoryFilter } from './AchievementCategoryFilter'
 export { AchievementUnlockNotification } from './AchievementUnlockNotification'
+export { AchievementDetailModal } from './AchievementDetailModal'
 
 // 未來可以加入更多元件：
 // export { AchievementSummary } from './AchievementSummary'

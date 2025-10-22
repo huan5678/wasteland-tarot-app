@@ -1,14 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { useAuthStore } from '@/lib/authStore'
-import { useAchievementStore, AchievementCategory } from '@/lib/stores/achievementStore'
+import { useAchievementStore, AchievementCategory, UserAchievementProgress } from '@/lib/stores/achievementStore'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   AchievementCategoryFilter,
   AchievementGrid,
+  AchievementDetailModal,
 } from '@/components/achievements'
 
 /**
@@ -41,6 +42,9 @@ export default function AchievementsPage() {
   } = useAchievementStore()
 
   const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null)
+  const [selectedAchievement, setSelectedAchievement] = useState<UserAchievementProgress | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   // 認證檢查
   useEffect(() => {
@@ -70,6 +74,33 @@ export default function AchievementsPage() {
       setTimeout(() => setShowSuccessMessage(null), 3000)
     }
   }
+
+  // 處理卡片點擊
+  const handleCardClick = (achievement: UserAchievementProgress) => {
+    setSelectedAchievement(achievement)
+    setIsModalOpen(true)
+  }
+
+  // 處理 Modal 關閉
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    setTimeout(() => setSelectedAchievement(null), 300) // 延遲清除以確保動畫完成
+  }
+
+  // 搜尋過濾
+  const filteredAchievements = useMemo(() => {
+    if (!searchQuery.trim()) return userProgress
+
+    const query = searchQuery.toLowerCase().trim()
+    return userProgress.filter((progress) => {
+      const { achievement } = progress
+      return (
+        achievement.name.toLowerCase().includes(query) ||
+        achievement.description.toLowerCase().includes(query) ||
+        achievement.code.toLowerCase().includes(query)
+      )
+    })
+  }, [userProgress, searchQuery])
 
   // 等待認證初始化
   if (!isInitialized || !token) {
@@ -173,6 +204,50 @@ export default function AchievementsPage() {
         </div>
       )}
 
+      {/* 搜尋欄 */}
+      <div className="container mx-auto px-4 py-6">
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.15 }}
+          className="max-w-2xl mx-auto"
+        >
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <PixelIcon name="search" sizePreset="sm" variant="muted" decorative />
+            </div>
+            <input
+              type="text"
+              placeholder="搜尋成就名稱或描述..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="
+                w-full pl-10 pr-4 py-3
+                bg-bg-secondary border-2 border-border-primary
+                text-text-primary placeholder:text-text-secondary
+                rounded-md
+                focus:outline-none focus:border-pip-boy-green
+                transition-colors
+              "
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                aria-label="清除搜尋"
+              >
+                <PixelIcon name="close" sizePreset="xs" variant="muted" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <p className="mt-2 text-sm text-text-secondary">
+              找到 {filteredAchievements.length} 個結果
+            </p>
+          )}
+        </motion.div>
+      </div>
+
       {/* 類別篩選 */}
       <div className="container mx-auto px-4 py-6">
         <motion.div
@@ -234,8 +309,9 @@ export default function AchievementsPage() {
             </div>
           ) : (
             <AchievementGrid
-              achievements={userProgress}
+              achievements={filteredAchievements}
               onClaim={handleClaimReward}
+              onCardClick={handleCardClick}
               isClaiming={isClaiming}
             />
           )}
@@ -260,6 +336,15 @@ export default function AchievementsPage() {
           </div>
         </motion.div>
       )}
+
+      {/* 成就詳細資訊 Modal */}
+      <AchievementDetailModal
+        achievement={selectedAchievement}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+        onClaim={handleClaimReward}
+        isClaiming={isClaiming}
+      />
     </div>
   )
 }

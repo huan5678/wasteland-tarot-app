@@ -14,16 +14,17 @@
   - Zustand Store 完整實作 (achievementStore.ts)
   - 新解鎖成就追蹤與通知邏輯
 - ✅ **前端 UI 元件** (任務 8)
-  - 成就卡片元件 (AchievementCard.tsx)
+  - 成就卡片元件 (AchievementCard.tsx - 含點擊互動)
   - 成就網格元件 (AchievementGrid.tsx)
   - 類別篩選器 (AchievementCategoryFilter.tsx)
   - 解鎖通知彈窗 (AchievementUnlockNotification.tsx)
+  - **成就詳細資訊 Modal** (AchievementDetailModal.tsx - 完整解鎖條件與獎勵顯示)
 - ✅ **頁面整合** (任務 9)
-  - 成就頁面 (/achievements)
+  - 成就頁面 (/achievements - 含搜尋功能)
   - 全域通知系統整合
   - Dashboard 導航連結
 
-**成就**: 15 個檔案新增/修改，1792 行程式碼，完整的端到端實作
+**成就**: 18 個檔案新增/修改，2100+ 行程式碼，完整的端到端實作
 
 ### 🔄 待完成階段
 
@@ -59,10 +60,8 @@
 3. Redis 快取層（效能優化）
 
 **中優先級**:
-4. 成就詳細資訊 Modal (任務 8.2)
-5. 搜尋功能 (任務 8.1)
-6. Profile 頁面成就概覽區塊 (任務 9.3)
-7. 背景任務處理（成就檢查超時）
+1. Profile 頁面成就概覽區塊 (任務 9.3)
+2. 背景任務處理（成就檢查超時）
 
 **低優先級**:
 8. Persist middleware (localStorage 快取)
@@ -208,23 +207,23 @@
   - ✅ 處理多個成就同時解鎖的佇列機制 (AchievementUnlockNotification 支援多個成就)
   - _Requirements: 5.3, 5.4_
 
-- [~] 8. 建立前端 UI 元件 *(核心元件已完成，缺少 Modal 和搜尋功能)*
+- [x] 8. 建立前端 UI 元件
 
-- [~] 8.1 建立成就卡片網格元件
+- [x] 8.1 建立成就卡片網格元件
   - ✅ 實作成就卡片的視覺呈現，包含圖示、名稱、描述、進度條 (AchievementCard.tsx)
   - ✅ 實作稀有度視覺效果（邊框顏色、動畫效果）(getRarityConfig)
   - ✅ 實作分類篩選功能，支援使用者選擇特定類別 (AchievementCategoryFilter.tsx)
-  - ⏸️ 實作搜尋功能，支援關鍵字篩選
+  - ✅ 實作搜尋功能，支援關鍵字篩選 (achievements/page.tsx - filteredAchievements)
   - ✅ 實作排序功能（依稀有度、進度、解鎖時間）(AchievementGrid.tsx - sortedAchievements)
   - ✅ 整合 PixelIcon 元件顯示成就圖示
   - ✅ 使用 Cubic 11 字體顯示文字內容（全域字體繼承）
   - _Requirements: 5.1, 10.1, 10.2, 10.3_
 
-- [ ] 8.2 建立成就詳細資訊 Modal
-  - ⏸️ 實作點擊成就卡片時顯示的詳細資訊彈窗
-  - ⏸️ 顯示完整的解鎖條件與獎勵細節
-  - ⏸️ 顯示解鎖時間（如已解鎖）
-  - ⏸️ 實作鍵盤導航支援（Tab 鍵、Esc 關閉）
+- [x] 8.2 建立成就詳細資訊 Modal
+  - ✅ 實作點擊成就卡片時顯示的詳細資訊彈窗 (AchievementDetailModal.tsx)
+  - ✅ 顯示完整的解鎖條件與獎勵細節 (parseCriteriaDescription, 獎勵網格)
+  - ✅ 顯示解鎖時間（如已解鎖）(unlocked_at, claimed_at 時間戳記)
+  - ✅ 實作鍵盤導航支援（Tab 鍵、Esc 關閉）(useEffect keyboard handler)
   - _Requirements: 5.6_
 
 - [x] 8.3 建立成就解鎖通知彈窗元件
@@ -246,11 +245,12 @@
 
 - [~] 9. 整合成就頁面與導航 *(已完成核心整合，缺少 Profile 頁面整合)*
 
-- [~] 9.1 建立成就頁面主體
+- [x] 9.1 建立成就頁面主體
   - ✅ 建立 `/achievements` 路由頁面 (src/app/achievements/page.tsx)
   - ✅ 整合成就卡片網格元件 (AchievementGrid)
   - ✅ 整合分類篩選 UI (AchievementCategoryFilter)
-  - ⏸️ 整合搜尋 UI
+  - ✅ 整合搜尋 UI (searchQuery state, filteredAchievements)
+  - ✅ 整合成就詳細資訊 Modal (AchievementDetailModal, handleCardClick)
   - ✅ 實作頁面載入時的資料取得邏輯 (useEffect with fetchUserProgress, fetchSummary)
   - ✅ 處理載入狀態與錯誤狀態的顯示 (isLoading, error state)
   - ✅ 加入統計總覽區塊（總數、已解鎖、已領取、完成度）

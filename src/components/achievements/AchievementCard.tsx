@@ -21,6 +21,7 @@ interface AchievementCardProps {
   achievement: UserAchievementProgress
   onClaim?: (code: string) => void
   isClaiming?: boolean
+  onClick?: (achievement: UserAchievementProgress) => void
   className?: string
 }
 
@@ -147,6 +148,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   achievement,
   onClaim,
   isClaiming = false,
+  onClick,
   className
 }) => {
   const { achievement: achievementDef, status, current_progress, target_progress, progress_percentage } = achievement
@@ -164,15 +166,23 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
     }
   }
 
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(achievement)
+    }
+  }
+
   return (
     <Card
       variant={isUnlocked ? 'elevated' : 'default'}
       padding="sm"
+      onClick={handleCardClick}
       className={cn(
         'relative overflow-hidden transition-all duration-300',
         rarityConfig.glow,
         isUnlocked && 'border-pip-boy-green/50',
         isClaimed && 'opacity-75',
+        onClick && 'cursor-pointer hover:scale-105',
         className
       )}
     >

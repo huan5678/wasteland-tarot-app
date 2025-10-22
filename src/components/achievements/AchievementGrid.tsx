@@ -17,6 +17,7 @@ import {
 interface AchievementGridProps {
   achievements: UserAchievementProgress[]
   onClaim?: (code: string) => void
+  onCardClick?: (achievement: UserAchievementProgress) => void
   isClaiming?: boolean
   className?: string
   emptyMessage?: string
@@ -29,6 +30,7 @@ interface AchievementGridProps {
 export const AchievementGrid: React.FC<AchievementGridProps> = ({
   achievements,
   onClaim,
+  onCardClick,
   isClaiming = false,
   className,
   emptyMessage = '目前沒有成就'
@@ -95,6 +97,7 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
           key={achievement.id || achievement.achievement_id}
           achievement={achievement}
           onClaim={onClaim}
+          onClick={onCardClick}
           isClaiming={isClaiming}
         />
       ))}
