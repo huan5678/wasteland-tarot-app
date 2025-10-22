@@ -1,10 +1,19 @@
 /**
  * useStreamingText Hook
  * Handles Server-Sent Events (SSE) streaming for AI-generated text
- * Provides typewriter effect and skip functionality
+ * Provides typewriter effect, skip functionality, and automatic retry
+ *
+ * 🔵 REFACTOR: Added comprehensive retry mechanism with exponential backoff
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
+// 🔵 REFACTOR: Logger helper
+const logger = {
+  info: (message: string, ...args: any[]) => console.info(`[useStreamingText] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => console.warn(`[useStreamingText] ${message}`, ...args),
+  error: (message: string, ...args: any[]) => console.error(`[useStreamingText] ${message}`, ...args),
+};
 
 export interface StreamingTextOptions {
   url: string;
@@ -13,6 +22,10 @@ export interface StreamingTextOptions {
   onComplete?: (fullText: string) => void;
   onError?: (error: Error) => void;
   charsPerSecond?: number; // Target streaming speed
+  // 🟢 TDD: Retry options
+  maxRetries?: number;      // Maximum number of retries (default: 3)
+  retryDelay?: number;      // Initial retry delay in ms (default: 1000)
+  timeout?: number;         // Request timeout in ms (default: 30000)
 }
 
 export interface StreamingTextState {
@@ -22,6 +35,9 @@ export interface StreamingTextState {
   error: Error | null;
   skip: () => void;
   reset: () => void;
+  // 🟢 TDD: Retry state
+  retryCount: number;       // Current retry count
+  isRetrying: boolean;      // Whether currently retrying
 }
 
 /**
@@ -58,11 +74,18 @@ export function useStreamingText({
   onComplete,
   onError,
   charsPerSecond = 40,
+  // 🟢 TDD: Retry parameters
+  maxRetries = 3,
+  retryDelay = 1000,
+  timeout = 30000,
 }: StreamingTextOptions): StreamingTextState {
   const [text, setText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  // 🟢 TDD: Retry state
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const fullTextRef = useRef<string>('');
@@ -151,6 +174,9 @@ export function useStreamingText({
     displayedCharsRef.current = 0;
     skippedRef.current = false;
     isCompleteRef.current = false;
+    // 🟢 TDD: Reset retry state
+    setRetryCount(0);
+    setIsRetrying(false);
   }, []);
 
   /**
@@ -200,6 +226,128 @@ export function useStreamingText({
   }, []); // No dependencies - fully stable, uses refs internally
 
   /**
+   * 🟢 TDD: Delay helper for retry backoff
+   */
+  const delay = useCallback((ms: number): Promise<void> => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }, []);
+
+  /**
+   * 🟢 TDD: Calculate exponential backoff delay
+   * Formula: retryDelay * 2^attempt
+   * Example: 1000ms * 2^0 = 1000ms, 1000ms * 2^1 = 2000ms, 1000ms * 2^2 = 4000ms
+   */
+  const getRetryDelay = useCallback((attempt: number): number => {
+    return retryDelay * Math.pow(2, attempt);
+  }, [retryDelay]);
+
+  /**
+   * 🟢 TDD: Fetch with timeout support
+   */
+  const fetchWithTimeout = useCallback(
+    async (
+      fetchUrl: string,
+      fetchOptions: RequestInit,
+      timeoutMs: number
+    ): Promise<Response> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const response = await fetch(fetchUrl, {
+          ...fetchOptions,
+          signal: controller.signal,
+        });
+        return response;
+      } catch (err) {
+        // If aborted due to timeout, throw timeout error
+        if (err instanceof Error && err.name === 'AbortError') {
+          throw new Error(`Request timeout after ${timeoutMs}ms`);
+        }
+        throw err;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    },
+    []
+  );
+
+  /**
+   * 🟢 TDD: Fetch with automatic retry and exponential backoff
+   */
+  const fetchWithRetry = useCallback(
+    async (signal: AbortSignal): Promise<Response> => {
+      let lastError: Error | null = null;
+
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          // Retry delay (skip for first attempt)
+          if (attempt > 0) {
+            setIsRetrying(true);
+            setRetryCount(attempt);
+            const delayMs = getRetryDelay(attempt - 1);
+
+            // 🔵 REFACTOR: Use logger
+            logger.info(`Retrying request (${attempt}/${maxRetries}) after ${delayMs}ms...`);
+
+            await delay(delayMs);
+          }
+
+          // Fetch with timeout
+          const response = await fetchWithTimeout(
+            url,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+            },
+            timeout
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+
+          // Success - clear retry state
+          setIsRetrying(false);
+          setRetryCount(0);
+          return response;
+
+        } catch (err) {
+          lastError = err instanceof Error ? err : new Error(String(err));
+
+          // Don't retry on user abort
+          if (lastError.name === 'AbortError' && signal.aborted) {
+            throw lastError;
+          }
+
+          // Don't retry if offline
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            // 🔵 REFACTOR: Use logger
+            logger.warn('Network offline, not retrying');
+            throw new Error('Network connection lost');
+          }
+
+          // If more retries available, continue
+          if (attempt < maxRetries) {
+            // 🔵 REFACTOR: Use logger
+            logger.warn(`Request failed (attempt ${attempt + 1}/${maxRetries + 1}):`, lastError.message);
+            continue;
+          }
+
+          // All retries exhausted
+          throw lastError;
+        }
+      }
+
+      throw lastError || new Error('Unknown error');
+    },
+    [url, requestBody, maxRetries, retryDelay, timeout, delay, getRetryDelay, fetchWithTimeout]
+  );
+
+  /**
    * Start streaming from server
    */
   useEffect(() => {
@@ -214,6 +362,9 @@ export function useStreamingText({
     displayedCharsRef.current = 0;
     skippedRef.current = false;
     isCompleteRef.current = false;
+    // 🟢 TDD: Reset retry state
+    setRetryCount(0);
+    setIsRetrying(false);
 
     // Create abort controller for cancellation
     const abortController = new AbortController();
@@ -221,18 +372,8 @@ export function useStreamingText({
 
     const startStreaming = async () => {
       try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-          signal: abortController.signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        // 🟢 TDD: Use fetchWithRetry instead of direct fetch
+        const response = await fetchWithRetry(abortController.signal);
 
         if (!response.body) {
           throw new Error('Response body is null');
@@ -298,6 +439,8 @@ export function useStreamingText({
           }
         }
         setIsStreaming(false);
+        // 🟢 TDD: Clear retry state on final error
+        setIsRetrying(false);
       }
     };
 
@@ -313,7 +456,7 @@ export function useStreamingText({
     };
     // Use requestBodyJson instead of requestBody to prevent re-runs on object identity changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, url, requestBodyJson, startTypewriter]); // Removed onComplete, onError - now using refs
+  }, [enabled, url, requestBodyJson, startTypewriter, fetchWithRetry]); // Added fetchWithRetry
 
   return {
     text,
@@ -322,5 +465,8 @@ export function useStreamingText({
     error,
     skip,
     reset,
+    // 🟢 TDD: Return retry state
+    retryCount,
+    isRetrying,
   };
 }

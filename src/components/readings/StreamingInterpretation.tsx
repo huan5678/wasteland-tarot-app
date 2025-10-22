@@ -86,8 +86,18 @@ export function StreamingInterpretation({
 
   return (
     <div className="streaming-interpretation-container relative">
+      {/* Retry state - TDD P0 Integration */}
+      {streaming.isRetrying && (
+        <div className="flex items-center gap-2 text-yellow-500/80 mb-4">
+          <div className="animate-spin h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full" />
+          <span className="text-sm">
+            Connection interrupted. Retrying ({streaming.retryCount}/3)...
+          </span>
+        </div>
+      )}
+
       {/* Loading state */}
-      {!streaming.text && streaming.isStreaming && (
+      {!streaming.text && streaming.isStreaming && !streaming.isRetrying && (
         <div className="flex items-center gap-2 text-amber-500/80 mb-4">
           <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
           <span className="text-sm">AI is thinking...</span>
@@ -219,8 +229,18 @@ export function MultiCardStreamingInterpretation({
 
   return (
     <div className="multi-card-streaming-interpretation-container relative">
+      {/* Retry state - TDD P0 Integration */}
+      {streaming.isRetrying && (
+        <div className="flex items-center gap-2 text-yellow-500/80 mb-4">
+          <div className="animate-spin h-4 w-4 border-2 border-yellow-500 border-t-transparent rounded-full" />
+          <span className="text-sm">
+            Connection interrupted. Retrying ({streaming.retryCount}/3)...
+          </span>
+        </div>
+      )}
+
       {/* Loading state */}
-      {!streaming.text && streaming.isStreaming && (
+      {!streaming.text && streaming.isStreaming && !streaming.isRetrying && (
         <div className="flex items-center gap-2 text-amber-500/80 mb-4">
           <div className="animate-spin h-4 w-4 border-2 border-amber-500 border-t-transparent rounded-full" />
           <span className="text-sm">
