@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
-import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   Tooltip,
@@ -20,7 +19,6 @@ interface NavItem {
   icon: string
   ariaLabel: string
   badge?: boolean
-  badgeCount?: number
   adminOnly?: boolean
 }
 
@@ -36,11 +34,7 @@ export function DashboardSidebar() {
 
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showBingoBadge, setShowBingoBadge] = useState(false)
-  const [unclaimedAchievements, setUnclaimedAchievements] = useState(0)
   const [isClient, setIsClient] = useState(false)
-
-  // 成就系統狀態
-  const { userProgress, fetchUserProgress, fetchSummary } = useAchievementStore()
 
   // 初始化：從 localStorage 讀取狀態
   useEffect(() => {
@@ -59,22 +53,6 @@ export function DashboardSidebar() {
       setShowBingoBadge(lastClaimDate !== today)
     }
   }, [isClient, user])
-
-  // 載入成就資料並計算未領取數量
-  useEffect(() => {
-    if (user) {
-      fetchUserProgress()
-      fetchSummary()
-    }
-  }, [user, fetchUserProgress, fetchSummary])
-
-  // 計算未領取的成就數量
-  useEffect(() => {
-    const unclaimedCount = userProgress.filter(
-      (progress) => progress.status === AchievementStatus.UNLOCKED
-    ).length
-    setUnclaimedAchievements(unclaimedCount)
-  }, [userProgress])
 
   // 切換收合狀態
   const toggleCollapse = () => {
@@ -109,7 +87,7 @@ export function DashboardSidebar() {
       title: '每日',
       items: [
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
-        { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統', badge: unclaimedAchievements > 0, badgeCount: unclaimedAchievements },
+        { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統' },
       ],
     },
     {
@@ -147,19 +125,10 @@ export function DashboardSidebar() {
           decorative
         />
         {item.badge && (
-          item.badgeCount && item.badgeCount > 0 ? (
-            <span
-              className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse"
-              aria-label={`${item.badgeCount} 個待處理項目`}
-            >
-              {item.badgeCount > 9 ? '9+' : item.badgeCount}
-            </span>
-          ) : (
-            <span
-              className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"
-              aria-label="有新內容"
-            />
-          )
+          <span
+            className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"
+            aria-label="有新內容"
+          />
         )}
       </div>
       <span className="flex-1 text-left">{item.label}</span>
@@ -184,29 +153,18 @@ export function DashboardSidebar() {
             aria-label={item.ariaLabel}
             aria-current={isActive(item.href) ? 'page' : undefined}
           >
-            <div className="relative">
-              <PixelIcon
-                name={item.icon}
-                sizePreset="sm"
-                variant="primary"
-                decorative
+            <PixelIcon
+              name={item.icon}
+              sizePreset="sm"
+              variant="primary"
+              decorative
+            />
+            {item.badge && (
+              <span
+                className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"
+                aria-label="有新內容"
               />
-              {item.badge && (
-                item.badgeCount && item.badgeCount > 0 ? (
-                  <span
-                    className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center animate-pulse"
-                    aria-label={`${item.badgeCount} 個待處理項目`}
-                  >
-                    {item.badgeCount > 9 ? '9+' : item.badgeCount}
-                  </span>
-                ) : (
-                  <span
-                    className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full animate-pulse"
-                    aria-label="有新內容"
-                  />
-                )
-              )}
-            </div>
+            )}
           </button>
         </TooltipTrigger>
         <TooltipContent side="right">

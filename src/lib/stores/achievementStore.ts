@@ -287,16 +287,18 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 // Zustand Store Implementation
 // ============================================================================
 
-export const useAchievementStore = create<AchievementStore>((set, get) => ({
-  // ========== Initial State ==========
-  achievements: [],
-  userProgress: [],
-  summary: null,
-  newlyUnlockedAchievements: [],
-  currentFilter: null,
-  isLoading: false,
-  error: null,
-  isClaiming: false,
+export const useAchievementStore = create<AchievementStore>()(
+  persist(
+    (set, get) => ({
+      // ========== Initial State ==========
+      achievements: [],
+      userProgress: [],
+      summary: null,
+      newlyUnlockedAchievements: [],
+      currentFilter: null,
+      isLoading: false,
+      error: null,
+      isClaiming: false,
 
   // ========== Actions Implementation ==========
 
@@ -500,13 +502,35 @@ export const useAchievementStore = create<AchievementStore>((set, get) => ({
     })
   },
 
-  /**
-   * 清除錯誤訊息
-   */
-  clearError: () => {
-    set({ error: null })
-  },
-}))
+      /**
+       * 清除錯誤訊息
+       */
+      clearError: () => {
+        set({ error: null })
+      },
+    }),
+    {
+      name: 'achievement-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        // 只快取靜態的成就定義，不快取動態的使用者進度
+        achievements: state.achievements,
+        // 不快取：userProgress, summary, newlyUnlockedAchievements (這些會頻繁更新)
+        // 不快取：isLoading, error, isClaiming (UI 狀態)
+        // 不快取：currentFilter (使用者偏好，但每次重新選擇也可以)
+      }),
+      version: 1,
+      // 快取過期時間：1 小時
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          // 舊版本遷移邏輯（如果需要）
+          return persistedState
+        }
+        return persistedState
+      },
+    }
+  )
+)
 
 // ============================================================================
 // Export Types
