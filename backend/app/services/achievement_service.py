@@ -19,6 +19,7 @@ from app.models.achievement import (
 from app.models.user import User, UserProfile
 from app.services.achievement_checker import AchievementChecker
 from app.services.karma_service import KarmaService
+from app.services.achievement_cache_service import achievement_cache
 from app.models.social_features import KarmaChangeReason
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class AchievementService:
         include_hidden: bool = False
     ) -> List[Achievement]:
         """
-        獲取所有成就定義
+        獲取所有成就定義（帶 Redis 快取）
 
         Args:
             category: 成就類別篩選（可選）
@@ -52,6 +53,18 @@ class AchievementService:
         Returns:
             List of Achievement objects
         """
+        # 只有在查詢全部成就時才使用快取
+        use_cache = category is None and not include_hidden
+
+        if use_cache:
+            # 嘗試從快取讀取
+            cached_achievements = await achievement_cache.get_achievement_definitions_cache()
+
+            if cached_achievements:
+                # 將字典轉回 Achievement 物件
+                return [Achievement(**ach) for ach in cached_achievements]
+
+        # Cache miss 或不使用快取：從資料庫查詢
         query = select(Achievement).where(Achievement.is_active == True)
 
         if category:
@@ -64,8 +77,33 @@ class AchievementService:
 
         result = await self.db.execute(query)
         achievements = result.scalars().all()
+        achievements_list = list(achievements)
 
-        return list(achievements)
+        # 寫入快取（只在查詢全部成就時）
+        if use_cache and achievements_list:
+            # 將 Achievement 物件轉為字典
+            achievements_dict = [
+                {
+                    'id': ach.id,
+                    'code': ach.code,
+                    'name_zh_tw': ach.name_zh_tw,
+                    'description_zh_tw': ach.description_zh_tw,
+                    'category': ach.category,
+                    'rarity': ach.rarity,
+                    'criteria': ach.criteria,
+                    'rewards': ach.rewards,
+                    'is_hidden': ach.is_hidden,
+                    'is_active': ach.is_active,
+                    'display_order': ach.display_order,
+                    'icon_name': ach.icon_name,
+                    'created_at': ach.created_at,
+                    'updated_at': ach.updated_at
+                }
+                for ach in achievements_list
+            ]
+            await achievement_cache.set_achievement_definitions_cache(achievements_dict)
+
+        return achievements_list
 
     async def get_achievement_by_code(
         self,
@@ -209,6 +247,10 @@ class AchievementService:
             user_id=user_id,
             achievement_codes=[a.code for a in relevant_achievements]
         )
+
+        # 如果有新解鎖的成就，清除快取
+        if newly_unlocked:
+            await achievement_cache.invalidate_user_progress_cache(user_id)
 
         # 記錄解鎖事件到 Analytics
         for unlock_data in newly_unlocked:
@@ -366,6 +408,9 @@ class AchievementService:
 
         await self.db.commit()
 
+        # 清除快取以維持一致性（Write-through cache invalidation）
+        await achievement_cache.invalidate_user_progress_cache(user_id)
+
         return {
             'success': True,
             'achievement_code': achievement_code,
@@ -440,6 +485,9 @@ class AchievementService:
 
         await self.db.commit()
 
+        # 清除快取（新使用者不會有快取，但保持一致性）
+        await achievement_cache.invalidate_user_progress_cache(user_id)
+
     async def recalculate_user_progress(
         self,
         user_id: UUID
@@ -496,6 +544,9 @@ class AchievementService:
                 newly_unlocked_count += 1
 
         await self.db.commit()
+
+        # 清除快取以反映重新計算的結果
+        await achievement_cache.invalidate_user_progress_cache(user_id)
 
         return {
             'user_id': str(user_id),
