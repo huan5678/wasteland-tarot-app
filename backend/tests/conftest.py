@@ -25,9 +25,17 @@ for var in frontend_env_vars:
         print(f"🧹 Removed frontend env var: {var}")
 
 _test_env_path = os.path.join(os.path.dirname(__file__), "..", ".env.test")
-if os.path.exists(_test_env_path):
+_prod_env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
+
+# ⚠️ 策略：先載入 .env.test（預設），再載入 .env（覆蓋）
+# 如果環境變數 USE_PRODUCTION_DB=true，則使用生產資料庫進行測試
+if os.path.exists(_test_env_path) and os.getenv('USE_PRODUCTION_DB') != 'true':
     load_dotenv(_test_env_path, override=True)
     print(f"✅ Loaded test environment from: {_test_env_path}")
+    print(f"   DATABASE_URL: {os.getenv('DATABASE_URL')[:60]}...")
+elif os.path.exists(_prod_env_path):
+    load_dotenv(_prod_env_path, override=True)
+    print(f"✅ [PRODUCTION DB] Loaded from: {_prod_env_path}")
     print(f"   DATABASE_URL: {os.getenv('DATABASE_URL')[:60]}...")
 
 import pytest

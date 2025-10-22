@@ -34,6 +34,7 @@ class CharacterVoice(str, Enum):
     WASTELAND_TRADER = "wasteland_trader"  # 廢土商人
     SUPER_MUTANT = "super_mutant"  # 超級變種人
     CODSWORTH = "codsworth"  # Codsworth（科茲沃斯）
+    GHOUL = "ghoul"  # Ghoul（屍鬼倖存者）
 
 
 class FactionAlignment(str, Enum):
