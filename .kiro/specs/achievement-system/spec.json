@@ -1,0 +1,22 @@
+{
+  "feature_name": "achievement-system",
+  "created_at": "2025-10-21T04:55:00Z",
+  "updated_at": "2025-10-21T15:30:00Z",
+  "language": "zh-tw",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": false
+}

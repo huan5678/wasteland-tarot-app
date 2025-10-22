@@ -28,6 +28,7 @@ from app.api.v1.endpoints import (
     audio,
     test_ai,
     share,
+    achievements,
 )
 from app.api import oauth
 
@@ -124,6 +125,12 @@ api_router.include_router(
     bingo.router,
     prefix="/bingo",
     tags=["🎲 Bingo Game"]
+)
+
+api_router.include_router(
+    achievements.router,
+    prefix="/achievements",
+    tags=["🏆 Achievements"]
 )
 
 api_router.include_router(

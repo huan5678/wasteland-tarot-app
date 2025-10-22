@@ -87,6 +87,7 @@ export function DashboardSidebar() {
       title: '每日',
       items: [
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
+        { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統' },
       ],
     },
     {

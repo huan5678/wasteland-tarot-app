@@ -25,6 +25,23 @@ from .bingo import (
     ClaimResult,
     ResetLogMetadata,
 )
+from .achievement import (
+    AchievementCategory,
+    AchievementRarity,
+    AchievementStatus,
+    AchievementCriteria,
+    AchievementRewards,
+    AchievementResponse,
+    AchievementListResponse,
+    UserAchievementProgressResponse,
+    UserProgressSummaryResponse,
+    ClaimRewardRequest,
+    ClaimRewardResponse,
+    AchievementUnlockNotification,
+    AchievementErrorResponse,
+    AchievementAlreadyClaimedError,
+    AchievementNotUnlockedError,
+)
 
 __all__ = [
     "SessionCreateSchema",
@@ -47,4 +64,20 @@ __all__ = [
     "ErrorResponse",
     "ClaimResult",
     "ResetLogMetadata",
+    # Achievement schemas
+    "AchievementCategory",
+    "AchievementRarity",
+    "AchievementStatus",
+    "AchievementCriteria",
+    "AchievementRewards",
+    "AchievementResponse",
+    "AchievementListResponse",
+    "UserAchievementProgressResponse",
+    "UserProgressSummaryResponse",
+    "ClaimRewardRequest",
+    "ClaimRewardResponse",
+    "AchievementUnlockNotification",
+    "AchievementErrorResponse",
+    "AchievementAlreadyClaimedError",
+    "AchievementNotUnlockedError",
 ]

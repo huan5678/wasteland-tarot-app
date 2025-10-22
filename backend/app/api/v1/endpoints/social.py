@@ -5,7 +5,7 @@ Community features, sharing, and social interactions
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 import logging
@@ -33,6 +33,8 @@ from app.schemas.social import (
     SocialStats
 )
 from app.schemas.cards import CharacterVoice, KarmaAlignment
+from app.services.achievement_service import AchievementService
+from app.services.achievement_background_tasks import schedule_achievement_check
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -231,6 +233,7 @@ async def share_reading(
             "allow_comments": True
         }
     ),
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> SharedReading:
@@ -261,6 +264,24 @@ async def share_reading(
         )
 
         logger.info(f"Reading {share_request.reading_id} shared by {current_user.name}")
+
+        # ===== Achievement System Integration =====
+        # Schedule achievement check as background task to avoid blocking sharing response
+        background_tasks.add_task(
+            schedule_achievement_check,
+            user_id=current_user.id,
+            trigger_event='reading_shared',
+            event_context={
+                'reading_id': share_request.reading_id,
+                'title': share_request.title,
+                'tags': share_request.tags
+            }
+        )
+        logger.debug(
+            f"Scheduled achievement check for user {current_user.id} "
+            f"after sharing reading {share_request.reading_id}"
+        )
+
         return shared_reading
 
     except Exception as e:

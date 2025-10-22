@@ -72,6 +72,13 @@ from .audio_file import (
     AudioType,
     GenerationStatus,
 )
+from .achievement import (
+    Achievement,
+    UserAchievementProgress,
+    AchievementCategory as NewAchievementCategory,
+    AchievementRarity,
+    AchievementStatus,
+)
 
 __all__ = [
     "Base",
@@ -133,4 +140,10 @@ __all__ = [
     "AudioFile",
     "AudioType",
     "GenerationStatus",
+    # Achievement System Models (New)
+    "Achievement",
+    "UserAchievementProgress",
+    "NewAchievementCategory",
+    "AchievementRarity",
+    "AchievementStatus",
 ]

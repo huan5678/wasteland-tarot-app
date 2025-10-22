@@ -3,12 +3,15 @@ Social API - Endpoints for friendship management, achievements, and community fe
 """
 
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, Depends, HTTPException, Query, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
+import logging
 
 from app.db.database import get_db
 from app.services.social_service import SocialService
+from app.services.achievement_service import AchievementService
+from app.services.achievement_background_tasks import schedule_achievement_check
 from app.core.dependencies import get_current_user, get_optional_user
 from app.models.user import User
 from app.models.social_features import AchievementCategory, FriendshipStatus
@@ -104,6 +107,7 @@ class LeaderboardEntryResponse(BaseModel):
 
 
 router = APIRouter(prefix="/social", tags=["social"])
+logger = logging.getLogger(__name__)
 
 
 # Friendship Management Endpoints
@@ -143,6 +147,7 @@ async def send_friend_request(
 @router.post("/friends/respond", response_model=Dict[str, Any])
 async def respond_to_friend_request(
     response_data: FriendRequestResponse,
+    background_tasks: BackgroundTasks,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -156,6 +161,23 @@ async def respond_to_friend_request(
             accept=response_data.accept,
             custom_nickname=response_data.custom_nickname
         )
+
+        # ===== Achievement System Integration =====
+        # Schedule achievement check as background task (only when accepted)
+        if response_data.accept:
+            background_tasks.add_task(
+                schedule_achievement_check,
+                user_id=current_user.id,
+                trigger_event='friend_added',
+                event_context={
+                    'friendship_id': friendship.id,
+                    'friend_user_id': friendship.requester_id if friendship.recipient_id == current_user.id else friendship.recipient_id
+                }
+            )
+            logger.debug(
+                f"Scheduled achievement check for user {current_user.id} "
+                f"after accepting friend request {friendship.id}"
+            )
 
         return {
             "message": "Friend request accepted" if response_data.accept else "Friend request rejected",

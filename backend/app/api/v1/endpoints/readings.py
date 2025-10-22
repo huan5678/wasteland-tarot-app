@@ -5,7 +5,7 @@
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.orm import selectinload
@@ -58,6 +58,8 @@ from app.core.exceptions import (
 )
 from app.core.dependencies import get_current_user  # Placeholder for auth
 from app.services.analytics_service import AnalyticsService
+from app.services.achievement_service import AchievementService
+from app.services.achievement_background_tasks import schedule_achievement_check
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -117,6 +119,7 @@ async def create_reading(
             "privacy_level": "private"
         }
     ),
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ReadingSession:
@@ -265,6 +268,23 @@ async def create_reading(
         spread_template.usage_count += 1
 
         await db.commit()
+
+        # ===== Achievement System Integration =====
+        # Schedule achievement check as background task to avoid blocking API response
+        background_tasks.add_task(
+            schedule_achievement_check,
+            user_id=current_user.id,
+            trigger_event='reading_completed',
+            event_context={
+                'reading_id': reading_session.id,
+                'spread_type': reading_data.spread_template_id,
+                'character_voice': reading_data.character_voice.value
+            }
+        )
+        logger.debug(
+            f"Scheduled achievement check for user {current_user.id} "
+            f"after completing reading {reading_session.id}"
+        )
 
         # Convert to response model
         response_data = {

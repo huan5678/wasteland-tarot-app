@@ -223,6 +223,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **cubic-11-font-integration**: Apply Cubic_11.woff2 font as the primary typeface across the entire website for consistent typography
 - **pixel-icon-replacement**: Replace lucide-react icon system with pixelarticons package (486 pixel-style icons) for consistent Fallout aesthetic with TypeScript support and accessibility compliance. **⚠️ lucide-react 已完全移除，只使用 PixelIcon**
 - **wasteland-story-mode**: Wasteland Story Mode combining Fallout worldview with tarot readings - enhance existing card descriptions with Fallout-themed story backgrounds and character events through database content augmentation
+- **achievement-system**: Gamification achievement system tracking user progress across reading, social, bingo, and exploration activities with visual badges, titles, and Karma rewards to boost engagement and retention
 
 ## Font Integration (Cubic 11 Pixel Font)
 
