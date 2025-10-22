@@ -3,9 +3,18 @@ Wasteland Tarot Card Model - Fallout-themed tarot card representation
 """
 
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, Boolean
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.orm import validates
 from .base import BaseModel
+from .story_constants import (
+    VALID_FACTIONS,
+    TIMELINE_PATTERNS,
+    FACTION_VOICE_MAP,
+    DEFAULT_VOICES,
+)
 from typing import List, Dict, Any, Optional
 from enum import Enum
+import re
 
 
 class WastelandSuit(str, Enum):
@@ -130,6 +139,14 @@ class WastelandCard(BaseModel):
     total_appearances = Column(Integer, default=0)
     last_drawn_at = Column(String)  # Timestamp as string
 
+    # Story Mode Fields (Wasteland Story Mode feature)
+    story_background = Column(Text, nullable=True)  # 200-500 字故事背景
+    story_character = Column(String(100), nullable=True)  # 主要角色名稱
+    story_location = Column(String(100), nullable=True)  # 故事發生地點
+    story_timeline = Column(String(50), nullable=True)  # 時間線（戰前/戰後/YYYY 年）
+    story_faction_involved = Column(JSONB, nullable=True)  # 涉及的陣營列表
+    story_related_quest = Column(String(200), nullable=True)  # 相關任務名稱
+
     def __repr__(self):
         return f"<WastelandCard(name='{self.name}', suit='{self.suit}', radiation={self.radiation_level})>"
 
@@ -175,7 +192,11 @@ class WastelandCard(BaseModel):
 
     def is_court_card(self) -> bool:
         """Check if this is a court card (11-14 in Minor Arcana)"""
-        return not self.is_major_arcana() and self.number and self.number >= 11
+        return (
+            not self.is_major_arcana()
+            and self.number is not None
+            and self.number >= 11
+        )
 
     def get_radiation_influence(self) -> float:
         """Calculate radiation influence on card randomness"""
@@ -188,6 +209,80 @@ class WastelandCard(BaseModel):
         else:
             suit_name = self.suit.replace('_', '-')
             return f"/public/cards/minor_arcana/{suit_name}/{self.number:02d}_{self.name.lower().replace(' ', '_')}.jpg"
+
+    # Story Mode Validation Methods
+
+    @validates('story_background')
+    def validate_story_background(self, key, value):
+        """驗證故事背景字數（200-500字）"""
+        if value is None:
+            return value
+
+        from .story_constants import MIN_STORY_LENGTH, MAX_STORY_LENGTH
+
+        text_length = len(value)
+        if text_length < MIN_STORY_LENGTH or text_length > MAX_STORY_LENGTH:
+            raise ValueError(
+                f"story_background must be between {MIN_STORY_LENGTH}-{MAX_STORY_LENGTH} characters. "
+                f"Current length: {text_length}"
+            )
+
+        return value
+
+    @validates('story_timeline')
+    def validate_story_timeline(self, key, value):
+        """驗證時間格式：「戰前」、「戰後」或「YYYY 年」"""
+        if value is None:
+            return value
+
+        # 使用共用的時間格式模式
+        if not any(re.match(pattern, value) for pattern in TIMELINE_PATTERNS):
+            raise ValueError(
+                f"story_timeline format invalid: '{value}'. "
+                f"Must be '戰前', '戰後', or 'YYYY 年' (e.g., '2277 年')"
+            )
+
+        return value
+
+    @validates('story_faction_involved')
+    def validate_story_faction_involved(self, key, value):
+        """驗證陣營列表內容"""
+        if value is None:
+            return value
+
+        if not isinstance(value, list):
+            raise ValueError("story_faction_involved must be a list")
+
+        if len(value) == 0:
+            raise ValueError("story_faction_involved cannot be empty")
+
+        # 使用共用的有效陣營列表
+        for faction in value:
+            if faction not in VALID_FACTIONS:
+                raise ValueError(
+                    f"story_faction_involved contains invalid faction: '{faction}'. "
+                    f"Valid factions: {', '.join(VALID_FACTIONS)}"
+                )
+
+        return value
+
+    def get_story_character_voices(self) -> List[str]:
+        """根據陣營推導角色語音"""
+        voices = []
+
+        if self.story_faction_involved is None or len(self.story_faction_involved) == 0:
+            return DEFAULT_VOICES
+
+        # 使用共用的陣營語音映射
+        for faction in self.story_faction_involved:
+            if faction in FACTION_VOICE_MAP:
+                voices.extend(FACTION_VOICE_MAP[faction])
+
+        # 去重並排序
+        voices = list(set(voices))
+        voices.sort()
+
+        return voices if voices else DEFAULT_VOICES
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert card to dictionary representation matching WastelandCard schema"""
@@ -257,7 +352,7 @@ class WastelandCard(BaseModel):
                 "last_drawn_at": self.last_drawn_at,
             },
 
-            # Computed properties
-            "is_major_arcana": self.is_major_arcana(),
-            "is_court_card": self.is_court_card()
+            # Computed properties (handle both method and attribute cases)
+            "is_major_arcana": self.is_major_arcana() if callable(self.is_major_arcana) else self.is_major_arcana,
+            "is_court_card": self.is_court_card() if callable(self.is_court_card) else self.is_court_card
         }

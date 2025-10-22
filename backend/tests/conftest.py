@@ -61,14 +61,6 @@ from tests.factories import (
 
 
 @pytest.fixture(scope="session")
-def event_loop():
-    """Create an instance of the default event loop for the test session."""
-    loop = asyncio.get_event_loop_policy().new_event_loop()
-    yield loop
-    loop.close()
-
-
-@pytest.fixture(scope="session")
 def temp_db_url():
     """
     Create a database URL for testing.
@@ -93,18 +85,42 @@ def temp_db_url():
     return sqlite_url
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def test_engine(temp_db_url):
-    """Create async engine for testing."""
+    """Create async engine for testing with asyncpg configuration."""
     # Determine if we're using PostgreSQL or SQLite
     is_postgres = temp_db_url.startswith("postgresql")
     print(f"🔧 Creating test_engine with URL: {temp_db_url[:60]}...")
     print(f"   is_postgres: {is_postgres}")
 
+    # Apply production-like asyncpg settings for PostgreSQL test environment
+    # This prevents "another operation is in progress" errors
+    connect_args = {}
+    execution_options = {}
+
+    if is_postgres:
+        connect_args = {
+            "statement_cache_size": 0,  # Disable statement cache (critical for poolers)
+            "prepared_statement_cache_size": 0,
+            "server_settings": {
+                "jit": "off",
+            }
+        }
+        execution_options = {
+            "compiled_cache": None,  # Disable compiled statement cache
+        }
+        print(f"   ✓ Applied asyncpg configuration for PostgreSQL")
+
     engine = create_async_engine(
         temp_db_url,
         echo=False,
-        future=True
+        future=True,
+        pool_size=1,  # Minimize pool size for tests
+        max_overflow=0,  # No overflow connections
+        pool_pre_ping=True,  # Check connection health
+        pool_recycle=3600,  # Recycle connections hourly
+        connect_args=connect_args,
+        execution_options=execution_options
     )
     print(f"   Engine dialect: {engine.dialect.name}")
 
@@ -136,28 +152,29 @@ async def test_engine(temp_db_url):
 
     yield engine
 
-    await engine.dispose()
+    # Force dispose of all connections to prevent event loop issues
+    await engine.dispose(close=True)
 
 
 @pytest_asyncio.fixture
 async def db_session(test_engine) -> AsyncGenerator[AsyncSession, None]:
-    """Create a database session for testing."""
+    """Create a database session for testing with production-like configuration."""
     async_session = async_sessionmaker(
         bind=test_engine,
         class_=AsyncSession,
-        expire_on_commit=False
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False
     )
 
     async with async_session() as session:
-        # Seed the database with sample data
-        try:
-            from app.db.seed_data import seed_database
-            await seed_database(session)
-        except ImportError:
-            # If seed_data isn't available, skip seeding
-            pass
+        # Skip database seeding - tests will create their own test data
+        # Seeding can interfere with test isolation and cause UUID conflicts
 
         yield session
+
+        # Cleanup: rollback any uncommitted changes
+        # Note: session.close() is handled by the async context manager
         await session.rollback()
 
 
@@ -171,11 +188,17 @@ async def test_app() -> FastAPI:
 @pytest_asyncio.fixture
 async def async_client(test_app: FastAPI, db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
     """Create async HTTP client for API testing."""
-    from app.db.database import get_db
+    # 🔧 CRITICAL: Must import from session, not database!
+    # dependencies.py uses: from app.db.session import get_db
+    from app.db.session import get_db
     from httpx import ASGITransport
 
     # Override the database dependency for testing
-    test_app.dependency_overrides[get_db] = lambda: db_session
+    # get_db is an async generator, so override must also be async generator
+    async def override_get_db():
+        yield db_session
+
+    test_app.dependency_overrides[get_db] = override_get_db
 
     transport = ASGITransport(app=test_app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

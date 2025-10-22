@@ -3,18 +3,22 @@ Audio API Endpoints - TTS 音檔合成與取得
 提供即時 TTS 合成、靜態音檔取得等功能
 """
 
-from typing import Optional
+from typing import Optional, Dict
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Path
+from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.db.session import get_db
 from app.services.tts_service import get_tts_service, TTSService
 from app.services.audio_storage_service import get_audio_storage_service, AudioStorageService
 from app.services.audio_cache_service import get_audio_cache_service, AudioCacheService
+from app.services.story_audio_service import StoryAudioService
 from app.models.audio_file import AudioType
+from app.models.wasteland_card import WastelandCard
+from app.schemas.audio import GenerateStoryAudioRequest, GenerateStoryAudioResponse, GetStoryAudioResponse
 from app.core.logging_config import get_logger
 from app.core.dependencies import get_supabase_client, get_redis_client
 from supabase import Client
@@ -87,6 +91,16 @@ def get_cache_service_dep(
 ) -> AudioCacheService:
     """取得快取服務"""
     return get_audio_cache_service(redis)
+
+
+def get_story_audio_service_dep(
+    db: AsyncSession = Depends(get_db),
+    tts_service: TTSService = Depends(get_tts_service_dep),
+    storage_service: AudioStorageService = Depends(get_storage_service_dep),
+    supabase: Client = Depends(get_supabase_client)
+) -> StoryAudioService:
+    """取得故事音檔服務"""
+    return StoryAudioService(db, tts_service, storage_service, supabase)
 
 
 # ============================================================================
@@ -303,3 +317,201 @@ async def test_tts():
             "status": "error",
             "error": str(e)
         }
+
+
+# ============================================================================
+# Story Audio Endpoints (Wasteland Story Mode)
+# ============================================================================
+
+@router.post(
+    "/generate/story",
+    response_model=GenerateStoryAudioResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="生成故事音檔",
+    description="""
+    **為卡牌故事生成角色語音音檔**
+
+    此端點為指定卡牌的故事內容生成多個角色的語音音檔：
+
+    功能：
+    - 支援同時生成多個角色語音（最多 3 個）
+    - 自動檢測快取，避免重複生成
+    - 支援強制重新生成模式
+    - 返回所有生成的音檔 URL
+
+    速率限制：
+    - 每分鐘最多 10 次請求（避免濫用 TTS 配額）
+
+    錯誤處理：
+    - 404: 卡牌不存在或無故事內容
+    - 429: 超過速率限制
+    - 503: TTS 服務暫時無法使用（提供 Web Speech API 降級方案）
+    """
+)
+async def generate_story_audio(
+    request: GenerateStoryAudioRequest,
+    db: AsyncSession = Depends(get_db),
+    story_audio_service: StoryAudioService = Depends(get_story_audio_service_dep)
+):
+    """
+    生成卡牌故事音檔
+
+    Args:
+        request: 生成請求（卡牌 ID、角色列表）
+        db: 資料庫 session
+        story_audio_service: 故事音檔服務
+
+    Returns:
+        GenerateStoryAudioResponse: 包含音檔 URL 和快取狀態
+
+    Raises:
+        404: 卡牌不存在
+        503: TTS 服務失敗
+    """
+    try:
+        # 1. 驗證卡牌存在
+        result = await db.execute(
+            select(WastelandCard).where(WastelandCard.id == request.card_id)
+        )
+        card = result.scalar_one_or_none()
+
+        if not card:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Card not found: {request.card_id}"
+            )
+
+        if not card.story_background:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Card {request.card_id} has no story content"
+            )
+
+        # 2. 呼叫服務生成音檔
+        logger.info(f"[API] Generating story audio: card_id={request.card_id}, characters={request.character_keys}")
+
+        audio_urls = await story_audio_service.generate_story_audio(
+            card_id=request.card_id,
+            character_keys=request.character_keys,
+            force_regenerate=request.force_regenerate
+        )
+
+        # 3. 檢查快取狀態
+        cached_status = {}
+        for character_key in request.character_keys:
+            # 檢查是否為快取（通過檢查音檔是否已存在）
+            existing_audio = await story_audio_service.check_audio_exists(
+                request.card_id,
+                character_key
+            )
+            cached_status[character_key] = existing_audio is not None and not request.force_regenerate
+
+        # 4. 返回回應
+        return GenerateStoryAudioResponse(
+            card_id=request.card_id,
+            audio_urls=audio_urls,
+            cached=cached_status,
+            generated_at=datetime.utcnow()
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[API] Failed to generate story audio: {e}", exc_info=True)
+
+        # TTS 服務失敗時返回 503 並提供降級方案
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "error": "tts_service_unavailable",
+                "message": str(e),
+                "fallback": "web_speech_api"
+            }
+        )
+
+
+@router.get(
+    "/story/{card_id}",
+    response_model=GetStoryAudioResponse,
+    summary="取得故事音檔 URL",
+    description="""
+    **取得指定卡牌的所有故事音檔 URL**
+
+    此端點返回已生成的故事音檔 URL：
+
+    功能：
+    - 支援過濾特定角色（使用 character_key 參數）
+    - 返回所有已完成生成的音檔
+    - 設定適當的 Cache-Control headers
+
+    快取策略：
+    - Cache-Control: public, max-age=3600（1 小時）
+    - 音檔 URL 為靜態資源，可長期快取
+    """
+)
+async def get_story_audio_urls(
+    card_id: UUID = Path(..., description="卡牌 ID"),
+    character_key: Optional[str] = Query(None, description="過濾特定角色（可選）"),
+    story_audio_service: StoryAudioService = Depends(get_story_audio_service_dep),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    取得卡牌故事音檔 URL
+
+    Args:
+        card_id: 卡牌 ID
+        character_key: 過濾特定角色（可選）
+        story_audio_service: 故事音檔服務
+        db: 資料庫 session
+
+    Returns:
+        GetStoryAudioResponse: 包含音檔 URL 映射
+
+    Raises:
+        404: 卡牌不存在
+    """
+    try:
+        # 1. 驗證卡牌存在
+        result = await db.execute(
+            select(WastelandCard).where(WastelandCard.id == card_id)
+        )
+        card = result.scalar_one_or_none()
+
+        if not card:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Card not found: {card_id}"
+            )
+
+        # 2. 取得音檔 URL
+        audio_urls = await story_audio_service.get_story_audio_urls(card_id)
+
+        # 3. 過濾特定角色（如果有指定）
+        if character_key:
+            audio_urls = {
+                key: url for key, url in audio_urls.items()
+                if key == character_key
+            }
+
+        # 4. 建立回應並設定快取 headers
+        response_data = GetStoryAudioResponse(
+            card_id=card_id,
+            audio_urls=audio_urls
+        )
+
+        # 使用 JSONResponse 以設定 Cache-Control headers
+        return JSONResponse(
+            content=response_data.model_dump(mode='json'),
+            headers={
+                "Cache-Control": "public, max-age=3600"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[API] Failed to get story audio URLs: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve story audio URLs: {str(e)}"
+        )

@@ -20,6 +20,7 @@ import { useCardsStore } from '@/stores/cardsStore'
 import { useAdjacentCards } from '@/hooks/useAdjacentCards'
 import { Breadcrumb } from '@/components/navigation/Breadcrumb'
 import { PipBoyButton, PipBoyCard, LoadingSpinner, ErrorDisplay } from '@/components/ui/pipboy'
+import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer'
 import {
   getSuitDisplayName,
   isValidSuit,
@@ -330,6 +331,82 @@ export default function CardDetailPage() {
                         <span className="text-pip-boy-green">Vault {card.metadata.vault_number}</span>
                       </div>
                     )}
+                </div>
+              </PipBoyCard>
+            )}
+
+            {/* 廢土故事 */}
+            {card.story && (
+              <PipBoyCard>
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
+                  廢土故事
+                </h2>
+                <div className="space-y-4 text-sm md:text-base text-pip-boy-green/70">
+                  {/* 故事背景 */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-pip-boy-green mb-2">故事背景</h3>
+                    <p className="leading-relaxed whitespace-pre-wrap">{card.story.background}</p>
+                  </div>
+
+                  {/* 故事元素 */}
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-pip-boy-green/30">
+                    <div>
+                      <span className="font-semibold text-pip-boy-green">主角：</span>
+                      <span className="ml-2">{card.story.character}</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-pip-boy-green">地點：</span>
+                      <span className="ml-2">{card.story.location}</span>
+                    </div>
+                    <div>
+                      <span className="font-semibold text-pip-boy-green">時間：</span>
+                      <span className="ml-2">{card.story.timeline}</span>
+                    </div>
+                    {card.story.relatedQuest && (
+                      <div>
+                        <span className="font-semibold text-pip-boy-green">相關任務：</span>
+                        <span className="ml-2">{card.story.relatedQuest}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 涉及陣營 */}
+                  {card.story.factionsInvolved && card.story.factionsInvolved.length > 0 && (
+                    <div className="pt-4 border-t border-pip-boy-green/30">
+                      <h3 className="text-lg font-semibold text-pip-boy-green mb-2">涉及陣營</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {card.story.factionsInvolved.map((faction, index) => (
+                          <span
+                            key={index}
+                            className="px-3 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 text-pip-boy-green text-sm"
+                          >
+                            {faction}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </PipBoyCard>
+            )}
+
+            {/* 故事音頻播放器 */}
+            {card.audio_urls && Object.keys(card.audio_urls).length > 0 && (
+              <PipBoyCard>
+                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
+                  故事旁白
+                </h2>
+                <div className="space-y-4">
+                  {Object.entries(card.audio_urls).map(([characterKey, audioUrl]) => (
+                    <StoryAudioPlayer
+                      key={characterKey}
+                      audioUrl={audioUrl}
+                      characterName={characterKey === 'pip_boy' ? 'Pip-Boy' : characterKey}
+                      characterKey={characterKey}
+                      storyText={card.story?.background}
+                      volume={0.8}
+                    />
+                  ))}
                 </div>
               </PipBoyCard>
             )}

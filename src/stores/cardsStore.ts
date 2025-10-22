@@ -249,7 +249,8 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      const card = await apiRequest<TarotCard>(`/api/v1/cards/${cardId}`)
+      // 包含 include_story=true 參數以取得故事內容和音頻 URLs
+      const card = await apiRequest<TarotCard>(`/api/v1/cards/${cardId}?include_story=true`)
 
       set({
         isLoading: false,

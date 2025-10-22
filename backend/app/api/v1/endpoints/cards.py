@@ -12,9 +12,11 @@ import random
 import logging
 
 from app.db.session import get_db
+from app.models.user import User
 from app.models.wasteland_card import WastelandCard as WastelandCardModel
 from app.schemas.cards import (
     WastelandCard,
+    WastelandCardWithStory,
     CardCreate,
     CardUpdate,
     CardSearchParams,
@@ -27,14 +29,48 @@ from app.schemas.cards import (
     CharacterVoice,
     FactionAlignment
 )
+from app.schemas.story import StoryUpdateRequest
+from app.core.dependencies import get_current_active_user, get_supabase_client
 from app.core.exceptions import CardNotFoundError, RadiationOverloadError
+from app.services.wasteland_card_service import WastelandCardService
+from app.services.story_audio_service import StoryAudioService
+from app.services.tts_service import get_tts_service
+from app.services.audio_storage_service import get_audio_storage_service
+from supabase import Client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
+# ============================================================
+# 🔵 Refactor: 共用輔助函式
+# ============================================================
+
+def build_story_dict(card_data: WastelandCardModel) -> Optional[Dict[str, Any]]:
+    """
+    從 WastelandCard model 構建 Story 字典
+
+    Args:
+        card_data: WastelandCard ORM 物件
+
+    Returns:
+        Story 字典，如果沒有故事資料則返回 None
+    """
+    if not card_data.story_background:
+        return None
+
+    return {
+        "background": card_data.story_background,
+        "character": card_data.story_character,
+        "location": card_data.story_location,
+        "timeline": card_data.story_timeline,
+        "factions_involved": card_data.story_faction_involved,
+        "related_quest": card_data.story_related_quest
+    }
+
+
 @router.get(
-    "/",
+    "",
     response_model=CardListResponse,
     summary="取得所有卡牌",
     description="""
@@ -98,6 +134,7 @@ async def get_cards(
     search: Optional[str] = Query(None, min_length=1, description="在卡牌名稱和含義中搜尋"),
     sort_by: str = Query(default="name", description="排序欄位：name、suit、radiation_level、threat_level"),
     sort_order: str = Query(default="asc", regex="^(asc|desc)$", description="排序順序"),
+    include_story: bool = Query(default=False, description="包含完整故事內容（Story Mode）"),
     db: AsyncSession = Depends(get_db)
 ) -> CardListResponse:
     """
@@ -105,6 +142,11 @@ async def get_cards(
 
     此端點提供廢土塔羅牌組中所有 78 張卡牌的存取權限，
     並提供精密的篩選選項來建立自訂介面和專業的卡牌選擇工具。
+
+    **Story Mode (Wasteland Story Mode)**:
+    - 使用 `include_story=true` 參數取得所有卡牌的完整故事內容
+    - 注意：批次查詢時建議保持 `include_story=false` 以優化性能
+    - 對於需要故事的場景，建議先取得卡牌列表，再個別查詢故事
     """
     try:
         # Build base query
@@ -164,7 +206,15 @@ async def get_cards(
         cards = []
         for card_data in cards_data:
             card_dict = card_data.to_dict()
-            cards.append(WastelandCard(**card_dict))
+
+            # 根據 include_story 決定是否包含故事資料
+            if include_story:
+                # 使用共用函式構建 Story 物件
+                card_dict["story"] = build_story_dict(card_data)
+                cards.append(WastelandCardWithStory(**card_dict))
+            else:
+                # 預設不包含故事（性能優化）
+                cards.append(WastelandCard(**card_dict))
 
         has_more = (offset + len(cards)) < total_count
 
@@ -378,13 +428,21 @@ async def get_card(
     card_id: str = Path(..., description="唯一卡牌識別碼 (UUID)", example="550e8400-e29b-41d4-a716-446655440000"),
     include_stats: bool = Query(default=True, description="包含使用統計"),
     include_interpretations: bool = Query(default=True, description="包含角色解讀"),
-    db: AsyncSession = Depends(get_db)
-) -> WastelandCard:
+    include_story: bool = Query(default=False, description="包含完整故事內容（Story Mode）"),
+    db: AsyncSession = Depends(get_db),
+    supabase: Client = Depends(get_supabase_client)
+):
     """
     取得特定卡牌的詳細資訊。
 
     回傳完整的卡牌資料，包含所有角色聲音解讀、
     派系意義和使用統計。
+
+    **Story Mode (Wasteland Story Mode)**:
+    - 使用 `include_story=true` 參數取得完整故事內容
+    - 包含 background, character, location, timeline, factions, quest 等故事欄位
+    - 自動載入故事音檔 URL（如果有生成）
+    - 回應包含 Cache-Control 和 ETag headers 以優化性能
     """
     try:
         # Query for the specific card by UUID
@@ -412,13 +470,49 @@ async def get_card(
         card_data.total_appearances += 1
         await db.commit()
 
-        return WastelandCard(**card_dict)
+        # 根據 include_story 決定返回的 schema
+        if include_story:
+            # 使用共用函式構建 Story 物件
+            card_dict["story"] = build_story_dict(card_data)
+
+            # 整合音檔 URL（Task 8.5）
+            try:
+                # 建立 StoryAudioService
+                tts_service = get_tts_service()
+                storage_service = get_audio_storage_service(supabase)
+                story_audio_service = StoryAudioService(db, tts_service, storage_service, supabase)
+
+                # 取得音檔 URL
+                audio_urls = await story_audio_service.get_story_audio_urls(card_data.id)
+                card_dict["audio_urls"] = audio_urls if audio_urls else None
+
+            except Exception as e:
+                logger.warning(f"Failed to load audio URLs for card {card_id}: {e}")
+                # 不阻擋回應，只是沒有音檔
+                card_dict["audio_urls"] = None
+
+            # 使用 WastelandCardWithStory schema
+            response_data = WastelandCardWithStory(**card_dict)
+
+            # 設定快取 headers (使用 card_dict 避免 lazy loading 問題)
+            headers = {
+                "Cache-Control": "public, max-age=3600",
+                "ETag": f'"{card_id}-{card_dict.get("updated_at", "v1")}"'
+            }
+
+            return JSONResponse(
+                content=response_data.model_dump(mode='json'),
+                headers=headers
+            )
+        else:
+            # 預設不包含故事（性能優化）
+            return WastelandCard(**card_dict)
 
     except CardNotFoundError:
         raise
     except Exception as e:
-        logger.error(f"Error retrieving card {card_id}: {str(e)}")
-        raise HTTPException(status_code=500, detail="取得卡牌失敗")
+        logger.error(f"Error retrieving card {card_id}: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"取得卡牌失敗: {str(e)}")
 
 
 @router.get(
@@ -718,3 +812,115 @@ async def get_cards_by_suit(
     except Exception as e:
         logger.error(f"Error retrieving suit {suit}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve suit cards")
+
+
+# ============================================================
+# Wasteland Story Mode Endpoints (Phase: 故事模式擴展)
+# ============================================================
+
+@router.post(
+    "/{card_id}/story",
+    response_model=WastelandCardWithStory,
+    summary="更新卡牌故事內容",
+    description="""
+    **更新指定卡牌的 Wasteland Story Mode 故事內容**
+
+    此端點允許認證使用者更新或新增卡牌的故事內容，包含：
+    - **background**: 故事背景（200-500 字）
+    - **character**: 主要角色
+    - **location**: 故事發生地點
+    - **timeline**: 時間線（「戰前」、「戰後」或「YYYY 年」）
+    - **factions_involved**: 涉及的陣營列表
+    - **related_quest**: 相關任務名稱
+
+    **認證要求**:
+    - 需要有效的 JWT token
+    - 使用者帳號必須為啟用狀態
+
+    **驗證規則**:
+    - 故事背景必須為 200-500 字
+    - 時間格式必須符合規範
+    - 陣營必須為系統支援的有效陣營
+
+    **部分更新**:
+    - 支援只更新部分欄位
+    - 未提供的欄位保持原值不變
+    """,
+    response_description="更新後的卡牌（包含完整故事內容）",
+    responses={
+        200: {"description": "成功更新故事內容"},
+        400: {"description": "驗證失敗（故事內容不符合規範）"},
+        401: {"description": "未認證或 token 無效"},
+        404: {"description": "卡牌不存在"},
+        500: {"description": "伺服器內部錯誤"}
+    }
+)
+async def update_card_story(
+    card_id: str = Path(..., description="卡牌 UUID"),
+    story_update: StoryUpdateRequest = Body(
+        ...,
+        example={
+            "background": (
+                "在2287年的波士頓廢土，一個剛從111號避難所甦醒的倖存者，"
+                "睜開眼睛發現世界已經過了210年。他的配偶被殺害，兒子被綁架，"
+                "留下他獨自面對這個陌生又危險的新世界。"
+                "在這個充滿超級變種人、強盜和輻射屍鬼的廢土中，"
+                "他必須找到失蹤的兒子Shaun。Minutemen將軍Preston Garvey告訴他，"
+                "有一個神秘的組織叫做Institute，他們擁有先進的科技，可能與綁架案有關。"
+                "為了找回唯一的親人，他開始了在波士頓廢土的冒險旅程。"
+            ),
+            "character": "唯一倖存者 (Sole Survivor)",
+            "location": "Vault 111、Sanctuary Hills",
+            "timeline": "2287 年",
+            "factions_involved": ["minutemen", "railroad", "institute"],
+            "related_quest": "Out of Time"
+        }
+    ),
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+) -> WastelandCardWithStory:
+    """
+    更新卡牌的故事內容。
+
+    需要認證。支援部分更新（只提供需要更新的欄位）。
+    """
+    try:
+        # 建立 WastelandCardService
+        card_service = WastelandCardService(db)
+
+        # 將 StoryUpdateRequest 轉換為 dict（只包含非 None 欄位）
+        story_data_raw = story_update.model_dump(exclude_none=True)
+
+        # 轉換欄位名稱：API schema 使用 "background"，但 model 使用 "story_background"
+        field_mapping = {
+            "background": "story_background",
+            "character": "story_character",
+            "location": "story_location",
+            "timeline": "story_timeline",
+            "factions_involved": "story_faction_involved",
+            "related_quest": "story_related_quest"
+        }
+        story_data = {
+            field_mapping.get(key, key): value
+            for key, value in story_data_raw.items()
+        }
+
+        # 呼叫 service 層更新故事
+        updated_card = await card_service.update_story_content(
+            card_id=card_id,
+            story_data=story_data
+        )
+
+        # 構建故事物件返回（使用共用函式）
+        card_dict = updated_card.to_dict()
+        card_dict["story"] = build_story_dict(updated_card)
+        return WastelandCardWithStory(**card_dict)
+
+    except HTTPException:
+        # 直接傳遞 HTTPException（來自 service 層）
+        raise
+    except CardNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error updating story for card {card_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="更新故事失敗")

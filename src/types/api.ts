@@ -60,6 +60,18 @@ export const CardStatsSchema = z.object({
 
 export type CardStats = z.infer<typeof CardStatsSchema>
 
+// 嵌套物件：Wasteland Story (Fallout世界觀故事背景)
+export const WastelandStorySchema = z.object({
+  background: z.string(), // 故事背景 (200-500字)
+  character: z.string(), // 主角或關鍵人物
+  location: z.string(), // 發生地點
+  timeline: z.string(), // 時間點 (例如: "2287年")
+  factionsInvolved: z.array(z.string()), // 涉及的陣營
+  relatedQuest: z.string().optional().nullable(), // 相關任務
+})
+
+export type WastelandStory = z.infer<typeof WastelandStorySchema>
+
 // 完整的 Card Schema（嵌套結構）
 export const TarotCardSchema = z.object({
   // 基本資訊
@@ -97,6 +109,10 @@ export const TarotCardSchema = z.object({
   is_major_arcana: z.boolean(),
   is_court_card: z.boolean(),
   rank: z.string().optional().nullable(),
+
+  // 故事模式 (僅在 include_story=true 時包含)
+  story: WastelandStorySchema.optional().nullable(),
+  audio_urls: z.record(z.string(), z.string()).optional().nullable(), // {character_key: storage_url}
 
   // 向後相容（已棄用，但保留以避免破壞現有程式碼）
   image_url: z.string().optional().nullable(),

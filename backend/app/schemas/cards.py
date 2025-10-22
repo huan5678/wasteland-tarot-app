@@ -3,9 +3,12 @@
 提供完整的 API 文件與資料驗證模型
 """
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Union, TYPE_CHECKING
 from pydantic import BaseModel, Field, ConfigDict, field_validator
 from enum import Enum
+
+if TYPE_CHECKING:
+    from app.schemas.story import Story
 
 
 class WastelandSuit(str, Enum):
@@ -223,12 +226,14 @@ class CardSearchParams(BaseModel):
 
 
 class CardListResponse(BaseModel):
-    """卡牌清單回應模型"""
-    cards: List[WastelandCard] = Field(..., description="卡牌清單")
+    """卡牌清單回應模型（支援Story Mode）"""
+    cards: List[Union[WastelandCard, 'WastelandCardWithStory']] = Field(..., description="卡牌清單（可能包含故事內容）")
     total_count: int = Field(..., description="符合條件的卡牌總數")
     page: int = Field(..., description="目前頁碼")
     page_size: int = Field(..., description="每頁卡牌數量")
     has_more: bool = Field(..., description="是否有更多頁面")
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
 
 
 class RandomCardParams(BaseModel):
@@ -256,3 +261,76 @@ class CardInterpretationResponse(BaseModel):
     context_applied: bool = Field(..., description="是否套用額外情境")
     confidence: float = Field(..., ge=0.0, le=1.0, description="AI 對解讀的信心度")
     radiation_influence: float = Field(..., description="輻射對解讀的影響")
+
+
+# ============================================================
+# Wasteland Story Mode Schemas (Phase: 故事模式擴展)
+# ============================================================
+
+class WastelandCardWithStory(WastelandCard):
+    """
+    帶有故事內容的廢土塔羅卡牌 Schema
+
+    擴展 WastelandCard，新增故事模式相關欄位：
+    - story: 完整的故事內容
+    - audio_urls: 故事語音 URL（用於 TTS 功能）
+    """
+
+    story: Optional['Story'] = Field(
+        None,
+        description="卡牌故事內容（選填）"
+    )
+
+    audio_urls: Optional[Dict[str, str]] = Field(
+        None,
+        description="故事語音 URL 對應表（角色名稱 -> 音檔 URL）",
+        example={
+            "pip_boy": "/audio/story/card-001/pip_boy.mp3",
+            "vault_dweller": "/audio/story/card-001/vault_dweller.mp3",
+            "wasteland_trader": "/audio/story/card-001/wasteland_trader.mp3"
+        }
+    )
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "id": "wanderer-001",
+                "name": "The Wanderer",
+                "suit": "major_arcana",
+                "number": 0,
+                "upright_meaning": "New beginnings, journey into the unknown",
+                "reversed_meaning": "Fear of change, reluctance to leave comfort zone",
+                "is_major_arcana": True,
+                "is_court_card": False,
+                "story": {
+                    "background": (
+                        "在2277年10月23日的早晨，101號避難所的大門終於緩緩開啟。"
+                        "一個年輕的居民站在出口處，手持父親留下的Pip-Boy 3000..."
+                    ),
+                    "character": "避難所居民 101 (Lone Wanderer)",
+                    "location": "Vault 101 出口、Springvale 小鎮廢墟",
+                    "timeline": "2277 年",
+                    "factions_involved": ["vault_dweller", "brotherhood"],
+                    "related_quest": "Following in His Footsteps"
+                },
+                "audio_urls": {
+                    "pip_boy": "/audio/story/wanderer-001/pip_boy.mp3",
+                    "vault_dweller": "/audio/story/wanderer-001/vault_dweller.mp3"
+                }
+            }
+        }
+    )
+
+
+# ============================================================
+# Resolve Forward References (必須在檔案結尾)
+# ============================================================
+
+# 在執行時解析 Story forward reference
+# 這允許 WastelandCardWithStory 正確使用 story.Story 類型
+try:
+    from app.schemas.story import Story
+    WastelandCardWithStory.model_rebuild()
+except ImportError:
+    # 如果 Story 尚未定義，靜默失敗（用於測試環境）
+    pass

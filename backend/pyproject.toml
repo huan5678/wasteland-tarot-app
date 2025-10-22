@@ -32,6 +32,8 @@ dependencies = [
     "python-dateutil>=2.8.0",
     "webauthn>=2.4.0",
     "psycopg2-binary>=2.9.10",
+    "edge-tts>=7.2.3",
+    "gtts>=2.5.4",
 ]
 
 [project.optional-dependencies]

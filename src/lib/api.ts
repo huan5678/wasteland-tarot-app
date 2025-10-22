@@ -512,4 +512,76 @@ export const interpretationsAPI = {
   }> => apiRequest('/api/v1/interpretations/stats/summary'),
 }
 
+// Story Mode API (Wasteland Story Mode)
+import type {
+  WastelandCardWithStory,
+  GenerateStoryAudioRequest,
+  GenerateStoryAudioResponse,
+} from '@/types/database'
+
+/**
+ * Get card with story content and audio URLs
+ * @param id - Card ID
+ * @returns Card with story and audio URLs
+ */
+export async function getCardWithStory(id: string): Promise<WastelandCardWithStory> {
+  return apiRequest<WastelandCardWithStory>(`/api/v1/cards/${id}?include_story=true`)
+}
+
+/**
+ * Generate story audio for specific characters
+ * Falls back to Web Speech API if TTS service is unavailable (503)
+ * @param cardId - Card ID
+ * @param characterKeys - Array of character voice keys
+ * @param forceRegenerate - Force regenerate even if audio exists
+ * @returns Audio URLs and cache status
+ */
+export async function generateStoryAudio(
+  cardId: string,
+  characterKeys: string[],
+  forceRegenerate: boolean = false
+): Promise<GenerateStoryAudioResponse> {
+  try {
+    const response = await apiRequest<GenerateStoryAudioResponse>('/api/v1/audio/generate/story', {
+      method: 'POST',
+      body: JSON.stringify({
+        cardId,
+        characterKeys,
+        forceRegenerate,
+      } as GenerateStoryAudioRequest),
+    })
+    return response
+  } catch (error: any) {
+    // Handle TTS service unavailable (503) - return fallback hint
+    if (error instanceof APIError && error.status === 503) {
+      console.warn('TTS service unavailable, client should use Web Speech API fallback')
+      return {
+        cardId,
+        audioUrls: {},
+        cached: {},
+        generatedAt: new Date().toISOString(),
+      }
+    }
+    throw error
+  }
+}
+
+/**
+ * Get all story audio URLs for a card
+ * @param cardId - Card ID
+ * @returns Record of character keys to audio URLs
+ */
+export async function getStoryAudioUrls(cardId: string): Promise<Record<string, string>> {
+  try {
+    const response = await apiRequest<{ audioUrls: Record<string, string> }>(
+      `/api/v1/audio/story/${cardId}`
+    )
+    return response.audioUrls || {}
+  } catch (error: any) {
+    // Return empty object on error (404 or network failure)
+    console.warn(`Failed to fetch story audio URLs for card ${cardId}:`, error.message)
+    return {}
+  }
+}
+
 export type { TarotCard, Reading, User, APIError }

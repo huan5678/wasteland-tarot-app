@@ -4,8 +4,11 @@ Enhanced with user authentication and reading integration
 """
 
 from typing import List, Optional, Dict, Any
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, or_
+from sqlalchemy.orm import defer
+from fastapi import HTTPException
 from app.models.wasteland_card import (
     WastelandCard,
     WastelandSuit,
@@ -15,6 +18,7 @@ from app.models.wasteland_card import (
 )
 from app.models.user import User
 from app.core.exceptions import UserNotFoundError, InsufficientPermissionsError
+from app.services.story_validation_service import StoryValidationService
 import random
 import time
 import math
@@ -349,3 +353,111 @@ class WastelandCardService:
             "karma_influence": user.karma_alignment().value,
             "faction_preference": user.faction_alignment
         }
+
+    # ============================================================
+    # Wasteland Story Mode Methods (Phase: 故事模式擴展)
+    # ============================================================
+
+    async def get_card_with_story(self, card_id: UUID) -> Optional[WastelandCard]:
+        """
+        取得包含完整故事資料的卡牌
+
+        Args:
+            card_id: 卡牌 UUID
+
+        Returns:
+            包含所有故事欄位的卡牌，若不存在則返回 None
+        """
+        result = await self.db.execute(
+            select(WastelandCard).where(WastelandCard.id == card_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def list_cards_with_story(self, include_story: bool = False) -> List[WastelandCard]:
+        """
+        列出卡牌，可選擇性載入故事內容
+
+        Args:
+            include_story: 是否載入故事欄位（預設 False 以優化性能）
+
+        Returns:
+            卡牌列表
+
+        Notes:
+            - include_story=False 時使用 defer() 延遲載入故事欄位以提升查詢性能
+            - include_story=True 時載入完整故事資料
+        """
+        query = select(WastelandCard)
+
+        # 若不需要故事內容，使用 defer() 延遲載入以優化查詢
+        if not include_story:
+            query = query.options(
+                defer(WastelandCard.story_background),
+                defer(WastelandCard.story_character),
+                defer(WastelandCard.story_location),
+                defer(WastelandCard.story_timeline),
+                defer(WastelandCard.story_faction_involved),
+                defer(WastelandCard.story_related_quest)
+            )
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def update_story_content(
+        self,
+        card_id: UUID,
+        story_data: Dict[str, Any]
+    ) -> WastelandCard:
+        """
+        更新卡牌的故事內容
+
+        Args:
+            card_id: 卡牌 UUID
+            story_data: 故事資料字典，包含以下欄位：
+                - story_background: 故事背景 (200-500 字)
+                - story_character: 主要角色
+                - story_location: 故事地點 (可選)
+                - story_timeline: 時間線 (可選)
+                - story_faction_involved: 涉及陣營列表 (可選)
+                - story_related_quest: 相關任務 (可選)
+
+        Returns:
+            更新後的卡牌
+
+        Raises:
+            HTTPException(404): 卡牌不存在
+            HTTPException(400): 驗證失敗
+        """
+        # 1. 先查詢卡牌（確保資源存在）
+        card = await self.get_card_with_story(card_id)
+
+        if not card:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Card with ID '{card_id}' not found"
+            )
+
+        # 2. 驗證故事內容
+        validation_service = StoryValidationService()
+        validation_result = validation_service.validate_story_content(story_data)
+
+        if not validation_result.valid:
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Story content validation failed",
+                    "errors": validation_result.errors,
+                    "warnings": validation_result.warnings
+                }
+            )
+
+        # 3. 更新故事欄位
+        for key, value in story_data.items():
+            if hasattr(card, key):
+                setattr(card, key, value)
+
+        # 4. 提交變更
+        await self.db.commit()
+        await self.db.refresh(card)
+
+        return card

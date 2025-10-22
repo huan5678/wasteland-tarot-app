@@ -719,5 +719,33 @@ export interface UserDashboard {
   statistics: UserStatistics;
 }
 
+// Story Mode Types (Wasteland Story Mode)
+export interface Story {
+  background: string;          // 200-500 characters
+  character: string;           // Main character
+  location: string;            // Fallout location
+  timeline: string;            // "戰前", "戰後", or "YYYY 年"
+  factionsInvolved: string[];  // Faction list
+  relatedQuest?: string;       // Optional quest reference
+}
+
+export interface WastelandCardWithStory extends WastelandCard {
+  story?: Story;
+  audioUrls?: Record<string, string>;  // {character_key: url}
+}
+
+export interface GenerateStoryAudioRequest {
+  cardId: string;
+  characterKeys: string[];
+  forceRegenerate?: boolean;
+}
+
+export interface GenerateStoryAudioResponse {
+  cardId: string;
+  audioUrls: Record<string, string>;
+  cached: Record<string, boolean>;
+  generatedAt: string;
+}
+
 // Export default database type for Supabase client
 export default Database;
