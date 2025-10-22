@@ -38,6 +38,10 @@ export interface StreamingTextOptions {
   enableTypingSound?: boolean;  // Enable typing sound effect (default: false)
   soundThrottle?: number;       // Sound throttle interval in ms (default: 50)
   typingSoundVolume?: number;   // Typing sound volume (default: 0.3)
+  // 🟢 TDD P2: Fallback options
+  enableFallback?: boolean;     // Enable fallback to non-streaming endpoint (default: false)
+  fallbackUrl?: string;         // Custom fallback URL (default: auto-derived from url)
+  fallbackResponseKey?: string; // JSON response key for text content (default: 'interpretation')
 }
 
 export interface StreamingTextState {
@@ -52,6 +56,8 @@ export interface StreamingTextState {
   isRetrying: boolean;      // Whether currently retrying
   // 🟢 TDD P2: Network state
   isOnline: boolean;        // Current network online status
+  // 🟢 TDD P2: Fallback state
+  usedFallback: boolean;    // Whether fallback endpoint was used
 }
 
 /**
@@ -96,6 +102,10 @@ export function useStreamingText({
   enableTypingSound = false,
   soundThrottle = 50,
   typingSoundVolume = 0.3,
+  // 🟢 TDD P2: Fallback parameters
+  enableFallback = false,
+  fallbackUrl,
+  fallbackResponseKey = 'interpretation',
 }: StreamingTextOptions): StreamingTextState {
   const [text, setText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -108,6 +118,8 @@ export function useStreamingText({
   const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
+  // 🟢 TDD P2: Fallback state
+  const [usedFallback, setUsedFallback] = useState(false);
 
   // 🟢 TDD P1: Audio integration
   const { playSound } = useAudioEffect();
@@ -234,9 +246,11 @@ export function useStreamingText({
     displayedCharsRef.current = 0;
     skippedRef.current = false;
     isCompleteRef.current = false;
-    // 🟢 TDD: Reset retry state
+    // 🟢 TDD P0: Reset retry state
     setRetryCount(0);
     setIsRetrying(false);
+    // 🟢 TDD P2: Reset fallback state
+    setUsedFallback(false);
   }, []);
 
   /**
@@ -349,6 +363,64 @@ export function useStreamingText({
   );
 
   /**
+   * 🟢 TDD P2: Derive fallback URL from streaming URL
+   * Removes '/stream' suffix or uses custom fallbackUrl
+   */
+  const getFallbackUrl = useCallback((): string => {
+    if (fallbackUrl) {
+      return fallbackUrl;
+    }
+
+    // Auto-derive: remove '/stream' suffix
+    if (url.endsWith('/stream')) {
+      return url.slice(0, -7); // Remove '/stream'
+    }
+
+    // If URL doesn't end with /stream, append fallback endpoint
+    logger.warn('Cannot auto-derive fallback URL, using original URL');
+    return url;
+  }, [url, fallbackUrl]);
+
+  /**
+   * 🟢 TDD P2: Fetch from fallback (non-streaming) endpoint
+   * Used when streaming fails after all retries exhausted
+   */
+  const fetchFallback = useCallback(async (): Promise<string> => {
+    const fbUrl = getFallbackUrl();
+
+    logger.info(`Attempting fallback to non-streaming endpoint: ${fbUrl}`);
+
+    const response = await fetchWithTimeout(
+      fbUrl,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      },
+      timeout
+    );
+
+    if (!response.ok) {
+      throw new Error(`Fallback HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    // Parse JSON response
+    const jsonData = await response.json();
+
+    // Extract text from response using configured key
+    const text = jsonData[fallbackResponseKey];
+
+    if (typeof text !== 'string') {
+      throw new Error(`Fallback response missing '${fallbackResponseKey}' field`);
+    }
+
+    logger.info('Fallback succeeded');
+    return text;
+  }, [getFallbackUrl, requestBody, timeout, fallbackResponseKey, fetchWithTimeout]);
+
+  /**
    * 🟢 TDD P0: Fetch with automatic retry and exponential backoff
    * 🟢 TDD P2: Check network status before retrying
    */
@@ -445,9 +517,11 @@ export function useStreamingText({
     displayedCharsRef.current = 0;
     skippedRef.current = false;
     isCompleteRef.current = false;
-    // 🟢 TDD: Reset retry state
+    // 🟢 TDD P0: Reset retry state
     setRetryCount(0);
     setIsRetrying(false);
+    // 🟢 TDD P2: Reset fallback state
+    setUsedFallback(false);
 
     // Create abort controller for cancellation
     const abortController = new AbortController();
@@ -516,13 +590,57 @@ export function useStreamingText({
             // Request was aborted, not an error
             return;
           }
+
+          // 🟢 TDD P2: Try fallback if enabled
+          if (enableFallback) {
+            try {
+              logger.info('Streaming failed, attempting fallback...');
+              const fallbackText = await fetchFallback();
+
+              // Set text immediately (no typewriter effect for fallback)
+              fullTextRef.current = fallbackText;
+              setText(fallbackText);
+              displayedCharsRef.current = fallbackText.length;
+
+              // Mark as complete and used fallback
+              setIsComplete(true);
+              isCompleteRef.current = true;
+              setUsedFallback(true);
+              setIsStreaming(false);
+              setIsRetrying(false);
+
+              if (onCompleteRef.current) {
+                onCompleteRef.current(fallbackText);
+              }
+
+              // Fallback succeeded, return early
+              return;
+            } catch (fallbackErr) {
+              // 🔵 REFACTOR: Fallback also failed
+              // Set fallback error (more specific than streaming error)
+              logger.error('Fallback also failed:', fallbackErr);
+              const finalError = fallbackErr instanceof Error
+                ? fallbackErr
+                : new Error(String(fallbackErr));
+              setError(finalError);
+
+              if (onErrorRef.current) {
+                onErrorRef.current(finalError);
+              }
+
+              // Return early after handling fallback error
+              return;
+            }
+          }
+
+          // 🔵 REFACTOR: No fallback enabled - set streaming error
           setError(err);
           if (onErrorRef.current) {
             onErrorRef.current(err);
           }
         }
         setIsStreaming(false);
-        // 🟢 TDD: Clear retry state on final error
+        // 🟢 TDD P0: Clear retry state on final error
         setIsRetrying(false);
       }
     };
@@ -539,7 +657,7 @@ export function useStreamingText({
     };
     // Use requestBodyJson instead of requestBody to prevent re-runs on object identity changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, url, requestBodyJson, startTypewriter, fetchWithRetry]); // Added fetchWithRetry
+  }, [enabled, url, requestBodyJson, startTypewriter, fetchWithRetry, enableFallback, fetchFallback]);
 
   return {
     text,
@@ -553,5 +671,7 @@ export function useStreamingText({
     isRetrying,
     // 🟢 TDD P2: Return network state
     isOnline,
+    // 🟢 TDD P2: Return fallback state
+    usedFallback,
   };
 }
