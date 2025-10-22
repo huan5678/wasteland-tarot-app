@@ -27,6 +27,7 @@ from app.api.v1.endpoints import (
     card_interpretations,
     audio,
     test_ai,
+    share,
 )
 from app.api import oauth
 
@@ -167,4 +168,10 @@ api_router.include_router(
 api_router.include_router(
     oauth.router,
     tags=["🔐 OAuth"]
+)
+
+# Share endpoints - 占卜結果分享
+api_router.include_router(
+    share.router,
+    tags=["🔗 Share"]
 )

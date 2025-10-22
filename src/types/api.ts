@@ -442,3 +442,35 @@ export const PasskeyCredentialSchema = z.object({
 export type PasskeyCredential = z.infer<typeof PasskeyCredentialSchema>
 
 export const PasskeyCredentialArraySchema = z.array(PasskeyCredentialSchema)
+
+// ============================================================================
+// Share Types - Reading Share Link
+// ============================================================================
+
+/**
+ * Share Link Response - 生成分享連結的回應
+ */
+export const ShareLinkResponseSchema = z.object({
+  share_token: z.string().uuid(),
+  share_url: z.string().url(),
+  created_at: z.string(),
+})
+
+export type ShareLinkResponse = z.infer<typeof ShareLinkResponseSchema>
+
+/**
+ * Public Reading Data - 公開的占卜資料（無私密欄位）
+ */
+export const PublicReadingDataSchema = z.object({
+  reading_id: z.string().uuid(),
+  question: z.string(),
+  character_voice_used: z.string(),
+  karma_context: z.string(),
+  faction_influence: z.string().nullable().optional(),
+  overall_interpretation: z.string().nullable().optional(),
+  summary_message: z.string().nullable().optional(),
+  prediction_confidence: z.number().nullable().optional(),
+  created_at: z.string(),
+})
+
+export type PublicReadingData = z.infer<typeof PublicReadingDataSchema>

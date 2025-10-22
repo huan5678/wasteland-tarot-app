@@ -304,6 +304,9 @@ class CompletedReading(BaseModel):
     ai_interpretation_at = Column(DateTime(timezone=True), nullable=True)
     ai_interpretation_provider = Column(String(50), nullable=True)  # "openai", "anthropic", etc.
 
+    # Share Link Feature
+    share_token = Column(UUID(as_uuid=True), nullable=True, unique=True, index=True)  # Unique token for sharing
+
     # Relationships
     user = relationship("User", back_populates="readings")
     spread_template = relationship("SpreadTemplate")
@@ -332,6 +335,27 @@ class CompletedReading(BaseModel):
         """Calculate overall rating from multiple feedback metrics"""
         ratings = [r for r in [self.user_satisfaction, self.accuracy_rating, self.helpful_rating] if r is not None]
         return sum(ratings) / len(ratings) if ratings else 0.0
+
+    def generate_share_token(self):
+        """
+        Generate and set a unique share token for this reading.
+
+        This method is idempotent - if a share_token already exists, it will be returned.
+        If no token exists, a new UUID v4 will be generated.
+
+        Returns:
+            UUID: The generated or existing share token
+
+        Example:
+            >>> reading = CompletedReading()
+            >>> token1 = reading.generate_share_token()
+            >>> token2 = reading.generate_share_token()
+            >>> assert token1 == token2  # Idempotent
+        """
+        import uuid
+        if not self.share_token:
+            self.share_token = uuid.uuid4()
+        return self.share_token
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert reading session to dictionary"""
