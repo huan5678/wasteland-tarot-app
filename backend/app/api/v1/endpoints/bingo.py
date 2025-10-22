@@ -57,6 +57,7 @@ from app.services.bingo_card_service import BingoCardManagerService
 from app.services.daily_claim_service import DailyClaimService
 from app.services.line_detection_service import LineDetectionService
 from app.services.daily_number_generator_service import DailyNumberGeneratorService
+from app.services.achievement_service import AchievementService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -397,6 +398,31 @@ async def claim_daily_number(
             f"User {current_user.id} claimed number {result.daily_number} - "
             f"lines: {result.line_count}, reward: {result.has_reward}"
         )
+
+        # ===== Achievement System Integration =====
+        # Check and unlock achievements for Bingo activity
+        try:
+            achievement_service = AchievementService(db)
+
+            # Trigger achievement check if got a new line
+            if result.line_count > 0:
+                newly_unlocked = await achievement_service.unlock_achievements_for_user(
+                    user_id=current_user.id,
+                    trigger_event='bingo_line',
+                    event_context={
+                        'line_count': result.line_count,
+                        'claimed_number': result.daily_number
+                    }
+                )
+
+                if newly_unlocked:
+                    logger.info(
+                        f"User {current_user.id} unlocked {len(newly_unlocked)} achievement(s) "
+                        f"after Bingo line completion"
+                    )
+        except Exception as e:
+            # Don't fail the claim if achievement check fails
+            logger.error(f"Achievement check failed for Bingo claim: {e}", exc_info=True)
 
         return response
 

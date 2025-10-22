@@ -33,6 +33,7 @@ from app.schemas.social import (
     SocialStats
 )
 from app.schemas.cards import CharacterVoice, KarmaAlignment
+from app.services.achievement_service import AchievementService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -261,6 +262,31 @@ async def share_reading(
         )
 
         logger.info(f"Reading {share_request.reading_id} shared by {current_user.name}")
+
+        # ===== Achievement System Integration =====
+        # Check and unlock achievements for reading sharing
+        # Note: In production, this should happen after db.commit()
+        try:
+            achievement_service = AchievementService(db)
+            newly_unlocked = await achievement_service.unlock_achievements_for_user(
+                user_id=current_user.id,
+                trigger_event='reading_shared',
+                event_context={
+                    'reading_id': share_request.reading_id,
+                    'title': share_request.title,
+                    'tags': share_request.tags
+                }
+            )
+
+            if newly_unlocked:
+                logger.info(
+                    f"User {current_user.id} unlocked {len(newly_unlocked)} achievement(s) "
+                    f"after sharing reading {share_request.reading_id}"
+                )
+        except Exception as e:
+            # Don't fail the sharing if achievement check fails
+            logger.error(f"Achievement check failed for reading share {share_request.reading_id}: {e}", exc_info=True)
+
         return shared_reading
 
     except Exception as e:

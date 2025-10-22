@@ -13,6 +13,7 @@ import { MetricsInitializer } from '@/components/system/MetricsInitializer';
 import { AudioInitializer } from '@/components/system/AudioInitializer';
 import { ActivityTrackerInitializer } from '@/components/system/ActivityTrackerInitializer';
 import { LoyaltyRewardInitializer } from '@/components/system/LoyaltyRewardInitializer';
+import { AchievementNotificationInitializer } from '@/components/system/AchievementNotificationInitializer';
 import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
 import { MusicPlayerInitializer } from '@/components/system/MusicPlayerInitializer';
 import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
@@ -84,6 +85,9 @@ export default function RootLayout({
                 {/* LoyaltyRewardInitializer: 每日登入忠誠度檢查與獎勵通知 */}
                 {/* 必須在 NotificationProvider 內部才能使用 useNotification hook */}
                 <LoyaltyRewardInitializer />
+                {/* AchievementNotificationInitializer: 成就解鎖通知系統 */}
+                {/* 自動顯示新解鎖的成就，支援自動消失與手動關閉 */}
+                <AchievementNotificationInitializer />
                 {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
                 {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
                 <TiltConfigProvider>

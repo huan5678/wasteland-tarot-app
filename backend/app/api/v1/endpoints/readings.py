@@ -58,6 +58,7 @@ from app.core.exceptions import (
 )
 from app.core.dependencies import get_current_user  # Placeholder for auth
 from app.services.analytics_service import AnalyticsService
+from app.services.achievement_service import AchievementService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -265,6 +266,30 @@ async def create_reading(
         spread_template.usage_count += 1
 
         await db.commit()
+
+        # ===== Achievement System Integration =====
+        # Check and unlock achievements for reading completion
+        try:
+            achievement_service = AchievementService(db)
+            newly_unlocked = await achievement_service.unlock_achievements_for_user(
+                user_id=current_user.id,
+                trigger_event='reading_completed',
+                event_context={
+                    'reading_id': reading_session.id,
+                    'spread_type': reading_data.spread_template_id,
+                    'character_voice': reading_data.character_voice.value
+                }
+            )
+
+            # Log unlocked achievements (optional - for debugging)
+            if newly_unlocked:
+                logger.info(
+                    f"User {current_user.id} unlocked {len(newly_unlocked)} achievement(s) "
+                    f"after completing reading {reading_session.id}"
+                )
+        except Exception as e:
+            # Don't fail the reading creation if achievement check fails
+            logger.error(f"Achievement check failed for reading {reading_session.id}: {e}", exc_info=True)
 
         # Convert to response model
         response_data = {

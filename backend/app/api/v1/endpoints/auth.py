@@ -27,6 +27,7 @@ from app.core.exceptions import (
     OAuthUserCannotLoginError
 )
 from app.services.user_service import UserService
+from app.services.achievement_service import AchievementService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -614,6 +615,26 @@ async def login_user(
         except Exception as track_error:
             # 追蹤失敗不影響登入流程
             logger.warning(f"Failed to track login for user {user.id}: {str(track_error)}")
+
+        # ===== Achievement System Integration =====
+        # Check and unlock achievements for login (consecutive login)
+        try:
+            achievement_service = AchievementService(db)
+            newly_unlocked = await achievement_service.unlock_achievements_for_user(
+                user_id=user.id,
+                trigger_event='login',
+                event_context={
+                    'login_time': datetime.utcnow().isoformat()
+                }
+            )
+
+            if newly_unlocked:
+                logger.info(
+                    f"User {user.id} unlocked {len(newly_unlocked)} achievement(s) after login"
+                )
+        except Exception as e:
+            # Don't fail the login if achievement check fails
+            logger.error(f"Achievement check failed for user {user.id}: {e}", exc_info=True)
 
         # 設定 token 絕對過期時間（如果尚未設定）
         if not user.token_absolute_expiry:
