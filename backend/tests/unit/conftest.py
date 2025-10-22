@@ -1,62 +1,48 @@
 """
-OAuth 服務測試專用 conftest
+Unit Tests - Shared conftest
 
-使用 PostgreSQL 測試資料庫（來自 .env.test）
+提供資料庫 session 和服務 fixtures
+- OAuth 服務測試
+- AI 解讀服務測試
 """
 import os
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy import MetaData, text
+from dotenv import load_dotenv
+from app.config import settings
+from app.services.ai_interpretation_service import AIInterpretationService
+from app.db.database import AsyncSessionLocal  # 使用已配置好的 session factory
 
-@pytest_asyncio.fixture
+# ⚠️ 強制使用生產環境變數（Supabase）進行測試
+# 這些測試是 read-only，安全地使用生產資料庫
+backend_env = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+if os.path.exists(backend_env):
+    # 使用 override=True 確保覆蓋 .env.test 的設定
+    load_dotenv(backend_env, override=True)
+    print(f"✅ [FORCE] Loaded production .env from: {backend_env} (overriding .env.test)")
+
+@pytest_asyncio.fixture(scope="function")
 async def db_session():
     """
-    使用 PostgreSQL 測試資料庫
-    如果 DATABASE_URL 未設定或不是 PostgreSQL，回退到 SQLite
+    使用生產資料庫 (read-only)
+    直接使用 app.db.database.AsyncSessionLocal（已配置 Supabase PgBouncer 相容參數）
+
+    每個測試函數獨立建立 session，避免 event loop 衝突
     """
-    # 從環境變數取得資料庫 URL（應該已被父層 conftest 載入）
-    db_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    print(f"\n🔧 unit/conftest.py db_session using AsyncSessionLocal")
 
-    print(f"\n🔧 unit/conftest.py db_session using: {db_url[:60]}...")
-
-    # 建立 engine
-    engine = create_async_engine(
-        db_url,
-        echo=False
-    )
-
-    # 如果是 PostgreSQL，使用現有的 schema
-    # 如果是 SQLite，需要建立基本的 users 表
-    if not db_url.startswith("postgresql"):
-        async with engine.begin() as conn:
-            await conn.execute(text("""
-                CREATE TABLE IF NOT EXISTS users (
-                    id TEXT PRIMARY KEY,
-                    email TEXT UNIQUE NOT NULL,
-                    name TEXT NOT NULL,
-                    password_hash TEXT,
-                    oauth_provider TEXT,
-                    oauth_id TEXT,
-                    profile_picture_url TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """))
-
-    # 建立 session
-    async_session = async_sessionmaker(
-        bind=engine,
-        class_=AsyncSession,
-        expire_on_commit=False
-    )
-
-    async with async_session() as session:
+    session = AsyncSessionLocal()
+    try:
         yield session
-        await session.rollback()
-
-    # 清理
-    await engine.dispose()
+    finally:
+        # rollback 任何未提交的變更，但不關閉 session
+        # 讓 SQLAlchemy 在 event loop 關閉前自行清理
+        try:
+            await session.rollback()
+        except Exception:
+            pass  # 忽略 rollback 錯誤
 
 
 @pytest_asyncio.fixture
@@ -91,3 +77,25 @@ async def clean_db_session():
 
     # 清理
     await engine.dispose()
+
+@pytest_asyncio.fixture(scope="function")
+async def ai_service(db_session: AsyncSession) -> AIInterpretationService:
+    """
+    提供 AI Interpretation Service 實例用於測試
+
+    Args:
+        db_session: 資料庫 session fixture
+
+    Returns:
+        AIInterpretationService 實例（不初始化 provider，避免 API 呼叫）
+
+    每個測試函數獨立建立 service，避免 session 重用問題
+    """
+    # 建立 AI 服務實例，不自動初始化 provider（避免實際 API 呼叫）
+    service = AIInterpretationService(
+        settings=settings,
+        db_session=db_session,
+        provider=None  # 不提供 provider，避免實際 AI 呼叫
+    )
+    yield service
+    # 清理資源（如果需要）

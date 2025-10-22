@@ -409,7 +409,7 @@ class AIInterpretationService:
         ]
 
         if card.suit:
-            prompt_parts.append(f"**Suit:** {card.suit.value}")
+            prompt_parts.append(f"**Suit:** {card.suit}")
 
         if card.radiation_level:
             prompt_parts.append(f"**Radiation Level:** {card.radiation_level}/5 (intensity of change/chaos)")
