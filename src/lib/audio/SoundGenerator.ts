@@ -397,3 +397,43 @@ export async function generateUIHover(
 
   return buffer;
 }
+
+/**
+ * 🟢 TDD P1: Generate typing sound effect
+ * Short, crisp click sound for typewriter effect
+ * Uses high-frequency sine wave with rapid decay
+ *
+ * @param audioContext - AudioContext instance
+ * @param destination - Audio destination node
+ * @param options - Sound generation options
+ * @returns AudioBuffer
+ */
+export async function generateTypingSound(
+  audioContext: AudioContext,
+  destination: AudioNode,
+  options: SoundGeneratorOptions = {}
+): Promise<AudioBuffer> {
+  if (!audioContext) {
+    throw new Error('AudioContext is required');
+  }
+
+  const frequency = Math.max(0, options.frequency || 1200); // High frequency for crisp sound
+  const duration = Math.max(0.01, options.duration || 0.03); // Very short duration
+  const volume = Math.min(1, Math.max(0, options.volume || 0.3)); // Low volume
+
+  const sampleRate = audioContext.sampleRate;
+  const length = sampleRate * duration;
+  const buffer = audioContext.createBuffer(1, length, sampleRate);
+  const data = buffer.getChannelData(0);
+
+  // Generate short click with rapid decay
+  for (let i = 0; i < length; i++) {
+    const t = i / sampleRate;
+    // Very fast decay for click sound
+    const envelope = Math.exp(-t * 100);
+    // Sine wave for clean sound
+    data[i] = Math.sin(2 * Math.PI * frequency * t) * envelope * volume;
+  }
+
+  return buffer;
+}
