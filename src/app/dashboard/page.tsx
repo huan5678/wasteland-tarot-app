@@ -1,12 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
 import { readingsAPI, cardsAPI } from '@/lib/api'
 import { PixelIcon } from '@/components/ui/icons'
 import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
 import { useActivityTracker } from '@/hooks/useActivityTracker'
+import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore'
 import ActivityProgressCard from '@/components/activity/ActivityProgressCard'
 
 interface Reading {
@@ -28,6 +29,7 @@ export default function DashboardPage() {
   const router = useRouter()
   const user = useAuthStore(s => s.user)
   const { isActive, activeTime, progress } = useActivityTracker()
+  const { userProgress, fetchUserProgress } = useAchievementStore()
   const [recentReadings, setRecentReadings] = useState<Reading[]>([])
   const [stats, setStats] = useState({
     totalReadings: 0,
@@ -125,6 +127,22 @@ export default function DashboardPage() {
 
     loadDashboardData()
   }, [user])
+
+  // 載入成就資料
+  useEffect(() => {
+    if (user) {
+      fetchUserProgress()
+    }
+  }, [user, fetchUserProgress])
+
+  // 計算最近解鎖的成就（最多3個）
+  const recentAchievements = useMemo(() => {
+    return userProgress
+      .filter(p => p.status === AchievementStatus.UNLOCKED || p.status === AchievementStatus.CLAIMED)
+      .filter(p => p.unlocked_at)
+      .sort((a, b) => new Date(b.unlocked_at!).getTime() - new Date(a.unlocked_at!).getTime())
+      .slice(0, 3)
+  }, [userProgress])
 
   if (isLoading) {
     return (
@@ -329,43 +347,62 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* System Status */}
+            {/* Recent Achievements */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-              <h3 className="text-sm font-bold text-pip-boy-green mb-3">系統狀態</h3>
-
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs">Pip-Boy 連線</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs">線上</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs">卡牌資料庫</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs">已同步</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs">量子處理</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                    <span className="text-pip-boy-green text-xs">啓動中</span>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center">
-                  <span className="text-pip-boy-green/70 text-xs">備份狀態</span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                    <span className="text-yellow-400 text-xs">等待中</span>
-                  </div>
-                </div>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-bold text-pip-boy-green flex items-center">
+                  <PixelIcon name="trophy" size={16} className="mr-2" decorative />
+                  最近獲得成就
+                </h3>
+                <button
+                  onClick={() => router.push('/achievements')}
+                  className="text-pip-boy-green/70 hover:text-pip-boy-green text-xs transition-colors"
+                >
+                  查看全部
+                </button>
               </div>
+
+              {recentAchievements.length > 0 ? (
+                <div className="space-y-2">
+                  {recentAchievements.map((progress) => (
+                    <button
+                      key={progress.id}
+                      onClick={() => router.push('/achievements')}
+                      className="w-full text-left flex items-center gap-3 p-2 border border-pip-boy-green/20 bg-pip-boy-green/5 hover:bg-pip-boy-green/10 transition-colors"
+                    >
+                      <div className="flex-shrink-0">
+                        <PixelIcon
+                          name={progress.achievement.icon_name || 'trophy'}
+                          sizePreset="md"
+                          variant="primary"
+                          decorative
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-pip-boy-green text-xs font-semibold truncate">
+                          {progress.achievement.name}
+                        </div>
+                        <div className="text-pip-boy-green/60 text-[10px]">
+                          {progress.unlocked_at && new Date(progress.unlocked_at).toLocaleDateString('zh-TW')}
+                        </div>
+                      </div>
+                      {progress.status === AchievementStatus.UNLOCKED && (
+                        <div className="flex-shrink-0">
+                          <span className="text-[10px] text-pip-boy-green border border-pip-boy-green/50 px-2 py-0.5 rounded-sm">
+                            待領取
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-pip-boy-green/50 text-xs">
+                  <PixelIcon name="trophy" sizePreset="lg" variant="muted" decorative />
+                  <p className="mt-2">尚未解鎖任何成就</p>
+                  <p className="text-[10px] mt-1">探索廢土來獲得成就吧！</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
