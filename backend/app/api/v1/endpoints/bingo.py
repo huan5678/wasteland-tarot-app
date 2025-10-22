@@ -17,7 +17,7 @@ Tasks 13-16 Implementation
 
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_, func
 import logging
@@ -58,6 +58,7 @@ from app.services.daily_claim_service import DailyClaimService
 from app.services.line_detection_service import LineDetectionService
 from app.services.daily_number_generator_service import DailyNumberGeneratorService
 from app.services.achievement_service import AchievementService
+from app.services.achievement_background_tasks import schedule_achievement_check
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -355,6 +356,7 @@ async def get_bingo_status(
     }
 )
 async def claim_daily_number(
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ClaimResponse:
@@ -400,29 +402,21 @@ async def claim_daily_number(
         )
 
         # ===== Achievement System Integration =====
-        # Check and unlock achievements for Bingo activity
-        try:
-            achievement_service = AchievementService(db)
-
-            # Trigger achievement check if got a new line
-            if result.line_count > 0:
-                newly_unlocked = await achievement_service.unlock_achievements_for_user(
-                    user_id=current_user.id,
-                    trigger_event='bingo_line',
-                    event_context={
-                        'line_count': result.line_count,
-                        'claimed_number': result.daily_number
-                    }
-                )
-
-                if newly_unlocked:
-                    logger.info(
-                        f"User {current_user.id} unlocked {len(newly_unlocked)} achievement(s) "
-                        f"after Bingo line completion"
-                    )
-        except Exception as e:
-            # Don't fail the claim if achievement check fails
-            logger.error(f"Achievement check failed for Bingo claim: {e}", exc_info=True)
+        # Schedule achievement check as background task if got a new line
+        if result.line_count > 0:
+            background_tasks.add_task(
+                schedule_achievement_check,
+                user_id=current_user.id,
+                trigger_event='bingo_line',
+                event_context={
+                    'line_count': result.line_count,
+                    'claimed_number': result.daily_number
+                }
+            )
+            logger.debug(
+                f"Scheduled achievement check for user {current_user.id} "
+                f"after Bingo line completion (lines: {result.line_count})"
+            )
 
         return response
 

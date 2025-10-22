@@ -5,7 +5,7 @@ Community features, sharing, and social interactions
 
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Body, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_, desc
 import logging
@@ -34,6 +34,7 @@ from app.schemas.social import (
 )
 from app.schemas.cards import CharacterVoice, KarmaAlignment
 from app.services.achievement_service import AchievementService
+from app.services.achievement_background_tasks import schedule_achievement_check
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -232,6 +233,7 @@ async def share_reading(
             "allow_comments": True
         }
     ),
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> SharedReading:
@@ -264,28 +266,21 @@ async def share_reading(
         logger.info(f"Reading {share_request.reading_id} shared by {current_user.name}")
 
         # ===== Achievement System Integration =====
-        # Check and unlock achievements for reading sharing
-        # Note: In production, this should happen after db.commit()
-        try:
-            achievement_service = AchievementService(db)
-            newly_unlocked = await achievement_service.unlock_achievements_for_user(
-                user_id=current_user.id,
-                trigger_event='reading_shared',
-                event_context={
-                    'reading_id': share_request.reading_id,
-                    'title': share_request.title,
-                    'tags': share_request.tags
-                }
-            )
-
-            if newly_unlocked:
-                logger.info(
-                    f"User {current_user.id} unlocked {len(newly_unlocked)} achievement(s) "
-                    f"after sharing reading {share_request.reading_id}"
-                )
-        except Exception as e:
-            # Don't fail the sharing if achievement check fails
-            logger.error(f"Achievement check failed for reading share {share_request.reading_id}: {e}", exc_info=True)
+        # Schedule achievement check as background task to avoid blocking sharing response
+        background_tasks.add_task(
+            schedule_achievement_check,
+            user_id=current_user.id,
+            trigger_event='reading_shared',
+            event_context={
+                'reading_id': share_request.reading_id,
+                'title': share_request.title,
+                'tags': share_request.tags
+            }
+        )
+        logger.debug(
+            f"Scheduled achievement check for user {current_user.id} "
+            f"after sharing reading {share_request.reading_id}"
+        )
 
         return shared_reading
 
