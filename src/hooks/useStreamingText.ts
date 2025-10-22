@@ -47,9 +47,11 @@ export interface StreamingTextState {
   error: Error | null;
   skip: () => void;
   reset: () => void;
-  // 🟢 TDD: Retry state
+  // 🟢 TDD P0: Retry state
   retryCount: number;       // Current retry count
   isRetrying: boolean;      // Whether currently retrying
+  // 🟢 TDD P2: Network state
+  isOnline: boolean;        // Current network online status
 }
 
 /**
@@ -102,6 +104,10 @@ export function useStreamingText({
   // 🟢 TDD P0: Retry state
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  // 🟢 TDD P2: Network state
+  const [isOnline, setIsOnline] = useState(
+    typeof navigator !== 'undefined' ? navigator.onLine : true
+  );
 
   // 🟢 TDD P1: Audio integration
   const { playSound } = useAudioEffect();
@@ -131,6 +137,40 @@ export function useStreamingText({
   useEffect(() => {
     onErrorRef.current = onError;
   }, [onError]);
+
+  /**
+   * 🟢 TDD P2: Monitor network online/offline status
+   * Listen to online/offline events and update state accordingly
+   */
+  useEffect(() => {
+    const handleOnline = () => {
+      logger.info('Network connection restored');
+      setIsOnline(true);
+    };
+
+    const handleOffline = () => {
+      logger.warn('Network connection lost');
+      setIsOnline(false);
+
+      // If currently streaming, abort and set offline error
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      setError(new Error('Network connection lost'));
+      setIsStreaming(false);
+      setIsRetrying(false);
+    };
+
+    // Register event listeners
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   /**
    * Use a ref-based deep comparison for requestBody
@@ -309,10 +349,17 @@ export function useStreamingText({
   );
 
   /**
-   * 🟢 TDD: Fetch with automatic retry and exponential backoff
+   * 🟢 TDD P0: Fetch with automatic retry and exponential backoff
+   * 🟢 TDD P2: Check network status before retrying
    */
   const fetchWithRetry = useCallback(
     async (signal: AbortSignal): Promise<Response> => {
+      // 🟢 TDD P2: Check network status immediately
+      if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        logger.warn('Cannot start request: network offline');
+        throw new Error('Network connection lost');
+      }
+
       let lastError: Error | null = null;
 
       for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -501,8 +548,10 @@ export function useStreamingText({
     error,
     skip,
     reset,
-    // 🟢 TDD: Return retry state
+    // 🟢 TDD P0: Return retry state
     retryCount,
     isRetrying,
+    // 🟢 TDD P2: Return network state
+    isOnline,
   };
 }
