@@ -4,10 +4,12 @@
 
 1. [前置準備](#前置準備)
 2. [資料庫部署](#資料庫部署)
-3. [後端驗證](#後端驗證)
-4. [前端驗證](#前端驗證)
-5. [完整測試流程](#完整測試流程)
-6. [常見問題排除](#常見問題排除)
+3. [資料初始化](#資料初始化)
+4. [歷史資料回溯](#歷史資料回溯)
+5. [後端驗證](#後端驗證)
+6. [前端驗證](#前端驗證)
+7. [完整測試流程](#完整測試流程)
+8. [常見問題排除](#常見問題排除)
 
 ---
 
@@ -37,17 +39,201 @@ psql $DATABASE_URL -c "SELECT version();"
 
 ## 資料庫部署
 
-### Step 1: 執行 Migrations
-
-成就系統需要兩個資料表：
-- `achievements` - 成就定義表
-- `user_achievement_progress` - 使用者成就進度表
+### Step 1: 檢查現有 Migration 狀態
 
 ```bash
 cd /home/user/wasteland-tarot-app/backend
 
+# 啟動虛擬環境
+source .venv/bin/activate
+
 # 檢查當前 migration 版本
-.venv/bin/alembic current
+alembic current
+
+# 查看待執行的 migrations
+alembic heads
+
+# 查看 migration 歷史
+alembic history
+```
+
+### Step 2: 執行成就系統 Migration
+
+成就系統 migration 檔案：`alembic/versions/20251022_add_achievement_system_tables.py`
+
+**Migration ID**: `ach001_20251022`
+**前置條件**: `62677bc25018` (上一個 migration)
+
+```bash
+# 執行到最新版本
+alembic upgrade head
+
+# 或者只執行成就系統 migration
+alembic upgrade ach001_20251022
+```
+
+### Step 3: 驗證資料表建立
+
+```sql
+-- 連接資料庫
+psql $DATABASE_URL
+
+-- 檢查 achievements 表
+\d achievements
+
+-- 檢查 user_achievement_progress 表
+\d user_achievement_progress
+
+-- 檢查索引
+\di achievements*
+\di user_achievement_progress*
+
+-- 驗證約束
+SELECT conname, contype, pg_get_constraintdef(oid)
+FROM pg_constraint
+WHERE conrelid IN ('achievements'::regclass, 'user_achievement_progress'::regclass)
+ORDER BY conname;
+```
+
+**預期結果**:
+- `achievements` 表包含 15 個欄位
+- `user_achievement_progress` 表包含 10 個欄位
+- 共 9 個索引
+- 5 個 CHECK 約束
+- 2 個 FOREIGN KEY 約束
+
+---
+
+## 資料初始化
+
+### Step 1: 執行成就定義種子資料
+
+成就種子腳本會插入 15 個初始成就定義。
+
+```bash
+cd /home/user/wasteland-tarot-app/backend
+
+# 執行種子腳本
+python scripts/run_achievement_seeds.py
+```
+
+**預期輸出**:
+```
+🌱 Seeding achievements...
+✅ Seed complete!
+   New achievements: 15
+   Updated achievements: 0
+   Total achievements: 15
+```
+
+### Step 2: 驗證成就資料
+
+```sql
+-- 檢查成就總數
+SELECT COUNT(*) FROM achievements;
+-- 預期: 15
+
+-- 檢查各類別的成就數量
+SELECT category, COUNT(*) as count
+FROM achievements
+GROUP BY category
+ORDER BY category;
+-- 預期:
+--   READING: 4
+--   SOCIAL: 3
+--   BINGO: 3
+--   KARMA: 2
+--   EXPLORATION: 3
+
+-- 檢查稀有度分佈
+SELECT rarity, COUNT(*) as count
+FROM achievements
+GROUP BY rarity
+ORDER BY rarity;
+-- 預期:
+--   COMMON: 10
+--   RARE: 3
+--   EPIC: 2
+--   LEGENDARY: 0
+
+-- 查看所有成就
+SELECT code, name_zh_tw, category, rarity
+FROM achievements
+ORDER BY display_order;
+```
+
+### Step 3: 回滾測試（選用）
+
+```bash
+# 刪除所有種子資料
+python scripts/run_achievement_seeds.py --rollback
+
+# 重新插入
+python scripts/run_achievement_seeds.py
+```
+
+---
+
+## 歷史資料回溯
+
+為現有使用者初始化成就進度。
+
+### Step 1: 執行回溯腳本
+
+```bash
+cd /home/user/wasteland-tarot-app/backend
+
+# 執行歷史資料回溯
+python scripts/backfill_user_achievements.py
+```
+
+**預期輸出**:
+```
+📊 Starting achievement backfill...
+   Total users: 150
+
+Processing users:
+[████████████████████] 150/150 (100%)
+
+✅ Backfill complete!
+   Users processed: 150
+   Achievements initialized: 2250 (150 users × 15 achievements)
+   Auto-unlocked achievements: 87
+   Errors: 0
+
+Execution time: 12.3s
+```
+
+### Step 2: 驗證回溯結果
+
+```sql
+-- 檢查總進度記錄數（應該是 users × achievements）
+SELECT COUNT(*) FROM user_achievement_progress;
+
+-- 檢查已解鎖成就數量
+SELECT status, COUNT(*) as count
+FROM user_achievement_progress
+GROUP BY status;
+
+-- 查看特定使用者的成就進度
+SELECT
+    u.email,
+    a.code,
+    a.name_zh_tw,
+    uap.current_progress,
+    uap.target_progress,
+    uap.status,
+    uap.unlocked_at
+FROM user_achievement_progress uap
+JOIN users u ON uap.user_id = u.id
+JOIN achievements a ON uap.achievement_id = a.id
+WHERE u.email = 'test@example.com'
+ORDER BY a.display_order;
+```
+
+---
+
+## 後端驗證
 
 # 查看待執行的 migrations
 .venv/bin/alembic heads
