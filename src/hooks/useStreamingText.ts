@@ -23,6 +23,28 @@ const logger = {
   error: (message: string, ...args: any[]) => console.error(`[useStreamingText] ${message}`, ...args),
 };
 
+/**
+ * 🟢 TDD P2: Error type classification
+ */
+export type StreamingErrorType =
+  | 'NETWORK_ERROR'
+  | 'TIMEOUT'
+  | 'CLIENT_ERROR'
+  | 'SERVER_ERROR'
+  | 'NOT_FOUND'
+  | 'AUTH_ERROR'
+  | 'OFFLINE'
+  | 'UNKNOWN';
+
+/**
+ * 🟢 TDD P2: Error information with user-friendly messages
+ */
+export interface ErrorInfo {
+  type: StreamingErrorType;
+  userFriendlyMessage: string;
+  recoverySuggestion: string;
+}
+
 export interface StreamingTextOptions {
   url: string;
   requestBody: any;
@@ -58,6 +80,10 @@ export interface StreamingTextState {
   isOnline: boolean;        // Current network online status
   // 🟢 TDD P2: Fallback state
   usedFallback: boolean;    // Whether fallback endpoint was used
+  // 🟢 TDD P2: Friendly error messages
+  errorType: StreamingErrorType | null;  // Classified error type
+  userFriendlyError: string | null;      // User-friendly error message
+  recoverySuggestion: string | null;     // Recovery suggestion
 }
 
 /**
@@ -120,6 +146,10 @@ export function useStreamingText({
   );
   // 🟢 TDD P2: Fallback state
   const [usedFallback, setUsedFallback] = useState(false);
+  // 🟢 TDD P2: Friendly error messages
+  const [errorType, setErrorType] = useState<StreamingErrorType | null>(null);
+  const [userFriendlyError, setUserFriendlyError] = useState<string | null>(null);
+  const [recoverySuggestion, setRecoverySuggestion] = useState<string | null>(null);
 
   // 🟢 TDD P1: Audio integration
   const { playSound } = useAudioEffect();
@@ -168,7 +198,8 @@ export function useStreamingText({
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      setError(new Error('Network connection lost'));
+      // 🟢 TDD P2: Use setErrorWithInfo for friendly messages
+      setErrorWithInfo(new Error('Network connection lost'));
       setIsStreaming(false);
       setIsRetrying(false);
     };
@@ -251,7 +282,116 @@ export function useStreamingText({
     setIsRetrying(false);
     // 🟢 TDD P2: Reset fallback state
     setUsedFallback(false);
+    // 🟢 TDD P2: Reset error info
+    setErrorType(null);
+    setUserFriendlyError(null);
+    setRecoverySuggestion(null);
   }, []);
+
+  /**
+   * 🟢 TDD P2: Classify error and generate user-friendly messages
+   */
+  const classifyError = useCallback((err: Error): ErrorInfo => {
+    const message = err.message.toLowerCase();
+
+    // Offline detection
+    if (
+      !navigator.onLine ||
+      message.includes('network connection lost') ||
+      message.includes('offline')
+    ) {
+      return {
+        type: 'OFFLINE',
+        userFriendlyMessage: '目前無網路連線，請檢查網路設定',
+        recoverySuggestion: '請確認您的網路連線後重試',
+      };
+    }
+
+    // Timeout detection
+    if (message.includes('timeout') || message.includes('逾時')) {
+      return {
+        type: 'TIMEOUT',
+        userFriendlyMessage: '連線逾時，請稍後再試',
+        recoverySuggestion: '請檢查網路連線或稍後重試',
+      };
+    }
+
+    // HTTP status code detection
+    if (message.includes('http')) {
+      // 404 Not Found
+      if (message.includes('404')) {
+        return {
+          type: 'NOT_FOUND',
+          userFriendlyMessage: '找不到請求的資源',
+          recoverySuggestion: '請確認功能是否可用或聯繫支援',
+        };
+      }
+
+      // 401/403 Authentication
+      if (message.includes('401') || message.includes('403') || message.includes('unauthorized')) {
+        return {
+          type: 'AUTH_ERROR',
+          userFriendlyMessage: '權限不足或需要重新登入',
+          recoverySuggestion: '請重新登入後再試',
+        };
+      }
+
+      // 400-499 Client errors
+      if (message.match(/4\d{2}/)) {
+        return {
+          type: 'CLIENT_ERROR',
+          userFriendlyMessage: '請求無效，請確認參數是否正確',
+          recoverySuggestion: '請檢查輸入內容或聯繫支援',
+        };
+      }
+
+      // 500-599 Server errors
+      if (message.match(/5\d{2}/)) {
+        return {
+          type: 'SERVER_ERROR',
+          userFriendlyMessage: '伺服器暫時無法回應，請稍後再試',
+          recoverySuggestion: '請稍候片刻後重試',
+        };
+      }
+    }
+
+    // Network errors
+    if (
+      message.includes('failed to fetch') ||
+      message.includes('network') ||
+      message.includes('connection')
+    ) {
+      return {
+        type: 'NETWORK_ERROR',
+        userFriendlyMessage: '網路連線不穩定，請檢查您的網路設定',
+        recoverySuggestion: '請檢查網路連線後重試',
+      };
+    }
+
+    // Unknown errors
+    return {
+      type: 'UNKNOWN',
+      userFriendlyMessage: '發生未知錯誤，請稍後再試',
+      recoverySuggestion: '請稍後重試，若問題持續請聯繫支援',
+    };
+  }, []);
+
+  /**
+   * 🟢 TDD P2: Set error with classification and friendly messages
+   */
+  const setErrorWithInfo = useCallback((err: Error) => {
+    const errorInfo = classifyError(err);
+
+    // Set technical error (for debugging)
+    setError(err);
+
+    // Set user-friendly error info
+    setErrorType(errorInfo.type);
+    setUserFriendlyError(errorInfo.userFriendlyMessage);
+    setRecoverySuggestion(errorInfo.recoverySuggestion);
+
+    logger.error(`Error classified as ${errorInfo.type}:`, err.message);
+  }, [classifyError]);
 
   /**
    * Store charsPerSecond in ref to keep startTypewriter stable
@@ -617,12 +757,12 @@ export function useStreamingText({
               return;
             } catch (fallbackErr) {
               // 🔵 REFACTOR: Fallback also failed
-              // Set fallback error (more specific than streaming error)
+              // 🟢 TDD P2: Use setErrorWithInfo for friendly messages
               logger.error('Fallback also failed:', fallbackErr);
               const finalError = fallbackErr instanceof Error
                 ? fallbackErr
                 : new Error(String(fallbackErr));
-              setError(finalError);
+              setErrorWithInfo(finalError);
 
               if (onErrorRef.current) {
                 onErrorRef.current(finalError);
@@ -634,7 +774,8 @@ export function useStreamingText({
           }
 
           // 🔵 REFACTOR: No fallback enabled - set streaming error
-          setError(err);
+          // 🟢 TDD P2: Use setErrorWithInfo for friendly messages
+          setErrorWithInfo(err);
           if (onErrorRef.current) {
             onErrorRef.current(err);
           }
@@ -657,7 +798,7 @@ export function useStreamingText({
     };
     // Use requestBodyJson instead of requestBody to prevent re-runs on object identity changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, url, requestBodyJson, startTypewriter, fetchWithRetry, enableFallback, fetchFallback]);
+  }, [enabled, url, requestBodyJson, startTypewriter, fetchWithRetry, enableFallback, fetchFallback, setErrorWithInfo]);
 
   return {
     text,
@@ -673,5 +814,9 @@ export function useStreamingText({
     isOnline,
     // 🟢 TDD P2: Return fallback state
     usedFallback,
+    // 🟢 TDD P2: Return friendly error messages
+    errorType,
+    userFriendlyError,
+    recoverySuggestion,
   };
 }
