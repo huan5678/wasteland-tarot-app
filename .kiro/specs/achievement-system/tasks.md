@@ -57,16 +57,46 @@
 2. API 端點測試（使用 DEPLOYMENT_GUIDE.md 中的 curl 範例）
 3. 前端 E2E 測試（手動測試 /achievements, /dashboard, /profile 頁面）
 
-### 📝 未實作功能清單
+### ✅ 低優先級任務（已完成）
 
-**低優先級**（可選）:
-1. Redis 快取層（目前使用 localStorage 快取）
-2. 背景任務處理（成就檢查超時處理）
-3. 單元測試套件
-4. 整合測試套件
-5. E2E 自動化測試
-6. 效能測試與優化
-7. 監控與告警系統
+所有低優先級任務已於 2025-01-22 完成：
+
+1. ✅ **Redis 快取層** (`achievement_cache_service.py`)
+   - 使用者進度快取（TTL 5分鐘）
+   - 成就定義快取（TTL 1小時）
+   - Graceful degradation（Redis不可用時降級至PostgreSQL）
+   - Write-through cache invalidation
+
+2. ✅ **背景任務處理** (`achievement_background_tasks.py`)
+   - FastAPI BackgroundTasks整合
+   - 5個API endpoint整合（readings, auth, social, bingo）
+   - 超時處理（>2秒改為背景執行）
+
+3. ✅ **單元測試套件** (18 tests)
+   - `test_achievement_service.py` (11 tests)
+   - `test_achievement_checker.py` (10 tests)
+
+4. ✅ **整合測試套件** (7 tests)
+   - `test_achievement_integration.py`
+   - 使用者註冊、占卜完成、登入、Karma/Analytics整合
+   - Migration與並發情境測試
+
+5. ✅ **E2E 自動化測試** (9 tests)
+   - `achievement-system.spec.ts` (Playwright)
+   - 成就頁面、解鎖通知、獎勵領取、分類篩選
+   - 完整使用者流程測試
+
+6. ✅ **效能測試與優化** (6 tests)
+   - `test_achievement_performance.py`
+   - 1000並發測試（P95 < 1s）
+   - Redis cache命中率測試（>80%）
+   - Migration效能測試
+
+7. ✅ **監控與告警系統** (`achievement_monitor.py`)
+   - PerformanceMetrics收集
+   - AlertLevel分級告警
+   - Health check endpoint
+   - MonitoredOperation context manager
 
 ---
 
