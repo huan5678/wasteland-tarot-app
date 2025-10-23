@@ -28,6 +28,7 @@ import { filterCharacterVoicesByFaction } from '@/lib/factionVoiceMapping'
 import { useFactions } from '@/hooks/useCharacterVoices'
 import { useCharacters } from '@/hooks/useCharacterVoices'
 import { ShareButton } from '@/components/share/ShareButton'
+import { ReadingJournalSection } from '@/components/journal/ReadingJournalSection'
 
 // Tab 類型定義
 type MainTabType = 'overview' | 'interpretation' | 'metadata' | `card-${number}`
@@ -1177,6 +1178,11 @@ export default function ReadingDetailPage() {
             {activeTab.startsWith('card-') && renderCardDetailTab()}
             {activeTab === 'interpretation' && renderInterpretationTab()}
           </AnimatePresence>
+        </div>
+
+        {/* Journal Section */}
+        <div className="mt-8">
+          <ReadingJournalSection readingId={readingId} />
         </div>
 
         {/* Actions */}
