@@ -121,8 +121,8 @@
 
 ## Phase 4: 後端 API 路由層（TDD）
 
-- [ ] 5. 實作 FastAPI 路由端點
-- [ ] 5.1 撰寫建立日記 API 的整合測試
+- [x] 5. 實作 FastAPI 路由端點
+- [x] 5.1 撰寫建立日記 API 的整合測試
   - 測試 POST `/api/v1/readings/{reading_id}/journal` 成功回應（201）
   - 測試未認證請求失敗（401）
   - 測試無效資料失敗（400）
@@ -130,7 +130,7 @@
   - 測試 reading 不屬於使用者失敗（403）
   - _Requirements: 1.6, 1.7, 5.1_
 
-- [ ] 5.2 實作建立日記 API 端點
+- [x] 5.2 實作建立日記 API 端點
   - 實作 POST `/api/v1/readings/{reading_id}/journal`
   - 整合 JWT 認證（get_current_user dependency）
   - 整合 JournalService.create_journal()
@@ -138,7 +138,7 @@
   - 確保所有整合測試通過
   - _Requirements: 1.6, 1.7, 5.1_
 
-- [ ] 5.3 撰寫查詢日記 API 的整合測試
+- [x] 5.3 撰寫查詢日記 API 的整合測試
   - 測試 GET `/api/v1/journal` 成功回應（200，分頁）
   - 測試 GET `/api/v1/journal/{journal_id}` 成功回應（200）
   - 測試查詢他人日記失敗（403）
@@ -146,7 +146,7 @@
   - 測試未認證請求失敗（401）
   - _Requirements: 2.1, 3.1, 5.1_
 
-- [ ] 5.4 實作查詢日記 API 端點
+- [x] 5.4 實作查詢日記 API 端點
   - 實作 GET `/api/v1/journal`（分頁支援）
   - 實作 GET `/api/v1/journal/{journal_id}`
   - 整合 JournalService 查詢方法
@@ -154,14 +154,14 @@
   - 確保所有整合測試通過
   - _Requirements: 2.1, 3.1, 5.1_
 
-- [ ] 5.5 撰寫更新與刪除日記 API 的整合測試
+- [x] 5.5 撰寫更新與刪除日記 API 的整合測試
   - 測試 PUT `/api/v1/journal/{journal_id}` 成功回應（200）
   - 測試 DELETE `/api/v1/journal/{journal_id}` 成功回應（200）
   - 測試更新/刪除他人日記失敗（403）
   - 測試無效更新資料失敗（400）
   - _Requirements: 1.9, 3.4, 3.5, 5.1_
 
-- [ ] 5.6 實作更新與刪除日記 API 端點
+- [x] 5.6 實作更新與刪除日記 API 端點
   - 實作 PUT `/api/v1/journal/{journal_id}`
   - 實作 DELETE `/api/v1/journal/{journal_id}`
   - 整合 JournalService 更新/刪除方法
