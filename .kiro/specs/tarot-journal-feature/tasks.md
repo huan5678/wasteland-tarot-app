@@ -48,15 +48,15 @@
   - 確保所有單元測試通過
   - _Requirements: 6.1, 6.2_
 
-- [ ] 3. 實作 Pydantic Schema 驗證層
-- [ ] 3.1 撰寫 Pydantic Schema 的驗證測試
+- [x] 3. 實作 Pydantic Schema 驗證層
+- [x] 3.1 撰寫 Pydantic Schema 的驗證測試
   - 測試 JournalCreate schema（content 長度、mood_tags 驗證）
   - 測試 JournalUpdate schema（部分更新驗證）
   - 測試 JournalResponse schema（序列化正確性）
   - 測試心情標籤白名單驗證（僅允許 8 個預設標籤）
   - _Requirements: 5.1, 1.4, 1.5_
 
-- [ ] 3.2 實作 Pydantic Schema 定義
+- [x] 3.2 實作 Pydantic Schema 定義
   - 定義 JournalCreate（content, mood_tags, is_private）
   - 定義 JournalUpdate（支援部分欄位更新）
   - 定義 JournalResponse（包含關聯的 reading 資訊）
