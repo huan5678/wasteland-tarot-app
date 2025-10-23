@@ -312,6 +312,7 @@ class CompletedReading(BaseModel):
     spread_template = relationship("SpreadTemplate")
     interpretation_template = relationship("InterpretationTemplate")
     card_positions = relationship("ReadingCardPosition", back_populates="completed_reading")
+    journals = relationship("ReadingJournal", back_populates="reading", cascade="all, delete-orphan")
 
     def calculate_total_duration(self) -> int:
         """Calculate reading duration in seconds"""

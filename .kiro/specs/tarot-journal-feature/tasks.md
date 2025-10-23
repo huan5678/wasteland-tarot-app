@@ -33,15 +33,15 @@
 
 ## Phase 2: 後端資料模型與驗證層（TDD）
 
-- [ ] 2. 實作 SQLAlchemy 資料模型
-- [ ] 2.1 撰寫 ReadingJournal 模型的單元測試
+- [x] 2. 實作 SQLAlchemy 資料模型
+- [x] 2.1 撰寫 ReadingJournal 模型的單元測試
   - 測試模型欄位定義與型別
   - 測試外鍵關聯（reading, user）
   - 測試 UNIQUE 約束驗證（重複 reading_id + user_id 應失敗）
   - 測試 CHECK 約束驗證（超長內容、過多標籤應失敗）
   - _Requirements: 6.1, 6.2_
 
-- [ ] 2.2 實作 ReadingJournal SQLAlchemy 模型
+- [x] 2.2 實作 ReadingJournal SQLAlchemy 模型
   - 定義資料表映射與欄位型別
   - 設定 relationship（與 CompletedReading, User 的關聯）
   - 實作約束條件（UNIQUE, CHECK）
