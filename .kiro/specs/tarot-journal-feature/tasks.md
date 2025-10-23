@@ -173,8 +173,8 @@
 
 ## Phase 5: 前端狀態管理（TDD）
 
-- [ ] 6. 實作 Zustand 日記狀態管理
-- [ ] 6.1 撰寫 journalStore 的單元測試
+- [x] 6. 實作 Zustand 日記狀態管理
+- [x] 6.1 撰寫 journalStore 的單元測試
   - 測試初始狀態（空日記列表）
   - 測試 fetchJournals 方法（API 呼叫與狀態更新）
   - 測試分頁狀態管理（setPage）
@@ -182,7 +182,7 @@
   - 測試刪除日記後重新載入列表
   - _Requirements: 2.1, 4.1_
 
-- [ ] 6.2 實作 journalStore Zustand store
+- [x] 6.2 實作 journalStore Zustand store
   - 定義狀態介面（journals, total, page, searchKeyword 等）
   - 實作 fetchJournals 方法（呼叫 API）
   - 實作分頁與搜尋狀態管理方法
