@@ -8,8 +8,8 @@
 
 ## Phase 1: 資料庫基礎建設
 
-- [ ] 1. 建立資料庫 schema 與 migration
-- [ ] 1.1 建立 ReadingJournal 資料表的 Alembic migration
+- [x] 1. 建立資料庫 schema 與 migration
+- [x] 1.1 建立 ReadingJournal 資料表的 Alembic migration
   - 定義資料表結構（id, reading_id, user_id, content, mood_tags, is_private, created_at, updated_at）
   - 設定外鍵約束（reading_id → completed_readings, user_id → users）
   - 新增 UNIQUE 約束（reading_id, user_id）
@@ -17,13 +17,13 @@
   - 設定 ON DELETE CASCADE 行為
   - _Requirements: 6.1, 6.2_
 
-- [ ] 1.2 建立資料表索引以優化查詢效能
+- [x] 1.2 建立資料表索引以優化查詢效能
   - 建立 user_id 索引（查詢使用者所有日記）
   - 建立 reading_id 索引（查詢特定占卜的日記）
   - 建立複合索引（user_id, created_at DESC）支援分頁排序
   - _Requirements: 6.3_
 
-- [ ] 1.3 執行 migration 並驗證資料表結構
+- [x] 1.3 執行 migration 並驗證資料表結構
   - 執行 `alembic upgrade head`
   - 驗證資料表、約束、索引正確建立
   - 測試 migration rollback（`alembic downgrade -1`）
