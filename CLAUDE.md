@@ -184,6 +184,276 @@ When you see code, immediately perform a three-tier judgment:
 - 前端請使用 bun
 - 後端請使用 uv (虛擬環境於 '/backend/.venv')
 
+---
+
+## File Search Policy for Agents
+
+To ensure reliable, efficient, and reproducible file search behavior across all CLI-based operations, agents **MUST** strictly use the following tools:
+
+---
+
+### 1. `fd` – File Discovery
+
+**Purpose:**
+Locate files and directories recursively with high performance and intuitive syntax.
+
+**Basic Syntax:**
+```bash
+fd [OPTIONS] [PATTERN] [PATH]
+```
+
+**Standard Usage Examples:**
+```bash
+# Basic file search (respects .gitignore)
+fd config
+
+# Search specific directory
+fd password /etc
+
+# List all files recursively
+fd .
+
+# Search by file extension
+fd -e js
+fd -e tsx
+fd -e rs mod
+
+# Search with glob patterns
+fd -g "*.test.ts"
+fd -g "libc.so" /usr
+
+# Search with regex
+fd "^x.*rc$"
+
+# Type filtering (file-only)
+fd -tf config
+
+# Type filtering (directory-only)
+fd -td src
+
+# Include hidden files
+fd -H config
+
+# Limit search depth
+fd -d 3 test
+
+# Exclude patterns
+fd -E node_modules -E .git
+
+# Execute command on each result
+fd -e jpg -x convert {} {.}.png
+
+# Batch execute on all results
+fd -g "test_*.py" -X vim
+```
+
+**Behavioral Rules:**
+- **MUST** use `fd` instead of `find` for all file discovery tasks.
+- **MUST** include `--hidden` (`-H`) when hidden files should be considered.
+- **MUST** include `--exclude .git` (`-E .git`) to avoid unnecessary repository indexing.
+- Default `fd` behavior respects `.gitignore`, which **MUST** be maintained.
+- **MUST** combine `--type f` (`-tf`) for file-only results, unless directory listing is explicitly required.
+- **MUST** use `--max-depth` (`-d`) to prevent excessive recursion when depth limit is needed.
+
+**Common Options:**
+- `-e, --extension <EXT>`: Filter by file extension
+- `-g, --glob`: Use glob patterns instead of regex
+- `-t, --type <TYPE>`: Filter by type (f=file, d=directory, l=symlink)
+- `-H, --hidden`: Include hidden files/directories
+- `-I, --no-ignore`: Don't respect .gitignore rules
+- `-d, --max-depth <NUM>`: Limit search depth
+- `-E, --exclude <PATTERN>`: Exclude matching patterns
+- `-x, --exec <CMD>`: Execute command per result
+- `-X, --exec-batch <CMD>`: Execute command with all results
+
+**Placeholder Syntax:**
+- `{}`: Full path
+- `{.}`: Path without extension
+- `{/}`: Basename (filename only)
+- `{//}`: Parent directory
+
+---
+
+### 2. `rg` (ripgrep) – File Content Search
+
+**Purpose:**
+Perform high-speed, regex-based text searches across files with intelligent defaults.
+
+**Basic Syntax:**
+```bash
+rg [OPTIONS] <PATTERN> [PATH]
+```
+
+**Standard Usage Examples:**
+```bash
+# Basic recursive search (respects .gitignore)
+rg "function"
+
+# Search specific file type (Python)
+rg "import" -tpy
+
+# Search specific file type (TypeScript/JavaScript)
+rg "export" -tts -tjs
+
+# Case-insensitive search
+rg -i "error"
+
+# Word boundary match
+rg -w "test"
+
+# Literal string search (no regex)
+rg -F "fn write("
+
+# Glob filtering (only .tsx files)
+rg "useState" -g "*.tsx"
+
+# Exclude specific files
+rg "TODO" -g "!*.test.ts"
+
+# Search hidden files
+rg "password" --hidden
+
+# Show context (3 lines before/after)
+rg "error" -C 3
+
+# Show only filenames with matches
+rg "import" --files-with-matches
+rg "import" -l
+
+# Count matches per file
+rg "error" -c
+
+# Search with regex
+rg -w "[A-Z]+_SUSPEND"
+
+# Search multiple file types
+rg --type-add 'web:*.{html,css,js}' -tweb "title"
+```
+
+**Behavioral Rules:**
+- **MUST** use `rg` instead of `grep` for all text content search tasks.
+- **MUST** include `--no-heading` for machine-readable output when piping results.
+- **MUST** include `--line-number` (`-n`) for line-based result mapping.
+- **MUST** include `--hidden` if hidden files are included by `fd`.
+- When combined with `fd`, **MUST** only pass valid file paths from `fd` results to `rg`.
+- **MUST** use `-F` (fixed strings) when searching for literal strings with special regex characters.
+
+**Common Options:**
+- `-i, --ignore-case`: Case-insensitive search
+- `-w, --word-regexp`: Match whole words only
+- `-t, --type <TYPE>`: Filter by file type (py, js, ts, rust, etc.)
+- `-g, --glob <PATTERN>`: Filter by glob pattern
+- `-F, --fixed-strings`: Literal string search (disable regex)
+- `--hidden`: Search hidden files
+- `-C, --context <NUM>`: Show context lines around matches
+- `-l, --files-with-matches`: Show only filenames with matches
+- `-c, --count`: Show count of matches per file
+- `-n, --line-number`: Show line numbers
+- `--no-heading`: Disable filename headings (for machine parsing)
+
+**File Type Management:**
+```bash
+# List available file types
+rg --type-list
+
+# Add custom file type
+rg --type-add 'web:*.{html,css,js}' -tweb "pattern"
+```
+
+**Configuration File (`~/.ripgreprc`):**
+```shell
+# Limit line length display
+--max-columns=150
+--max-columns-preview
+
+# Smart case (case-insensitive if pattern is lowercase)
+--smart-case
+
+# Search hidden files by default
+--hidden
+
+# Always exclude .git directory
+--glob=!.git/*
+
+# Custom colors
+--colors=line:style:bold
+```
+
+---
+
+### 3. Integration Pattern
+
+Agents performing file search **MUST** follow these chained patterns:
+
+**Pattern 1: Find files then search content**
+```bash
+# Find TypeScript files, then search for pattern
+fd -e ts -e tsx | xargs rg "useState" --no-heading --line-number
+
+# More precise control
+fd -tf -e ts -e tsx --exclude node_modules | xargs rg -i "error" -n
+```
+
+**Pattern 2: Direct content search with type filtering**
+```bash
+# Search in Python files only
+rg "import" -tpy --no-heading --line-number
+
+# Search in TypeScript/JavaScript with context
+rg "async function" -tts -tjs -C 2
+```
+
+**Pattern 3: Complex filtering**
+```bash
+# Find non-test TypeScript files, search for pattern
+fd -e ts -E "*.test.ts" -E "*.spec.ts" | xargs rg "export class" -n
+
+# Search excluding multiple directories
+rg "TODO" -g "!node_modules/*" -g "!dist/*" -g "!.git/*"
+```
+
+This ensures that file discovery and content scanning remain tightly controlled, fast, and reproducible across environments.
+
+---
+
+### 4. Enforcement
+
+All agents executing file discovery or content lookup tasks **MUST** adhere to the above conventions.
+
+**Prohibited Commands:**
+- ❌ `find` - Use `fd` instead
+- ❌ `grep` - Use `rg` instead
+- ❌ `grep -r` - Use `rg` instead
+- ❌ `ack` - Use `rg` instead
+- ❌ `ag` (The Silver Searcher) - Use `rg` instead
+
+Direct invocation of `find`, `grep`, or any legacy search command is **prohibited** unless explicitly authorized by the system configuration.
+
+---
+
+### 5. Rationale
+
+- **Performance:** `fd` and `rg` are implemented in Rust, offering significant performance gains:
+  - `fd` is ~23x faster than `find -iregex` (parallelized directory traversal)
+  - `rg` is ~10-20x faster than `grep -r` (intelligent binary file detection, parallel search)
+
+- **Consistency:** Standardized output and behavior ensure predictable parsing for automated systems:
+  - Default `.gitignore` respect prevents searching irrelevant files
+  - Unicode support enabled by default
+  - Consistent exit codes and output format
+
+- **Maintainability:** Unified tooling reduces error rates and simplifies pipeline debugging:
+  - Simpler, more intuitive command syntax
+  - Better error messages
+  - Configurable via `.ripgreprc` and environment
+
+- **Security:** Restricting search commands prevents unbounded directory traversal and unintended system reads:
+  - Automatic binary file skipping
+  - Respect for `.gitignore` prevents accidental exposure
+  - Depth limiting prevents filesystem exhaustion
+
+---
+
 # Claude Code Spec-Driven Development
 
 Kiro-style Spec Driven Development implementation using claude code slash commands, hooks and agents.

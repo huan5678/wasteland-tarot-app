@@ -17,6 +17,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "READING",
         "rarity": "COMMON",
         "icon_name": "book",
+        "icon_image_url": "/assets/achievements/first_reading.png",
         "criteria": {
             "type": "READING_COUNT",
             "target": 1
@@ -35,6 +36,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "READING",
         "rarity": "COMMON",
         "icon_name": "book-open",
+        "icon_image_url": "/assets/achievements/reading_apprentice.png",
         "criteria": {
             "type": "READING_COUNT",
             "target": 10
@@ -52,6 +54,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "READING",
         "rarity": "RARE",
         "icon_name": "grid",
+        "icon_image_url": "/assets/achievements/celtic_cross_initiate.png",
         "criteria": {
             "type": "READING_COUNT",
             "target": 1,
@@ -73,6 +76,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "READING",
         "rarity": "EPIC",
         "icon_name": "collection",
+        "icon_image_url": "/assets/achievements/major_arcana_collector.png",
         "criteria": {
             "type": "CARD_VIEW",
             "target": 22,
@@ -96,6 +100,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "SOCIAL",
         "rarity": "COMMON",
         "icon_name": "share",
+        "icon_image_url": "/assets/achievements/first_share.png",
         "criteria": {
             "type": "SOCIAL_SHARE",
             "target": 1
@@ -113,6 +118,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "SOCIAL",
         "rarity": "RARE",
         "icon_name": "users",
+        "icon_image_url": "/assets/achievements/social_butterfly.png",
         "criteria": {
             "type": "SOCIAL_SHARE",
             "target": 20
@@ -131,6 +137,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "SOCIAL",
         "rarity": "COMMON",
         "icon_name": "user-plus",
+        "icon_image_url": "/assets/achievements/friend_collector.png",
         "criteria": {
             "type": "FRIEND_COUNT",
             "target": 5
@@ -150,6 +157,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "BINGO",
         "rarity": "COMMON",
         "icon_name": "grid",
+        "icon_image_url": "/assets/achievements/bingo_first_try.png",
         "criteria": {
             "type": "BINGO_LINE",
             "target": 1
@@ -167,6 +175,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "BINGO",
         "rarity": "RARE",
         "icon_name": "trophy",
+        "icon_image_url": "/assets/achievements/bingo_master.png",
         "criteria": {
             "type": "BINGO_LINE",
             "target": 10
@@ -185,6 +194,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "BINGO",
         "rarity": "RARE",
         "icon_name": "calendar-check",
+        "icon_image_url": "/assets/achievements/daily_devotee.png",
         "criteria": {
             "type": "CONSECUTIVE_LOGIN",
             "target": 7
@@ -205,6 +215,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "KARMA",
         "rarity": "EPIC",
         "icon_name": "heart",
+        "icon_image_url": "/assets/achievements/wasteland_saint.png",
         "criteria": {
             "type": "KARMA_THRESHOLD",
             "target": 90
@@ -223,6 +234,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "KARMA",
         "rarity": "RARE",
         "icon_name": "balance",
+        "icon_image_url": "/assets/achievements/balanced_soul.png",
         "criteria": {
             "type": "READING_COUNT",
             "target": 20,
@@ -246,6 +258,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "EXPLORATION",
         "rarity": "RARE",
         "icon_name": "cards",
+        "icon_image_url": "/assets/achievements/card_explorer.png",
         "criteria": {
             "type": "CARD_VIEW",
             "target": 30
@@ -263,6 +276,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "EXPLORATION",
         "rarity": "COMMON",
         "icon_name": "music",
+        "icon_image_url": "/assets/achievements/music_lover.png",
         "criteria": {
             "type": "PLAYLIST_CREATE",
             "target": 1
@@ -280,6 +294,7 @@ INITIAL_ACHIEVEMENTS: List[Dict[str, Any]] = [
         "category": "EXPLORATION",
         "rarity": "EPIC",
         "icon_name": "moon",
+        "icon_image_url": "/assets/achievements/midnight_diviner.png",
         "criteria": {
             "type": "TIME_BASED",
             "target": 5,

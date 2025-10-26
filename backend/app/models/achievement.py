@@ -56,6 +56,7 @@ class Achievement(BaseModel):
 
     # 視覺呈現
     icon_name = Column(String(100), nullable=False)  # PixelIcon 圖示名稱
+    icon_image_url = Column(String(500), nullable=True)  # 成就圖示圖檔路徑（選填）
 
     # 解鎖條件 (JSON 格式)
     # 範例: {"type": "READING_COUNT", "target": 10, "filters": {"spread_type": "CELTIC_CROSS"}}
@@ -100,6 +101,7 @@ class Achievement(BaseModel):
             'category': self.category,
             'rarity': self.rarity,
             'icon_name': self.icon_name,
+            'icon_image_url': self.icon_image_url,
             'criteria': self.criteria,
             'rewards': self.rewards,
             'is_hidden': self.is_hidden,
