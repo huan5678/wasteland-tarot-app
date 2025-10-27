@@ -36,7 +36,7 @@ class AchievementCacheService:
         # 嘗試連接 Redis
         try:
             import redis
-            from app.core.config import settings
+            from app.config import settings
 
             # 檢查是否配置了 Redis URL
             redis_url = getattr(settings, 'REDIS_URL', None)

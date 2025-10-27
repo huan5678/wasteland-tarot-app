@@ -221,18 +221,7 @@ async def get_community_feed(
     }
 )
 async def share_reading(
-    share_request: ShareReadingRequest = Body(
-        ...,
-        example={
-            "reading_id": "reading-12345",
-            "title": "Amazing guidance for career transition",
-            "description": "The cards provided exactly the insight I needed for my big decision",
-            "cards_to_reveal": ["past", "present", "future"],
-            "include_full_interpretation": False,
-            "tags": ["career", "transition", "guidance"],
-            "allow_comments": True
-        }
-    ),
+    share_request: ShareReadingRequest,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

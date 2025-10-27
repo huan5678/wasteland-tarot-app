@@ -106,19 +106,7 @@ router = APIRouter()
     }
 )
 async def create_reading(
-    reading_data: ReadingCreate = Body(
-        ...,
-        example={
-            "question": "What should I focus on in the coming weeks?",
-            "spread_template_id": "vault-tec-spread",
-            "character_voice": "pip_boy",
-            "karma_context": "neutral",
-            "faction_influence": "vault_dweller",
-            "radiation_factor": 0.3,
-            "focus_area": "career",
-            "privacy_level": "private"
-        }
-    ),
+    reading_data: ReadingCreate,
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)

@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.services.achievement_service import AchievementService
-from app.core.config import settings
+from app.config import settings
 
 logger = logging.getLogger(__name__)
 
