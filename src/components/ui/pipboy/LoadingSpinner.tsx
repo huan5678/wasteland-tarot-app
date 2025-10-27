@@ -87,6 +87,7 @@ export function LoadingSpinner({
             size === 'md' && 'text-sm',
             size === 'lg' && 'text-base'
           )}
+          suppressHydrationWarning
         >
           {text}
         </p>
