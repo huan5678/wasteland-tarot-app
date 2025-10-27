@@ -15,6 +15,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
 import { speak, stopSpeech, pauseSpeech, resumeSpeech, isWebSpeechAvailable } from '@/lib/webSpeechApi'
+import { analyzeWaveform, calculateBarCount, resampleWaveform, generateFallbackWaveform, type WaveformData } from '@/lib/audio/waveformAnalyzer'
 
 interface StoryAudioPlayerProps {
   /** URL of the audio file */
@@ -45,6 +46,7 @@ export default function StoryAudioPlayer({
   // Audio element reference
   const audioRef = useRef<HTMLAudioElement>(null)
   const timelineRef = useRef<HTMLDivElement>(null)
+  const waveformContainerRef = useRef<HTMLDivElement>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   // Playback state
@@ -54,6 +56,11 @@ export default function StoryAudioPlayer({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isFallbackMode, setIsFallbackMode] = useState(useFallback)
+
+  // Waveform state
+  const [waveformData, setWaveformData] = useState<WaveformData | null>(null)
+  const [displayPeaks, setDisplayPeaks] = useState<number[]>([])
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false)
@@ -146,12 +153,12 @@ export default function StoryAudioPlayer({
   }
 
   /**
-   * Handle timeline click
+   * Handle waveform click
    */
   const handleTimelineClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || !timelineRef.current || error) return
+    if (!audioRef.current || !waveformContainerRef.current || error || isFallbackMode) return
 
-    const rect = timelineRef.current.getBoundingClientRect()
+    const rect = waveformContainerRef.current.getBoundingClientRect()
     const clickX = e.clientX - rect.left
     const percentage = clickX / rect.width
     const newTime = percentage * duration
@@ -163,7 +170,7 @@ export default function StoryAudioPlayer({
    * Handle drag start
    */
   const handleDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!audioRef.current || error) return
+    if (!audioRef.current || error || isFallbackMode) return
 
     setIsDragging(true)
     setWasPlayingBeforeDrag(isPlaying)
@@ -175,9 +182,9 @@ export default function StoryAudioPlayer({
 
     // Handle drag move and end
     const handleDragMove = (moveEvent: MouseEvent) => {
-      if (!timelineRef.current || !audioRef.current) return
+      if (!waveformContainerRef.current || !audioRef.current) return
 
-      const rect = timelineRef.current.getBoundingClientRect()
+      const rect = waveformContainerRef.current.getBoundingClientRect()
       const dragX = moveEvent.clientX - rect.left
       const percentage = Math.max(0, Math.min(1, dragX / rect.width))
       const newTime = percentage * duration
@@ -285,6 +292,84 @@ export default function StoryAudioPlayer({
     setIsLoading(false)
   }
 
+  // Analyze waveform when audio URL changes (non-fallback mode only)
+  useEffect(() => {
+    if (isFallbackMode || !audioUrl) return
+
+    let cancelled = false
+
+    const analyze = async () => {
+      setIsAnalyzing(true)
+      setError(null)
+
+      try {
+        const data = await analyzeWaveform(audioUrl, {
+          minBars: 50,
+          maxBars: 200,
+          barsPerSecond: 10,
+        })
+
+        if (!cancelled) {
+          setWaveformData(data)
+          // Initial display peaks (will be resampled on resize)
+          setDisplayPeaks(data.peaks)
+        }
+      } catch (err) {
+        console.error('波形分析失敗:', err)
+        if (!cancelled) {
+          // Use fallback waveform on error
+          const fallbackPeaks = generateFallbackWaveform(100)
+          setDisplayPeaks(fallbackPeaks)
+        }
+      } finally {
+        if (!cancelled) {
+          setIsAnalyzing(false)
+        }
+      }
+    }
+
+    analyze()
+
+    return () => {
+      cancelled = true
+    }
+  }, [audioUrl, isFallbackMode])
+
+  // Generate fallback waveform for Web Speech API mode
+  useEffect(() => {
+    if (isFallbackMode && displayPeaks.length === 0) {
+      setDisplayPeaks(generateFallbackWaveform(100))
+    }
+  }, [isFallbackMode, displayPeaks.length])
+
+  // Responsive waveform: Resample based on container width
+  useEffect(() => {
+    if (!waveformContainerRef.current) return
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width
+        const optimalBarCount = calculateBarCount(width, 3, 2, 30, 200)
+
+        // Resample waveform data if we have it
+        if (waveformData && waveformData.peaks.length > 0) {
+          const resampled = resampleWaveform(waveformData.peaks, optimalBarCount)
+          setDisplayPeaks(resampled)
+        } else if (displayPeaks.length > 0) {
+          // Resample existing display peaks
+          const resampled = resampleWaveform(displayPeaks, optimalBarCount)
+          setDisplayPeaks(resampled)
+        }
+      }
+    })
+
+    resizeObserver.observe(waveformContainerRef.current)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [waveformData, displayPeaks])
+
   // Update volume when prop changes
   useEffect(() => {
     if (audioRef.current) {
@@ -348,36 +433,63 @@ export default function StoryAudioPlayer({
           )}
         </button>
 
-        {/* Timeline and Time Display */}
+        {/* Waveform and Time Display */}
         <div className="flex-1 flex flex-col gap-2">
-          {/* Timeline */}
+          {/* Waveform Visualization */}
           <div
-            ref={timelineRef}
+            ref={waveformContainerRef}
             role="slider"
-            aria-label="時間軸"
+            aria-label="音頻波形時間軸"
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.round(getProgressPercentage())}
             tabIndex={0}
-            className="relative h-2 bg-zinc-800 rounded-full cursor-pointer hover:h-3 transition-all"
+            className="relative h-16 bg-zinc-900/30 rounded cursor-pointer group"
             onClick={handleTimelineClick}
             onMouseDown={handleDragStart}
           >
-            {/* Progress Bar */}
-            <div
-              role="progressbar"
-              aria-valuenow={Math.round(getProgressPercentage())}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              className="absolute left-0 top-0 h-full bg-pip-boy-green rounded-full transition-all shadow-[0_0_10px_rgba(0,255,136,0.5)]"
-              style={{ width: `${getProgressPercentage()}%` }}
-            />
+            {/* Waveform Bars */}
+            <div className="absolute inset-0 flex items-center justify-between px-1 gap-[2px]">
+              {displayPeaks.length > 0 ? (
+                displayPeaks.map((peak, index) => {
+                  const progress = getProgressPercentage()
+                  const barProgress = (index / displayPeaks.length) * 100
+                  const isPlayed = barProgress <= progress
 
-            {/* Drag Handle */}
-            <div
-              className="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-pip-boy-green rounded-full shadow-[0_0_10px_rgba(0,255,136,0.8)] transition-transform hover:scale-125"
-              style={{ left: `${getProgressPercentage()}%`, transform: `translate(-50%, -50%)` }}
-            />
+                  // Bar height based on peak value (10% to 100% of container)
+                  const height = Math.max(10, peak * 100)
+
+                  return (
+                    <div
+                      key={index}
+                      className="flex-1 flex items-center justify-center transition-colors duration-150"
+                    >
+                      <div
+                        className={`w-full rounded-sm transition-all ${
+                          isPlayed
+                            ? 'bg-pip-boy-green shadow-[0_0_4px_rgba(0,255,136,0.5)]'
+                            : 'bg-zinc-700 group-hover:bg-zinc-600'
+                        }`}
+                        style={{ height: `${height}%` }}
+                      />
+                    </div>
+                  )
+                })
+              ) : (
+                // Loading placeholder
+                <div className="w-full h-full flex items-center justify-center text-xs text-zinc-600">
+                  {isAnalyzing ? '分析波形中...' : '載入中...'}
+                </div>
+              )}
+            </div>
+
+            {/* Playhead Indicator */}
+            {displayPeaks.length > 0 && (
+              <div
+                className="absolute top-0 bottom-0 w-[2px] bg-pip-boy-green/80 shadow-[0_0_8px_rgba(0,255,136,0.8)] pointer-events-none"
+                style={{ left: `${getProgressPercentage()}%` }}
+              />
+            )}
           </div>
 
           {/* Time Display */}
