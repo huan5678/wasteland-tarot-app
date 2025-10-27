@@ -7,18 +7,15 @@
  * - Timeline interaction (click and drag)
  * - Loading states
  * - Error handling
- *
- * @vitest-environment happy-dom
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import StoryAudioPlayer from '../StoryAudioPlayer'
 
 // Create mock audio methods
-const mockPlay = vi.fn().mockResolvedValue(undefined)
-const mockPause = vi.fn()
-const mockLoad = vi.fn()
+const mockPlay = jest.fn().mockResolvedValue(undefined)
+const mockPause = jest.fn()
+const mockLoad = jest.fn()
 
 // Create mock HTMLMediaElement if it doesn't exist
 if (typeof HTMLMediaElement === 'undefined') {
@@ -95,7 +92,7 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.clearAllMocks()
+  jest.clearAllMocks()
 })
 
 describe('StoryAudioPlayer', () => {
@@ -135,6 +132,21 @@ describe('StoryAudioPlayer', () => {
       const audioElement = container.querySelector('audio')
       expect(audioElement).toBeInTheDocument()
       expect(audioElement).toHaveAttribute('src', mockAudioUrl)
+    })
+
+    it('應該渲染波形可視化容器', () => {
+      render(
+        <StoryAudioPlayer
+          audioUrl={mockAudioUrl}
+          characterName={mockCharacterName}
+          characterKey={mockCharacterKey}
+        />
+      )
+
+      // 檢查波形時間軸存在
+      const waveformSlider = screen.getByRole('slider', { name: /音頻波形時間軸|時間軸|timeline/i })
+      expect(waveformSlider).toBeInTheDocument()
+      expect(waveformSlider).toHaveAttribute('tabIndex', '0')
     })
   })
 
@@ -275,8 +287,8 @@ describe('StoryAudioPlayer', () => {
       fireEvent.timeUpdate(audioElement)
 
       await waitFor(() => {
-        const progressBar = container.querySelector('[role="progressbar"]')
-        expect(progressBar).toHaveAttribute('aria-valuenow', '50')
+        const waveformSlider = screen.getByRole('slider', { name: /音頻波形時間軸|時間軸|timeline/i })
+        expect(waveformSlider).toHaveAttribute('aria-valuenow', '50')
       })
     })
   })
@@ -300,7 +312,7 @@ describe('StoryAudioPlayer', () => {
 
       // 模擬點擊時間軸 50% 位置
       const timelineRect = { left: 0, width: 200 }
-      vi.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
+      jest.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
 
       fireEvent.click(timeline, { clientX: 100 }) // 點擊中間位置
 
@@ -329,7 +341,7 @@ describe('StoryAudioPlayer', () => {
       fireEvent.durationChange(audioElement)
 
       const timelineRect = { left: 0, width: 200 }
-      vi.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
+      jest.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
 
       // 開始拖曳
       fireEvent.mouseDown(timeline, { clientX: 0 })
@@ -392,7 +404,7 @@ describe('StoryAudioPlayer', () => {
       })
 
       const timelineRect = { left: 0, width: 200 }
-      vi.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
+      jest.spyOn(timeline, 'getBoundingClientRect').mockReturnValue(timelineRect as DOMRect)
 
       // 拖曳時間軸
       fireEvent.mouseDown(timeline, { clientX: 50 })
@@ -541,7 +553,7 @@ describe('StoryAudioPlayer', () => {
       expect(playButton).toHaveAttribute('aria-label')
     })
 
-    it('進度條應該有正確的 ARIA 屬性', async () => {
+    it('波形時間軸應該有正確的 ARIA 屬性', async () => {
       const { container } = render(
         <StoryAudioPlayer
           audioUrl={mockAudioUrl}
@@ -560,10 +572,10 @@ describe('StoryAudioPlayer', () => {
       fireEvent.timeUpdate(audioElement)
 
       await waitFor(() => {
-        const progressBar = container.querySelector('[role="progressbar"]')
-        expect(progressBar).toHaveAttribute('aria-valuemin', '0')
-        expect(progressBar).toHaveAttribute('aria-valuemax', '100')
-        expect(progressBar).toHaveAttribute('aria-valuenow', '30')
+        const waveformSlider = screen.getByRole('slider', { name: /音頻波形時間軸|時間軸|timeline/i })
+        expect(waveformSlider).toHaveAttribute('aria-valuemin', '0')
+        expect(waveformSlider).toHaveAttribute('aria-valuemax', '100')
+        expect(waveformSlider).toHaveAttribute('aria-valuenow', '30')
       })
     })
 
