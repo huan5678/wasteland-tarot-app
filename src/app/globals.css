@@ -95,12 +95,79 @@
   animation: float 2s ease-in-out infinite;
 }
 
+/* Pip-Boy Scanline Animation - Pip-Boy 掃描線效果（適合載入畫面） */
+@keyframes scanline {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}
+
+/* Pip-Boy Pulse Animation - Pip-Boy 脈衝效果（成功狀態） */
+@keyframes pip-boy-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pip-boy-pulse {
+  animation: pip-boy-pulse 2s ease-in-out infinite;
+}
+
+/* CRT Flicker Animation - CRT 螢幕閃爍效果（可選，用於強化復古感） */
+@keyframes crt-flicker {
+  0%, 100% {
+    opacity: 0.98;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-crt-flicker {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* Scale In Animation - 縮放進入動畫（成功/錯誤提示） */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s ease-out;
+}
+
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-out,
   .animate-wiggle,
   .animate-float,
-  .animate-shimmer {
+  .animate-shimmer,
+  .animate-scanline,
+  .animate-pip-boy-pulse,
+  .animate-crt-flicker,
+  .animate-scale-in {
     animation: none;
   }
 }

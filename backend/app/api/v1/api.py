@@ -30,7 +30,7 @@ from app.api.v1.endpoints import (
     share,
     achievements,
 )
-from app.api import oauth
+from app.api import oauth, webauthn
 
 # Create main API router
 api_router = APIRouter()
@@ -175,6 +175,12 @@ api_router.include_router(
 api_router.include_router(
     oauth.router,
     tags=["🔐 OAuth"]
+)
+
+# WebAuthn/Passkeys endpoints
+api_router.include_router(
+    webauthn.router,
+    tags=["🔑 Passkeys"]
 )
 
 # Share endpoints - 占卜結果分享

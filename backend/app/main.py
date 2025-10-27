@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from starlette.middleware.sessions import SessionMiddleware
 from contextlib import asynccontextmanager
 from typing import Union
 import logging
@@ -18,6 +19,8 @@ from app.config import get_settings
 from app.core.exceptions import WastelandTarotException
 from app.core.logging_config import setup_logging, get_logger, error_aggregator
 from app.core.logging_middleware import RequestLoggingMiddleware, PerformanceMonitoringMiddleware
+from app.middleware.security import SecurityHeadersMiddleware, SensitiveDataRedactionMiddleware
+from app.middleware.rate_limit import limiter, RateLimitMiddleware
 from app.api.v1.api import api_router
 from app.db.session import init_db
 
@@ -301,6 +304,29 @@ app = FastAPI(
     },
 )
 
+
+# Add security headers middleware (always enabled)
+app.add_middleware(
+    SecurityHeadersMiddleware,
+    enable_hsts=(settings.environment == "production")
+)
+
+# Add session middleware for WebAuthn
+# Secret key should be at least 32 characters
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,
+    session_cookie="wasteland_tarot_session",
+    max_age=3600,  # 1 hour
+    same_site="lax",
+    https_only=(settings.environment == "production")
+)
+
+# Add sensitive data redaction middleware
+app.add_middleware(SensitiveDataRedactionMiddleware)
+
+# Add rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
 # Add security middleware
 if not settings.debug:

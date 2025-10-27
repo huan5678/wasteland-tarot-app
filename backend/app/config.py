@@ -190,6 +190,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = False
+        extra = "ignore"  # Allow WebAuthn and other module-specific env vars
 
 
 class TestSettings(Settings):

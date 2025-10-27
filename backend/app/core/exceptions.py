@@ -406,12 +406,12 @@ class NoDailyNumberError(WastelandTarotException):
         )
 
 
-# WebAuthn/Passkeys 例外
+# WebAuthn/Passkeys 例外（Fallout 主題錯誤訊息）
 
 class WebAuthnRegistrationError(WastelandTarotException):
     """當 Passkey 註冊失敗時拋出"""
 
-    def __init__(self, message: str = "Passkey 註冊失敗"):
+    def __init__(self, message: str = "生物辨識註冊失敗，請確認 Pip-Boy 功能正常"):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=message,
@@ -422,7 +422,7 @@ class WebAuthnRegistrationError(WastelandTarotException):
 class WebAuthnAuthenticationError(WastelandTarotException):
     """當 Passkey 認證失敗時拋出"""
 
-    def __init__(self, message: str = "Passkey 認證失敗"):
+    def __init__(self, message: str = "生物辨識驗證失敗，請重新掃描 Pip-Boy"):
         super().__init__(
             status_code=status.HTTP_401_UNAUTHORIZED,
             message=message,
@@ -433,7 +433,7 @@ class WebAuthnAuthenticationError(WastelandTarotException):
 class CredentialNotFoundError(WastelandTarotException):
     """當找不到憑證時拋出"""
 
-    def __init__(self, message: str = "找不到對應的 Passkey"):
+    def __init__(self, message: str = "避難所資料庫中找不到此生物辨識記錄"):
         super().__init__(
             status_code=status.HTTP_404_NOT_FOUND,
             message=message,
@@ -444,7 +444,7 @@ class CredentialNotFoundError(WastelandTarotException):
 class InvalidChallengeError(WastelandTarotException):
     """當 Challenge 驗證失敗時拋出"""
 
-    def __init__(self, message: str = "Challenge 驗證失敗"):
+    def __init__(self, message: str = "安全驗證碼已過期，避難科技安全協議要求重新驗證"):
         super().__init__(
             status_code=status.HTTP_400_BAD_REQUEST,
             message=message,
@@ -455,11 +455,23 @@ class InvalidChallengeError(WastelandTarotException):
 class CounterError(WastelandTarotException):
     """當偵測到計數器回歸時拋出（可能是重放攻擊）"""
 
-    def __init__(self, message: str = "偵測到可疑的認證請求（可能是重放攻擊）"):
+    def __init__(self, message: str = "偵測到異常的時間扭曲（可能的複製裝置攻擊），Pip-Boy 安全鎖啟動"):
         super().__init__(
             status_code=status.HTTP_403_FORBIDDEN,
             message=message,
             error_code="COUNTER_ERROR"
+        )
+
+
+class MaxCredentialsReachedError(WastelandTarotException):
+    """當使用者達到 Passkey 數量上限時拋出"""
+
+    def __init__(self, current_count: int = 10, max_allowed: int = 10):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            message=f"已達到 Passkey 數量上限（{current_count}/{max_allowed}）。請先刪除不使用的 Pip-Boy 生物辨識記錄",
+            error_code="MAX_CREDENTIALS_REACHED",
+            details={"current_count": current_count, "max_allowed": max_allowed}
         )
 
 

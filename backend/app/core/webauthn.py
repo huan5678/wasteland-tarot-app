@@ -236,6 +236,7 @@ class WebAuthnConfig(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # 允許未定義的環境變數（忽略其他模組的環境變數）
 
 
 # Global configuration instance

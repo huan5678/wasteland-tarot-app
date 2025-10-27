@@ -67,7 +67,7 @@ class NewUserRegistrationResponse(BaseModel):
     refresh_token: str = Field(..., description="JWT 重新整理權杖")
     user: "UserResponse" = Field(..., description="建立的使用者資訊")
     credential: "CredentialResponse" = Field(..., description="建立的憑證")
-    message: str = Field("Passkey 註冊成功，歡迎加入！", description="成功訊息")
+    message: str = Field("生物辨識註冊成功！歡迎加入廢土，新的避難所居民", description="成功訊息")
 
 
 # ==================== Registration Schemas ====================

@@ -11,6 +11,11 @@ interface AuthState {
   isOAuthUser: boolean
   oauthProvider: string | null
   profilePicture: string | null
+  // Passkey 認證方式 state (Stage 12.3)
+  authMethod: 'passkey' | 'password' | 'oauth' | null
+  hasPasskey: boolean
+  hasPassword: boolean
+  hasOAuth: boolean
 
   initialize: (onProgress?: (progress: number) => void) => Promise<void>
   login: (email: string, password: string) => Promise<void>
@@ -18,8 +23,8 @@ interface AuthState {
   clearError: () => void
   // OAuth 專用 actions
   setOAuthUser: (user: User) => void
-  // 通用設定使用者方法
-  setUser: (user: User, tokenExpiresAt?: number) => void
+  // 通用設定使用者方法（擴充支援 authMethod）
+  setUser: (user: User, tokenExpiresAt?: number, authMethod?: 'passkey' | 'password' | 'oauth') => void
   // Token 驗證方法
   checkTokenValidity: () => boolean
   startTokenExpiryMonitor: () => void
@@ -34,6 +39,9 @@ interface AuthState {
     extension_available: boolean
     current_streak: number
   }>
+  // 認證方式管理 (Stage 12.3)
+  setAuthMethodsState: (state: { hasPasskey: boolean; hasPassword: boolean; hasOAuth: boolean }) => void
+  refreshAuthMethods: () => Promise<void>
 }
 
 // Token 儲存在 httpOnly cookies 中，由後端管理
@@ -107,6 +115,11 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   isOAuthUser: false,
   oauthProvider: null,
   profilePicture: null,
+  // Passkey 認證方式初始值 (Stage 12.3)
+  authMethod: null,
+  hasPasskey: false,
+  hasPassword: false,
+  hasOAuth: false,
 
   /**
    * 初始化認證狀態
@@ -326,6 +339,10 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         isOAuthUser: false,
         oauthProvider: null,
         profilePicture: null,
+        authMethod: null,  // Stage 12.3: 清除認證方式
+        hasPasskey: false, // Stage 12.3: 清除認證狀態
+        hasPassword: false,
+        hasOAuth: false,
         isInitialized: false, // 重置初始化狀態
         error: null
       })
@@ -377,8 +394,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    *
    * @param user - 用戶資料
    * @param tokenExpiresAt - Token 過期時間（可選）
+   * @param authMethod - 認證方式（'passkey' | 'password' | 'oauth'）(Stage 12.3)
    */
-  setUser: (user: User, tokenExpiresAt?: number) => {
+  setUser: (user: User, tokenExpiresAt?: number, authMethod?: 'passkey' | 'password' | 'oauth') => {
     // 儲存登入狀態
     if (tokenExpiresAt) {
       saveAuthState(tokenExpiresAt)
@@ -392,6 +410,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       isOAuthUser: isOAuth,
       oauthProvider: user.oauthProvider || null,
       profilePicture: user.profilePicture || null,
+      authMethod: authMethod || null,  // Stage 12.3: 設定認證方式
       error: null,
       isLoading: false,
       isInitialized: true
@@ -547,16 +566,60 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       console.error('❌ 查詢忠誠度狀態失敗:', error.message || error)
       throw error
     }
+  },
+
+  /**
+   * 設定認證方式狀態 (Stage 12.3)
+   *
+   * @param state - 認證方式狀態
+   */
+  setAuthMethodsState: (state: { hasPasskey: boolean; hasPassword: boolean; hasOAuth: boolean }) => {
+    set({
+      hasPasskey: state.hasPasskey,
+      hasPassword: state.hasPassword,
+      hasOAuth: state.hasOAuth
+    })
+  },
+
+  /**
+   * 重新查詢用戶的認證方式狀態 (Stage 12.3)
+   *
+   * 呼叫後端 /api/v1/auth/methods 端點並更新 store 狀態
+   */
+  refreshAuthMethods: async () => {
+    const state = get()
+
+    // 只有已登入用戶才能查詢
+    if (!state.user) {
+      return
+    }
+
+    try {
+      const methods = await authAPI.getAuthMethods()
+      set({
+        hasPasskey: methods.has_passkey,
+        hasPassword: methods.has_password,
+        hasOAuth: methods.has_oauth
+      })
+    } catch (error: any) {
+      console.warn('❌ 查詢認證方式失敗（靜默處理）:', error.message || error)
+      // 靜默處理錯誤，不更新狀態
+    }
   }
 }), {
   name: 'auth-store',
-  version: 2, // 版本號：變更 persist 結構時遞增，自動清除舊資料
+  version: 3, // 版本號：變更 persist 結構時遞增，自動清除舊資料 (Stage 12.3: v2 -> v3)
   partialize: (state) => ({
     // 移除 token from persist（不再儲存在 localStorage）
     user: state.user,
     isOAuthUser: state.isOAuthUser,
     oauthProvider: state.oauthProvider,
     profilePicture: state.profilePicture,
+    // Stage 12.3: 新增認證方式狀態
+    authMethod: state.authMethod,
+    hasPasskey: state.hasPasskey,
+    hasPassword: state.hasPassword,
+    hasOAuth: state.hasOAuth,
     // 不保存 isInitialized，讓每次頁面載入都重新初始化（確保正確執行 auth 流程）
     // isLoading: false, // 不保存此狀態（loading 應該每次重新開始）
   }),
@@ -566,6 +629,17 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       console.log('[AuthStore] Migrating from version', version, 'to 2 - clearing isInitialized')
       const { isInitialized, ...rest } = persistedState || {}
       return rest
+    }
+    // 版本 < 3：新增 Stage 12.3 認證方式欄位
+    if (version < 3) {
+      console.log('[AuthStore] Migrating from version', version, 'to 3 - adding authMethod fields')
+      return {
+        ...persistedState,
+        authMethod: null,
+        hasPasskey: false,
+        hasPassword: false,
+        hasOAuth: false
+      }
     }
     return persistedState
   }

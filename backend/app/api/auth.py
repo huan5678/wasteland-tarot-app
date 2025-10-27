@@ -356,6 +356,32 @@ async def get_current_user_info(
     }
 
 
+@router.get("/methods", response_model=Dict[str, bool])
+async def get_auth_methods(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    取得用戶的認證方式狀態
+
+    Returns:
+        has_passkey: 是否有註冊 Passkey
+        has_password: 是否有設定密碼
+        has_oauth: 是否有 OAuth 連結
+    """
+    from app.services.auth_helpers import user_has_passkey, user_has_password, user_has_oauth
+
+    has_passkey = await user_has_passkey(current_user.id, db)
+    has_password = await user_has_password(current_user.id, db)
+    has_oauth = await user_has_oauth(current_user.id, db)
+
+    return {
+        "has_passkey": has_passkey,
+        "has_password": has_password,
+        "has_oauth": has_oauth
+    }
+
+
 @router.post("/password/reset/request")
 async def request_password_reset(
     reset_data: PasswordResetRequest,

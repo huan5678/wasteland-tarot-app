@@ -44,6 +44,7 @@ from app.core.exceptions import (
     InvalidChallengeError,
     CounterError,
     UserAlreadyExistsError,
+    MaxCredentialsReachedError,
 )
 
 
@@ -553,7 +554,7 @@ class WebAuthnService:
 
             if existing_user:
                 raise UserAlreadyExistsError(
-                    f"Email {email} 已被註冊"
+                    f"此 email 已在避難所註冊，請使用生物辨識登入存取你的 Pip-Boy"
                 )
 
             # 2. Create new user (passwordless)
@@ -586,7 +587,7 @@ class WebAuthnService:
             if existing_cred:
                 self.db.rollback()
                 raise WebAuthnRegistrationError(
-                    "此 Passkey 已經註冊過了"
+                    "此生物辨識裝置已在避難所系統中註冊，請使用不同的認證器"
                 )
 
             # Create credential
@@ -623,7 +624,7 @@ class WebAuthnService:
         except Exception as e:
             self.db.rollback()
             raise WebAuthnRegistrationError(
-                f"Passkey 註冊失敗: {str(e)}"
+                f"生物辨識註冊失敗：{str(e)}。請檢查 Pip-Boy 連線狀態"
             ) from e
 
     def generate_registration_options_for_new_user(
@@ -661,7 +662,7 @@ class WebAuthnService:
 
             if existing_user:
                 raise UserAlreadyExistsError(
-                    f"Email {email} 已被註冊"
+                    f"此 email 已在避難所註冊，請使用生物辨識登入存取你的 Pip-Boy"
                 )
 
             # Generate temporary user handle for registration
@@ -694,7 +695,7 @@ class WebAuthnService:
             raise
         except Exception as e:
             raise WebAuthnRegistrationError(
-                f"無法生成 Passkey 註冊選項: {str(e)}"
+                f"無法初始化生物辨識系統：{str(e)}。請確認 Pip-Boy 電源充足"
             ) from e
 
     # ==================== Helper Methods ====================
@@ -751,3 +752,143 @@ class WebAuthnService:
             COSEAlgorithmIdentifier(alg_id)
             for alg_id in self.config.supported_algorithms
         ]
+
+    # ==================== Credential Management Methods ====================
+
+    def list_user_credentials(self, user_id: UUID) -> List[Credential]:
+        """
+        List all credentials for a user.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            List[Credential]: List of credentials ordered by last_used_at DESC
+
+        Example:
+            ```python
+            credentials = service.list_user_credentials(user.id)
+            for cred in credentials:
+                print(f"{cred.device_name} - Last used: {cred.last_used_at}")
+            ```
+        """
+        return self.db.execute(
+            select(Credential)
+            .where(Credential.user_id == user_id)
+            .order_by(Credential.last_used_at.desc())
+        ).scalars().all()
+
+    def update_credential_name(
+        self,
+        credential_id: UUID,
+        new_name: str,
+        user_id: UUID
+    ) -> Credential:
+        """
+        Update credential device name.
+
+        Args:
+            credential_id: Credential ID
+            new_name: New device name
+            user_id: User ID (for permission check)
+
+        Returns:
+            Credential: Updated credential
+
+        Raises:
+            CredentialNotFoundError: If credential not found or user doesn't own it
+
+        Example:
+            ```python
+            updated = service.update_credential_name(
+                credential_id=cred_id,
+                new_name="MacBook Pro Touch ID",
+                user_id=user.id
+            )
+            ```
+        """
+        # Query with user_id to prevent unauthorized access
+        credential = self.db.execute(
+            select(Credential).where(
+                Credential.id == credential_id,
+                Credential.user_id == user_id
+            )
+        ).scalar_one_or_none()
+
+        if not credential:
+            raise CredentialNotFoundError(
+                "找不到對應的 Passkey 或無權限操作"
+            )
+
+        credential.device_name = new_name
+        self.db.commit()
+        self.db.refresh(credential)
+
+        return credential
+
+    def delete_credential(
+        self,
+        credential_id: UUID,
+        user_id: UUID
+    ) -> bool:
+        """
+        Delete a credential.
+
+        Args:
+            credential_id: Credential ID
+            user_id: User ID (for permission check)
+
+        Returns:
+            bool: True if deleted successfully
+
+        Raises:
+            CredentialNotFoundError: If credential not found or user doesn't own it
+
+        Example:
+            ```python
+            result = service.delete_credential(
+                credential_id=cred_id,
+                user_id=user.id
+            )
+            ```
+        """
+        # Query with user_id to prevent unauthorized access
+        credential = self.db.execute(
+            select(Credential).where(
+                Credential.id == credential_id,
+                Credential.user_id == user_id
+            )
+        ).scalar_one_or_none()
+
+        if not credential:
+            raise CredentialNotFoundError(
+                "找不到對應的 Passkey 或無權限操作"
+            )
+
+        self.db.delete(credential)
+        self.db.commit()
+
+        return True
+
+    def check_credential_limit(self, user_id: UUID) -> None:
+        """
+        Check if user has reached the maximum credential limit (10).
+
+        Args:
+            user_id: User ID
+
+        Raises:
+            MaxCredentialsReachedError: If user has 10 or more credentials
+
+        Example:
+            ```python
+            service.check_credential_limit(user.id)  # Raises if >= 10
+            ```
+        """
+        credentials = self.list_user_credentials(user_id)
+
+        if len(credentials) >= 10:
+            raise MaxCredentialsReachedError(
+                current_count=len(credentials),
+                max_allowed=10
+            )

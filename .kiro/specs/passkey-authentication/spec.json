@@ -1,0 +1,22 @@
+{
+  "feature_name": "passkey-authentication",
+  "created_at": "2025-10-27T10:59:00Z",
+  "updated_at": "2025-10-27T12:00:00Z",
+  "language": "zh-TW",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false
+    }
+  },
+  "ready_for_implementation": false
+}

@@ -149,7 +149,7 @@ export default function PasskeysPage() {
         {/* 頁面標題 */}
         <div className="mb-8">
           <h1 className="text-3xl text-pip-boy-green mb-2 flex items-center gap-3">
-            <Fingerprint className="w-8 h-8" />
+            <PixelIcon name="fingerprint" size={32} decorative />
             Passkey 管理終端機
           </h1>
           <p className="text-pip-boy-green/70 text-sm">
@@ -161,7 +161,7 @@ export default function PasskeysPage() {
         {/* 不支援警告 */}
         {!isSupported && (
           <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-3" />
+            <PixelIcon name="alert-triangle" size={20} className="mr-3" aria-label="警告" />
             你的瀏覽器不支援 Passkey，請使用最新版本的 Chrome、Safari、Edge 或 Firefox
           </div>
         )}
@@ -169,7 +169,7 @@ export default function PasskeysPage() {
         {/* 錯誤訊息 */}
         {error && (
           <div className="mb-6 p-4 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
-            <AlertTriangle className="w-5 h-5 mr-3" />
+            <PixelIcon name="alert-triangle" size={20} className="mr-3" aria-label="錯誤" />
             {error}
           </div>
         )}
@@ -181,7 +181,7 @@ export default function PasskeysPage() {
             disabled={!isSupported || isLoading}
             className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-sm hover:bg-pip-boy-green/80 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            <Plus className="w-5 h-5" />
+            <PixelIcon name="plus" size={20} decorative />
             {isLoading ? '處理中...' : '新增 Passkey'}
           </button>
         </div>
@@ -197,7 +197,7 @@ export default function PasskeysPage() {
             </div>
           ) : credentials.length === 0 ? (
             <div className="py-8 text-center">
-              <Fingerprint className="w-16 h-16 mx-auto text-pip-boy-green/30 mb-4" />
+              <PixelIcon name="fingerprint" size={64} className="mx-auto text-pip-boy-green/30 mb-4" decorative />
               <p className="text-pip-boy-green/70 text-sm">
                 尚未設定 Passkey
               </p>
@@ -268,7 +268,7 @@ export default function PasskeysPage() {
                             className="p-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 disabled:opacity-50 transition-colors"
                             title="編輯名稱"
                           >
-                            <Edit2 className="w-4 h-4" />
+                            <PixelIcon name="edit" size={16} decorative />
                           </button>
                           <button
                             onClick={() => confirmDelete(credential.id)}
@@ -280,7 +280,7 @@ export default function PasskeysPage() {
                                 : '刪除 Passkey'
                             }
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <PixelIcon name="trash" size={16} decorative />
                           </button>
                         </>
                       )}
@@ -291,7 +291,7 @@ export default function PasskeysPage() {
                   {deletingId === credential.id && (
                     <div className="mt-4 pt-4 border-t border-pip-boy-green/30">
                       <div className="flex items-center gap-2 text-red-400 text-sm mb-3">
-                        <AlertTriangle className="w-5 h-5" />
+                        <PixelIcon name="alert-triangle" size={20} decorative />
                         確定要刪除此 Passkey？此操作無法復原
                       </div>
                       <div className="flex gap-2">
@@ -321,7 +321,7 @@ export default function PasskeysPage() {
         {/* 說明資訊 */}
         <div className="mt-8 p-4 border border-pip-boy-green/30 bg-pip-boy-green/5">
           <h3 className="text-pip-boy-green text-sm mb-2 flex items-center gap-2">
-            <CheckCircle className="w-4 h-4" />
+            <PixelIcon name="check-circle" size={16} decorative />
             關於 Passkeys
           </h3>
           <ul className="text-pip-boy-green/70 text-xs space-y-1 list-disc list-inside">

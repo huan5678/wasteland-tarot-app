@@ -65,6 +65,7 @@ class User(BaseModel):
 
     # Security & Session Management
     last_login = Column(DateTime(timezone=True))
+    last_login_method = Column(String(50), nullable=True)  # "passkey", "password", "oauth_google", etc.
     session_count = Column(Integer, default=0)
     failed_login_attempts = Column(Integer, default=0)
     last_failed_login = Column(DateTime(timezone=True))

@@ -3,6 +3,7 @@ WebAuthn Credential Model
 Represents a Passkey/FIDO2 credential for passwordless authentication.
 """
 
+import logging
 from sqlalchemy import Column, String, BigInteger, Boolean, TIMESTAMP, ForeignKey, Text, ARRAY
 from sqlalchemy.dialects.postgresql import UUID, BYTEA
 from sqlalchemy.orm import relationship
@@ -12,6 +13,10 @@ from typing import Optional, List
 from datetime import datetime
 
 from app.models.base import Base
+from app.core.exceptions import CounterError
+
+# Logger for security alerts
+logger = logging.getLogger(__name__)
 
 
 class Credential(Base):
@@ -157,24 +162,37 @@ class Credential(Base):
 
     def increment_counter(self, new_counter: int) -> bool:
         """
-        Update the signature counter.
+        Update the signature counter with security validation.
 
         Args:
             new_counter: The new counter value from the authenticator
 
         Returns:
-            True if counter was successfully incremented, False if counter regression detected
+            True if counter was successfully incremented
 
         Raises:
-            ValueError: If new_counter is less than current counter (possible replay attack)
+            CounterError: If new_counter is less than or equal to current counter
+                         (possible replay attack or credential cloning)
         """
         if new_counter <= self.counter:
-            # Counter regression - possible replay attack!
-            raise ValueError(
-                f"Counter regression detected! Current: {self.counter}, New: {new_counter}. "
-                f"This may indicate a cloned credential or replay attack."
+            # Log security alert for counter anomaly
+            logger.warning(
+                f"Counter regression detected for credential {self.id}: "
+                f"expected > {self.counter}, got {new_counter}. "
+                f"Possible credential cloning or replay attack. "
+                f"User ID: {self.user_id}"
             )
 
+            # Raise Fallout-themed CounterError
+            raise CounterError(
+                message=(
+                    f"偵測到異常的時間扭曲（Counter 未遞增）！"
+                    f"預期 > {self.counter}，實際收到 {new_counter}。"
+                    f"可能的複製裝置攻擊，Pip-Boy 安全鎖啟動。"
+                )
+            )
+
+        # Update counter
         self.counter = new_counter
         return True
 

@@ -410,6 +410,16 @@ export const authAPI = {
     apiRequest('/api/v1/auth/loyalty-status', {
       method: 'GET',
     }),
+
+  // 取得用戶的認證方式狀態 (Stage 12.3)
+  getAuthMethods: (): Promise<{
+    has_passkey: boolean
+    has_password: boolean
+    has_oauth: boolean
+  }> =>
+    apiRequest('/api/v1/auth/methods', {
+      method: 'GET',
+    }),
 }
 
 // Health check

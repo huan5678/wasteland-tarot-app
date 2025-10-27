@@ -48,7 +48,14 @@
     "test:audio:watch": "jest --config=jest.audio.config.js --watch",
     "test:audio:coverage": "jest --config=jest.audio.config.js --coverage",
     "test:audio:e2e": "playwright test --config=playwright.audio.config.ts",
-    "test:audio:e2e:ui": "playwright test --config=playwright.audio.config.ts --ui"
+    "test:audio:e2e:ui": "playwright test --config=playwright.audio.config.ts --ui",
+    "test:passkey": "playwright test tests/e2e/passkey*.spec.ts",
+    "test:passkey:ui": "playwright test tests/e2e/passkey*.spec.ts --ui",
+    "test:passkey:chromium": "playwright test tests/e2e/passkey*.spec.ts --project=chromium",
+    "test:passkey:firefox": "playwright test tests/e2e/passkey*.spec.ts --project=firefox",
+    "test:passkey:registration": "playwright test tests/e2e/passkey-registration.spec.ts",
+    "test:passkey:login": "playwright test tests/e2e/passkey-login.spec.ts",
+    "test:passkey:management": "playwright test tests/e2e/passkey-management.spec.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

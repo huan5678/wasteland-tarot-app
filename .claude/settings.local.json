@@ -71,7 +71,9 @@
       "Bash(.venv/bin/alembic current -v)",
       "mcp__chrome-devtools__fill_form",
       "mcp__chrome-devtools__close_page",
-      "WebFetch(domain:remixicon.com)"
+      "WebFetch(domain:remixicon.com)",
+      "SlashCommand(/kiro:spec-init 實作 passkey (WebAuthn) 無密碼登入系統，支援生物辨識（指紋、Face ID）和安全金鑰。包含註冊流程、登入流程、credential 管理，以及完整的前後端實作。確保符合 FIDO2/WebAuthn 標準，並提供良好的使用者體驗。)",
+      "SlashCommand(/kiro:spec-tasks passkey-authentication -y)"
     ]
   },
   "enableAllProjectMcpServers": true,
