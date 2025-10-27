@@ -449,31 +449,43 @@ export default function StoryAudioPlayer({
             onMouseDown={handleDragStart}
           >
             {/* Center line (subtle) */}
-            <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-zinc-800/50 pointer-events-none" />
+            <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-zinc-800/50 pointer-events-none z-0" />
 
-            {/* Waveform Bars */}
-            <div className="absolute inset-0 flex items-center justify-start px-1 gap-[1px]">
+            {/* Waveform Bars (Symmetric) */}
+            <div className="absolute inset-0 flex items-center justify-start px-1 gap-[2px]">
               {displayPeaks.length > 0 ? (
                 displayPeaks.map((peak, index) => {
                   const progress = getProgressPercentage()
                   const barProgress = (index / displayPeaks.length) * 100
                   const isPlayed = barProgress <= progress
 
-                  // Bar height based on peak value (20% to 100% of container)
-                  const height = Math.max(20, peak * 100)
+                  // Bar height based on peak value
+                  // Played: 15% to 50% of container (half of symmetric bar)
+                  // Unplayed: 2% (dot state)
+                  const halfHeight = isPlayed ? Math.max(15, peak * 50) : 2
 
                   return (
                     <div
                       key={index}
-                      className="flex-1 flex items-center justify-center transition-colors duration-100"
+                      className="flex-1 flex flex-col items-center justify-center gap-0"
                     >
+                      {/* Top half (mirror) */}
                       <div
-                        className={`w-full rounded-full transition-all ${
+                        className={`w-full rounded-full transition-all duration-200 ${
                           isPlayed
-                            ? 'bg-pip-boy-green shadow-[0_0_6px_rgba(0,255,136,0.6)]'
-                            : 'bg-zinc-700/80 group-hover:bg-zinc-600/80'
+                            ? 'bg-pip-boy-green'
+                            : 'bg-zinc-700'
                         }`}
-                        style={{ height: `${height}%` }}
+                        style={{ height: `${halfHeight}%` }}
+                      />
+                      {/* Bottom half (mirror) */}
+                      <div
+                        className={`w-full rounded-full transition-all duration-200 ${
+                          isPlayed
+                            ? 'bg-pip-boy-green'
+                            : 'bg-zinc-700'
+                        }`}
+                        style={{ height: `${halfHeight}%` }}
                       />
                     </div>
                   )
@@ -489,7 +501,7 @@ export default function StoryAudioPlayer({
             {/* Playhead Indicator */}
             {displayPeaks.length > 0 && (
               <div
-                className="absolute top-0 bottom-0 w-[2px] bg-pip-boy-green shadow-[0_0_10px_rgba(0,255,136,1)] pointer-events-none z-10"
+                className="absolute top-0 bottom-0 w-[3px] bg-pip-boy-green/90 pointer-events-none z-10"
                 style={{ left: `${getProgressPercentage()}%` }}
               />
             )}
