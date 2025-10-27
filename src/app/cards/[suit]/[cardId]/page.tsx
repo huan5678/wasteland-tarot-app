@@ -335,15 +335,35 @@ export default function CardDetailPage() {
               </PipBoyCard>
             )}
 
-            {/* 廢土故事 */}
+            {/* 廢土故事與旁白 (合併 section) */}
             {card.story && (
               <PipBoyCard>
                 <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
                   廢土故事
                 </h2>
+
+                {/* 故事旁白 (音頻播放器) - 放在最上方 */}
+                {card.audio_urls && Object.keys(card.audio_urls).length > 0 && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-pip-boy-green mb-3">故事旁白</h3>
+                    <div className="space-y-3">
+                      {Object.entries(card.audio_urls).map(([characterKey, audioUrl]) => (
+                        <StoryAudioPlayer
+                          key={characterKey}
+                          audioUrl={audioUrl}
+                          characterName={characterKey === 'pip_boy' ? 'Pip-Boy' : characterKey}
+                          characterKey={characterKey}
+                          storyText={card.story?.background}
+                          volume={0.8}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4 text-sm md:text-base text-pip-boy-green/70">
                   {/* 故事背景 */}
-                  <div>
+                  <div className={card.audio_urls && Object.keys(card.audio_urls).length > 0 ? "pt-4 border-t border-pip-boy-green/30" : ""}>
                     <h3 className="text-lg font-semibold text-pip-boy-green mb-2">故事背景</h3>
                     <p className="leading-relaxed whitespace-pre-wrap">{card.story.background}</p>
                   </div>
@@ -386,27 +406,6 @@ export default function CardDetailPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              </PipBoyCard>
-            )}
-
-            {/* 故事音頻播放器 */}
-            {card.audio_urls && Object.keys(card.audio_urls).length > 0 && (
-              <PipBoyCard>
-                <h2 className="text-xl md:text-2xl font-bold text-pip-boy-green uppercase mb-4">
-                  故事旁白
-                </h2>
-                <div className="space-y-4">
-                  {Object.entries(card.audio_urls).map(([characterKey, audioUrl]) => (
-                    <StoryAudioPlayer
-                      key={characterKey}
-                      audioUrl={audioUrl}
-                      characterName={characterKey === 'pip_boy' ? 'Pip-Boy' : characterKey}
-                      characterKey={characterKey}
-                      storyText={card.story?.background}
-                      volume={0.8}
-                    />
-                  ))}
                 </div>
               </PipBoyCard>
             )}
