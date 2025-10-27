@@ -122,18 +122,18 @@ function extractPeaks(audioBuffer: AudioBuffer, barCount: number): number[] {
  * Calculate optimal bar count based on container width
  *
  * @param containerWidth - Width of the container in pixels
- * @param barWidth - Width of each bar in pixels (default: 3)
- * @param gap - Gap between bars in pixels (default: 2)
- * @param minBars - Minimum number of bars (default: 30)
- * @param maxBars - Maximum number of bars (default: 200)
+ * @param barWidth - Width of each bar in pixels (default: 2)
+ * @param gap - Gap between bars in pixels (default: 1)
+ * @param minBars - Minimum number of bars (default: 50)
+ * @param maxBars - Maximum number of bars (default: 300)
  * @returns Optimal number of bars
  */
 export function calculateBarCount(
   containerWidth: number,
-  barWidth: number = 3,
-  gap: number = 2,
-  minBars: number = 30,
-  maxBars: number = 200
+  barWidth: number = 2,
+  gap: number = 1,
+  minBars: number = 50,
+  maxBars: number = 300
 ): number {
   const barTotalWidth = barWidth + gap
   const calculatedBars = Math.floor(containerWidth / barTotalWidth)

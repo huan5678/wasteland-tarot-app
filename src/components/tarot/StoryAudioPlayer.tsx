@@ -304,9 +304,9 @@ export default function StoryAudioPlayer({
 
       try {
         const data = await analyzeWaveform(audioUrl, {
-          minBars: 50,
-          maxBars: 200,
-          barsPerSecond: 10,
+          minBars: 100,
+          maxBars: 300,
+          barsPerSecond: 15,
         })
 
         if (!cancelled) {
@@ -318,7 +318,7 @@ export default function StoryAudioPlayer({
         console.error('波形分析失敗:', err)
         if (!cancelled) {
           // Use fallback waveform on error
-          const fallbackPeaks = generateFallbackWaveform(100)
+          const fallbackPeaks = generateFallbackWaveform(150)
           setDisplayPeaks(fallbackPeaks)
         }
       } finally {
@@ -338,7 +338,7 @@ export default function StoryAudioPlayer({
   // Generate fallback waveform for Web Speech API mode
   useEffect(() => {
     if (isFallbackMode && displayPeaks.length === 0) {
-      setDisplayPeaks(generateFallbackWaveform(100))
+      setDisplayPeaks(generateFallbackWaveform(150))
     }
   }, [isFallbackMode, displayPeaks.length])
 
@@ -349,7 +349,7 @@ export default function StoryAudioPlayer({
     const resizeObserver = new ResizeObserver((entries) => {
       for (const entry of entries) {
         const width = entry.contentRect.width
-        const optimalBarCount = calculateBarCount(width, 3, 2, 30, 200)
+        const optimalBarCount = calculateBarCount(width, 2, 1, 50, 300)
 
         // Resample waveform data if we have it
         if (waveformData && waveformData.peaks.length > 0) {
@@ -444,31 +444,34 @@ export default function StoryAudioPlayer({
             aria-valuemax={100}
             aria-valuenow={Math.round(getProgressPercentage())}
             tabIndex={0}
-            className="relative h-16 bg-zinc-900/30 rounded cursor-pointer group"
+            className="relative h-20 bg-zinc-900/30 rounded-lg cursor-pointer group overflow-hidden"
             onClick={handleTimelineClick}
             onMouseDown={handleDragStart}
           >
+            {/* Center line (subtle) */}
+            <div className="absolute left-0 right-0 top-1/2 h-[1px] bg-zinc-800/50 pointer-events-none" />
+
             {/* Waveform Bars */}
-            <div className="absolute inset-0 flex items-center justify-between px-1 gap-[2px]">
+            <div className="absolute inset-0 flex items-center justify-start px-1 gap-[1px]">
               {displayPeaks.length > 0 ? (
                 displayPeaks.map((peak, index) => {
                   const progress = getProgressPercentage()
                   const barProgress = (index / displayPeaks.length) * 100
                   const isPlayed = barProgress <= progress
 
-                  // Bar height based on peak value (10% to 100% of container)
-                  const height = Math.max(10, peak * 100)
+                  // Bar height based on peak value (20% to 100% of container)
+                  const height = Math.max(20, peak * 100)
 
                   return (
                     <div
                       key={index}
-                      className="flex-1 flex items-center justify-center transition-colors duration-150"
+                      className="flex-1 flex items-center justify-center transition-colors duration-100"
                     >
                       <div
-                        className={`w-full rounded-sm transition-all ${
+                        className={`w-full rounded-full transition-all ${
                           isPlayed
-                            ? 'bg-pip-boy-green shadow-[0_0_4px_rgba(0,255,136,0.5)]'
-                            : 'bg-zinc-700 group-hover:bg-zinc-600'
+                            ? 'bg-pip-boy-green shadow-[0_0_6px_rgba(0,255,136,0.6)]'
+                            : 'bg-zinc-700/80 group-hover:bg-zinc-600/80'
                         }`}
                         style={{ height: `${height}%` }}
                       />
@@ -486,7 +489,7 @@ export default function StoryAudioPlayer({
             {/* Playhead Indicator */}
             {displayPeaks.length > 0 && (
               <div
-                className="absolute top-0 bottom-0 w-[2px] bg-pip-boy-green/80 shadow-[0_0_8px_rgba(0,255,136,0.8)] pointer-events-none"
+                className="absolute top-0 bottom-0 w-[2px] bg-pip-boy-green shadow-[0_0_10px_rgba(0,255,136,1)] pointer-events-none z-10"
                 style={{ left: `${getProgressPercentage()}%` }}
               />
             )}
