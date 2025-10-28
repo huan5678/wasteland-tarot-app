@@ -495,6 +495,7 @@ Kiro-style Spec Driven Development implementation using claude code slash comman
 - **wasteland-story-mode**: Wasteland Story Mode combining Fallout worldview with tarot readings - enhance existing card descriptions with Fallout-themed story backgrounds and character events through database content augmentation
 - **achievement-system**: Gamification achievement system tracking user progress across reading, social, bingo, and exploration activities with visual badges, titles, and Karma rewards to boost engagement and retention
 - **passkey-authentication**: WebAuthn/FIDO2 passwordless authentication system supporting biometric authentication (fingerprint, Face ID) and security keys, with complete registration, login, and credential management flows
+- **google-oauth-passkey-integration**: Integration of Google OAuth with Passkey passwordless authentication, allowing users to quick-register with Google and optionally upgrade to Passkey. Supports three login methods: (1) Google OAuth one-click, (2) Passkey biometric, (3) Email/password, with seamless integration of existing Supabase OAuth and WebAuthn implementations
 
 ## Font Integration (Cubic 11 Pixel Font)
 

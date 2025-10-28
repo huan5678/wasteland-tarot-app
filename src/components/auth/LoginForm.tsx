@@ -273,11 +273,30 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           {/* Passkey Login Link */}
           <Link
             href="/auth/login-passkey"
+            aria-disabled={!passkeySupported}
             className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            onClick={(e) => {
+              if (!passkeySupported) {
+                e.preventDefault()
+                pushError({
+                  source: 'auth',
+                  message: 'Passkey 不支援',
+                  detail: '您的瀏覽器不支援 Passkey 認證，請使用 Google 或 Email/密碼登入'
+                })
+              }
+            }}
           >
             <PixelIcon name="fingerprint" size={20} decorative />
             使用 Passkey 登入
           </Link>
+
+          {/* Passkey 不支援提示 */}
+          {!passkeySupported && (
+            <div className="mt-2 p-2 border border-pip-boy-green/30 bg-pip-boy-green/5 text-pip-boy-green/70 text-xs flex items-center gap-2">
+              <PixelIcon name="information" sizePreset="xs" variant="info" decorative />
+              <span>您的裝置不支援 Passkey，可使用 Google 或密碼登入</span>
+            </div>
+          )}
 
           {/* Traditional Form Toggle */}
           <div className="mt-6 flex items-center justify-between p-3 border border-pip-boy-green/30 bg-pip-boy-green/5">
@@ -314,6 +333,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
               id="email"
               type="email"
               aria-required="true"
+              autoComplete="email webauthn"
               className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
               placeholder="輸入你的 Email..."
               value={formData.email}

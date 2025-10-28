@@ -47,22 +47,45 @@ async def db_session():
 
 @pytest_asyncio.fixture
 async def clean_db_session():
-    """建立一個乾淨的測試資料庫 session，支援完整 User 模型但避免其他表"""
+    """建立一個乾淨的測試資料庫 session，支援 User 和 Credential 模型"""
     # 使用 SQLite 記憶體資料庫
     engine = create_async_engine(
         "sqlite+aiosqlite:///:memory:",
         echo=False
     )
 
-    # 導入 User 模型但不觸發其他關係
+    # 導入需要的模型
     from app.models.user import User
-    from sqlalchemy import MetaData
+    from app.models.base import Base  # 使用 Base 的 metadata
+    from sqlalchemy import MetaData, Table, Column, String, BigInteger, Boolean, TIMESTAMP, ForeignKey, Text
 
-    # 只建立 users 表，忽略其他表
+    # 建立新的 metadata（避免使用全域的 Base.metadata）
     metadata = MetaData()
+
     async with engine.begin() as conn:
-        # 直接建立 users 表結構
-        await conn.run_sync(User.__table__.create, checkfirst=True)
+        # 1. 建立 users 表（使用 User 模型的完整結構，不執行 server_default）
+        # 直接使用 User.__table__ 的定義，但綁定到新的 metadata
+        await conn.run_sync(User.__table__.to_metadata(metadata).create, checkfirst=True)
+
+        # 2. 手動建立 credentials 表（避免 ARRAY 類型問題）
+        credentials_table = Table(
+            'credentials',
+            metadata,
+            Column('id', String, primary_key=True),
+            Column('user_id', String, ForeignKey('users.id', ondelete='CASCADE'), nullable=False),
+            Column('credential_id', Text, unique=True, nullable=False),
+            Column('public_key', Text, nullable=False),
+            Column('counter', BigInteger, nullable=False, default=0),
+            Column('transports', Text, nullable=True),  # 儲存為 JSON 字串
+            Column('device_name', Text, nullable=True),
+            Column('aaguid', String, nullable=True),
+            Column('backup_eligible', Boolean, nullable=False, default=False),
+            Column('backup_state', Boolean, nullable=False, default=False),
+            Column('created_at', TIMESTAMP, nullable=False),
+            Column('last_used_at', TIMESTAMP, nullable=True),
+        )
+
+        await conn.run_sync(credentials_table.create, checkfirst=True)
 
     # 建立 session
     async_session = async_sessionmaker(

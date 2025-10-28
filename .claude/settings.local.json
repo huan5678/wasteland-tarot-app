@@ -73,7 +73,9 @@
       "mcp__chrome-devtools__close_page",
       "WebFetch(domain:remixicon.com)",
       "SlashCommand(/kiro:spec-init 實作 passkey (WebAuthn) 無密碼登入系統，支援生物辨識（指紋、Face ID）和安全金鑰。包含註冊流程、登入流程、credential 管理，以及完整的前後端實作。確保符合 FIDO2/WebAuthn 標準，並提供良好的使用者體驗。)",
-      "SlashCommand(/kiro:spec-tasks passkey-authentication -y)"
+      "SlashCommand(/kiro:spec-tasks passkey-authentication -y)",
+      "Bash(fd:*)",
+      "SlashCommand(/kiro:spec-init google-oauth-passkey-integration \"整合 Google OAuth 與 Passkey 無密碼認證系統。允許用戶使用 Google 帳號快速註冊後，可選擇升級為 Passkey 認證。支援三種登入方式：(1) Google OAuth 一鍵登入，(2) Passkey 生物辨識登入，(3) Email/密碼傳統登入。整合現有的 Supabase OAuth 設定和 WebAuthn 實作，確保所有認證方式能共存並提供一致的使用體驗。特別功能：首次 Google 登入後引導用戶註冊 Passkey，以獲得更快速的生物辨識登入體驗。\")"
     ]
   },
   "enableAllProjectMcpServers": true,

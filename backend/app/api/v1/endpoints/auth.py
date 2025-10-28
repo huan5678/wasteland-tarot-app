@@ -97,6 +97,7 @@ class LoginRequest(BaseModel):
     """登入請求"""
     email: EmailStr
     password: str
+    oauth_data: Optional[Dict[str, Any]] = None  # 用於 link_oauth=true 流程
 
 
 class LoginResponse(BaseModel):
@@ -104,6 +105,56 @@ class LoginResponse(BaseModel):
     message: str
     user: Dict[str, Any]
     token_expires_at: Optional[int] = None  # JWT exp timestamp
+
+
+class CredentialInfoResponse(BaseModel):
+    """Credential 簡化資訊（API 回應）"""
+    id: str
+    name: Optional[str] = None
+    device_name: Optional[str] = None
+    created_at: Optional[str] = None
+    last_used_at: Optional[str] = None
+    device_type: str = "unknown"
+
+
+class PasskeyLoginAndLinkRequest(BaseModel):
+    """
+    Passkey 登入並連結 OAuth 請求
+
+    Task 4.5: POST /api/auth/passkey/login-and-link 端點
+    需求 8.5: 相同 Email 跨認證方式整合引導
+    """
+    assertion_response: Dict[str, Any]  # WebAuthn assertion response
+    oauth_data: Dict[str, Any]  # OAuth 資料（oauth_provider, oauth_id, email, etc.）
+
+
+class PasskeyLoginAndLinkResponse(BaseModel):
+    """Passkey 登入並連結 OAuth 回應"""
+    success: bool
+    message: str
+    user: Dict[str, Any]
+    # tokens 透過 httpOnly cookies 回傳，不在 body 中
+
+
+class AuthMethodsResponse(BaseModel):
+    """
+    認證方式查詢回應
+
+    需求 5: 認證方式狀態同步（前後端一致性）
+    設計文件：.kiro/specs/google-oauth-passkey-integration/design.md
+    """
+    # OAuth 相關
+    has_oauth: bool = False
+    oauth_provider: Optional[str] = None
+    profile_picture: Optional[str] = None
+
+    # Passkey 相關
+    has_passkey: bool = False
+    passkey_count: int = 0
+    passkey_credentials: List[CredentialInfoResponse] = []
+
+    # 密碼相關
+    has_password: bool = False
 
 
 @router.post("/verify", response_model=VerifyResponse)
@@ -565,6 +616,7 @@ async def login_user(
     request: LoginRequest,
     response: Response,
     background_tasks: BackgroundTasks,
+    link_oauth: Optional[str] = None,  # 查詢參數：link_oauth=true
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -572,27 +624,51 @@ async def login_user(
 
     驗證使用者憑證並設定 httpOnly cookies。
 
+    支援 link_oauth=true 參數以連結 OAuth 帳號（需求 8.5）。
+
     Args:
-        request: 登入請求資料
+        request: 登入請求資料（包含 email, password, oauth_data）
         response: FastAPI Response 物件用於設定 cookies
+        link_oauth: 查詢參數，設為 "true" 時連結 OAuth 帳號
         db: 資料庫 session
 
     Returns:
         LoginResponse: 包含成功訊息和使用者資料
 
     Raises:
+        HTTPException: 400 - Email 不一致或參數錯誤
         HTTPException: 401 - 憑證無效或帳號問題
         HTTPException: 403 - OAuth 使用者無法使用傳統登入
         HTTPException: 500 - 內部錯誤
     """
-    try:
-        # 驗證使用者憑證
-        user_service = UserService(db)
-        user = await user_service.authenticate_user(request.email, request.password)
+    from app.core.exceptions import EmailMismatchError
+    from app.services.auth_method_coordinator import AuthMethodCoordinatorService
 
-        # 生成 JWT tokens
-        access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
-        refresh_token = create_refresh_token(data={"sub": str(user.id)})
+    try:
+        # 檢查是否為 link_oauth 流程
+        if link_oauth == "true" and request.oauth_data:
+            # Task 4.5: 密碼登入並連結 OAuth 流程
+            coordinator = AuthMethodCoordinatorService()
+            result = await coordinator.login_with_password_and_link_oauth(
+                email=request.email,
+                password=request.password,
+                oauth_data=request.oauth_data,
+                db=db
+            )
+
+            user = result["user"]
+            tokens = result["tokens"]
+            access_token = tokens["access_token"]
+            refresh_token = tokens["refresh_token"]
+
+        else:
+            # 原本的密碼登入流程
+            user_service = UserService(db)
+            user = await user_service.authenticate_user(request.email, request.password)
+
+            # 生成 JWT tokens（原始流程不包含認證方式標記）
+            access_token = create_access_token(data={"sub": str(user.id), "email": user.email})
+            refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
         # 設定 httpOnly cookies
         access_cookie_settings = get_access_token_cookie_settings()
@@ -660,6 +736,12 @@ async def login_user(
             token_expires_at=token_expires_at
         )
 
+    except EmailMismatchError as e:
+        logger.warning(f"Login failed - email mismatch: {request.email}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except InvalidCredentialsError as e:
         logger.warning(f"Login failed - invalid credentials: {request.email}")
         raise HTTPException(
@@ -967,3 +1049,197 @@ async def track_login(
     result = await service.track_daily_login(user_id)
 
     return TrackLoginResponse(**result)
+
+
+@router.get("/methods", response_model=AuthMethodsResponse)
+async def get_auth_methods(
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    查詢當前用戶的所有認證方式狀態
+
+    需求 5: 認證方式狀態同步（前後端一致性）
+    設計文件：.kiro/specs/google-oauth-passkey-integration/design.md - Section: GET /api/auth/methods
+
+    功能：
+    - 查詢用戶的 OAuth 狀態（has_oauth, oauth_provider, profile_picture）
+    - 查詢用戶的 Passkey 狀態（has_passkey, passkey_count, passkey_credentials）
+    - 查詢用戶的密碼狀態（has_password）
+
+    效能需求：<500ms 回應時間
+
+    Args:
+        access_token: 從 cookie 提取的 access token（需要 JWT 認證）
+        db: 資料庫 session
+
+    Returns:
+        AuthMethodsResponse: 完整的認證方式資訊
+
+    Raises:
+        HTTPException: 401 - 未認證或 token 無效
+        HTTPException: 500 - 查詢失敗
+    """
+    from app.services.auth_method_coordinator import AuthMethodCoordinatorService
+    from uuid import UUID
+
+    # 檢查認證
+    if not access_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated"
+        )
+
+    # 驗證 token
+    payload = verify_token(access_token)
+    if not payload or payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token"
+        )
+
+    user_id_str = payload.get("sub")
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    try:
+        # 解析 user_id
+        user_id = UUID(user_id_str)
+
+        # 查詢認證方式
+        coordinator = AuthMethodCoordinatorService()
+        auth_info = await coordinator.get_auth_methods(user_id=user_id, db=db)
+
+        # 轉換為回應格式
+        return AuthMethodsResponse(
+            has_oauth=auth_info.has_oauth,
+            oauth_provider=auth_info.oauth_provider,
+            profile_picture=auth_info.profile_picture,
+            has_passkey=auth_info.has_passkey,
+            passkey_count=auth_info.passkey_count,
+            passkey_credentials=[
+                CredentialInfoResponse(**cred) for cred in auth_info.passkey_credentials
+            ],
+            has_password=auth_info.has_password
+        )
+
+    except ValueError as e:
+        logger.error(f"User not found for ID {user_id_str}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User not found: {user_id_str}"
+        )
+    except Exception as e:
+        logger.error(f"Error querying auth methods for user {user_id_str}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to query authentication methods"
+        )
+
+
+@router.post("/passkey/login-and-link", response_model=PasskeyLoginAndLinkResponse)
+async def passkey_login_and_link_oauth(
+    request: PasskeyLoginAndLinkRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    使用 Passkey 登入並連結 OAuth 帳號
+
+    Task 4.5: POST /api/auth/passkey/login-and-link 端點
+    需求 8.5: 相同 Email 跨認證方式整合引導（帳號衝突解決）
+
+    功能：
+    - 使用 WebAuthn assertion 驗證 Passkey
+    - 驗證成功後連結 OAuth 資訊至用戶帳號
+    - 產生包含認證方式標記的 JWT tokens
+    - 設定 httpOnly cookies
+
+    效能需求：<1.5 秒回應時間
+
+    Args:
+        request: 包含 assertion_response 和 oauth_data
+        response: FastAPI Response 物件用於設定 cookies
+        db: 資料庫 session
+
+    Returns:
+        PasskeyLoginAndLinkResponse: 包含 success, message, user
+
+    Raises:
+        HTTPException: 400 - Email 不一致
+        HTTPException: 401 - Passkey 驗證失敗
+        HTTPException: 500 - 內部錯誤
+    """
+    from app.core.exceptions import EmailMismatchError
+    from app.services.auth_method_coordinator import AuthMethodCoordinatorService
+
+    try:
+        # 呼叫 AuthMethodCoordinatorService
+        coordinator = AuthMethodCoordinatorService()
+        result = await coordinator.login_with_passkey_and_link_oauth(
+            assertion_response=request.assertion_response,
+            oauth_data=request.oauth_data,
+            db=db
+        )
+
+        user = result["user"]
+        tokens = result["tokens"]
+        access_token = tokens["access_token"]
+        refresh_token = tokens["refresh_token"]
+
+        # 設定 httpOnly cookies
+        access_cookie_settings = get_access_token_cookie_settings()
+        refresh_cookie_settings = get_refresh_token_cookie_settings()
+
+        response.set_cookie(
+            **access_cookie_settings,
+            value=access_token
+        )
+        response.set_cookie(
+            **refresh_cookie_settings,
+            value=refresh_token
+        )
+
+        logger.info(f"User logged in with Passkey and linked OAuth successfully: {user.email}")
+
+        # 回傳成功回應
+        return PasskeyLoginAndLinkResponse(
+            success=True,
+            message="Passkey 登入成功並已連結 OAuth 帳號",
+            user={
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "display_name": user.display_name,
+                "oauth_provider": user.oauth_provider,
+                "profile_picture_url": user.profile_picture_url,
+                "karma_score": user.karma_score,
+                "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
+                "is_oauth_user": True,  # 已連結 OAuth
+                "is_verified": user.is_verified,
+                "is_active": user.is_active,
+                "created_at": user.created_at.isoformat() if user.created_at else None
+            }
+        )
+
+    except EmailMismatchError as e:
+        logger.warning(f"Passkey login and link failed - email mismatch")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except InvalidCredentialsError as e:
+        logger.warning(f"Passkey login and link failed - invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Passkey login and link failed: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Passkey 登入並連結 OAuth 失敗，請稍後再試"
+        )

@@ -71,6 +71,10 @@ class User(BaseModel):
     last_failed_login = Column(DateTime(timezone=True))
     account_locked_until = Column(DateTime(timezone=True))
 
+    # Passkey Upgrade Prompt Tracking (需求 6: Passkey 優先引導策略)
+    passkey_prompt_skipped_at = Column(DateTime(timezone=True), nullable=True)  # 上次跳過 Passkey 引導的時間
+    passkey_prompt_skip_count = Column(Integer, default=0, nullable=False)  # 跳過 Passkey 引導的次數
+
     # Token Extension & Loyalty (新增欄位)
     loyalty_badge_unlocked = Column(Boolean, default=False)
     loyalty_streak_days = Column(Integer, default=0)

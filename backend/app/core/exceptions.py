@@ -154,6 +154,22 @@ class OAuthUserCreationError(WastelandTarotException):
         )
 
 
+class EmailMismatchError(WastelandTarotException):
+    """當 OAuth email 與當前帳號 email 不一致時拋出"""
+
+    def __init__(self, user_email: str = None, oauth_email: str = None):
+        message = "Google 帳號的 email 與您的帳號不符"
+        if user_email and oauth_email:
+            message = f"Google 帳號 ({oauth_email}) 與您的帳號 ({user_email}) 不符"
+
+        super().__init__(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            message=message,
+            error_code="EMAIL_MISMATCH_ERROR",
+            details={"user_email": user_email, "oauth_email": oauth_email} if user_email and oauth_email else {}
+        )
+
+
 class OAuthStateValidationError(WastelandTarotException):
     """當 OAuth 狀態參數驗證失敗時拋出（CSRF 防護）"""
 

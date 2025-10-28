@@ -4,15 +4,18 @@ OAuth Authentication API endpoints
 處理 Google OAuth 授權回調和會話建立
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
 from app.db.database import get_db
 from app.services.oauth_service import create_or_update_oauth_user
 from app.services.karma_service import KarmaService
+from app.services.auth_method_coordinator import AuthMethodCoordinatorService
 from app.core.supabase import get_supabase_client
 from app.core.security import create_access_token, create_refresh_token
+from app.core.dependencies import get_current_user
+from app.models.user import User
 from app.core.exceptions import (
     ExternalServiceError,
     InvalidRequestError,
@@ -227,4 +230,108 @@ async def oauth_callback(
         raise OAuthCallbackError(
             provider="Google",
             reason="內部處理錯誤"
+        )
+
+
+# ==================== 認證方式查詢 API ====================
+
+class CredentialInfoResponse(BaseModel):
+    """Credential 簡化資訊回應"""
+    id: str
+    name: Optional[str] = None
+    device_name: Optional[str] = None
+    created_at: Optional[str] = None
+    last_used_at: Optional[str] = None
+    device_type: str = "unknown"
+
+
+class AuthMethodsResponse(BaseModel):
+    """認證方式查詢回應"""
+    # OAuth 相關
+    has_oauth: bool = False
+    oauth_provider: Optional[str] = None
+    profile_picture: Optional[str] = None
+
+    # Passkey 相關
+    has_passkey: bool = False
+    passkey_count: int = 0
+    passkey_credentials: List[Dict[str, Any]] = []
+
+    # 密碼相關
+    has_password: bool = False
+
+
+@router.get("/methods", response_model=AuthMethodsResponse)
+async def get_auth_methods(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    查詢當前用戶的所有認證方式
+
+    需求：
+    - 需求 5: 認證方式狀態同步（前後端一致性）
+
+    回傳資訊：
+    - OAuth 狀態（是否綁定、提供者、頭像）
+    - Passkey 狀態（是否註冊、數量、裝置清單）
+    - 密碼狀態（是否設定）
+
+    使用場景：
+    - 用戶設定頁面：顯示已啟用的認證方式
+    - Passkey 註冊流程：檢查是否已註冊 Passkey
+    - 安全性檢查：確認用戶至少有一種認證方式
+
+    回應範例：
+    ```json
+    {
+      "has_oauth": true,
+      "oauth_provider": "google",
+      "profile_picture": "https://...",
+      "has_passkey": true,
+      "passkey_count": 2,
+      "passkey_credentials": [
+        {
+          "id": "...",
+          "device_name": "MacBook Touch ID",
+          "created_at": "2025-01-15T10:30:00Z",
+          "device_type": "platform"
+        }
+      ],
+      "has_password": false
+    }
+    ```
+    """
+    try:
+        # 使用 AuthMethodCoordinatorService 查詢認證方式
+        coordinator = AuthMethodCoordinatorService()
+        auth_info = await coordinator.get_auth_methods(
+            user_id=current_user.id,
+            db=db
+        )
+
+        # 轉換為 API 回應格式
+        return AuthMethodsResponse(
+            has_oauth=auth_info.has_oauth,
+            oauth_provider=auth_info.oauth_provider,
+            profile_picture=auth_info.profile_picture,
+            has_passkey=auth_info.has_passkey,
+            passkey_count=auth_info.passkey_count,
+            passkey_credentials=auth_info.passkey_credentials,
+            has_password=auth_info.has_password
+        )
+
+    except ValueError as e:
+        # 用戶不存在（理論上不應發生，因為已通過身份驗證）
+        logger.error(f"用戶查詢失敗: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    except Exception as e:
+        # 未預期的錯誤
+        logger.error(f"認證方式查詢失敗: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve authentication methods"
         )
