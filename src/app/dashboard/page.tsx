@@ -28,6 +28,8 @@ interface Reading {
 export default function DashboardPage() {
   const router = useRouter()
   const user = useAuthStore(s => s.user)
+  const isInitialized = useAuthStore(s => s.isInitialized)
+  const initialize = useAuthStore(s => s.initialize)
   const { isActive, activeTime, progress } = useActivityTracker()
   const { userProgress, fetchUserProgress } = useAchievementStore()
   const [recentReadings, setRecentReadings] = useState<Reading[]>([])
@@ -38,6 +40,31 @@ export default function DashboardPage() {
     daysInVault: 0
   })
   const [isLoading, setIsLoading] = useState(true)
+
+  // 方案 3：重新驗證登入狀態（防止 OAuth callback 競態條件）
+  useEffect(() => {
+    console.log('[Dashboard] 🔍 驗證登入狀態...', {
+      isInitialized,
+      hasUser: !!user,
+      userId: user?.id
+    })
+
+    // 如果尚未初始化，先初始化
+    if (!isInitialized) {
+      console.log('[Dashboard] ⏳ 尚未初始化，開始初始化...')
+      initialize()
+      return
+    }
+
+    // 初始化完成後，檢查是否有使用者
+    if (isInitialized && !user) {
+      console.warn('[Dashboard] ⚠️ 未登入，重導向至登入頁')
+      router.push('/auth/login')
+      return
+    }
+
+    console.log('[Dashboard] ✅ 登入狀態有效，使用者:', user?.email)
+  }, [user, isInitialized, initialize, router])
 
   // Load real data from API
   useEffect(() => {
@@ -144,12 +171,15 @@ export default function DashboardPage() {
       .slice(0, 3)
   }, [userProgress])
 
-  if (isLoading) {
+  // 顯示載入畫面（初始化中或資料載入中）
+  if (!isInitialized || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-pip-boy-green">初始化 Pip-Boy 介面...</p>
+          <p className="text-pip-boy-green">
+            {!isInitialized ? '驗證認證狀態...' : '初始化 Pip-Boy 介面...'}
+          </p>
         </div>
       </div>
     )

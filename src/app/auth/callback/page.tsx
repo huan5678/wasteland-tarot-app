@@ -45,9 +45,21 @@ function CallbackContent() {
     // 處理 OAuth 回調（傳遞 code 和 state）
     handleOAuthCallback(code, state)
       .then(result => {
+        // 調試日誌：檢查 OAuth callback 結果
+        console.log('🔍 [Callback] OAuth result:', {
+          success: result.success,
+          has_tokenExpiresAt: !!result.tokenExpiresAt,
+          tokenExpiresAt: result.tokenExpiresAt,
+          user: result.user?.email
+        })
+
         if (result.success && result.user) {
+          // 額外檢查：警告如果 tokenExpiresAt 缺失
+          if (!result.tokenExpiresAt) {
+            console.error('❌ [Callback] Missing tokenExpiresAt in result!')
+          }
           // 更新 auth store
-          // 重構變更：不再傳遞 token，後端已設定 httpOnly cookies
+          // 重構變更：傳遞 token_expires_at 以儲存登入狀態
           setOAuthUser({
             id: result.user.id,
             email: result.user.email,
@@ -55,7 +67,7 @@ function CallbackContent() {
             isOAuthUser: true,
             oauthProvider: result.user.oauth_provider,
             profilePicture: result.user.profile_picture_url,
-          })
+          }, result.tokenExpiresAt) // 傳遞 token 過期時間
 
           setStatus('success')
 

@@ -12,6 +12,7 @@ interface OAuthState {
 
 interface OAuthCallbackResult {
   success: boolean
+  tokenExpiresAt?: number  // JWT exp timestamp（秒）
   user?: {
     id: string
     email: string
@@ -118,6 +119,13 @@ export function useOAuth() {
 
       const data = await response.json()
 
+      // 調試日誌：檢查後端返回的 token_expires_at
+      console.log('🔍 [OAuth] Backend response:', {
+        has_token_expires_at: !!data.token_expires_at,
+        token_expires_at: data.token_expires_at,
+        user: data.user?.email
+      })
+
       setState({ loading: false, error: null })
 
       // Play success sound
@@ -127,6 +135,7 @@ export function useOAuth() {
 
       return {
         success: true,
+        tokenExpiresAt: data.token_expires_at,  // 傳遞 token 過期時間
         user: {
           id: data.user.id,
           email: data.user.email,

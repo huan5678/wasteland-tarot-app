@@ -22,7 +22,7 @@ interface AuthState {
   logout: () => Promise<void>
   clearError: () => void
   // OAuth 專用 actions
-  setOAuthUser: (user: User) => void
+  setOAuthUser: (user: User, tokenExpiresAt?: number) => void
   // 通用設定使用者方法（擴充支援 authMethod）
   setUser: (user: User, tokenExpiresAt?: number, authMethod?: 'passkey' | 'password' | 'oauth') => void
   // Token 驗證方法
@@ -80,7 +80,10 @@ function isAuthStateValid(): boolean {
  * 儲存登入狀態至 localStorage
  */
 function saveAuthState(expiresAt: number): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    console.warn('⚠️ [AuthStore] Cannot save auth state: not in browser environment')
+    return
+  }
 
   try {
     const authState: AuthStateStorage = {
@@ -88,8 +91,14 @@ function saveAuthState(expiresAt: number): void {
       issuedAt: Date.now()
     }
     localStorage.setItem(AUTH_STATE_KEY, JSON.stringify(authState))
+    console.log('✅ [AuthStore] Auth state saved to localStorage:', {
+      key: AUTH_STATE_KEY,
+      expiresAt,
+      expiresAtDate: new Date(expiresAt * 1000).toISOString(),
+      issuedAt: authState.issuedAt
+    })
   } catch (error) {
-    console.warn('Failed to save auth state:', error)
+    console.error('❌ [AuthStore] Failed to save auth state:', error)
   }
 }
 
@@ -145,8 +154,10 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       }
     }
 
-    // 檢查 localStorage 中的登入狀態
-    const hasValidAuthState = isAuthStateValid()
+    // 重構：不再依賴 localStorage auth state 檢查
+    // 原因：localStorage 可能被清空，但 httpOnly cookies 仍有效
+    // 解決方案：直接嘗試使用 cookies 呼叫後端驗證，失敗時才清空狀態
+    console.log('[AuthStore] 🔐 嘗試使用 httpOnly cookies 驗證登入狀態...')
 
     // Start progress tracking
     let apiCompleted = false
@@ -156,50 +167,29 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     const progressInterval = setInterval(() => {
       const elapsed = Date.now() - startTime
       timeProgress = Math.min(100, (elapsed / minLoadingTime) * 100)
-
-      if (hasValidAuthState) {
-        // 50% 權重給時間進度，50% 權重給 API 狀態
-        const progress = (timeProgress * 0.5) + (apiCompleted ? 50 : 0)
-        reportProgress(progress)
-      } else {
-        // 100% 時間進度
-        reportProgress(timeProgress)
-      }
+      // 50% 權重給時間進度，50% 權重給 API 狀態
+      const progress = (timeProgress * 0.5) + (apiCompleted ? 50 : 0)
+      reportProgress(progress)
     }, 50) // Update every 50ms for smooth animation
-
-    if (!hasValidAuthState) {
-      // 登入狀態過期或不存在，直接設為未登入（避免不必要的 API 呼叫）
-      console.log('Auth state expired or not found, skipping API call')
-      clearAuthState()
-
-      // 等待最小 loading 時間
-      const elapsed = Date.now() - startTime
-      if (elapsed < minLoadingTime) {
-        await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsed))
-      }
-
-      clearInterval(progressInterval)
-      reportProgress(100)
-
-      set({
-        user: null,
-        isOAuthUser: false,
-        oauthProvider: null,
-        profilePicture: null,
-        isLoading: false,
-        isInitialized: true
-      })
-      return
-    }
 
     try {
       // 呼叫後端 /me 端點（會自動使用 httpOnly cookie 中的 token）
+      console.log('[AuthStore] 📡 呼叫後端 /me 驗證...')
       const response = await authAPI.getCurrentUser()
       apiCompleted = true
 
+      console.log('[AuthStore] ✅ 後端驗證成功:', {
+        userId: response.user?.id,
+        email: response.user?.email,
+        hasTokenExpires: !!response.token_expires_at
+      })
+
       // 儲存新的過期時間至 localStorage
       if (response.token_expires_at) {
+        console.log('[AuthStore] 💾 儲存 token 過期時間:', response.token_expires_at)
         saveAuthState(response.token_expires_at)
+      } else {
+        console.warn('[AuthStore] ⚠️ 後端未返回 token_expires_at')
       }
 
       // 等待最小 loading 時間
@@ -228,6 +218,11 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       apiCompleted = true
       clearInterval(progressInterval)
 
+      console.log('[AuthStore] ❌ 後端驗證失敗:', {
+        status: error?.status,
+        message: error?.message
+      })
+
       // 清除過期的登入狀態
       clearAuthState()
 
@@ -241,6 +236,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
       // 401 表示未登入或 token 過期，這是正常情況
       if (error?.status === 401) {
+        console.log('[AuthStore] 🔒 Token 過期或未登入（401），清除登入狀態')
         set({
           user: null,
           isOAuthUser: false,
@@ -251,7 +247,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         })
       } else {
         // 其他錯誤（網路錯誤等）- 靜默失敗，不顯示錯誤
-        console.warn('Auth initialization failed (silent):', error.message || error)
+        console.warn('[AuthStore] ⚠️ 其他錯誤（靜默失敗）:', error.message || error)
         set({
           user: null,
           isLoading: false,
@@ -364,11 +360,32 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    *
    * 重構變更：
    * - 移除 token 參數（不再需要，後端已設定 httpOnly cookies）
-   * - 移除 localStorage token 儲存
-   * - 僅更新 authStore 狀態
+   * - 新增 tokenExpiresAt 參數以儲存 token 過期時間
+   * - 儲存登入狀態至 localStorage
+   * - 更新 authStore 狀態
    * - 啟動 token 過期監控
    */
-  setOAuthUser: (user: User) => {
+  setOAuthUser: (user: User, tokenExpiresAt?: number) => {
+    // 調試日誌：檢查 tokenExpiresAt
+    console.log('🔍 [AuthStore] setOAuthUser called:', {
+      has_tokenExpiresAt: tokenExpiresAt !== undefined,
+      tokenExpiresAt,
+      type: typeof tokenExpiresAt
+    })
+
+    // 儲存登入狀態至 localStorage（使用更嚴格的類型檢查）
+    if (typeof tokenExpiresAt === 'number' && tokenExpiresAt > 0) {
+      console.log('✅ [AuthStore] Saving auth state with expires:', tokenExpiresAt)
+      saveAuthState(tokenExpiresAt)
+    } else {
+      console.error('❌ [AuthStore] Invalid tokenExpiresAt:', {
+        value: tokenExpiresAt,
+        type: typeof tokenExpiresAt,
+        isNumber: typeof tokenExpiresAt === 'number',
+        isPositive: typeof tokenExpiresAt === 'number' && tokenExpiresAt > 0
+      })
+    }
+
     set({
       user,
       isOAuthUser: true,
@@ -397,9 +414,11 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
    * @param authMethod - 認證方式（'passkey' | 'password' | 'oauth'）(Stage 12.3)
    */
   setUser: (user: User, tokenExpiresAt?: number, authMethod?: 'passkey' | 'password' | 'oauth') => {
-    // 儲存登入狀態
-    if (tokenExpiresAt) {
+    // 儲存登入狀態（使用更嚴格的類型檢查）
+    if (typeof tokenExpiresAt === 'number' && tokenExpiresAt > 0) {
       saveAuthState(tokenExpiresAt)
+    } else if (tokenExpiresAt !== undefined) {
+      console.warn('[AuthStore] setUser: Invalid tokenExpiresAt:', tokenExpiresAt)
     }
 
     // 判斷是否為 OAuth 使用者
@@ -642,5 +661,27 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       }
     }
     return persistedState
+  },
+  // 方案 2：持久化狀態監控（偵測寫入完成和錯誤）
+  onRehydrateStorage: () => {
+    console.log('[AuthStore] 🔄 開始從 localStorage 還原狀態...')
+
+    return (state, error) => {
+      if (error) {
+        console.error('[AuthStore] ❌ 狀態還原失敗:', error)
+      } else if (state) {
+        console.log('[AuthStore] ✅ 狀態還原成功:', {
+          hasUser: !!state.user,
+          isOAuthUser: state.isOAuthUser,
+          oauthProvider: state.oauthProvider,
+          authMethod: state.authMethod,
+          hasPasskey: state.hasPasskey,
+          hasPassword: state.hasPassword,
+          hasOAuth: state.hasOAuth
+        })
+      } else {
+        console.log('[AuthStore] ℹ️ 沒有儲存的狀態（首次訪問或已清除）')
+      }
+    }
   }
 }))

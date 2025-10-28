@@ -53,6 +53,7 @@ class OAuthCallbackResponse(BaseModel):
     """OAuth 回調回應資料"""
     access_token: str
     refresh_token: str
+    token_expires_at: int  # JWT exp timestamp（秒）
     user: Dict[str, Any]
     token_type: str = "bearer"
 
@@ -346,16 +347,23 @@ async def oauth_callback(
             logger.warning(f"OAuth 事件追蹤失敗（非致命）: {str(e)}")
 
         # 步驟 5: 生成 JWT token
+        from datetime import datetime, timedelta
         access_token = create_access_token(data={"sub": str(user.id)})
         refresh_token = create_refresh_token(data={"sub": str(user.id)})
 
+        # 計算 access token 過期時間（30 分鐘）
+        token_expires_at = int((datetime.utcnow() + timedelta(minutes=30)).timestamp())
+
         # 步驟 6: 設定 httpOnly cookies（安全儲存 token）
-        # TODO: Task 19 會實作完整的 cookie 管理
+        # 本地開發使用 HTTP，需要 secure=False
+        from app.config import settings
+        is_production = settings.environment == "production"
+
         response.set_cookie(
             key="access_token",
             value=access_token,
             httponly=True,
-            secure=True,  # 生產環境需要 HTTPS
+            secure=is_production,  # 生產環境使用 HTTPS
             samesite="lax",
             max_age=1800  # 30 分鐘
         )
@@ -363,7 +371,7 @@ async def oauth_callback(
             key="refresh_token",
             value=refresh_token,
             httponly=True,
-            secure=True,
+            secure=is_production,
             samesite="lax",
             max_age=604800  # 7 天
         )
@@ -372,6 +380,7 @@ async def oauth_callback(
         return OAuthCallbackResponse(
             access_token=access_token,
             refresh_token=refresh_token,
+            token_expires_at=token_expires_at,
             user={
                 "id": str(user.id),
                 "email": user.email,

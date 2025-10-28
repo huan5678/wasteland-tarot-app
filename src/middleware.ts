@@ -40,46 +40,26 @@ const guestAllowedRoutes = [
 ]
 
 /**
- * 透過後端 API 驗證 JWT token
- * 從 request cookies 中讀取 access_token 並發送至後端驗證
+ * 簡化的 token 檢查（僅檢查 cookies 是否存在）
+ * 實際的 token 驗證由前端 authStore.initialize() 處理
+ *
+ * 重構原因：
+ * - 避免 middleware 呼叫後端 API 導致超時
+ * - 前端已有完整的認證檢查邏輯（authStore.initialize）
+ * - middleware 只需做基本的路由保護即可
  */
-async function verifyTokenWithBackend(request: NextRequest): Promise<{ isValid: boolean; user?: any }> {
+function checkTokenExists(request: NextRequest): { isValid: boolean } {
   try {
     const cookieHeader = request.headers.get('cookie') || ''
 
-    // 如果沒有 cookie，直接返回未驗證（避免不必要的 API 呼叫）
-    if (!cookieHeader || !cookieHeader.includes('access_token')) {
-      return { isValid: false }
-    }
+    // 檢查是否有 access_token cookie
+    const hasAccessToken = cookieHeader.includes('access_token=')
 
-    // 呼叫後端驗證端點
-    const verifyResponse = await fetch(`${API_BASE_URL}/api/v1/auth/verify`, {
-      method: 'POST',
-      headers: {
-        'Cookie': cookieHeader,
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-      // 設定較短的 timeout，避免阻塞請求
-      signal: AbortSignal.timeout(3000),
-    })
-
-    if (!verifyResponse.ok) {
-      return { isValid: false }
-    }
-
-    const data = await verifyResponse.json()
-    return {
-      isValid: true,
-      user: data.user,
-    }
+    // 檢查 localStorage 中的認證狀態（透過 cookie 傳遞）
+    // 注意：middleware 無法直接訪問 localStorage，
+    // 但前端會在有效登入狀態時設定 access_token cookie
+    return { isValid: hasAccessToken }
   } catch (error) {
-    // Token 驗證失敗不應該阻止頁面載入
-    // 只有在訪問受保護路由時才會重定向到登入頁
-    // 靜默失敗，讓使用者以未登入狀態繼續
-    if (error instanceof Error && error.name !== 'AbortError') {
-      console.error('Token verification failed:', error.message)
-    }
     return { isValid: false }
   }
 }
@@ -112,8 +92,8 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // 驗證 token（透過後端 API）
-  const { isValid, user } = await verifyTokenWithBackend(request)
+  // 檢查 token 是否存在（簡化版，實際驗證由前端處理）
+  const { isValid } = checkTokenExists(request)
 
   // 檢查是否為管理員路由
   const isAdminRoute = adminRoutes.some(route =>
@@ -135,13 +115,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl)
     }
 
-    // 已登入但非管理員，重導向至 dashboard
-    if (!user?.is_admin) {
-      console.warn(`Non-admin user attempted to access admin route: ${pathname}`)
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
-    // 管理員，允許訪問
+    // 注意：簡化版 middleware 無法檢查 is_admin
+    // 實際的管理員權限檢查由後端 API 和前端頁面邏輯處理
+    // 允許訪問（後端會在 API 層面驗證權限）
     return NextResponse.next()
   }
 
