@@ -22,10 +22,11 @@ from app.models.credential import Credential
 from app.models.social_features import KarmaHistory, KarmaChangeReason
 
 
-# Karma 獎勵規則
+# Karma 獎勵規則（已更新為 Task 11.3 規範）
+# 注意：這些值已被新的 KarmaRulesEngine 取代，保留用於向後相容
 KARMA_REWARDS = {
-    "first_passkey_registration": 50,  # 首次註冊 Passkey
-    "first_passkey_login": 20,         # 首次使用 Passkey 登入
+    "first_passkey_registration": 20,  # 首次註冊 Passkey（Task 11.3）
+    "first_passkey_login": 10,         # 每日首次使用 Passkey 登入（Task 11.3）
     "add_passkey": 10,                 # 新增額外 Passkey
 }
 
@@ -242,6 +243,76 @@ async def award_first_passkey_login_karma(
     await db.refresh(karma_history)
 
     return karma_history
+
+
+async def award_daily_passkey_login_karma(
+    user_id: UUID,
+    db: AsyncSession
+) -> Optional[KarmaHistory]:
+    """
+    每日首次 Passkey 登入獎勵 10 Karma (Task 11.3)
+
+    每天首次使用 Passkey 登入時給予獎勵，使用 PasskeyLoginTracker 追蹤。
+
+    Args:
+        user_id: 用戶 ID
+        db: 資料庫 session
+
+    Returns:
+        KarmaHistory: Karma 變更記錄，如果今日已領取則回傳 None
+    """
+    from app.services.passkey_login_tracker import PasskeyLoginTracker
+    from app.core.redis import get_redis_client
+    import logging
+
+    logger = logging.getLogger(__name__)
+
+    try:
+        # 檢查是否為今日首次登入
+        tracker = PasskeyLoginTracker()
+        redis_client = get_redis_client()
+
+        is_first_today = await tracker.is_first_login_today(
+            user_id=str(user_id),
+            redis_client=redis_client,
+            db=db
+        )
+
+        if not is_first_today:
+            logger.debug(f"User {user_id} already received daily Passkey login karma today")
+            return None
+
+        # 獲取用戶
+        result = await db.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+
+        if not user:
+            logger.warning(f"User {user_id} not found for daily Passkey login karma")
+            return None
+
+        # 使用新的 KarmaService
+        from app.services.karma_service import KarmaService
+
+        karma_service = KarmaService(db)
+
+        # 發放 Karma（使用 PASSKEY_LOGIN reason，會給 10 Karma）
+        karma_history = await karma_service.apply_karma_change(
+            user_id=str(user_id),
+            reason=KarmaChangeReason.PASSKEY_LOGIN,
+            reason_description="每日首次 Passkey 登入獎勵",
+            context={"is_first_login_today": True},
+            triggered_by_action="passkey_authentication"
+        )
+
+        logger.info(f"✅ Awarded daily Passkey login karma (10) to user {user_id}")
+        return karma_history
+
+    except Exception as e:
+        logger.error(f"Failed to award daily Passkey login karma to user {user_id}: {e}", exc_info=True)
+        # 不拋出異常，讓主流程繼續
+        return None
 
 
 async def award_add_passkey_karma(

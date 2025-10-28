@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request, Cookie, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.database import get_db
 from app.core.security import (
@@ -1242,4 +1242,322 @@ async def passkey_login_and_link_oauth(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Passkey 登入並連結 OAuth 失敗，請稍後再試"
+        )
+
+
+# ==================== 新增端點：認證方式管理 ====================
+
+class SetPasswordRequest(BaseModel):
+    """
+    設定密碼請求
+
+    需求：
+    - 需求 11.1: 允許已登入的 OAuth 用戶設定密碼作為備用認證方式
+    - 需求 11.2: 密碼強度驗證（至少 8 個字元）
+    - 需求 11.3: 使用 bcrypt 加密密碼（cost factor ≥ 12）
+    """
+    password: str = Field(..., min_length=8, description="新密碼，至少 8 個字元")
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        """
+        驗證密碼強度
+        需求 11.2: 至少 8 字元
+        """
+        if len(v) < 8:
+            raise ValueError('密碼長度必須至少 8 字元')
+        return v
+
+
+class SetPasswordResponse(BaseModel):
+    """設定密碼回應"""
+    success: bool
+    message: str
+    has_password: bool = True
+
+
+class UnlinkOAuthResponse(BaseModel):
+    """移除 OAuth 連結回應"""
+    success: bool
+    message: str
+    has_oauth: bool = False
+
+
+@router.post("/set-password", response_model=SetPasswordResponse)
+async def set_password(
+    request: SetPasswordRequest,
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    設定密碼 API
+
+    允許已登入的 OAuth 用戶設定密碼，作為備用認證方式。
+
+    需求：
+    - 需求 11.1: 驗證使用者已登入（需要 JWT token）
+    - 需求 11.2: 驗證密碼強度（至少 8 個字元）
+    - 需求 11.3: 使用 bcrypt 加密密碼（cost factor ≥ 12）
+    - 需求 11.4: 更新 users.password_hash 欄位
+    - 需求 11.5: 回傳成功訊息和更新後的認證方式狀態
+
+    錯誤處理：
+    - 400 Bad Request: 密碼不符合強度要求
+    - 401 Unauthorized: 未登入
+    - 409 Conflict: 已設定密碼
+    - 500 Internal Server Error: 伺服器錯誤
+    """
+    from app.core.security import get_password_hash
+    from uuid import UUID
+
+    try:
+        # 檢查認證
+        if not access_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+
+        # 驗證 token
+        payload = verify_token(access_token)
+        if not payload or payload.get("type") != "access":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access token"
+            )
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+
+        # 查詢用戶
+        user_service = UserService(db)
+        current_user = await user_service.get_user_by_id(UUID(user_id))
+
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+
+        # 檢查用戶是否已設定密碼
+        if current_user.password_hash is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="密碼已設定，無法重複設定。如需修改密碼，請使用「忘記密碼」功能。"
+            )
+
+        # 加密密碼（使用 bcrypt, cost factor = 12）
+        password_hash = get_password_hash(request.password)
+
+        # 更新用戶密碼
+        current_user.password_hash = password_hash
+
+        await db.commit()
+        await db.refresh(current_user)
+
+        logger.info(f"User {current_user.email} set password successfully")
+
+        # 追蹤認證方式變更（Task 11.4: 安全性控制）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.redis import get_redis_client
+
+            redis_client = get_redis_client()
+            tracker = AuthChangeTracker(redis_client)
+            change_count = await tracker.record_change(
+                user_id=str(current_user.id),
+                change_type="set_password",
+                metadata={"method": "password"}
+            )
+
+            # 檢查可疑活動
+            is_suspicious, count, types = await tracker.check_suspicious_activity(str(current_user.id))
+
+            if is_suspicious:
+                logger.warning(
+                    f"Suspicious activity detected for user {current_user.id}: "
+                    f"{count} auth method changes in 1 hour ({', '.join(types)})"
+                )
+        except Exception as e:
+            logger.warning(f"Failed to track password setup: {e}")
+            # 不影響主流程
+
+        return SetPasswordResponse(
+            success=True,
+            message="密碼設定成功",
+            has_password=True
+        )
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        # 密碼驗證錯誤
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"設定密碼失敗: {str(e)}", exc_info=True)
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="設定密碼失敗，請稍後再試"
+        )
+
+
+@router.post("/oauth/unlink", response_model=UnlinkOAuthResponse)
+async def unlink_oauth(
+    access_token: Optional[str] = Cookie(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    移除 OAuth 連結 API
+
+    允許用戶移除 Google OAuth 連結（需至少保留一種認證方式）。
+
+    需求：
+    - 需求 12.1: 驗證使用者已登入（需要 JWT token）
+    - 需求 12.2: 驗證至少保留一種認證方式（has_passkey OR has_password）
+    - 需求 12.3: 將 users.oauth_provider 和 users.oauth_id 設為 NULL
+    - 需求 12.4: 將 users.profile_picture_url 設為 NULL
+    - 需求 12.5: 回傳成功訊息和更新後的認證方式狀態
+
+    錯誤處理：
+    - 401 Unauthorized: 未登入
+    - 409 Conflict: 唯一的認證方式（無法移除）
+    - 404 Not Found: 未連結 OAuth
+    - 500 Internal Server Error: 伺服器錯誤
+    """
+    from app.services.auth_helpers import user_has_passkey, user_has_password
+    from uuid import UUID
+
+    try:
+        # 檢查認證
+        if not access_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated"
+            )
+
+        # 驗證 token
+        payload = verify_token(access_token)
+        if not payload or payload.get("type") != "access":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid access token"
+            )
+
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload"
+            )
+
+        # 查詢用戶
+        user_service = UserService(db)
+        current_user = await user_service.get_user_by_id(UUID(user_id))
+
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found"
+            )
+
+        # 檢查用戶是否有 OAuth 連結
+        if current_user.oauth_provider is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="未連結 OAuth 帳號"
+            )
+
+        # 檢查至少保留一種認證方式（使用統一的檢查方法）
+        from app.services.auth_method_coordinator import AuthMethodCoordinatorService
+
+        coordinator = AuthMethodCoordinatorService()
+        can_remove, error_msg = await coordinator.can_remove_auth_method(
+            user_id=user_id,
+            method_type="oauth",
+            db=db
+        )
+
+        if not can_remove:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=error_msg
+            )
+
+        # 移除 OAuth 連結
+        current_user.oauth_provider = None
+        current_user.oauth_id = None
+        current_user.profile_picture_url = None
+
+        await db.commit()
+        await db.refresh(current_user)
+
+        # 追蹤認證方式移除事件（需求 9）
+        try:
+            from app.services.auth_analytics_tracker import AuthAnalyticsTracker
+            tracker = AuthAnalyticsTracker(db)
+
+            # 查詢剩餘認證方式
+            methods = await coordinator.get_auth_methods(UUID(user_id), db)
+            remaining_methods = []
+            if methods.has_password:
+                remaining_methods.append("password")
+            if methods.has_passkey:
+                remaining_methods.append("passkey")
+
+            await tracker.track_auth_method_removed(
+                user_id=str(current_user.id),
+                method_type="oauth",
+                metadata={
+                    "provider": "google",
+                    "remaining_auth_methods": remaining_methods,
+                    "email": current_user.email
+                }
+            )
+        except Exception as e:
+            # 事件追蹤失敗不應阻擋操作
+            logger.warning(f"OAuth 移除事件追蹤失敗（非致命）: {str(e)}")
+
+        # 追蹤認證方式變更（安全性需求）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.dependencies import get_redis_client
+
+            redis_client = get_redis_client()
+            if redis_client:
+                change_tracker = AuthChangeTracker(redis_client)
+                change_count = change_tracker.record_change(
+                    user_id=str(current_user.id),
+                    change_type="remove_oauth",
+                    metadata={"provider": "google"}
+                )
+                change_tracker.check_suspicious_activity(str(current_user.id))
+        except Exception as e:
+            # 追蹤失敗不應阻擋操作
+            logger.warning(f"OAuth 移除事件追蹤失敗（非致命）: {str(e)}")
+
+        logger.info(f"User {current_user.email} unlinked OAuth successfully")
+
+        return UnlinkOAuthResponse(
+            success=True,
+            message="OAuth 連結已成功移除",
+            has_oauth=False
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"移除 OAuth 連結失敗: {str(e)}", exc_info=True)
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="移除 OAuth 連結失敗，請稍後再試"
         )

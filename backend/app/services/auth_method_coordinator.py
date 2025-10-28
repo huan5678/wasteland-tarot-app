@@ -14,6 +14,10 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from dataclasses import dataclass, field
+from app.services.auth_analytics_tracker import AuthAnalyticsTracker
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -71,6 +75,77 @@ class AuthMethodCoordinatorService:
 
     職責：協調多種認證方式的整合邏輯，提供統一的查詢介面
     """
+
+    async def can_remove_auth_method(
+        self,
+        user_id: str,
+        method_type: str,  # "oauth", "passkey", "password"
+        db: AsyncSession
+    ) -> tuple[bool, str]:
+        """
+        檢查是否可以移除指定的認證方式
+        確保至少保留一種認證方式（安全性需求）
+
+        Args:
+            user_id: 使用者 ID
+            method_type: 要移除的認證方式類型（"oauth", "passkey", "password"）
+            db: 資料庫 session
+
+        Returns:
+            tuple[bool, str]: (是否可以移除, 錯誤訊息)
+                - (True, ""): 可以移除
+                - (False, error_msg): 不能移除，包含錯誤訊息
+
+        Example:
+            ```python
+            coordinator = AuthMethodCoordinatorService()
+            can_remove, error_msg = await coordinator.can_remove_auth_method(
+                user_id="user_123",
+                method_type="oauth",
+                db=db
+            )
+
+            if not can_remove:
+                raise HTTPException(status_code=400, detail=error_msg)
+            ```
+        """
+        from uuid import UUID
+
+        # 查詢當前認證方式狀態
+        try:
+            methods = await self.get_auth_methods(UUID(user_id), db)
+        except ValueError:
+            logger.error(f"無效的 user_id: {user_id}")
+            return False, "無效的使用者 ID"
+
+        # 計算剩餘認證方式
+        remaining_methods = []
+
+        if methods.has_oauth and method_type != "oauth":
+            remaining_methods.append("Google 帳號")
+
+        if methods.has_passkey and method_type != "passkey":
+            remaining_methods.append("Passkey 生物辨識")
+
+        if methods.has_password and method_type != "password":
+            remaining_methods.append("密碼")
+
+        if len(remaining_methods) == 0:
+            error_msg = (
+                "無法移除唯一的認證方式。"
+                "請先新增其他登入方式（如 Passkey 或密碼）後再移除。"
+            )
+            logger.warning(
+                f"Attempt to remove last auth method: "
+                f"user_id={user_id}, method_type={method_type}"
+            )
+            return False, error_msg
+
+        logger.info(
+            f"Can remove auth method: user_id={user_id}, "
+            f"method_type={method_type}, remaining={remaining_methods}"
+        )
+        return True, ""
 
     async def handle_oauth_registration(
         self,
@@ -402,9 +477,16 @@ class AuthMethodCoordinatorService:
         )
         from datetime import datetime, timedelta
 
-        # 步驟 1: 驗證 email 一致性
+        # 步驟 1: 驗證 email 一致性（安全性需求 8）
         oauth_email = oauth_data.get("email")
+        if not oauth_email:
+            logger.error("OAuth 資料缺少 email 資訊")
+            raise InvalidCredentialsError()
+
         if oauth_email != email:
+            logger.warning(
+                f"Email 不一致：user_email={email}, oauth_email={oauth_email}"
+            )
             raise EmailMismatchError(user_email=email, oauth_email=oauth_email)
 
         # 步驟 2: 查詢用戶
@@ -447,6 +529,49 @@ class AuthMethodCoordinatorService:
 
         await db.commit()
         await db.refresh(user)
+
+        # 步驟 7.5: 追蹤 OAuth 連結成功和衝突解決事件（需求 9）
+        try:
+            from app.services.auth_analytics_tracker import AuthAnalyticsTracker
+            tracker = AuthAnalyticsTracker(db)
+
+            # 追蹤 OAuth 連結至現有帳號
+            await tracker.track_oauth_account_linked(
+                user_id=str(user.id),
+                oauth_provider=oauth_data["oauth_provider"],
+                source="password",
+                metadata={"email": email}
+            )
+
+            # 追蹤帳號衝突解決成功
+            await tracker.track_oauth_conflict_resolved(
+                user_id=str(user.id),
+                resolution_method="password",
+                metadata={"oauth_provider": oauth_data["oauth_provider"]}
+            )
+        except Exception as e:
+            # 事件追蹤失敗不應阻擋登入流程
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"OAuth 連結事件追蹤失敗（非致命）: {str(e)}")
+
+        # 步驟 7.6: 追蹤認證方式變更（安全性需求）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.dependencies import get_redis_client
+
+            redis_client = get_redis_client()
+            if redis_client:
+                tracker = AuthChangeTracker(redis_client)
+                change_count = tracker.record_change(
+                    user_id=str(user.id),
+                    change_type="add_oauth",
+                    metadata={"provider": oauth_data["oauth_provider"]}
+                )
+                tracker.check_suspicious_activity(str(user.id))
+        except Exception as e:
+            # 追蹤失敗不應阻擋登入流程
+            logger.warning(f"認證方式變更追蹤失敗（非致命）: {str(e)}")
 
         # 步驟 8: 產生 JWT tokens（包含認證方式標記）
         access_token = create_access_token(data={
@@ -548,9 +673,16 @@ class AuthMethodCoordinatorService:
         if not user or not credential:
             raise InvalidCredentialsError()
 
-        # 步驟 3: 驗證 email 一致性
+        # 步驟 3: 驗證 email 一致性（安全性需求 8）
         oauth_email = oauth_data.get("email")
+        if not oauth_email:
+            logger.error("OAuth 資料缺少 email 資訊")
+            raise InvalidCredentialsError()
+
         if oauth_email != user.email:
+            logger.warning(
+                f"Email 不一致：user_email={user.email}, oauth_email={oauth_email}, user_id={user.id}"
+            )
             raise EmailMismatchError(user_email=user.email, oauth_email=oauth_email)
 
         # 步驟 4: 更新 OAuth 資訊
@@ -564,6 +696,58 @@ class AuthMethodCoordinatorService:
 
         await db.commit()
         await db.refresh(user)
+
+        # 步驟 5.5: 追蹤 OAuth 連結成功和衝突解決事件（需求 9）
+        try:
+            from app.services.auth_analytics_tracker import AuthAnalyticsTracker
+            tracker = AuthAnalyticsTracker(db)
+
+            # 追蹤 OAuth 連結至現有帳號
+            await tracker.track_oauth_account_linked(
+                user_id=str(user.id),
+                oauth_provider=oauth_data["oauth_provider"],
+                source="passkey",
+                metadata={
+                    "email": user.email,
+                    "credential_id": str(credential.id)
+                }
+            )
+
+            # 追蹤帳號衝突解決成功
+            await tracker.track_oauth_conflict_resolved(
+                user_id=str(user.id),
+                resolution_method="passkey",
+                metadata={
+                    "oauth_provider": oauth_data["oauth_provider"],
+                    "credential_id": str(credential.id)
+                }
+            )
+        except Exception as e:
+            # 事件追蹤失敗不應阻擋登入流程
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Passkey OAuth 連結事件追蹤失敗（非致命）: {str(e)}")
+
+        # 步驟 5.6: 追蹤認證方式變更（安全性需求）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.dependencies import get_redis_client
+
+            redis_client = get_redis_client()
+            if redis_client:
+                tracker = AuthChangeTracker(redis_client)
+                change_count = tracker.record_change(
+                    user_id=str(user.id),
+                    change_type="add_oauth",
+                    metadata={
+                        "provider": oauth_data["oauth_provider"],
+                        "source": "passkey"
+                    }
+                )
+                tracker.check_suspicious_activity(str(user.id))
+        except Exception as e:
+            # 追蹤失敗不應阻擋登入流程
+            logger.warning(f"認證方式變更追蹤失敗（非致命）: {str(e)}")
 
         # 步驟 6: 產生 JWT tokens（包含認證方式標記）
         # 查詢是否有密碼（用於 JWT payload）

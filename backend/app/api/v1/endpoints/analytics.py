@@ -728,3 +728,43 @@ async def get_token_extension_history(
         "period_start": start_date,
         "period_end": end_date
     }
+
+
+# ==================== Auth Events Tracking ====================
+
+class AuthEventCreate(BaseModel):
+    """Schema for authentication event tracking"""
+    event_type: str = Field(..., description="事件類型")
+    metadata: dict = Field(default_factory=dict, description="事件相關資料")
+
+
+@router.post("/auth-events", status_code=201)
+async def track_auth_event(
+    event: AuthEventCreate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    追蹤認證相關事件
+
+    支援的事件類型：
+    - passkey_upgrade_prompt_accepted: Passkey 升級引導接受
+    - passkey_upgrade_prompt_skipped: Passkey 升級引導跳過
+    - passkey_upgrade_completed: Passkey 升級完成
+    - oauth_conflict_resolution_abandoned: 帳號衝突解決放棄
+    """
+    service = UserAnalyticsService(db)
+
+    # 追蹤事件
+    tracked_event = service.track_event(
+        user_id=current_user.id,
+        event_type=event.event_type,
+        event_category="authentication",
+        event_action=event.event_type,
+        event_data=event.metadata
+    )
+
+    return {
+        "message": "Auth event tracked successfully",
+        "event": tracked_event.to_dict()
+    }

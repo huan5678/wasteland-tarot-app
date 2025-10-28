@@ -43,6 +43,8 @@ class KarmaChangeReason(str, PyEnum):
     SPECIAL_EVENTS = "special_events"
     ADMIN_ADJUSTMENT = "admin_adjustment"
     SYSTEM_INITIALIZATION = "system_initialization"  # Task 29: 使用者註冊時的 Karma 初始化
+    PASSKEY_LOGIN = "passkey_login"  # Task 11.3: 每日首次 Passkey 登入獎勵
+    PASSKEY_REGISTRATION = "passkey_registration"  # Task 11.3: 首次註冊 Passkey 獎勵
 
 
 class UserAchievement(BaseModel):

@@ -55,6 +55,18 @@ class KarmaRulesEngine:
             "max_per_day": 15,
             "requires_verification": False,
             "multiplier_factors": ["faction_alignment", "activity_impact"]
+        },
+        KarmaChangeReason.PASSKEY_LOGIN: {
+            "base_change": 10,
+            "max_per_day": 10,
+            "requires_verification": False,
+            "multiplier_factors": []
+        },
+        KarmaChangeReason.PASSKEY_REGISTRATION: {
+            "base_change": 20,
+            "max_per_day": 20,
+            "requires_verification": False,
+            "multiplier_factors": []
         }
     }
 

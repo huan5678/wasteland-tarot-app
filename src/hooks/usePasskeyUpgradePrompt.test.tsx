@@ -17,32 +17,23 @@ import { renderHook, act, waitFor } from '@testing-library/react'
 import { usePasskeyUpgradePrompt } from './usePasskeyUpgradePrompt'
 import { useAuthStore } from '@/lib/authStore'
 import * as webauthnAPI from '@/lib/webauthnAPI'
+import * as webauthn from '@/lib/webauthn'
 
 // Mock dependencies
-jest.mock('@/lib/authStore')
-jest.mock('@/lib/webauthnAPI')
-
-// Mock localStorage
-const localStorageMock = (() => {
-  let store: Record<string, string> = {}
-
-  return {
-    getItem: (key: string) => store[key] || null,
-    setItem: (key: string, value: string) => {
-      store[key] = value.toString()
-    },
-    removeItem: (key: string) => {
-      delete store[key]
-    },
-    clear: () => {
-      store = {}
-    }
-  }
-})()
-
-Object.defineProperty(window, 'localStorage', {
-  value: localStorageMock
-})
+jest.mock('@/lib/authStore', () => ({
+  useAuthStore: jest.fn()
+}))
+jest.mock('@/lib/webauthnAPI', () => ({
+  getRegistrationOptions: jest.fn(),
+  verifyRegistration: jest.fn(),
+  registerPasskey: jest.fn()
+}))
+jest.mock('@/lib/webauthn', () => ({
+  isWebAuthnSupported: jest.fn(),
+  startRegistration: jest.fn(),
+  base64URLEncode: jest.fn((buf) => 'mock-base64'),
+  base64URLDecode: jest.fn((str) => new ArrayBuffer(8))
+}))
 
 // Mock navigator.credentials
 const mockNavigatorCredentials = {
@@ -55,16 +46,53 @@ describe('usePasskeyUpgradePrompt', () => {
   const mockSetAuthMethodsState = jest.fn()
   const mockAuthStore = {
     hasPasskey: false,
+    hasPassword: true,
+    hasOAuth: false,
     setAuthMethodsState: mockSetAuthMethodsState
   }
 
-  beforeEach(() => {
-    // Reset all mocks
-    jest.clearAllMocks()
-    localStorageMock.clear()
+  // Internal storage for localStorage mock
+  const storageData: Record<string, string> = {}
 
-    // Setup authStore mock
-    ;(useAuthStore as unknown as jest.Mock).mockReturnValue(mockAuthStore)
+  beforeAll(() => {
+    // Ensure global window exists
+    if (typeof window === 'undefined') {
+      (global as any).window = {}
+    }
+
+    // Ensure localStorage exists
+    if (!global.localStorage) {
+      global.localStorage = {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: jest.fn(),
+        length: 0,
+        key: jest.fn(),
+      } as any
+    }
+
+    // Setup localStorage mock implementation
+    ;(global.localStorage.getItem as jest.Mock).mockImplementation((key: string) => storageData[key] || null)
+    ;(global.localStorage.setItem as jest.Mock).mockImplementation((key: string, value: string) => {
+      storageData[key] = value
+    })
+    ;(global.localStorage.removeItem as jest.Mock).mockImplementation((key: string) => {
+      delete storageData[key]
+    })
+    ;(global.localStorage.clear as jest.Mock).mockImplementation(() => {
+      Object.keys(storageData).forEach(key => delete storageData[key])
+    })
+
+    // Ensure window.navigator exists
+    if (!window.navigator) {
+      (window as any).navigator = {}
+    }
+
+    // Ensure window.PublicKeyCredential exists
+    if (!window.PublicKeyCredential) {
+      (window as any).PublicKeyCredential = jest.fn()
+    }
 
     // Setup navigator.credentials mock
     Object.defineProperty(window.navigator, 'credentials', {
@@ -72,6 +100,23 @@ describe('usePasskeyUpgradePrompt', () => {
       writable: true,
       configurable: true
     })
+  })
+
+  beforeEach(() => {
+    // Reset all mocks
+    jest.clearAllMocks()
+    // Clear localStorage data
+    Object.keys(storageData).forEach(key => delete storageData[key])
+
+    // Setup authStore mock
+    ;(useAuthStore as unknown as jest.Mock).mockReturnValue(mockAuthStore)
+
+    // Setup webauthn mocks - default to supported
+    ;(webauthn.isWebAuthnSupported as jest.Mock).mockReturnValue(true)
+
+    // Reset navigator.credentials mocks
+    mockNavigatorCredentials.create.mockClear()
+    mockNavigatorCredentials.get.mockClear()
   })
 
   afterEach(() => {
@@ -202,22 +247,28 @@ describe('usePasskeyUpgradePrompt', () => {
           id: 'mock-user-id',
           name: 'test@example.com',
           displayName: 'Test User'
-        }
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        timeout: 60000,
+        attestation: 'none' as const
       }
 
       const mockCredential = {
         id: 'mock-credential-id',
-        rawId: new ArrayBuffer(8),
+        rawId: 'mock-raw-id',
         response: {
-          clientDataJSON: new ArrayBuffer(8),
-          attestationObject: new ArrayBuffer(8)
+          clientDataJSON: 'mock-client-data',
+          attestationObject: 'mock-attestation',
+          transports: []
         },
-        type: 'public-key'
+        type: 'public-key',
+        clientExtensionResults: {},
+        authenticatorAttachment: 'platform'
       }
 
       ;(webauthnAPI.getRegistrationOptions as jest.Mock).mockResolvedValue(mockRegistrationOptions)
-      mockNavigatorCredentials.create.mockResolvedValue(mockCredential)
-      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true })
+      ;(webauthn.startRegistration as jest.Mock).mockResolvedValue(mockCredential)
+      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true, credential_id: 'mock-cred-id' })
 
       // Act
       const { result } = renderHook(() => usePasskeyUpgradePrompt(props))
@@ -228,8 +279,8 @@ describe('usePasskeyUpgradePrompt', () => {
 
       // Assert
       expect(webauthnAPI.getRegistrationOptions).toHaveBeenCalled()
-      expect(mockNavigatorCredentials.create).toHaveBeenCalled()
-      expect(webauthnAPI.verifyRegistration).toHaveBeenCalled()
+      expect(webauthn.startRegistration).toHaveBeenCalledWith(mockRegistrationOptions)
+      expect(webauthnAPI.verifyRegistration).toHaveBeenCalledWith(mockCredential, 'My Passkey')
     })
 
     it('Passkey 註冊成功後應更新 authStore.hasPasskey=true', async () => {
@@ -248,22 +299,28 @@ describe('usePasskeyUpgradePrompt', () => {
           id: 'mock-user-id',
           name: 'test@example.com',
           displayName: 'Test User'
-        }
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        timeout: 60000,
+        attestation: 'none' as const
       }
 
       const mockCredential = {
         id: 'mock-credential-id',
-        rawId: new ArrayBuffer(8),
+        rawId: 'mock-raw-id',
         response: {
-          clientDataJSON: new ArrayBuffer(8),
-          attestationObject: new ArrayBuffer(8)
+          clientDataJSON: 'mock-client-data',
+          attestationObject: 'mock-attestation',
+          transports: []
         },
-        type: 'public-key'
+        type: 'public-key',
+        clientExtensionResults: {},
+        authenticatorAttachment: 'platform'
       }
 
       ;(webauthnAPI.getRegistrationOptions as jest.Mock).mockResolvedValue(mockRegistrationOptions)
-      mockNavigatorCredentials.create.mockResolvedValue(mockCredential)
-      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true })
+      ;(webauthn.startRegistration as jest.Mock).mockResolvedValue(mockCredential)
+      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true, credential_id: 'mock-cred-id' })
 
       // Act
       const { result } = renderHook(() => usePasskeyUpgradePrompt(props))
@@ -276,8 +333,8 @@ describe('usePasskeyUpgradePrompt', () => {
       await waitFor(() => {
         expect(mockSetAuthMethodsState).toHaveBeenCalledWith({
           hasPasskey: true,
-          hasPassword: expect.any(Boolean),
-          hasOAuth: expect.any(Boolean)
+          hasPassword: true,
+          hasOAuth: false
         })
       })
     })
@@ -298,22 +355,28 @@ describe('usePasskeyUpgradePrompt', () => {
           id: 'mock-user-id',
           name: 'test@example.com',
           displayName: 'Test User'
-        }
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        timeout: 60000,
+        attestation: 'none' as const
       }
 
       const mockCredential = {
         id: 'mock-credential-id',
-        rawId: new ArrayBuffer(8),
+        rawId: 'mock-raw-id',
         response: {
-          clientDataJSON: new ArrayBuffer(8),
-          attestationObject: new ArrayBuffer(8)
+          clientDataJSON: 'mock-client-data',
+          attestationObject: 'mock-attestation',
+          transports: []
         },
-        type: 'public-key'
+        type: 'public-key',
+        clientExtensionResults: {},
+        authenticatorAttachment: 'platform'
       }
 
       ;(webauthnAPI.getRegistrationOptions as jest.Mock).mockResolvedValue(mockRegistrationOptions)
-      mockNavigatorCredentials.create.mockResolvedValue(mockCredential)
-      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true })
+      ;(webauthn.startRegistration as jest.Mock).mockResolvedValue(mockCredential)
+      ;(webauthnAPI.verifyRegistration as jest.Mock).mockResolvedValue({ success: true, credential_id: 'mock-cred-id' })
 
       // Act
       const { result } = renderHook(() => usePasskeyUpgradePrompt(props))
@@ -349,7 +412,7 @@ describe('usePasskeyUpgradePrompt', () => {
       })
 
       // Assert
-      const storedData = JSON.parse(localStorageMock.getItem('passkey-upgrade-prompt') || '{}')
+      const storedData = JSON.parse(storageData['passkey-upgrade-prompt'] || '{}')
       expect(storedData.skipCount).toBe(1)
     })
 
@@ -374,7 +437,7 @@ describe('usePasskeyUpgradePrompt', () => {
       const afterSkip = new Date()
 
       // Assert
-      const storedData = JSON.parse(localStorageMock.getItem('passkey-upgrade-prompt') || '{}')
+      const storedData = JSON.parse(storageData['passkey-upgrade-prompt'] || '{}')
       const lastSkippedAt = new Date(storedData.lastSkippedAt)
 
       expect(lastSkippedAt.getTime()).toBeGreaterThanOrEqual(beforeSkip.getTime())
@@ -405,10 +468,10 @@ describe('usePasskeyUpgradePrompt', () => {
 
     it('skipCount 應該只增不減（持久化）', () => {
       // Arrange
-      localStorageMock.setItem('passkey-upgrade-prompt', JSON.stringify({
+      storageData['passkey-upgrade-prompt'] = JSON.stringify({
         skipCount: 2,
         lastSkippedAt: new Date().toISOString()
-      }))
+      })
 
       const props = {
         hasPasskey: false,
@@ -425,7 +488,7 @@ describe('usePasskeyUpgradePrompt', () => {
       })
 
       // Assert
-      const storedData = JSON.parse(localStorageMock.getItem('passkey-upgrade-prompt') || '{}')
+      const storedData = JSON.parse(storageData['passkey-upgrade-prompt'] || '{}')
       expect(storedData.skipCount).toBe(3)
     })
   })
@@ -433,6 +496,9 @@ describe('usePasskeyUpgradePrompt', () => {
   describe('瀏覽器不支援 WebAuthn', () => {
     it('瀏覽器不支援時應顯示錯誤訊息', async () => {
       // Arrange
+      // Mock isWebAuthnSupported to return false
+      ;(webauthn.isWebAuthnSupported as jest.Mock).mockReturnValue(false)
+
       Object.defineProperty(window.navigator, 'credentials', {
         value: undefined,
         writable: true,
@@ -461,6 +527,9 @@ describe('usePasskeyUpgradePrompt', () => {
     it('瀏覽器不支援時 modal 應自動關閉（5 秒後）', async () => {
       // Arrange
       jest.useFakeTimers()
+
+      // Mock isWebAuthnSupported to return false
+      ;(webauthn.isWebAuthnSupported as jest.Mock).mockReturnValue(false)
 
       Object.defineProperty(window.navigator, 'credentials', {
         value: undefined,
@@ -572,11 +641,14 @@ describe('usePasskeyUpgradePrompt', () => {
           id: 'mock-user-id',
           name: 'test@example.com',
           displayName: 'Test User'
-        }
+        },
+        pubKeyCredParams: [{ type: 'public-key', alg: -7 }],
+        timeout: 60000,
+        attestation: 'none' as const
       }
 
       ;(webauthnAPI.getRegistrationOptions as jest.Mock).mockResolvedValue(mockRegistrationOptions)
-      mockNavigatorCredentials.create.mockRejectedValue(
+      ;(webauthn.startRegistration as jest.Mock).mockRejectedValue(
         new Error('User cancelled')
       )
 

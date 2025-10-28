@@ -7,6 +7,7 @@ This module is completely independent from OAuth and Email authentication.
 Reference: docs/passkeys-architecture.md Section 5.1
 """
 
+import logging
 import secrets
 from typing import Optional
 from uuid import UUID
@@ -54,8 +55,9 @@ from app.services.security_logger import get_security_logger, SecurityEventType
 
 router = APIRouter(prefix="/webauthn", tags=["WebAuthn/Passkeys"])
 
-# Initialize security logger
+# Initialize loggers
 security_logger = get_security_logger()
+logger = logging.getLogger(__name__)
 
 
 # ==================== Helper Functions ====================
@@ -586,6 +588,34 @@ async def verify_registration_response(
             expected_challenge=expected_challenge
         )
 
+        # 追蹤認證方式變更（Task 11.4: 安全性控制）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.redis import get_redis_client
+
+            redis_client = get_redis_client()
+            tracker = AuthChangeTracker(redis_client)
+            change_count = await tracker.record_change(
+                user_id=str(current_user.id),
+                change_type="add_passkey",
+                metadata={
+                    "credential_name": credential.device_name or "unnamed",
+                    "authenticator_type": "passkey"
+                }
+            )
+
+            # 檢查可疑活動
+            is_suspicious, count, types = await tracker.check_suspicious_activity(str(current_user.id))
+
+            if is_suspicious:
+                logger.warning(
+                    f"Suspicious activity detected for user {current_user.id}: "
+                    f"{count} auth method changes in 1 hour ({', '.join(types)})"
+                )
+        except Exception as e:
+            logger.warning(f"Failed to track Passkey addition: {e}")
+            # 不影響主流程
+
         # Convert to response model
         credential_response = CredentialResponse(
             id=credential.id,
@@ -804,11 +834,21 @@ async def verify_authentication_response(
 
         # Award first passkey login karma (only once)
         from app.services.auth_helpers import award_first_passkey_login_karma
-        award_first_passkey_login_karma(user.id, db)
+        await award_first_passkey_login_karma(user.id, db)
+
+        # Task 11.3: Award daily passkey login karma (10 Karma per day)
+        from app.services.auth_helpers import award_daily_passkey_login_karma
+        try:
+            await award_daily_passkey_login_karma(user.id, db)
+        except Exception as e:
+            # Log error but don't fail the login
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to award daily Passkey login karma: {e}")
 
         # Update last login method
         user.last_login_method = "passkey"
-        db.commit()
+        await db.commit()
 
         # Log security event: Passkey Login Success
         security_logger.log_event(
@@ -1032,6 +1072,31 @@ async def delete_credential(
             success=True,
             credential_id=str(credential_id)
         )
+
+        # 追蹤認證方式變更（Task 11.4: 安全性控制）
+        try:
+            from app.services.auth_change_tracker import AuthChangeTracker
+            from app.core.redis import get_redis_client
+
+            redis_client = get_redis_client()
+            tracker = AuthChangeTracker(redis_client)
+            change_count = await tracker.record_change(
+                user_id=str(current_user.id),
+                change_type="remove_passkey",
+                metadata={"credential_id": str(credential_id)}
+            )
+
+            # 檢查可疑活動
+            is_suspicious, count, types = await tracker.check_suspicious_activity(str(current_user.id))
+
+            if is_suspicious:
+                logger.warning(
+                    f"Suspicious activity detected for user {current_user.id}: "
+                    f"{count} auth method changes in 1 hour ({', '.join(types)})"
+                )
+        except Exception as e:
+            logger.warning(f"Failed to track Passkey removal: {e}")
+            # 不影響主流程
 
         return DeleteCredentialResponse()
 

@@ -185,11 +185,12 @@ class TestOAuthCallbackCoordinator:
         # 新增一個 Passkey credential
         credential = Credential(
             user_id=existing_user.id,
-            credential_id=f"cred_{uuid4(, created_at=datetime.utcnow()).hex}",
+            credential_id=f"cred_{uuid4().hex}",
             public_key=secrets.token_hex(64),
             device_name="MacBook Touch ID",
             transports='["internal"]',
-            counter=0
+            counter=0,
+            created_at=datetime.utcnow()
         )
         clean_db_session.add(credential)
         await clean_db_session.commit()
@@ -256,11 +257,12 @@ class TestOAuthCallbackCoordinator:
         # 新增 Passkey
         credential = Credential(
             user_id=existing_user.id,
-            credential_id=f"cred_{uuid4(, created_at=datetime.utcnow()).hex}",
+            credential_id=f"cred_{uuid4().hex}",
             public_key=secrets.token_hex(64),
             device_name="iPhone Face ID",
             transports='["internal"]',
-            counter=0
+            counter=0,
+            created_at=datetime.utcnow()
         )
         clean_db_session.add(credential)
         await clean_db_session.commit()

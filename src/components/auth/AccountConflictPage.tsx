@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation'
 import { PixelIcon } from '@/components/ui/icons'
 import { useAuthStore } from '@/lib/authStore'
 import { toast } from 'sonner'
+import { trackConflictResolutionAbandoned } from '@/lib/analytics/authEventTracker'
 
 export interface AccountConflictPageProps {
   email: string
@@ -139,15 +140,64 @@ export function AccountConflictPage({
     }
   }
 
-  // Handle Passkey login and link OAuth
+  // Handle Passkey login and link OAuth (Task 7.3)
   const handlePasskeyLoginAndLink = async () => {
     setIsLoading(true)
     setError(null)
 
     try {
-      // TODO: Implement Passkey login and link OAuth flow
-      // This requires WebAuthn API integration
-      toast.info('Passkey 登入功能即將推出')
+      // Step 1: 取得 Passkey 驗證選項
+      const optionsResponse = await fetch('/api/v1/auth/passkey/login/options', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ email })
+      })
+
+      if (!optionsResponse.ok) {
+        const errorData = await optionsResponse.json()
+        throw new Error(errorData.error || '取得驗證選項失敗')
+      }
+
+      const passkeyOptions = await optionsResponse.json()
+
+      // Step 2: 觸發瀏覽器 WebAuthn
+      const { startAuthentication } = await import('@/lib/webauthn')
+      const assertion = await startAuthentication(passkeyOptions)
+
+      // Step 3: 呼叫 login-and-link API
+      const loginResponse = await fetch('/api/v1/auth/passkey/login-and-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          assertion_response: assertion,
+          link_oauth: true,
+          oauth_provider: oauthProvider,
+          oauth_id: oauthId,
+          profile_picture: profilePicture
+        })
+      })
+
+      if (!loginResponse.ok) {
+        const errorData = await loginResponse.json()
+        throw new Error(errorData.error || '登入失敗')
+      }
+
+      const data = await loginResponse.json()
+
+      // Step 4: 更新 authStore
+      setUser(data.user, data.expires_at, 'passkey')
+      await refreshAuthMethods()
+
+      // Step 5: 顯示成功訊息
+      toast.success('Google 帳號已連結！', {
+        description: '您現在可以使用 Google 或 Passkey 登入'
+      })
+
+      // Step 6: 導向 dashboard
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      router.push('/dashboard')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Passkey 登入失敗'
       setError(errorMessage)
@@ -164,6 +214,9 @@ export function AccountConflictPage({
 
   // Handle back to login
   const handleBackToLogin = () => {
+    // 追蹤事件：使用者放棄解決衝突
+    trackConflictResolutionAbandoned(existingAuthMethods).catch(console.warn)
+
     router.push('/auth/login')
   }
 

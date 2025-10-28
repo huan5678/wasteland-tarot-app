@@ -451,3 +451,178 @@ async def verify_email(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email verification failed"
         )
+
+
+class SetPasswordRequest(BaseModel):
+    """
+    設定密碼請求
+
+    需求：
+    - 需求 11.1: 允許已登入的 OAuth 用戶設定密碼作為備用認證方式
+    - 需求 11.2: 密碼強度驗證（至少 8 個字元）
+    - 需求 11.3: 使用 bcrypt 加密密碼（cost factor ≥ 12）
+    """
+    password: str = Field(..., min_length=8, description="新密碼，至少 8 個字元")
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, v):
+        """
+        驗證密碼強度
+        需求 11.2: 至少 8 字元
+        """
+        if len(v) < 8:
+            raise ValueError('密碼長度必須至少 8 字元')
+        return v
+
+
+class SetPasswordResponse(BaseModel):
+    """設定密碼回應"""
+    success: bool
+    message: str
+    has_password: bool = True
+
+
+class UnlinkOAuthResponse(BaseModel):
+    """移除 OAuth 連結回應"""
+    success: bool
+    message: str
+    has_oauth: bool = False
+
+
+@router.post("/set-password", response_model=SetPasswordResponse)
+async def set_password(
+    request: SetPasswordRequest,
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    設定密碼 API
+
+    允許已登入的 OAuth 用戶設定密碼，作為備用認證方式。
+
+    需求：
+    - 需求 11.1: 驗證使用者已登入（需要 JWT token）
+    - 需求 11.2: 驗證密碼強度（至少 8 個字元）
+    - 需求 11.3: 使用 bcrypt 加密密碼（cost factor ≥ 12）
+    - 需求 11.4: 更新 users.password_hash 欄位
+    - 需求 11.5: 回傳成功訊息和更新後的認證方式狀態
+
+    錯誤處理：
+    - 400 Bad Request: 密碼不符合強度要求
+    - 401 Unauthorized: 未登入
+    - 409 Conflict: 已設定密碼
+    - 500 Internal Server Error: 伺服器錯誤
+    """
+    from app.core.security import get_password_hash
+
+    try:
+        # 檢查用戶是否已設定密碼
+        if current_user.password_hash is not None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="密碼已設定，無法重複設定。如需修改密碼，請使用「忘記密碼」功能。"
+            )
+
+        # 加密密碼（使用 bcrypt, cost factor = 12）
+        password_hash = get_password_hash(request.password)
+
+        # 更新用戶密碼
+        current_user.password_hash = password_hash
+
+        await db.commit()
+        await db.refresh(current_user)
+
+        return SetPasswordResponse(
+            success=True,
+            message="密碼設定成功",
+            has_password=True
+        )
+
+    except HTTPException:
+        raise
+    except ValueError as e:
+        # 密碼驗證錯誤
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"設定密碼失敗: {str(e)}", exc_info=True)
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="設定密碼失敗，請稍後再試"
+        )
+
+
+@router.post("/oauth/unlink", response_model=UnlinkOAuthResponse)
+async def unlink_oauth(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    移除 OAuth 連結 API
+
+    允許用戶移除 Google OAuth 連結（需至少保留一種認證方式）。
+
+    需求：
+    - 需求 12.1: 驗證使用者已登入（需要 JWT token）
+    - 需求 12.2: 驗證至少保留一種認證方式（has_passkey OR has_password）
+    - 需求 12.3: 將 users.oauth_provider 和 users.oauth_id 設為 NULL
+    - 需求 12.4: 將 users.profile_picture_url 設為 NULL
+    - 需求 12.5: 回傳成功訊息和更新後的認證方式狀態
+
+    錯誤處理：
+    - 401 Unauthorized: 未登入
+    - 409 Conflict: 唯一的認證方式（無法移除）
+    - 404 Not Found: 未連結 OAuth
+    - 500 Internal Server Error: 伺服器錯誤
+    """
+    from app.services.auth_helpers import user_has_passkey, user_has_password
+
+    try:
+        # 檢查用戶是否有 OAuth 連結
+        if current_user.oauth_provider is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="未連結 OAuth 帳號"
+            )
+
+        # 檢查至少保留一種認證方式
+        has_passkey = await user_has_passkey(current_user.id, db)
+        has_password = await user_has_password(current_user.id, db)
+
+        if not has_passkey and not has_password:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="無法移除唯一的認證方式。請先設定密碼或註冊 Passkey。"
+            )
+
+        # 移除 OAuth 連結
+        current_user.oauth_provider = None
+        current_user.oauth_id = None
+        current_user.profile_picture_url = None
+
+        await db.commit()
+        await db.refresh(current_user)
+
+        return UnlinkOAuthResponse(
+            success=True,
+            message="OAuth 連結已成功移除",
+            has_oauth=False
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"移除 OAuth 連結失敗: {str(e)}", exc_info=True)
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="移除 OAuth 連結失敗，請稍後再試"
+        )

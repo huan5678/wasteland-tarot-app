@@ -13,6 +13,7 @@ import { useAuthStore } from '@/lib/authStore'
 import { useErrorStore } from '@/lib/errorStore'
 import { useOAuth } from '@/hooks/useOAuth'
 import { usePasskey } from '@/hooks/usePasskey'
+import { useAuthErrorHandling } from '@/hooks/useAuthErrorHandling'
 import { toast } from 'sonner'
 import { Switch } from '@/components/ui/switch'
 
@@ -44,6 +45,19 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
     isSupported: passkeySupported,
     clearError: clearPasskeyError,
   } = usePasskey()
+
+  // Task 10.2: 整合錯誤處理 hook
+  const {
+    serviceAvailability,
+    checkServiceAvailability,
+    loginAttempts,
+    isLocked,
+    incrementLoginAttempts,
+    resetLoginAttempts,
+    handleRetry,
+    showErrorToast,
+    showWarningToast,
+  } = useAuthErrorHandling()
 
   const [formData, setFormData] = useState<FormData>({
     email: '', // 改用 email
@@ -107,6 +121,18 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Task 10.2: 檢查是否被鎖定
+    if (isLocked) {
+      const remainingTime = Math.ceil((loginAttempts.lockedUntil! - Date.now()) / 1000 / 60)
+      showErrorToast(
+        '帳號已鎖定',
+        {
+          description: `請 ${remainingTime} 分鐘後再試，或使用忘記密碼功能`,
+        }
+      )
+      return
+    }
+
     if (!validateForm()) {
       return
     }
@@ -117,6 +143,9 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
     try {
       // Use centralized API service (now uses email)
       await login(formData.email, formData.password)
+
+      // Task 10.2: 登入成功，重置失敗次數
+      resetLoginAttempts()
 
       // Handle remember me
       if (formData.rememberMe) {
@@ -140,12 +169,18 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '登入失敗'
 
+      // Task 10.2: 增加失敗次數
+      incrementLoginAttempts()
+
       // 處理 OAuth 使用者嘗試密碼登入錯誤
       if (errorMessage.includes('OAuth') || errorMessage.includes('Google')) {
         setSubmitError('此帳號使用 Google 登入，請點擊下方「使用 Google 登入」按鈕')
       } else {
         setSubmitError(errorMessage)
       }
+
+      // Task 10.2: 使用 Sonner toast 顯示錯誤
+      showErrorToast('登入失敗', { description: errorMessage })
 
       pushError({
         source: 'auth',
@@ -159,14 +194,58 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
   // Google 登入處理
   const handleGoogleLogin = async () => {
+    // Task 10.2: 檢查 OAuth 服務可用性
+    if (!serviceAvailability.oauth) {
+      showWarningToast(
+        'Google 登入目前無法使用',
+        '請使用其他方式登入'
+      )
+      return
+    }
+
     try {
       const result = await signInWithGoogle()
       if (result.success) {
         // OAuth 流程會自動重導向到 /auth/callback
         toast.info('正在跳轉至 Google 登入...')
       }
-    } catch (err) {
+    } catch (err: any) {
+      // Task 5.3: 檢測 409 Conflict（帳號衝突）
+      if (err.status === 409 && err.detail?.conflict_info) {
+        const conflictInfo = err.detail.conflict_info
+
+        // 將衝突資訊儲存至 sessionStorage（使用與頁面相同的 key）
+        sessionStorage.setItem('oauth-conflict-data', JSON.stringify({
+          email: conflictInfo.email,
+          existingAuthMethods: conflictInfo.existing_auth_methods,
+          oauthProvider: 'google',
+          oauthId: conflictInfo.oauth_id || '',
+          profilePicture: conflictInfo.profile_picture || ''
+        }))
+
+        // 導向帳號衝突解決頁面
+        router.push('/auth/account-conflict')
+        return
+      }
+
+      // Task 10.2: 網路錯誤處理 - 提供重試選項
       const errorMessage = err instanceof Error ? err.message : 'Google 登入失敗'
+
+      // 檢查是否為網路錯誤
+      const isNetworkError = errorMessage.includes('網路') ||
+                            errorMessage.includes('network') ||
+                            errorMessage.includes('timeout') ||
+                            err.name === 'NetworkError'
+
+      if (isNetworkError) {
+        showErrorToast('Google 登入失敗', {
+          description: '網路連線錯誤，請重試',
+          retry: handleGoogleLogin,
+        })
+      } else {
+        showErrorToast('Google 登入失敗', { description: errorMessage })
+      }
+
       pushError({
         source: 'auth',
         message: 'Google 登入失敗',
@@ -177,13 +256,38 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
 
   // Passkey 登入處理
   const handlePasskeyLogin = async () => {
+    // Task 10.2: 檢查 Passkey 支援性
+    if (!passkeySupported) {
+      showErrorToast(
+        'Passkey 不支援',
+        {
+          description: '您的瀏覽器不支援 Passkey 認證，可使用 Google 或 Email/密碼登入',
+        }
+      )
+      return
+    }
+
     clearPasskeyError()
     try {
       // Email-guided Passkey 登入（如果有輸入 email）
       await authenticateWithPasskey(formData.email || undefined)
+
+      // Task 10.2: 登入成功，重置失敗次數
+      resetLoginAttempts()
+
       toast.success('Passkey 登入成功！')
     } catch (err) {
+      // Task 10.2: 增加失敗次數
+      incrementLoginAttempts()
+
       const errorMessage = err instanceof Error ? err.message : 'Passkey 登入失敗'
+
+      // Task 10.2: 提供重試選項
+      showErrorToast('Passkey 登入失敗', {
+        description: errorMessage,
+        retry: handlePasskeyLogin,
+      })
+
       pushError({
         source: 'auth',
         message: 'Passkey 登入失敗',
@@ -240,21 +344,31 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
             </div>
           )}
 
-          {/* Google Login Button */}
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={oauthLoading || isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            {oauthLoading ? '連接 Google...' : '使用 Google 登入'}
-          </button>
+          {/* Task 10.2: OAuth 服務不可用警告 */}
+          {!serviceAvailability.oauth && (
+            <div className="mb-4 p-3 border border-radiation-orange bg-radiation-orange/10 text-radiation-orange text-sm flex items-center gap-2">
+              <PixelIcon name="alert-circle" sizePreset="xs" variant="warning" animation="pulse" decorative />
+              <span>Google 登入目前無法使用，請使用其他方式登入</span>
+            </div>
+          )}
+
+          {/* Google Login Button - 動態調整可見性和樣式 */}
+          {serviceAvailability.oauth && (
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={oauthLoading || isFormDisabled}
+              className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-dark disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              {oauthLoading ? '連接 Google...' : '使用 Google 登入'}
+            </button>
+          )}
 
           {/* OAuth Error Display */}
           {oauthError && (
@@ -264,37 +378,46 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           )}
 
           {/* Divider */}
-          <div className="mt-6 mb-6 flex items-center">
-            <div className="flex-1 h-px bg-pip-boy-green/30"></div>
-            <span className="px-4 text-pip-boy-green/70 text-xs">或</span>
-            <div className="flex-1 h-px bg-pip-boy-green/30"></div>
-          </div>
+          {(serviceAvailability.oauth || passkeySupported) && (
+            <div className="mt-6 mb-6 flex items-center">
+              <div className="flex-1 h-px bg-pip-boy-green/30"></div>
+              <span className="px-4 text-pip-boy-green/70 text-xs">或</span>
+              <div className="flex-1 h-px bg-pip-boy-green/30"></div>
+            </div>
+          )}
 
-          {/* Passkey Login Link */}
-          <Link
-            href="/auth/login-passkey"
-            aria-disabled={!passkeySupported}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-            onClick={(e) => {
-              if (!passkeySupported) {
-                e.preventDefault()
-                pushError({
-                  source: 'auth',
-                  message: 'Passkey 不支援',
-                  detail: '您的瀏覽器不支援 Passkey 認證，請使用 Google 或 Email/密碼登入'
-                })
-              }
-            }}
-          >
-            <PixelIcon name="fingerprint" size={20} decorative />
-            使用 Passkey 登入
-          </Link>
+          {/* Passkey Login Link - 動態調整可見性和樣式 */}
+          {passkeySupported && (
+            <Link
+              href="/auth/login-passkey"
+              className={`w-full py-3 bg-black border-2 text-pip-boy-green font-bold text-sm focus:outline-none focus:ring-2 focus:ring-pip-boy-green transition-all flex items-center justify-center gap-2 ${
+                // Task 10.2: 當其他方式不可用時，視覺突出 Passkey
+                !serviceAvailability.oauth
+                  ? 'border-pip-boy-green hover:bg-pip-boy-green hover:text-black shadow-lg shadow-pip-boy-green/30 animate-pulse'
+                  : 'border-pip-boy-green hover:bg-pip-boy-green/10'
+              }`}
+            >
+              <PixelIcon name="fingerprint" size={20} decorative />
+              使用 Passkey 登入
+              {/* Task 10.2: 當其他方式不可用時顯示推薦標籤 */}
+              {!serviceAvailability.oauth && (
+                <span className="ml-2 px-2 py-0.5 bg-pip-boy-green text-black text-xs rounded">推薦</span>
+              )}
+            </Link>
+          )}
 
-          {/* Passkey 不支援提示 */}
+          {/* Task 10.2: Passkey 不支援提示 - 優化版本 */}
           {!passkeySupported && (
-            <div className="mt-2 p-2 border border-pip-boy-green/30 bg-pip-boy-green/5 text-pip-boy-green/70 text-xs flex items-center gap-2">
-              <PixelIcon name="information" sizePreset="xs" variant="info" decorative />
-              <span>您的裝置不支援 Passkey，可使用 Google 或密碼登入</span>
+            <div className="mt-4 p-3 border border-radiation-orange bg-radiation-orange/10 text-radiation-orange text-sm flex items-center gap-2">
+              <PixelIcon name="information" sizePreset="xs" variant="warning" decorative />
+              <div>
+                <div className="font-bold mb-1">您的裝置不支援 Passkey</div>
+                <div className="text-xs">
+                  {serviceAvailability.oauth
+                    ? '可使用 Google 登入或密碼登入'
+                    : '請使用密碼登入'}
+                </div>
+              </div>
             </div>
           )}
 

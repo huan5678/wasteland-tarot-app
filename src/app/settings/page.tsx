@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { usePreferences } from '@/hooks/usePreferences'
 import { Card } from '@/components/ui/card'
 import { PixelIcon } from '@/components/ui/icons'
+import { AuthMethodsManagement } from '@/components/auth/AuthMethodsManagement'
+import { useAuthStore } from '@/lib/authStore'
 // Old lucide imports:
 
 
@@ -312,87 +314,25 @@ export default function SettingsPage() {
 
       {activeTab === 'security' && (
         <div className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <PixelIcon name="shield" size={24} decorative />
-              帳號安全
-            </h3>
+          {/* 認證方式管理（主要功能） */}
+          <AuthMethodsManagement />
 
-            <div className="space-y-4">
-              {/* Passkey 管理 */}
-              <div className="p-4 border border-pip-boy-green/30 rounded hover:border-pip-boy-green/50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <PixelIcon name="fingerprint" size={32} className="text-pip-boy-green" decorative />
-                    <div>
-                      <h4 className="font-semibold text-sm mb-1">Passkey 管理</h4>
-                      <p className="text-xs text-wasteland-tan/60">
-                        管理你的生物辨識憑證（Touch ID、Face ID、Windows Hello）
-                      </p>
-                    </div>
-                  </div>
-                  <a
-                    href="/settings/passkeys"
-                    className="px-4 py-2 bg-pip-boy-green/10 hover:bg-pip-boy-green/20 border border-pip-boy-green/40 text-pip-boy-green text-xs font-semibold transition-colors flex items-center gap-2"
-                  >
-                    管理
-                    <PixelIcon name="chevron-right" size={14} decorative />
-                  </a>
-                </div>
-              </div>
-
-              {/* 密碼管理 */}
-              <div className="p-4 border border-pip-boy-green/30 rounded opacity-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <PixelIcon name="lock" size={32} className="text-pip-boy-green" decorative />
-                    <div>
-                      <h4 className="font-semibold text-sm mb-1">密碼管理</h4>
-                      <p className="text-xs text-wasteland-tan/60">
-                        變更或重設你的帳號密碼
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    disabled
-                    className="px-4 py-2 bg-pip-boy-green/5 border border-pip-boy-green/20 text-pip-boy-green/50 text-xs font-semibold cursor-not-allowed"
-                  >
-                    即將推出
-                  </button>
-                </div>
-              </div>
-
-              {/* 兩步驟驗證 */}
-              <div className="p-4 border border-pip-boy-green/30 rounded opacity-50">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <PixelIcon name="key" size={32} className="text-pip-boy-green" decorative />
-                    <div>
-                      <h4 className="font-semibold text-sm mb-1">兩步驟驗證</h4>
-                      <p className="text-xs text-wasteland-tan/60">
-                        為帳號增加額外的安全保護
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    disabled
-                    className="px-4 py-2 bg-pip-boy-green/5 border border-pip-boy-green/20 text-pip-boy-green/50 text-xs font-semibold cursor-not-allowed"
-                  >
-                    即將推出
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Card>
-
+          {/* 關於 Passkey 資訊卡片 */}
           <Card className="p-6 bg-pip-boy-green/5 border-pip-boy-green/40">
             <div className="flex items-start gap-3">
               <PixelIcon name="info" size={20} className="text-pip-boy-green mt-0.5 flex-shrink-0" decorative />
               <div className="text-sm text-wasteland-tan/80">
-                <p className="font-semibold mb-1">關於 Passkey</p>
+                <p className="font-semibold mb-1">關於多重認證方式</p>
                 <p className="text-xs">
-                  Passkey 是一種更安全的登入方式，使用生物辨識（指紋、Face ID）或安全金鑰取代傳統密碼。
-                  它無法被釣魚攻擊，也不會因為密碼外洩而危及帳號安全。
+                  你可以為帳號設定多種登入方式以提升安全性和便利性：
+                </p>
+                <ul className="text-xs mt-2 space-y-1 list-disc list-inside">
+                  <li><strong>Passkey</strong>：使用生物辨識（指紋、Face ID）或安全金鑰，無法被釣魚攻擊</li>
+                  <li><strong>Google OAuth</strong>：使用 Google 帳號快速登入，無需記憶密碼</li>
+                  <li><strong>Email + 密碼</strong>：傳統登入方式，適合沒有生物辨識裝置的情境</li>
+                </ul>
+                <p className="text-xs mt-2 text-pip-boy-green">
+                  ⚠️ 至少需要保留一種認證方式才能登入帳號
                 </p>
               </div>
             </div>

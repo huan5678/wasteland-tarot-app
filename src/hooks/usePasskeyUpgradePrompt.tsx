@@ -14,6 +14,11 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuthStore } from '@/lib/authStore'
 import { isWebAuthnSupported, startRegistration } from '@/lib/webauthn'
 import * as webauthnAPI from '@/lib/webauthnAPI'
+import {
+  trackPasskeyUpgradeAccepted,
+  trackPasskeyUpgradeSkipped,
+  trackPasskeyUpgradeCompleted,
+} from '@/lib/analytics/authEventTracker'
 
 const STORAGE_KEY = 'passkey-upgrade-prompt'
 const REMIND_INTERVAL_DAYS = 7
@@ -157,6 +162,10 @@ export function usePasskeyUpgradePrompt(
     setIsLoading(true)
     setError(null)
 
+    // 追蹤事件：使用者接受 Passkey 升級
+    const storedData = loadSkipRecord()
+    trackPasskeyUpgradeAccepted(storedData.skipCount).catch(console.warn)
+
     try {
       // Step 1: 檢查瀏覽器支援度
       if (!isWebAuthnSupported()) {
@@ -189,6 +198,9 @@ export function usePasskeyUpgradePrompt(
           hasOAuth: authStore.hasOAuth,
         })
 
+        // 追蹤事件：Passkey 註冊成功（來源：OAuth 引導）
+        trackPasskeyUpgradeCompleted('oauth_prompt').catch(console.warn)
+
         setIsLoading(false)
 
         // 立即關閉 modal（不需要延遲，UI 元件會處理成功訊息顯示）
@@ -210,6 +222,9 @@ export function usePasskeyUpgradePrompt(
     const storedData = loadSkipRecord()
     const newSkipCount = storedData.skipCount + 1
     const now = new Date().toISOString()
+
+    // 追蹤事件：使用者跳過 Passkey 升級
+    trackPasskeyUpgradeSkipped(newSkipCount).catch(console.warn)
 
     // 儲存至 localStorage
     saveSkipRecord({

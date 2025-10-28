@@ -24,6 +24,18 @@ jest.mock('sonner', () => ({
     info: jest.fn(),
   },
 }))
+jest.mock('@/lib/webauthn', () => ({
+  startAuthentication: jest.fn().mockResolvedValue({
+    id: 'credential-id',
+    rawId: 'credential-id',
+    response: {
+      authenticatorData: new Uint8Array([1, 2, 3]),
+      clientDataJSON: new Uint8Array([4, 5, 6]),
+      signature: new Uint8Array([7, 8, 9]),
+    },
+    type: 'public-key',
+  }),
+}))
 
 // Mock fetch
 global.fetch = jest.fn()
@@ -247,6 +259,30 @@ describe('AccountConflictPage', () => {
     })
 
     it('Passkey 登入成功後應連結 OAuth', async () => {
+      // Mock Passkey options API and login-and-link API
+      ;(global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (url.includes('/api/v1/auth/passkey/login/options')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              challenge: 'test-challenge',
+              allowCredentials: [{ id: 'credential-id', type: 'public-key' }],
+            }),
+          })
+        }
+        if (url.includes('/api/v1/auth/passkey/login-and-link')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => ({
+              user: { id: '1', email: 'test@example.com', name: 'Test User' },
+              expires_at: Date.now() + 3600000,
+              linked_oauth: true,
+            }),
+          })
+        }
+        return Promise.reject(new Error('Unknown API'))
+      })
+
       const props = {
         ...defaultProps,
         existingAuthMethods: ['passkey'],
@@ -257,9 +293,11 @@ describe('AccountConflictPage', () => {
       fireEvent.click(passkeyButton)
 
       await waitFor(() => {
-        // Currently shows "即將推出" message
-        expect(toast.info).toHaveBeenCalledWith(expect.stringContaining('即將推出'))
-      })
+        expect(toast.success).toHaveBeenCalledWith(
+          expect.stringContaining('Google 帳號已連結'),
+          expect.any(Object)
+        )
+      }, { timeout: 3000 })
     })
   })
 

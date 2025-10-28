@@ -12,6 +12,7 @@ from app.db.database import get_db
 from app.services.oauth_service import create_or_update_oauth_user
 from app.services.karma_service import KarmaService
 from app.services.auth_method_coordinator import AuthMethodCoordinatorService
+from app.services.auth_analytics_tracker import AuthAnalyticsTracker
 from app.core.supabase import get_supabase_client
 from app.core.security import create_access_token, create_refresh_token
 from app.core.dependencies import get_current_user
@@ -35,6 +36,7 @@ router = APIRouter(prefix="/auth", tags=["oauth"])
 class OAuthCallbackRequest(BaseModel):
     """OAuth 回調請求資料"""
     code: str  # 授權碼
+    state: Optional[str] = None  # CSRF 防護 state 參數（安全性需求）
 
 
 class OAuthCallbackResponse(BaseModel):
@@ -65,8 +67,10 @@ async def oauth_callback(
     - 3.1: 呼叫 OAuth 使用者服務
     - 3.4: 初始化 Karma（若為新使用者）
     - 12.1: 返回 JWT token 和使用者資料
+    - 安全性需求：CSRF 防護（OAuth State 驗證）
 
     流程：
+    0. 驗證 OAuth state 參數（CSRF 防護）
     1. 使用授權碼交換 Supabase session
     2. 從 session 提取使用者資料（email, name, sub）
     3. 建立或更新 OAuth 使用者
@@ -75,6 +79,44 @@ async def oauth_callback(
     6. 設定 httpOnly cookies
     7. 返回使用者資料和 token
     """
+    # 步驟 0: 驗證 OAuth state 參數（CSRF 防護）
+    # 注意：目前前端可能未傳送 state，所以暫時設為可選
+    # 未來應強制要求 state 參數
+    if request.state:
+        from app.services.oauth_state_service import OAuthStateService
+        from app.core.dependencies import get_redis_client
+
+        redis_client = get_redis_client()
+
+        if redis_client:
+            try:
+                state_service = OAuthStateService(redis_client)
+                is_valid = state_service.verify_and_consume_state(request.state)
+
+                if not is_valid:
+                    logger.warning(
+                        f"無效的 OAuth state 參數: {request.state[:8]}...",
+                        extra={"state": request.state[:16]}
+                    )
+                    raise InvalidRequestError(
+                        "無效的 state 參數，可能是 CSRF 攻擊或請求已過期"
+                    )
+
+                logger.info("OAuth state 驗證成功")
+
+            except InvalidRequestError:
+                # 重新拋出驗證錯誤
+                raise
+            except Exception as e:
+                # Redis 錯誤不應阻擋 OAuth 流程（降級處理）
+                logger.warning(f"OAuth state 驗證失敗（非致命）: {e}")
+        else:
+            # Redis 不可用，記錄警告但繼續流程
+            logger.warning("Redis 不可用，無法驗證 OAuth state 參數")
+    else:
+        # 前端未傳送 state（向後相容）
+        logger.info("OAuth callback 未包含 state 參數（向後相容模式）")
+
     try:
         # 步驟 1: 使用 Supabase SDK 交換授權碼（帶重試邏輯）
         supabase = get_supabase_client()
@@ -141,16 +183,50 @@ async def oauth_callback(
         # 提取頭像
         profile_picture_url = user_metadata.get("avatar_url") or user_metadata.get("picture")
 
-        # 步驟 3: 建立或更新 OAuth 使用者（帶錯誤處理）
+        # 步驟 3: 使用協調器處理 OAuth 註冊（偵測衝突）
         try:
-            user = await create_or_update_oauth_user(
-                db=db,
-                email=email,
-                name=name,
-                oauth_provider=provider,
-                oauth_id=oauth_id,
-                profile_picture_url=profile_picture_url
+            coordinator = AuthMethodCoordinatorService()
+            oauth_data = {
+                "email": email,
+                "name": name or email.split("@")[0],  # 確保 name 不為 None
+                "oauth_provider": provider,
+                "oauth_id": oauth_id,
+                "profile_picture_url": profile_picture_url
+            }
+
+            result = await coordinator.handle_oauth_registration(
+                oauth_data=oauth_data,
+                db=db
             )
+
+            # 檢查是否有帳號衝突
+            if not result["success"]:
+                # 回傳 409 Conflict 和衝突資訊
+                conflict_info = result["conflict"]
+
+                # 追蹤帳號衝突偵測事件（需求 9）
+                tracker = AuthAnalyticsTracker(db)
+                await tracker.track_oauth_conflict_detected(
+                    email=email,
+                    existing_methods=conflict_info["existing_auth_methods"],
+                    oauth_provider=provider
+                )
+
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail={
+                        "error": "account_conflict",
+                        "message": "此 email 已註冊，請先使用現有方式登入後連結 Google 帳號",
+                        "conflict_info": conflict_info
+                    }
+                )
+
+            user = result["user"]
+            is_new_user = result.get("is_new_user", False)
+
+        except HTTPException:
+            # 帳號衝突錯誤，直接拋出
+            raise
         except Exception as e:
             logger.error(f"建立或更新 OAuth 使用者失敗: {str(e)}", exc_info=True)
             raise OAuthUserCreationError(
@@ -173,6 +249,27 @@ async def oauth_callback(
         except Exception as e:
             # Karma 初始化失敗不應阻擋登入流程
             logger.warning(f"Karma 初始化失敗（非致命）: {str(e)}")
+
+        # 步驟 4.5: 追蹤 OAuth 註冊或登入成功事件（需求 9）
+        tracker = AuthAnalyticsTracker(db)
+        try:
+            if is_new_user:
+                # 新用戶註冊
+                await tracker.track_oauth_registration_success(
+                    user_id=str(user.id),
+                    provider=provider,
+                    metadata={"email": email}
+                )
+            else:
+                # 現有用戶登入
+                await tracker.track_oauth_login_success(
+                    user_id=str(user.id),
+                    provider=provider,
+                    metadata={"has_passkey": False}  # TODO: 從 result 取得實際值
+                )
+        except Exception as e:
+            # 事件追蹤失敗不應阻擋登入流程
+            logger.warning(f"OAuth 事件追蹤失敗（非致命）: {str(e)}")
 
         # 步驟 5: 生成 JWT token
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -211,6 +308,9 @@ async def oauth_callback(
             }
         )
 
+    except HTTPException:
+        # HTTP 異常（包含 409 Conflict），直接拋出
+        raise
     except (
         OAuthAuthorizationError,
         OAuthCallbackError,

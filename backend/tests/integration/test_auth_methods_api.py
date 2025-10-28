@@ -752,3 +752,538 @@ class TestAuthMethodsAPIPerformance:
         # Assert: 效能需求 <1.5 秒
         assert response.status_code == 200
         assert elapsed_time < 1.5, f"Response time {elapsed_time}s exceeded 1.5s requirement"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+class TestSetPasswordAPI:
+    """
+    測試設定密碼 API
+
+    需求 11: POST /api/v1/auth/set-password
+    允許已登入的 OAuth 用戶設定密碼作為備用認證方式
+    """
+
+    async def test_set_password_success(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試成功設定密碼"""
+        from app.core.security import create_access_token, verify_password
+
+        # Arrange: 建立 OAuth only 用戶
+        user_email = f"oauth_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_user = User(
+            email=user_email,
+            name="OAuth Test User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            profile_picture_url="https://example.com/profile.jpg",
+            password_hash=None,  # OAuth 用戶無密碼
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_user)
+
+        # 生成 JWT token
+        access_token = create_access_token(data={"sub": str(oauth_user.id)})
+
+        # Act: 發送請求設定密碼
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "SecurePassword123"},
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 驗證回應
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+
+        data = response.json()
+        assert data["success"] is True
+        assert data["message"] == "密碼設定成功"
+        assert data["has_password"] is True
+
+        # 驗證資料庫更新
+        await db_session.refresh(oauth_user)
+        assert oauth_user.password_hash is not None
+        assert verify_password("SecurePassword123", oauth_user.password_hash)
+
+    async def test_set_password_too_short(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試密碼太短（少於 8 字元）"""
+        from app.core.security import create_access_token
+
+        # Arrange: 建立 OAuth only 用戶
+        user_email = f"oauth_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_user = User(
+            email=user_email,
+            name="OAuth Test User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=None,
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_user)
+
+        access_token = create_access_token(data={"sub": str(oauth_user.id)})
+
+        # Act: 發送請求設定太短的密碼
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "short"},
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 應該回傳 422 (Pydantic validation error)
+        assert response.status_code == 422
+
+    async def test_set_password_already_set(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試已設定密碼的用戶無法重複設定"""
+        from app.core.security import create_access_token, get_password_hash
+
+        # Arrange: 建立已有密碼的用戶
+        user_email = f"user_{uuid4().hex[:8]}@example.com"
+
+        user_with_password = User(
+            email=user_email,
+            name="User With Password",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=get_password_hash("ExistingPassword123"),
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(user_with_password)
+        await db_session.commit()
+        await db_session.refresh(user_with_password)
+
+        access_token = create_access_token(data={"sub": str(user_with_password.id)})
+
+        # Act: 嘗試重複設定密碼
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "NewPassword123"},
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 應該回傳 409 Conflict
+        assert response.status_code == 409
+        data = response.json()
+        assert "密碼已設定" in data["detail"]
+
+    async def test_set_password_unauthorized(
+        self,
+        async_client: AsyncClient
+    ):
+        """測試未登入無法設定密碼"""
+        # Act: 發送請求但不提供 JWT token
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "SecurePassword123"}
+        )
+
+        # Assert: 應該回傳 401 Unauthorized
+        assert response.status_code == 401
+
+    async def test_set_password_bcrypt_cost_factor(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試 bcrypt cost factor ≥ 12"""
+        from app.core.security import create_access_token
+
+        # Arrange: 建立 OAuth only 用戶
+        user_email = f"oauth_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_user = User(
+            email=user_email,
+            name="OAuth Test User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=None,
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_user)
+
+        access_token = create_access_token(data={"sub": str(oauth_user.id)})
+
+        # Act: 設定密碼
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "SecurePassword123"},
+            cookies={"access_token": access_token}
+        )
+
+        assert response.status_code == 200
+
+        # Assert: 驗證 bcrypt cost factor
+        await db_session.refresh(oauth_user)
+        password_hash = oauth_user.password_hash
+
+        # bcrypt hash 格式: $2b$<cost>$<salt><hash>
+        # 例如: $2b$12$...
+        assert password_hash.startswith("$2b$")
+        cost_factor = int(password_hash.split("$")[2])
+        assert cost_factor >= 12, f"bcrypt cost factor {cost_factor} < 12"
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+class TestUnlinkOAuthAPI:
+    """
+    測試移除 OAuth 連結 API
+
+    需求 12: POST /api/v1/auth/oauth/unlink
+    允許用戶移除 Google OAuth 連結（需至少保留一種認證方式）
+    """
+
+    async def test_unlink_oauth_success_with_password(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試成功移除 OAuth（有密碼作為備用）"""
+        from app.core.security import create_access_token, get_password_hash
+
+        # Arrange: 建立有 OAuth + 密碼的用戶
+        user_email = f"user_{uuid4().hex[:8]}@example.com"
+
+        user_with_both = User(
+            email=user_email,
+            name="User With Both",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            profile_picture_url="https://example.com/profile.jpg",
+            password_hash=get_password_hash("SecurePassword123"),
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(user_with_both)
+        await db_session.commit()
+        await db_session.refresh(user_with_both)
+
+        # 確認用戶有 OAuth
+        assert user_with_both.oauth_provider is not None
+
+        access_token = create_access_token(data={"sub": str(user_with_both.id)})
+
+        # Act: 移除 OAuth 連結
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 驗證回應
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+        assert data["message"] == "OAuth 連結已成功移除"
+        assert data["has_oauth"] is False
+
+        # 驗證資料庫更新
+        await db_session.refresh(user_with_both)
+        assert user_with_both.oauth_provider is None
+        assert user_with_both.oauth_id is None
+        assert user_with_both.profile_picture_url is None
+
+    async def test_unlink_oauth_success_with_passkey(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試成功移除 OAuth（有 Passkey 作為備用）"""
+        from app.core.security import create_access_token
+
+        # Arrange: 建立有 OAuth 的用戶
+        user_email = f"user_{uuid4().hex[:8]}@example.com"
+
+        oauth_user = User(
+            email=user_email,
+            name="OAuth User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=None,
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_user)
+
+        # 建立一個 Passkey credential
+        credential = Credential(
+            user_id=oauth_user.id,
+            credential_id=b"test_credential_id",
+            public_key=b"test_public_key",
+            counter=0,
+            device_name="Test Device",
+            transports=json.dumps(["internal"]),
+            created_at=datetime.now(timezone.utc)
+        )
+        db_session.add(credential)
+        await db_session.commit()
+
+        access_token = create_access_token(data={"sub": str(oauth_user.id)})
+
+        # Act: 移除 OAuth 連結
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 驗證回應
+        assert response.status_code == 200
+        data = response.json()
+        assert data["success"] is True
+
+    async def test_unlink_oauth_conflict_only_method(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試無法移除唯一的認證方式"""
+        from app.core.security import create_access_token
+
+        # Arrange: 建立只有 OAuth 的用戶
+        user_email = f"oauth_only_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_only_user = User(
+            email=user_email,
+            name="OAuth Only User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=None,  # 沒有密碼
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_only_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_only_user)
+
+        access_token = create_access_token(data={"sub": str(oauth_only_user.id)})
+
+        # Act: 嘗試移除唯一的 OAuth
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 應該回傳 409 Conflict
+        assert response.status_code == 409
+        data = response.json()
+        assert "無法移除唯一的認證方式" in data["detail"]
+
+    async def test_unlink_oauth_not_found(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """測試未連結 OAuth 的用戶無法移除"""
+        from app.core.security import create_access_token, get_password_hash
+
+        # Arrange: 建立沒有 OAuth 的用戶（只有密碼）
+        user_email = f"password_user_{uuid4().hex[:8]}@example.com"
+
+        password_user = User(
+            email=user_email,
+            name="Password User",
+            oauth_provider=None,  # 沒有 OAuth
+            password_hash=get_password_hash("SecurePassword123"),
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(password_user)
+        await db_session.commit()
+        await db_session.refresh(password_user)
+
+        access_token = create_access_token(data={"sub": str(password_user.id)})
+
+        # Act: 嘗試移除不存在的 OAuth
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 應該回傳 404 Not Found
+        assert response.status_code == 404
+        data = response.json()
+        assert "未連結 OAuth 帳號" in data["detail"]
+
+    async def test_unlink_oauth_unauthorized(
+        self,
+        async_client: AsyncClient
+    ):
+        """測試未登入無法移除 OAuth"""
+        # Act: 發送請求但不提供 JWT token
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink"
+        )
+
+        # Assert: 應該回傳 401 Unauthorized
+        assert response.status_code == 401
+
+
+@pytest.mark.integration
+@pytest.mark.asyncio
+class TestAuthMethodsManagementIntegration:
+    """
+    測試認證方式管理的整合流程
+
+    驗證完整的用戶旅程：OAuth → 設定密碼 → 移除 OAuth
+    """
+
+    async def test_oauth_user_upgrade_to_multi_factor(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """
+        測試 OAuth 用戶升級為多因素認證
+
+        流程：
+        1. OAuth 用戶登入
+        2. 查詢認證方式狀態（只有 OAuth）
+        3. 設定密碼（備用認證方式）
+        4. 查詢認證方式狀態（OAuth + 密碼）
+        5. 移除 OAuth（保留密碼）
+        6. 最終狀態確認（只有密碼）
+        """
+        from app.core.security import create_access_token
+
+        # Arrange: 建立 OAuth only 用戶
+        user_email = f"oauth_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_user = User(
+            email=user_email,
+            name="OAuth Test User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            profile_picture_url="https://example.com/profile.jpg",
+            password_hash=None,
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_user)
+
+        access_token = create_access_token(data={"sub": str(oauth_user.id)})
+
+        # Step 1: 查詢認證方式狀態
+        response = await async_client.get(
+            "/api/v1/auth/methods",
+            cookies={"access_token": access_token}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["has_oauth"] is True
+        assert data["has_password"] is False
+        assert data["has_passkey"] is False
+
+        # Step 2: 設定密碼
+        response = await async_client.post(
+            "/api/v1/auth/set-password",
+            json={"password": "SecurePassword123"},
+            cookies={"access_token": access_token}
+        )
+        assert response.status_code == 200
+
+        # Step 3: 確認有兩種認證方式
+        response = await async_client.get(
+            "/api/v1/auth/methods",
+            cookies={"access_token": access_token}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["has_oauth"] is True
+        assert data["has_password"] is True
+
+        # Step 4: 移除 OAuth
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+        assert response.status_code == 200
+
+        # Step 5: 最終狀態確認
+        response = await async_client.get(
+            "/api/v1/auth/methods",
+            cookies={"access_token": access_token}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["has_oauth"] is False
+        assert data["has_password"] is True
+
+    async def test_cannot_remove_last_auth_method(
+        self,
+        async_client: AsyncClient,
+        db_session: AsyncSession
+    ):
+        """
+        測試無法移除最後一種認證方式
+
+        流程：
+        1. OAuth only 用戶
+        2. 嘗試移除 OAuth
+        3. 失敗：409 Conflict
+        """
+        from app.core.security import create_access_token
+
+        # Arrange: 建立 OAuth only 用戶
+        user_email = f"oauth_only_user_{uuid4().hex[:8]}@example.com"
+
+        oauth_only_user = User(
+            email=user_email,
+            name="OAuth Only User",
+            oauth_provider="google",
+            oauth_id=f"google_id_{uuid4().hex[:8]}",
+            password_hash=None,
+            karma_score=50,
+            is_active=True,
+            is_verified=True
+        )
+        db_session.add(oauth_only_user)
+        await db_session.commit()
+        await db_session.refresh(oauth_only_user)
+
+        access_token = create_access_token(data={"sub": str(oauth_only_user.id)})
+
+        # Act: 嘗試移除唯一的 OAuth
+        response = await async_client.post(
+            "/api/v1/auth/oauth/unlink",
+            cookies={"access_token": access_token}
+        )
+
+        # Assert: 應該失敗
+        assert response.status_code == 409
+        data = response.json()
+        assert "無法移除唯一的認證方式" in data["detail"]

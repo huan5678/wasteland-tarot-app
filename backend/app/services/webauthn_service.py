@@ -13,6 +13,7 @@ from typing import Optional, Dict, Any, List
 from uuid import UUID
 from datetime import datetime
 
+from fastapi import HTTPException, status
 from webauthn import (
     generate_registration_options,
     verify_registration_response,
@@ -86,6 +87,7 @@ class WebAuthnService:
             PublicKeyCredentialCreationOptions: Registration options to send to client
 
         Raises:
+            HTTPException: 501 Not Implemented if WebAuthn is disabled
             WebAuthnRegistrationError: If registration options cannot be generated
 
         Example:
@@ -94,6 +96,13 @@ class WebAuthnService:
             return {"options": options_to_json(options)}
             ```
         """
+        # Task 10.3: 檢查 WebAuthn 功能是否啟用
+        if not self.config.enabled:
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="Passkey 功能目前未啟用，請使用其他登入方式（Google OAuth 或 Email/密碼）"
+            )
+
         try:
             # Get existing credentials for this user
             existing_credentials = self._get_user_credentials(user.id)
@@ -242,6 +251,7 @@ class WebAuthnService:
             PublicKeyCredentialRequestOptions: Authentication options
 
         Raises:
+            HTTPException: 501 Not Implemented if WebAuthn is disabled
             WebAuthnAuthenticationError: If options cannot be generated
             CredentialNotFoundError: If user has no credentials
 
@@ -254,6 +264,13 @@ class WebAuthnService:
             options = service.generate_authentication_options()
             ```
         """
+        # Task 10.3: 檢查 WebAuthn 功能是否啟用
+        if not self.config.enabled:
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="Passkey 功能目前未啟用，請使用其他登入方式（Google OAuth 或 Email/密碼）"
+            )
+
         try:
             allow_credentials = []
 
