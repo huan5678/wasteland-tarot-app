@@ -4,8 +4,8 @@ OAuth Authentication API endpoints
 處理 Google OAuth 授權回調和會話建立
 """
 
-from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from typing import Dict, Any, List, Optional, Annotated
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
 from app.db.database import get_db
@@ -33,6 +33,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["oauth"])
 
 
+class OAuthLoginRequest(BaseModel):
+    """OAuth 登入請求資料"""
+    redirect_url: str = "http://localhost:3000/auth/callback"  # 前端 callback URL
+
+
+class OAuthLoginResponse(BaseModel):
+    """OAuth 登入回應資料"""
+    authorization_url: str  # Google OAuth 授權 URL
+
+
 class OAuthCallbackRequest(BaseModel):
     """OAuth 回調請求資料"""
     code: str  # 授權碼
@@ -51,11 +61,99 @@ class OAuthCallbackResponse(BaseModel):
 # 此檔案僅保留 OAuth 相關端點
 
 
+@router.post("/oauth/google/login", response_model=OAuthLoginResponse)
+async def initiate_google_oauth(
+    request: OAuthLoginRequest,
+    response: Response
+):
+    """
+    啟動 Google OAuth 登入流程（使用 PKCE）
+
+    此 endpoint 生成 Google OAuth 授權 URL 並返回給前端。
+    使用 PKCE (Proof Key for Code Exchange) 來確保安全性。
+
+    流程：
+    1. 後端生成 code_verifier 和 code_challenge
+    2. 將 code_verifier 儲存到 HTTP-only cookie
+    3. 返回包含 code_challenge 的 OAuth URL 給前端
+    4. 前端重導向到 OAuth URL
+    5. 使用者授權後，Supabase 重導向到前端並帶上 code
+    6. 前端呼叫 /oauth/callback，傳遞 code
+    7. 後端從 cookie 讀取 code_verifier
+    8. 後端用 code + code_verifier 交換 session
+
+    Args:
+        request: OAuth 登入請求，包含 redirect_url（前端 callback URL）
+        response: FastAPI Response 物件，用於設定 cookie
+
+    Returns:
+        OAuthLoginResponse: 包含 Google OAuth 授權 URL
+    """
+    try:
+        from app.config import settings
+        import urllib.parse
+        import secrets
+        import hashlib
+        import base64
+
+        supabase_url = settings.supabase_url
+        provider = "google"
+
+        # 生成 PKCE code_verifier 和 code_challenge
+        code_verifier = base64.urlsafe_b64encode(secrets.token_bytes(32)).decode('utf-8').rstrip('=')
+        code_challenge_bytes = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+        code_challenge = base64.urlsafe_b64encode(code_challenge_bytes).decode('utf-8').rstrip('=')
+
+        # 將 code_verifier 儲存到 HTTP-only cookie（TTL 10 分鐘）
+        # 使用 httponly=True 確保前端 JavaScript 無法訪問（防止 XSS）
+        # 使用 samesite='lax' 允許從 OAuth 重定向回來時攜帶 cookie
+        response.set_cookie(
+            key="oauth_code_verifier",
+            value=code_verifier,
+            max_age=600,  # 10 分鐘
+            httponly=True,
+            secure=False,  # 本地開發使用 HTTP，生產環境應設為 True
+            samesite="lax"
+        )
+
+        logger.info("已儲存 code_verifier 到 HTTP-only cookie")
+
+        # 構建查詢參數（包含 PKCE 參數但不包含自定義 state）
+        params = {
+            "provider": provider,
+            "redirect_to": request.redirect_url,
+            # Google OAuth 特定參數
+            "access_type": "offline",
+            "prompt": "consent",
+            # PKCE 參數
+            "code_challenge": code_challenge,
+            "code_challenge_method": "S256",
+        }
+
+        # 生成完整的 OAuth URL
+        query_string = urllib.parse.urlencode(params)
+        authorization_url = f"{supabase_url}/auth/v1/authorize?{query_string}"
+
+        logger.info("生成 Google OAuth URL (PKCE=enabled)")
+
+        return OAuthLoginResponse(
+            authorization_url=authorization_url
+        )
+
+    except Exception as e:
+        logger.error(f"生成 OAuth URL 失敗: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="無法啟動 Google OAuth 登入流程"
+        )
+
+
 @router.post("/oauth/callback", response_model=OAuthCallbackResponse)
 async def oauth_callback(
     request: OAuthCallbackRequest,
     response: Response,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    oauth_code_verifier: Annotated[Optional[str], Cookie(alias="oauth_code_verifier")] = None
 ):
     """
     處理 OAuth 授權回調
@@ -67,58 +165,30 @@ async def oauth_callback(
     - 3.1: 呼叫 OAuth 使用者服務
     - 3.4: 初始化 Karma（若為新使用者）
     - 12.1: 返回 JWT token 和使用者資料
-    - 安全性需求：CSRF 防護（OAuth State 驗證）
+    - 安全性需求：PKCE 保護
 
     流程：
-    0. 驗證 OAuth state 參數（CSRF 防護）
-    1. 使用授權碼交換 Supabase session
-    2. 從 session 提取使用者資料（email, name, sub）
-    3. 建立或更新 OAuth 使用者
-    4. 若為新使用者，初始化 Karma
-    5. 生成 JWT token
-    6. 設定 httpOnly cookies
-    7. 返回使用者資料和 token
+    1. 從 cookie 讀取 code_verifier
+    2. 使用授權碼 + code_verifier 交換 Supabase session
+    3. 從 session 提取使用者資料（email, name, sub）
+    4. 建立或更新 OAuth 使用者
+    5. 若為新使用者，初始化 Karma
+    6. 生成 JWT token
+    7. 設定 httpOnly cookies
+    8. 返回使用者資料和 token
     """
-    # 步驟 0: 驗證 OAuth state 參數（CSRF 防護）
-    # 注意：目前前端可能未傳送 state，所以暫時設為可選
-    # 未來應強制要求 state 參數
-    if request.state:
-        from app.services.oauth_state_service import OAuthStateService
-        from app.core.dependencies import get_redis_client
-
-        redis_client = get_redis_client()
-
-        if redis_client:
-            try:
-                state_service = OAuthStateService(redis_client)
-                is_valid = state_service.verify_and_consume_state(request.state)
-
-                if not is_valid:
-                    logger.warning(
-                        f"無效的 OAuth state 參數: {request.state[:8]}...",
-                        extra={"state": request.state[:16]}
-                    )
-                    raise InvalidRequestError(
-                        "無效的 state 參數，可能是 CSRF 攻擊或請求已過期"
-                    )
-
-                logger.info("OAuth state 驗證成功")
-
-            except InvalidRequestError:
-                # 重新拋出驗證錯誤
-                raise
-            except Exception as e:
-                # Redis 錯誤不應阻擋 OAuth 流程（降級處理）
-                logger.warning(f"OAuth state 驗證失敗（非致命）: {e}")
-        else:
-            # Redis 不可用，記錄警告但繼續流程
-            logger.warning("Redis 不可用，無法驗證 OAuth state 參數")
-    else:
-        # 前端未傳送 state（向後相容）
-        logger.info("OAuth callback 未包含 state 參數（向後相容模式）")
-
     try:
-        # 步驟 1: 使用 Supabase SDK 交換授權碼（帶重試邏輯）
+        # 步驟 1: 從 cookie 讀取 code_verifier（用於 PKCE flow）
+        code_verifier = oauth_code_verifier
+
+        if code_verifier:
+            logger.info("已從 cookie 取得 code_verifier (PKCE enabled)")
+            # 刪除已使用的 code_verifier cookie
+            response.delete_cookie(key="oauth_code_verifier")
+        else:
+            logger.warning("Cookie 中找不到 code_verifier，將使用非 PKCE 流程")
+
+        # 步驟 2: 使用 Supabase SDK 交換授權碼（帶重試邏輯）
         supabase = get_supabase_client()
 
         async def exchange_code():
@@ -126,9 +196,13 @@ async def oauth_callback(
             try:
                 # 執行授權碼交換
                 # Supabase Python SDK 2.20.0 使用同步 API
-                auth_response = supabase.auth.exchange_code_for_session({
-                    "auth_code": request.code
-                })
+                # 如果有 code_verifier，則使用 PKCE flow
+                exchange_params = {"auth_code": request.code}
+                if code_verifier:
+                    exchange_params["code_verifier"] = code_verifier
+                    logger.info("使用 PKCE flow 進行授權碼交換")
+
+                auth_response = supabase.auth.exchange_code_for_session(exchange_params)
 
                 if not auth_response or not auth_response.session:
                     raise OAuthAuthorizationError(

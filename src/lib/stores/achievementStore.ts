@@ -3,7 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { useErrorStore } from '@/lib/errorStore'
 import { timedFetch } from '@/lib/metrics'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// 使用空字串讓請求透過 Next.js API proxy 轉發
+const API_BASE_URL = ''
 
 // ============================================================================
 // Types & Interfaces

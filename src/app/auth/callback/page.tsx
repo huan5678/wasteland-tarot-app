@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useEffect, useState, Suspense } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useOAuth } from '@/hooks/useOAuth'
 import { useAuthStore } from '@/lib/authStore'
@@ -19,9 +19,15 @@ function CallbackContent() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const hasProcessedRef = useRef(false) // 防止重複處理（React StrictMode）
 
   useEffect(() => {
+    // 防止 React StrictMode 重複執行
+    if (hasProcessedRef.current) return
+    hasProcessedRef.current = true
+
     const code = searchParams?.get('code')
+    const state = searchParams?.get('state')
     const error = searchParams?.get('error')
 
     if (error) {
@@ -36,8 +42,8 @@ function CallbackContent() {
       return
     }
 
-    // 處理 OAuth 回調
-    handleOAuthCallback(code)
+    // 處理 OAuth 回調（傳遞 code 和 state）
+    handleOAuthCallback(code, state)
       .then(result => {
         if (result.success && result.user) {
           // 更新 auth store

@@ -1,10 +1,9 @@
 /**
  * useOAuth Hook - Google OAuth 流程管理
- * 封裝 Supabase OAuth 認證流程
+ * 重構後：完全透過後端 API 處理，不直接依賴 Supabase SDK
  */
 
 import { useState, useCallback } from 'react'
-import { createClient } from '@/utils/supabase/client'
 
 interface OAuthState {
   loading: boolean
@@ -29,29 +28,38 @@ export function useOAuth() {
     error: null,
   })
 
-  const supabase = createClient()
-
   /**
    * 啟動 Google OAuth 登入流程
+   * 重構後：呼叫後端 API 取得 OAuth URL，然後重導向
    */
   const signInWithGoogle = useCallback(async () => {
     setState({ loading: true, error: null })
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+      // 呼叫後端 API 取得 Google OAuth URL
+      // 使用 Next.js API proxy (空字串表示使用相對路徑，會經過 /api/v1/[...path] proxy)
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+      const apiPath = API_BASE_URL ? `${API_BASE_URL}/api/v1/auth/oauth/google/login` : '/api/v1/auth/oauth/google/login'
+      const response = await fetch(apiPath, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
+        credentials: 'include',
+        body: JSON.stringify({
+          redirect_url: `${window.location.origin}/auth/callback`,
+        }),
       })
 
-      if (error) {
-        throw new Error(error.message)
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.detail || '無法啟動 Google 登入')
       }
+
+      const data = await response.json()
+
+      // 重導向到 Google OAuth 頁面
+      window.location.href = data.authorization_url
 
       // OAuth 流程會自動重導向，無需手動處理
       return { success: true }
@@ -66,7 +74,7 @@ export function useOAuth() {
 
       return { success: false, error: errorMessage }
     }
-  }, [supabase])
+  }, [])
 
   /**
    * 處理 OAuth 回調
@@ -78,7 +86,7 @@ export function useOAuth() {
    * - 後端負責交換 session、建立使用者、設定 cookies
    */
   const handleOAuthCallback = useCallback(async (
-    code: string
+    code: string, state?: string | null
   ): Promise<OAuthCallbackResult> => {
     setState({ loading: true, error: null })
 
@@ -90,15 +98,16 @@ export function useOAuth() {
       // 3. 建立或更新資料庫使用者記錄
       // 4. 生成 JWT tokens 並設定 httpOnly cookies
       // 5. 返回使用者資料
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
-      const response = await fetch(`${API_BASE_URL}/auth/oauth/callback`, {
+      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ''
+      const apiPath = API_BASE_URL ? `${API_BASE_URL}/api/v1/auth/oauth/callback` : '/api/v1/auth/oauth/callback'
+      const response = await fetch(apiPath, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include', // 包含 cookies 以接收 httpOnly cookies
         body: JSON.stringify({
-          code,
+          code, state: state || undefined,
         }),
       })
 
