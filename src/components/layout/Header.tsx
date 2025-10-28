@@ -58,8 +58,9 @@ export function Header() {
   }, [user, startTokenExpiryMonitor, stopTokenExpiryMonitor])
 
   const handleLogout = () => {
+    // authStore.logout() 已經會處理重導向至首頁
+    // 不需要在這裡再次呼叫 router.push('/')
     logout()
-    router.push('/')
   }
 
   const handleNavigation = (href: string) => {
