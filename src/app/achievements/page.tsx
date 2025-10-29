@@ -26,7 +26,7 @@ import {
  */
 export default function AchievementsPage() {
   const router = useRouter()
-  const { user, token, isInitialized } = useAuthStore()
+  const { user, isInitialized } = useAuthStore()
   const {
     userProgress,
     summary,
@@ -48,18 +48,18 @@ export default function AchievementsPage() {
 
   // 認證檢查
   useEffect(() => {
-    if (isInitialized && !token) {
+    if (isInitialized && !user) {
       router.push('/auth/login')
     }
-  }, [isInitialized, token, router])
+  }, [isInitialized, user, router])
 
   // 載入成就資料
   useEffect(() => {
-    if (token) {
+    if (user) {
       fetchUserProgress()
       fetchSummary()
     }
-  }, [token, fetchUserProgress, fetchSummary])
+  }, [user, fetchUserProgress, fetchSummary])
 
   // 處理類別篩選變更
   const handleFilterChange = (category: AchievementCategory | null) => {
