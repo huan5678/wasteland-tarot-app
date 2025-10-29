@@ -29,6 +29,7 @@ from app.api.v1.endpoints import (
     test_ai,
     share,
     achievements,
+    journal,
 )
 from app.api import oauth, webauthn
 
@@ -187,4 +188,10 @@ api_router.include_router(
 api_router.include_router(
     share.router,
     tags=["🔗 Share"]
+)
+
+# Journal endpoints - 塔羅日記
+api_router.include_router(
+    journal.router,
+    tags=["📔 Journal"]
 )

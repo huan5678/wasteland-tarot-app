@@ -79,6 +79,9 @@ from .achievement import (
     AchievementRarity,
     AchievementStatus,
 )
+from .reading_journal import (
+    ReadingJournal,
+)
 
 __all__ = [
     "Base",
@@ -146,4 +149,6 @@ __all__ = [
     "NewAchievementCategory",
     "AchievementRarity",
     "AchievementStatus",
+    # Journal Models
+    "ReadingJournal",
 ]

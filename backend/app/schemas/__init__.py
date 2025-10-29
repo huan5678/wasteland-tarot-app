@@ -42,6 +42,12 @@ from .achievement import (
     AchievementAlreadyClaimedError,
     AchievementNotUnlockedError,
 )
+from .journal import (
+    JournalCreate,
+    JournalUpdate,
+    JournalResponse,
+    JournalListResponse,
+)
 
 __all__ = [
     "SessionCreateSchema",
@@ -80,4 +86,9 @@ __all__ = [
     "AchievementErrorResponse",
     "AchievementAlreadyClaimedError",
     "AchievementNotUnlockedError",
+    # Journal schemas
+    "JournalCreate",
+    "JournalUpdate",
+    "JournalResponse",
+    "JournalListResponse",
 ]
