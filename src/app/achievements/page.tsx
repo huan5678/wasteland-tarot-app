@@ -103,7 +103,7 @@ export default function AchievementsPage() {
   }, [userProgress, searchQuery])
 
   // 等待認證初始化
-  if (!isInitialized || !token) {
+  if (!isInitialized || !user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">

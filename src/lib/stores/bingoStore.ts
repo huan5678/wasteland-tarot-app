@@ -213,26 +213,8 @@ interface BingoStore {
 // ============================================================================
 
 /**
- * 取得認證 Token
- */
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('pip-boy-token')
-}
-
-/**
- * 建立認證 Headers
- */
-const createAuthHeaders = (): HeadersInit => {
-  const token = getAuthToken()
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  }
-}
-
-/**
  * 統一的 API 請求函數
+ * 使用 httpOnly cookies 進行認證（透過 credentials: 'include'）
  */
 async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`
@@ -246,28 +228,100 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       useErrorStore.getState().setNetworkOnline(true)
     }
 
-    // 使用 timedFetch 追蹤效能
+    // 使用 timedFetch 追蹤效能，並透過 credentials: 'include' 自動傳送 httpOnly cookies
     const response = await timedFetch(url, {
       ...options,
+      credentials: 'include', // 啟用 httpOnly cookie 傳輸
       headers: {
-        ...createAuthHeaders(),
+        'Content-Type': 'application/json',
         ...options.headers,
+        // 注意：不需要手動設定 Authorization header，httpOnly cookie 會自動傳送
       },
     })
 
+    // 處理 401 Unauthorized 錯誤
+    if (response.status === 401) {
+      // 判斷是 token 過期還是缺少 token
+      const reason = response.statusText === 'Token expired'
+        ? 'session_expired'
+        : 'auth_required'
+
+      // 記錄錯誤
+      console.error(`[BingoStore] API Error: ${endpoint}`, {
+        status: 401,
+        reason,
+        endpoint,
+        method: options.method || 'GET',
+        timestamp: new Date().toISOString(),
+      })
+
+      // 推送錯誤至 errorStore
+      useErrorStore.getState().pushError({
+        source: 'api',
+        message: '認證失敗',
+        detail: {
+          endpoint,
+          method: options.method || 'GET',
+          statusCode: 401,
+          reason,
+        },
+      })
+
+      // Task 3.2: 儲存當前 URL 到 sessionStorage 供登入後返回
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('auth-return-url', window.location.pathname)
+        window.location.href = `/auth/login?reason=${reason}`
+      }
+
+      throw new Error('Authentication required')
+    }
+
+    // 處理其他錯誤
     if (!response.ok) {
       const errorData: APIError = await response.json().catch(() => ({ detail: '未知錯誤' }))
+
+      console.error(`[BingoStore] API Error: ${endpoint}`, {
+        status: response.status,
+        message: errorData.detail,
+        endpoint,
+        method: options.method || 'GET',
+        timestamp: new Date().toISOString(),
+      })
+
+      useErrorStore.getState().pushError({
+        source: 'api',
+        message: errorData.detail || `HTTP ${response.status}`,
+        detail: {
+          endpoint,
+          method: options.method || 'GET',
+          statusCode: response.status,
+        },
+      })
+
       throw new Error(errorData.detail || `HTTP ${response.status}`)
     }
 
     return response.json()
   } catch (err: any) {
+    // 捕獲所有錯誤（包括網路錯誤、ReferenceError 等）
+    console.error(`[BingoStore] API Error: ${endpoint}`, {
+      error: err?.message || '未知錯誤',
+      stack: err?.stack,
+      endpoint,
+      method: options.method || 'GET',
+      timestamp: new Date().toISOString(),
+    })
+
     // 推送錯誤至全域錯誤 Store
     useErrorStore.getState().pushError({
-      source: 'bingo-api',
-      message: err.message || 'API 錯誤',
-      detail: { endpoint, options },
+      source: 'api',
+      message: err?.message || 'API 請求失敗',
+      detail: {
+        endpoint,
+        method: options.method || 'GET',
+      },
     })
+
     throw err
   }
 }

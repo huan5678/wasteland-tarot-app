@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { PixelIcon } from '@/components/ui/icons'
 import { useAuthStore } from '@/lib/authStore'
 import { useErrorStore } from '@/lib/errorStore'
@@ -34,6 +34,7 @@ interface LoginFormProps {
 
 export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const pushError = useErrorStore(s => s.pushError)
 
   const login = useAuthStore(s => s.login)
@@ -69,7 +70,28 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [showTraditionalForm, setShowTraditionalForm] = useState(false)
+  const [reasonMessage, setReasonMessage] = useState<string | null>(null)
   const loading = false
+
+  // Task 3.1: Parse reason parameter and display message
+  useEffect(() => {
+    const reason = searchParams.get('reason')
+    if (reason) {
+      // Map reason to Traditional Chinese message
+      if (reason === 'auth_required') {
+        setReasonMessage('請先登入以存取此功能')
+      } else if (reason === 'session_expired') {
+        setReasonMessage('您的登入已過期，請重新登入')
+      }
+
+      // Clear reason parameter from URL after 2 seconds
+      const timer = setTimeout(() => {
+        router.replace('/auth/login', undefined)
+      }, 2000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [searchParams, router])
 
   // Load remembered email from localStorage
   useEffect(() => {
@@ -162,10 +184,31 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
       // Wait a bit to ensure cookies are set before redirecting
       await new Promise(resolve => setTimeout(resolve, 500))
 
-      console.log('[LoginForm] Redirecting to dashboard...')
+      // Task 3.2: Check for return URL in sessionStorage
+      const returnUrl = typeof window !== 'undefined' ? sessionStorage.getItem('auth-return-url') : null
+      let redirectUrl = '/dashboard' // Default fallback
+
+      if (returnUrl) {
+        // Validate returnUrl is a valid internal path (not external URL)
+        try {
+          const url = new URL(returnUrl, window.location.origin)
+          // Only allow same-origin URLs
+          if (url.origin === window.location.origin) {
+            redirectUrl = url.pathname
+          }
+        } catch {
+          // Invalid URL format, use default
+          console.warn('[LoginForm] Invalid return URL, using default:', returnUrl)
+        }
+
+        // Clear returnUrl from sessionStorage
+        sessionStorage.removeItem('auth-return-url')
+      }
+
+      console.log('[LoginForm] Redirecting to:', redirectUrl)
 
       // Use window.location.href for reliable redirect (avoid HMR interference)
-      window.location.href = '/dashboard'
+      window.location.href = redirectUrl
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '登入失敗'
 
@@ -320,6 +363,18 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
           className="bg-wasteland-dark border-2 border-pip-boy-green rounded-none p-6 shadow-lg shadow-pip-boy-green/20"
           onSubmit={handleSubmit}
         >
+          {/* Task 3.1: Reason Message Display */}
+          {reasonMessage && (
+            <div
+              role="alert"
+              aria-live="polite"
+              className="mb-4 p-3 border border-radiation-orange bg-radiation-orange/10 text-pip-boy-green text-sm flex items-center"
+            >
+              <PixelIcon name="information" sizePreset="xs" variant="warning" className="mr-2" decorative />
+              {reasonMessage}
+            </div>
+          )}
+
           {/* Error Display */}
           {submitError && (
             <div

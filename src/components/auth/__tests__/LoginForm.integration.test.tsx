@@ -26,6 +26,9 @@ jest.mock('next/navigation', () => ({
     push: mockPush,
     replace: mockReplace,
   }),
+  useSearchParams: () => ({
+    get: () => null,
+  }),
 }))
 
 // Mock AuthStore
