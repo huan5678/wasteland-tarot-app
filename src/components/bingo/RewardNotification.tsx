@@ -77,7 +77,7 @@ export default function RewardNotification({
               exit={{ scale: 0.5, opacity: 0, rotate: 10 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative max-w-md w-full bg-black border-4 border-amber-600 rounded-lg shadow-2xl shadow-amber-600/50 overflow-hidden"
+              className="relative max-w-md w-full bg-black border-4 border-pip-boy-green rounded-lg shadow-2xl shadow-pip-boy-green/50 overflow-hidden"
             >
               {/* 粒子效果層 */}
               <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -96,7 +96,7 @@ export default function RewardNotification({
                       delay: particle.delay,
                       ease: 'easeOut',
                     }}
-                    className="absolute top-1/2 left-1/2 w-2 h-2 bg-amber-400 rounded-full"
+                    className="absolute top-1/2 left-1/2 w-2 h-2 bg-pip-boy-green rounded-full"
                   />
                 ))}
               </div>
@@ -124,7 +124,7 @@ export default function RewardNotification({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="text-4xl font-bold text-amber-400 tracking-wider mb-2"
+                  className="text-4xl font-bold text-pip-boy-green tracking-wider mb-2"
                 >
                   恭喜！
                 </motion.h2>
@@ -143,7 +143,7 @@ export default function RewardNotification({
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="mb-6 p-4 bg-amber-900/30 border border-amber-600 rounded-lg"
+                  className="mb-6 p-4 bg-pip-boy-green-deep/30 border border-pip-boy-green rounded-lg"
                 >
                   <p className="text-amber-300 text-lg mb-2">
                     {rewardDetails?.description || '本月賓果獎勵已發放'}
@@ -165,7 +165,7 @@ export default function RewardNotification({
                   <p className="text-gray-300 text-sm mb-2">
                     🎉 你在廢土中找到了珍貴的補給！
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-wasteland-lighter text-xs">
                     下個月可以再次挑戰賓果遊戲
                   </p>
                 </motion.div>
@@ -195,7 +195,7 @@ export default function RewardNotification({
                   repeat: Infinity,
                   ease: 'easeInOut',
                 }}
-                className="absolute inset-0 bg-gradient-radial from-amber-600/20 to-transparent pointer-events-none"
+                className="absolute inset-0 bg-gradient-radial from-pip-boy-green/20 to-transparent pointer-events-none"
               />
             </motion.div>
           </motion.div>
