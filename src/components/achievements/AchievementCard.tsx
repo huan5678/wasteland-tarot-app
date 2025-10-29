@@ -3,7 +3,7 @@
 import React from 'react'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { PixelIcon } from '@/components/ui/icons'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { SimpleProgressBar } from '@/components/ui/ProgressBar'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
@@ -199,14 +199,22 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
         {/* 圖示和類別 */}
         <div className="flex items-start gap-3 mb-2">
           <div className={cn(
-            'flex items-center justify-center w-12 h-12 rounded-md',
+            'flex items-center justify-center w-12 h-12 rounded-md overflow-hidden',
             isClaimed ? 'bg-bg-tertiary' : rarityConfig.bgColor
           )}>
-            <PixelIcon
-              name={achievementDef.icon_name || categoryIcon}
-              sizePreset="md"
-              variant={isClaimed ? 'muted' : 'primary'}
-            />
+            {achievementDef.icon_image_url ? (
+              <img
+                src={achievementDef.icon_image_url}
+                alt={achievementDef.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <PixelIcon
+                name={achievementDef.icon_name || categoryIcon}
+                sizePreset="md"
+                variant={isClaimed ? 'muted' : 'primary'}
+              />
+            )}
           </div>
 
           <div className="flex-1 mt-1">
@@ -241,13 +249,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
               <span>進度</span>
               <span>{current_progress} / {target_progress}</span>
             </div>
-            <ProgressBar
-              current={current_progress}
-              max={target_progress}
-              variant="pip-boy"
-              size="sm"
-              showPercentage={true}
-            />
+            <SimpleProgressBar percentage={progress_percentage || 0} />
           </div>
         )}
 

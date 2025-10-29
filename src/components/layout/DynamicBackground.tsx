@@ -22,7 +22,7 @@ export const DynamicBackground: React.FC = () => {
     }
 
     if (pathname.startsWith('/dashboard')) {
-      return { variant: 'dashboard' as const, animationIntensity: 'low' as const, useCRT: false };
+      return { variant: 'dashboard' as const, animationIntensity: 'low' as const, useCRT: true };
     }
 
     // Default background for other pages - 使用 CRT 掃描線背景

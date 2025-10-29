@@ -181,7 +181,7 @@ test.describe('帳號衝突解決完整流程', () => {
 
     // ========== 步驟 7: 驗證成功訊息 ==========
     await expect(
-      page.locator('text=/Google 帳號已連結！/).or(
+      page.locator('text=/Google 帳號已連結！/').or(
         page.locator('text=/您現在可以使用 Google 或密碼登入/')
       )
     ).toBeVisible({ timeout: 5000 });
@@ -230,7 +230,7 @@ test.describe('帳號衝突解決完整流程', () => {
 
     // ========== 步驟 7: 驗證錯誤訊息 ==========
     await expect(
-      page.locator('text=/密碼錯誤/).or(page.locator('text=/登入失敗/'))
+      page.locator('text=/密碼錯誤/').or(page.locator('text=/登入失敗/'))
     ).toBeVisible({ timeout: 3000 });
 
     // ========== 步驟 8: 驗證可以重試 ==========
@@ -281,7 +281,7 @@ test.describe('帳號衝突解決完整流程', () => {
     // 驗證建議訊息
     await expect(
       page
-        .locator('text=/使用忘記密碼功能/)
+        .locator('text=/使用忘記密碼功能/')
         .or(page.locator('text=/聯繫支援/'))
     ).toBeVisible();
   });
@@ -340,8 +340,8 @@ test.describe('帳號衝突解決完整流程', () => {
     await expect(passkeyMethodIcon).toBeVisible();
 
     const passkeyLoginButton = page.getByRole('button', {
-      name: /使用生物辨識登入/).or(page.getByRole('button', {name: /使用 Passkey 登入/})),
-    });
+      name: /使用生物辨識登入/
+    }).or(page.getByRole('button', {name: /使用 Passkey 登入/}));
     await expect(passkeyLoginButton).toBeVisible();
 
     // ========== 步驟 6: 點擊按鈕觸發 Passkey 登入 ==========

@@ -78,6 +78,7 @@ class AchievementResponse(BaseModel):
     category: AchievementCategory = Field(..., description="成就類別")
     rarity: AchievementRarity = Field(..., description="成就稀有度")
     icon_name: str = Field(..., description="圖示名稱（PixelIcon）")
+    icon_image_url: Optional[str] = Field(None, description="成就圖片 URL（選填）")
     criteria: Dict[str, Any] = Field(..., description="解鎖條件（JSON）")
     rewards: Dict[str, Any] = Field(..., description="獎勵內容（JSON）")
     is_hidden: bool = Field(..., description="是否為隱藏成就")

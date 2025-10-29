@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog'
 import { PixelIcon } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
-import { ProgressBar } from '@/components/ui/ProgressBar'
+import { SimpleProgressBar } from '@/components/ui/ProgressBar'
 import { cn } from '@/lib/utils'
 import {
   UserAchievementProgress,
@@ -166,18 +166,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   onClaim,
   isClaiming = false
 }) => {
-  if (!achievement) return null
-
-  const { achievement: achievementDef, status, current_progress, target_progress, unlocked_at, claimed_at } = achievement
-  const rarityConfig = getRarityConfig(achievementDef.rarity)
-  const categoryLabel = getCategoryLabel(achievementDef.category as AchievementCategory)
-  const criteriaDescription = parseCriteriaDescription(achievementDef.criteria)
-
-  const isUnlocked = status === AchievementStatus.UNLOCKED
-  const isClaimed = status === AchievementStatus.CLAIMED
-  const isInProgress = status === AchievementStatus.IN_PROGRESS
-
-  // 處理鍵盤導航
+  // 處理鍵盤導航 - MUST be before early return to follow React Hooks rules
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -190,6 +179,18 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
       return () => document.removeEventListener('keydown', handleEscape)
     }
   }, [isOpen, onClose])
+
+  // Early return after all Hooks
+  if (!achievement) return null
+
+  const { achievement: achievementDef, status, current_progress, target_progress, progress_percentage, unlocked_at, claimed_at } = achievement
+  const rarityConfig = getRarityConfig(achievementDef.rarity)
+  const categoryLabel = getCategoryLabel(achievementDef.category as AchievementCategory)
+  const criteriaDescription = parseCriteriaDescription(achievementDef.criteria)
+
+  const isUnlocked = status === AchievementStatus.UNLOCKED
+  const isClaimed = status === AchievementStatus.CLAIMED
+  const isInProgress = status === AchievementStatus.IN_PROGRESS
 
   const handleClaim = () => {
     if (isUnlocked && onClaim) {
@@ -209,16 +210,24 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
           <div className="flex items-start gap-4">
             {/* 成就圖示 */}
             <div className={cn(
-              'flex items-center justify-center w-20 h-20 rounded-lg',
+              'flex items-center justify-center w-20 h-20 rounded-lg overflow-hidden',
               rarityConfig.bgColor,
               rarityConfig.glow
             )}>
-              <PixelIcon
-                name={achievementDef.icon_name || 'trophy'}
-                sizePreset="xl"
-                variant="primary"
-                decorative
-              />
+              {achievementDef.icon_image_url ? (
+                <img
+                  src={achievementDef.icon_image_url}
+                  alt={achievementDef.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <PixelIcon
+                  name={achievementDef.icon_name || 'trophy'}
+                  sizePreset="xl"
+                  variant="primary"
+                  decorative
+                />
+              )}
             </div>
 
             {/* 標題與標籤 */}
@@ -266,13 +275,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
                   <span>當前進度</span>
                   <span className="font-semibold">{current_progress} / {target_progress}</span>
                 </div>
-                <ProgressBar
-                  current={current_progress}
-                  max={target_progress}
-                  variant="pip-boy"
-                  size="md"
-                  showPercentage={true}
-                />
+                <SimpleProgressBar percentage={progress_percentage || 0} />
               </div>
             </div>
           )}

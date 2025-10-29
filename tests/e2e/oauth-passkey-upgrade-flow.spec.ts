@@ -330,7 +330,7 @@ test.describe('OAuth 註冊與 Passkey 升級完整流程', () => {
 
     // ========== 步驟 6: 驗證錯誤訊息顯示 ==========
     await expect(
-      page.locator('text=/Passkey 註冊失敗/).or(page.locator('text=/錯誤/'))
+      page.locator('text=/Passkey 註冊失敗/').or(page.locator('text=/錯誤/'))
     ).toBeVisible({ timeout: 5000 });
 
     // ========== 步驟 7: 驗證重試和跳過選項存在 ==========
@@ -372,7 +372,7 @@ test.describe('OAuth 註冊與 Passkey 升級完整流程', () => {
 
     // ========== 步驟 4: 驗證不支援訊息 ==========
     await expect(
-      page.locator('text=/您的裝置不支援 Passkey/).or(
+      page.locator('text=/您的裝置不支援 Passkey/').or(
         page.locator('text=/WebAuthn/')
       )
     ).toBeVisible({ timeout: 5000 });

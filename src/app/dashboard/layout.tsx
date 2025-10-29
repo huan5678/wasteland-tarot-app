@@ -96,7 +96,7 @@ export default function DashboardLayout({
   // 不在這裡阻擋渲染，避免卡在 loading 畫面
 
   return (
-    <div className="flex min-h-screen bg-wasteland-dark">
+    <div className="flex min-h-screen bg-transparent">
       {/* 桌面版 Sidebar（固定） */}
       <div className="hidden md:block">
         <DashboardSidebar />

@@ -46,6 +46,7 @@ export interface Achievement {
   category: AchievementCategory
   rarity: AchievementRarity
   icon_name: string
+  icon_image_url?: string | null
   criteria: Record<string, any>
   rewards: Record<string, any>
   is_hidden: boolean
