@@ -27,7 +27,7 @@ import BingoHistory from '@/components/bingo/BingoHistory'
  */
 export default function BingoPage() {
   const router = useRouter()
-  const { user, token, isInitialized } = useAuthStore()
+  const { user, isInitialized } = useAuthStore()
   const {
     hasCard,
     userCard,
@@ -47,17 +47,17 @@ export default function BingoPage() {
 
   // 認證檢查
   useEffect(() => {
-    if (isInitialized && !token) {
+    if (isInitialized && !user) {
       router.push('/auth/login')
     }
-  }, [isInitialized, token, router])
+  }, [isInitialized, user, router])
 
   // 載入賓果狀態
   useEffect(() => {
-    if (token) {
+    if (user) {
       fetchBingoStatus()
     }
-  }, [token, fetchBingoStatus])
+  }, [user, fetchBingoStatus])
 
   // 監控獎勵狀態變化，顯示通知
   useEffect(() => {
@@ -68,7 +68,7 @@ export default function BingoPage() {
   }, [hasReward, prevHasReward])
 
   // 等待認證初始化
-  if (!isInitialized || !token) {
+  if (!isInitialized || !user) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
