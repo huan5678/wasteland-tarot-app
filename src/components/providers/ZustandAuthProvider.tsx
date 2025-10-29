@@ -24,28 +24,16 @@ export function ZustandAuthInitializer({ children }: { children: React.ReactNode
     })
   }, [initialize, mounted])
 
+  // 檢查是否為首頁
+  const isHomePage = pathname === '/'
+
   // Prevent hydration mismatch by always showing loading on initial render
   // SSR 時 mounted = false，所以總是顯示 loading
   // 客戶端初次渲染時 mounted = false，也顯示 loading（與 SSR 一致）
-  // 只有在 mounted = true 之後才檢查 isInitialized
-  if (!mounted) {
-    // 在 SSR 和客戶端初次渲染時，總是顯示相同的 loading 畫面
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-black z-50" suppressHydrationWarning>
-        <LoadingSpinner
-          size="lg"
-          text="INITIALIZING VAULT RESIDENT STATUS..."
-          centered
-        />
-      </div>
-    )
-  }
-
-  // mounted = true 之後，才根據頁面路徑和初始化狀態決定顯示內容
-  if (!isInitialized) {
-    const isHomePage = pathname === '/'
-
+  // 首頁使用 AsciiLoading，其他頁面使用 LoadingSpinner
+  if (!mounted || !isInitialized) {
     if (isHomePage) {
+      // 首頁：使用 AsciiLoading（Nuka Cola 瓶子動畫）
       return (
         <AsciiLoading
           type="bottle"
@@ -55,6 +43,7 @@ export function ZustandAuthInitializer({ children }: { children: React.ReactNode
       )
     }
 
+    // 非首頁：使用 LoadingSpinner
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-black z-50" suppressHydrationWarning>
         <LoadingSpinner

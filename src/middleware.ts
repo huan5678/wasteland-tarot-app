@@ -67,6 +67,11 @@ function checkTokenExists(request: NextRequest): { isValid: boolean } {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // 首頁總是允許訪問（不需驗證）
+  if (pathname === '/') {
+    return NextResponse.next()
+  }
+
   // 檢查是否為訪客允許的路由
   const isGuestAllowed = guestAllowedRoutes.some(route =>
     pathname.startsWith(route)
@@ -74,6 +79,11 @@ export async function middleware(request: NextRequest) {
 
   // 訪客允許的路由直接通過，不需驗證
   if (isGuestAllowed) {
+    return NextResponse.next()
+  }
+
+  // OAuth callback 路由需要特殊處理，不驗證 token
+  if (pathname.startsWith('/auth/callback')) {
     return NextResponse.next()
   }
 
@@ -86,11 +96,6 @@ export async function middleware(request: NextRequest) {
   const isPublicRoute = publicRoutes.some(route =>
     pathname.startsWith(route)
   )
-
-  // OAuth callback 路由需要特殊處理，不驗證 token
-  if (pathname.startsWith('/auth/callback')) {
-    return NextResponse.next()
-  }
 
   // 檢查 token 是否存在（簡化版，實際驗證由前端處理）
   const { isValid } = checkTokenExists(request)

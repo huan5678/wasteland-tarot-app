@@ -136,13 +136,15 @@ export function SuitCardGrid({ children, className }: SuitCardGridProps) {
   return (
     <div
       className={cn(
-        // 響應式網格佈局
-        'grid gap-4 md:gap-6 lg:gap-8',
+        // 響應式網格佈局 - 階段式 gap
+        'grid gap-4 md:gap-5 lg:gap-6',
         // 行動裝置: 1 欄
         'grid-cols-1',
-        // 平板: 2 欄
+        // 小平板: 2 欄 (640px+)
         'sm:grid-cols-2',
-        // 桌面: 3 欄(5 個花色,3x2 佈局)
+        // 平板: 3 欄 (768px+) - 充分利用空間
+        'md:grid-cols-3',
+        // 桌面: 3 欄 (1024px+) - 5 個花色,3x2 佈局
         'lg:grid-cols-3',
         className
       )}

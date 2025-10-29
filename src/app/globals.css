@@ -126,17 +126,33 @@
 }
 
 /* CRT Flicker Animation - CRT 螢幕閃爍效果（可選，用於強化復古感） */
+/* CRT 隨機閃爍動畫 - 通用版本 */
 @keyframes crt-flicker {
-  0%, 100% {
+  0%, 8%, 20%, 25%, 32%, 40%, 55%, 68%, 75%, 82%, 95%, 100% {
     opacity: 0.98;
   }
-  50% {
-    opacity: 1;
+  10% {
+    opacity: 0.90;
+  }
+  22% {
+    opacity: 0.86;
+  }
+  27% {
+    opacity: 0.83;
+  }
+  42% {
+    opacity: 0.88;
+  }
+  70% {
+    opacity: 0.85;
+  }
+  84% {
+    opacity: 0.91;
   }
 }
 
 .animate-crt-flicker {
-  animation: crt-flicker 0.15s infinite;
+  animation: crt-flicker 7s infinite; /* 7 秒一個循環，模擬隨機閃爍 */
 }
 
 /* Scale In Animation - 縮放進入動畫（成功/錯誤提示） */
@@ -4044,3 +4060,110 @@
   }
 }
 /* End of Pip-Boy Slider Styling */
+
+/* === CRT 掃描線與螢幕閃爍效果 === */
+/**
+ * CRT 掃描線與螢幕閃爍動畫效果
+ * 適用於復古 CRT 螢幕效果，包含掃描線（scanlines）和螢幕閃爍（flicker）動畫
+ * 適用於 Fallout Pip-Boy 風格或其他復古終端機介面
+ */
+
+/* CSS 變數定義 */
+:root {
+  /* 掃描線顏色 - 使用主題色的半透明版本 */
+  --crt-scanline-color: 120 100% 50% / 0.05;
+  --crt-flicker-color: 120 100% 50% / 0.02;
+}
+
+/* CRT 掃描線效果 (移動的水平線) */
+@keyframes crt-scanlines {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* 螢幕閃爍效果 */
+/* CRT 隨機閃爍動畫 - 模擬老舊螢幕的不規則閃爍 */
+@keyframes crt-flicker {
+  0%, 8%, 20%, 25%, 32%, 40%, 55%, 68%, 75%, 82%, 95%, 100% {
+    opacity: 1; /* 大部分時間保持正常 */
+  }
+  10% {
+    opacity: 0.92; /* 短暫輕微閃爍 */
+  }
+  22% {
+    opacity: 0.88; /* 稍強閃爍 */
+  }
+  27% {
+    opacity: 0.85; /* 更強閃爍 */
+  }
+  42% {
+    opacity: 0.90; /* 輕微閃爍 */
+  }
+  70% {
+    opacity: 0.87; /* 中等閃爍 */
+  }
+  84% {
+    opacity: 0.93; /* 非常輕微的閃爍 */
+  }
+}
+
+/* CRT 背景容器基礎樣式 */
+.crt-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background: var(--color-wasteland-darker);
+  overflow: hidden;
+}
+
+/* CRT 掃描線層 - 覆蓋在最上層 */
+.crt-scanlines-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    transparent 50%,
+    hsl(var(--crt-scanline-color)) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: crt-scanlines 0.1s linear infinite;
+}
+
+/* CRT 閃爍層 - 覆蓋在次上層 */
+.crt-flicker-layer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: hsl(var(--crt-flicker-color));
+  pointer-events: none;
+  z-index: 9998;
+  animation: crt-flicker 7s infinite; /* 7 秒一個循環，模擬隨機閃爍 */
+}
+
+/* 暗色網格紋理 - 背景層（已停用，只保留掃描線效果） */
+.crt-grid-layer {
+  display: none; /* 移除網格效果，只保留掃描線 */
+}
+
+/* 減少動畫支援 */
+@media (prefers-reduced-motion: reduce) {
+  .crt-scanlines-layer,
+  .crt-flicker-layer {
+    animation: none;
+  }
+}
+
+/* End of CRT Effects */

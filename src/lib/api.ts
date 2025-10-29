@@ -171,7 +171,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               throw new APIError(retryError.detail || `HTTP ${retryResponse.status}`, retryResponse.status)
             }
           } else {
-            // Refresh failed - clear auth state and redirect to login
+            // Refresh failed - clear auth state and redirect to login (only for protected routes)
             if (typeof window !== 'undefined') {
               // Clear localStorage auth state
               localStorage.removeItem('auth-store')
@@ -190,7 +190,18 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               })
 
               const currentPath = window.location.pathname
-              if (currentPath !== '/auth/login' && !currentPath.startsWith('/auth')) {
+
+              // 定義公開路由（不需要登入就能訪問）
+              const publicPaths = [
+                '/',              // 首頁
+                '/cards',         // 卡牌圖書館
+                '/readings/quick', // 快速占卜
+              ]
+
+              // 只有在受保護的路由才跳轉到登入頁
+              const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/auth')
+
+              if (!isPublicPath) {
                 window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentPath)}`
               }
             }

@@ -26,7 +26,7 @@ export default function ReadingsPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-wasteland-dark flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <PixelIcon name="lock" size={64} className="mb-4 mx-auto text-pip-boy-green" decorative />
           <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
@@ -48,7 +48,7 @@ export default function ReadingsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-wasteland-dark flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-pip-boy-green">載入占卜記錄中...</p>
@@ -74,10 +74,10 @@ export default function ReadingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-wasteland-dark p-4">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
+        <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 md:p-6 mb-6">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h1 className="text-2xl font-bold text-pip-boy-green">

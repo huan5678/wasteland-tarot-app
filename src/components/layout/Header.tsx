@@ -97,7 +97,7 @@ export function Header() {
     <header className="border-b-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-wasteland-dark)'}}>
       {/* Top Terminal Bar */}
       <div className="interface-header">
-        <div className="max-w-6xl mx-auto flex items-center justify-between px-2">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-2 md:px-4">
           <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
             <span className="hidden sm:inline">VAULT-TEC PIP-BOY 3000 MARK IV</span>
             <span className="sm:hidden">PIP-BOY 3000</span>
@@ -127,7 +127,7 @@ export function Header() {
             <img
               src="/logo.svg"
               alt="廢土塔羅 Logo"
-              className="w-12 h-12"
+              className="w-12 h-12 md:w-14 md:h-14"
               style={{
                 filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
               }}

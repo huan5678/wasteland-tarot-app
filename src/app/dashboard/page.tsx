@@ -196,7 +196,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Dashboard Header */}
         <div className="mb-8">
@@ -219,7 +219,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5 mb-6">
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 text-center">
               <div className="text-2xl font-bold text-pip-boy-green">{stats.totalReadings}</div>
               <div className="text-pip-boy-green/70 text-xs">占卜總數</div>
@@ -238,7 +238,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-8">
           <button
             onClick={() => window.location.href = '/readings/new'}
             className="border-2 border-pip-boy-green bg-pip-boy-green/10 hover:bg-pip-boy-green/20
@@ -283,7 +283,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Readings */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8 mb-8">
           <div>
             <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
               <PixelIcon name="scroll-text" size={20} className="mr-2" decorative />最近占卜

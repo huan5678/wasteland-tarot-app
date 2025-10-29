@@ -134,7 +134,7 @@ export default function CardListPage() {
   // 處理無效花色
   if (!isValidSuitType) {
     return (
-      <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
+      <div className="min-h-screen bg-transparent p-4 md:p-6 lg:p-8">
         <div className="max-w-7xl mx-auto">
           <Breadcrumb items={[{ label: '塔羅牌圖書館', href: '/cards' }, { label: '錯誤' }]} />
 
@@ -152,7 +152,7 @@ export default function CardListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-wasteland-dark p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-transparent p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* 麵包屑導航 */}
         <div className="mb-6">

@@ -68,8 +68,9 @@ function isAuthStateValid(): boolean {
     const authState: AuthStateStorage = JSON.parse(authStateStr)
     const currentTimestamp = Math.floor(Date.now() / 1000) // 轉換為秒
 
-    // 檢查是否過期（提前 60 秒判定過期，避免邊界情況）
-    return authState.expiresAt > currentTimestamp + 60
+    // 檢查是否過期（提前 5 分鐘判定過期，給用戶足夠的緩衝時間）
+    // 5 分鐘 = 300 秒
+    return authState.expiresAt > currentTimestamp + 300
   } catch (error) {
     console.warn('Failed to parse auth state:', error)
     return false
@@ -133,10 +134,11 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   /**
    * 初始化認證狀態
    *
-   * 重構變更：
-   * - 檢查 localStorage 登入狀態，若過期則直接設為未登入
-   * - 僅在有效登入狀態時才呼叫後端 /api/v1/auth/me
-   * - 後端會自動驗證 cookie 中的 access token 並返回過期時間
+   * 重構變更（2025-10-29）：
+   * - 改進分頁切換時的登入狀態保持
+   * - 優先檢查 localStorage 中的持久化用戶資料
+   * - 如果有持久化資料且未過期，先恢復登入狀態
+   * - 然後在背景呼叫後端驗證，失敗時才清空狀態
    * - 支援進度回調（最小顯示時間 5 秒）
    */
   initialize: async (onProgress?: (progress: number) => void) => {
@@ -154,9 +156,16 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       }
     }
 
-    // 重構：不再依賴 localStorage auth state 檢查
-    // 原因：localStorage 可能被清空，但 httpOnly cookies 仍有效
-    // 解決方案：直接嘗試使用 cookies 呼叫後端驗證，失敗時才清空狀態
+    // 檢查 localStorage 中的 auth state 是否有效
+    const hasValidAuthState = isAuthStateValid()
+
+    // 如果有有效的 auth state，先從 persist 恢復用戶狀態
+    // 這樣即使後端驗證失敗，用戶也不會看到「閃一下」就登出的情況
+    if (hasValidAuthState && get().user) {
+      console.log('[AuthStore] ✅ 發現有效的持久化登入狀態，先恢復用戶資料')
+      // 不需要額外操作，persist middleware 已經恢復了 user 資料
+    }
+
     console.log('[AuthStore] 🔐 嘗試使用 httpOnly cookies 驗證登入狀態...')
 
     // Start progress tracking
@@ -220,11 +229,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
       console.log('[AuthStore] ❌ 後端驗證失敗:', {
         status: error?.status,
-        message: error?.message
+        message: error?.message,
+        hasPersistedUser: !!get().user
       })
-
-      // 清除過期的登入狀態
-      clearAuthState()
 
       // 等待最小 loading 時間
       const elapsed = Date.now() - startTime
@@ -234,24 +241,32 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
       reportProgress(100)
 
-      // 401 表示未登入或 token 過期，這是正常情況
-      if (error?.status === 401) {
-        console.log('[AuthStore] 🔒 Token 過期或未登入（401），清除登入狀態')
+      // 重要修正：如果有持久化的用戶資料且 auth state 有效，
+      // 暫時保留登入狀態，不要立即清空
+      // 只有在 auth state 真正過期時才清空
+      if (hasValidAuthState && get().user) {
+        console.log('[AuthStore] ⚠️ 後端驗證失敗，但 localStorage 狀態有效，暫時保留用戶登入狀態')
+        set({
+          isLoading: false,
+          isInitialized: true,
+          // 保留 user、isOAuthUser 等資料
+          // 不設定 error，避免顯示錯誤訊息
+        })
+
+        // 啟動 token 過期監控（會在 token 真正過期時自動登出）
+        get().startTokenExpiryMonitor()
+      } else {
+        // auth state 已過期或沒有持久化資料，清除登入狀態
+        console.log('[AuthStore] 🔒 Token 過期或未登入，清除登入狀態')
+        clearAuthState()
+
         set({
           user: null,
           isOAuthUser: false,
           oauthProvider: null,
           profilePicture: null,
           isLoading: false,
-          isInitialized: true
-        })
-      } else {
-        // 其他錯誤（網路錯誤等）- 靜默失敗，不顯示錯誤
-        console.warn('[AuthStore] ⚠️ 其他錯誤（靜默失敗）:', error.message || error)
-        set({
-          user: null,
-          isLoading: false,
-          isInitialized: true
+          isInitialized: true,
           // 不設定 error，避免顯示 toast
         })
       }
@@ -451,8 +466,9 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   /**
    * 啟動 Token 過期監控
    *
-   * 每 60 秒檢查一次 token 狀態：
+   * 每 5 分鐘檢查一次 token 狀態：
    * - 如果 token 過期且使用者仍在登入狀態，自動登出
+   * - 降低檢查頻率以減少效能消耗
    */
   startTokenExpiryMonitor: () => {
     // 只在瀏覽器環境執行
@@ -463,18 +479,18 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       clearInterval(tokenExpiryTimerId)
     }
 
-    // 每 60 秒檢查一次
+    // 每 5 分鐘檢查一次（300 秒）
     tokenExpiryTimerId = setInterval(() => {
       const state = get()
 
       // 如果使用者已登入，檢查 token 是否過期
       if (state.user && !isAuthStateValid()) {
-        console.warn('Token expired, logging out user')
+        console.warn('[AuthStore] Token expired, logging out user')
 
         // 自動登出
         get().logout()
       }
-    }, 60 * 1000) // 60 秒
+    }, 5 * 60 * 1000) // 5 分鐘 = 300 秒
   },
 
   /**
