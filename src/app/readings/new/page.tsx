@@ -579,14 +579,15 @@ export default function NewReadingPage() {
 
             <form onSubmit={handleQuestionSubmit} className="space-y-6">
               <div>
-                <label htmlFor="question" className="block text-pip-boy-green text-sm mb-2">
+                <label htmlFor="question" className="block text-pip-boy-green text-sm font-bold tracking-wide mb-2 uppercase">
                   你希望從廢土靈魂那裡尋求什麼指引？
                 </label>
                 <textarea
                   id="question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="w-full px-4 py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green resize-none"
+                  className="w-full px-4 py-3 bg-wasteland-dark/50 border-2 border-pip-boy-green/50 text-pip-boy-green placeholder:text-pip-boy-green/40 focus:outline-none focus:border-pip-boy-green focus:shadow-[0_0_10px_rgba(0,255,136,0.5)] hover:border-pip-boy-green/70 disabled:cursor-not-allowed disabled:opacity-40 resize-none transition-colors font-[family-name:var(--font-cubic),monospace]"
+                  style={{ fontFamily: 'var(--font-cubic), monospace' }}
                   placeholder="詢問關於你在後末世世界中的道路、關係、挑戰或未來..."
                   rows={4}
                   required

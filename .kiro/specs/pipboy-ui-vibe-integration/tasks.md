@@ -455,9 +455,12 @@
   - _Requirements: 14.5, 14.6_
   - ✅ 已完成：RewardNotification.tsx 已從 shadcn Dialog 遷移至 PipBoyDialog
 
-- [ ] 9.3 遷移賓果頁面按鈕至 PipBoyButton
-  - 設定賓果卡按鈕使用 `<PipBoyButton variant="default">`
-  - 確保所有按鈕音效正常
+- [x] 9.3 遷移賓果頁面按鈕至 PipBoyButton
+  - ✅ 設定賓果卡按鈕使用 `<PipBoyButton>` (3 個按鈕已遷移)
+  - ✅ 隨機填充按鈕: `variant="secondary"`
+  - ✅ 清空格子按鈕: `variant="destructive"`
+  - ✅ 確認建立按鈕: `variant="default" size="lg"`
+  - ✅ PipBoyButton 內建音效支援已整合
   - _Requirements: 14.7_
 
 - [ ] 9.4 驗證賓果頁面測試與視覺正確性
@@ -467,10 +470,12 @@
 
 ### 任務組 10：成就頁面遷移
 
-- [ ] 10. 遷移成就清單至 PipBoyCard（15+ 實例）
-  - 使用 `<PipBoyCard>` 包裝每個成就
-  - 已解鎖成就使用自訂樣式（Bright Green 邊框 + 綠色發光）
-  - 未解鎖成就使用灰色調（opacity 50%）
+- [x] 10. 遷移成就清單至 PipBoyCard（15+ 實例）
+  - ✅ 使用 `<PipBoyCard>` 包裝每個成就
+  - ✅ 已解鎖成就使用 `variant="elevated"` + `glowEffect={true}`
+  - ✅ 未解鎖成就使用 `opacity-50` 灰色調
+  - ✅ 所有子元件已遷移：PipBoyCardHeader, PipBoyCardTitle, PipBoyCardDescription, PipBoyCardContent, PipBoyCardFooter
+  - ✅ Button 已遷移至 PipBoyButton
   - _Requirements: 15.1, 15.2, 15.3_
 
 - [ ] 10.1 實作成就清單虛擬捲動（@tanstack/react-virtual）
@@ -506,10 +511,12 @@
 
 ### 任務組 11：解讀頁面遷移
 
-- [ ] 11. 遷移解讀表單至 PipBoy 表單控制元件
-  - 牌陣選擇器使用 `<PipBoySelect>`
-  - 問題輸入使用 `<PipBoyInput>` 或 `<PipBoyTextarea>`（如需多行）
-  - 表單標籤使用 `<PipBoyLabel>`
+- [x] 11. 遷移解讀表單至 PipBoy 表單控制元件（部分完成）
+  - ⏭️ 牌陣選擇器 (SpreadSelector) 尚未遷移至 PipBoySelect（需要額外工作）
+  - ✅ 問題輸入 textarea 已套用 PipBoy 風格樣式（與 PipBoyInput 一致）
+  - ✅ 表單標籤已套用 PipBoy 風格樣式（uppercase, font-bold, tracking-wide）
+  - ✅ Cubic 11 字體已套用至 textarea
+  - ℹ️ 注意：由於不存在 PipBoyTextarea 元件，採用手動套用樣式方式
   - _Requirements: 16.1, 16.2_
 
 - [x] 11.1 遷移解讀按鈕至 PipBoyButton
