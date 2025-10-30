@@ -117,7 +117,7 @@ export default function AchievementsPage() {
   return (
     <div className="min-h-screen bg-black text-white pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-b from-gray-900 to-black border-b-2 border-pip-boy-green/50">
+      <div className="bg-gradient-to-b from-wasteland-medium to-black border-b-2 border-pip-boy-green/50">
         <div className="container mx-auto px-4 py-6">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
@@ -136,11 +136,11 @@ export default function AchievementsPage() {
                 廢土成就
               </h1>
             </div>
-            <p className="text-green-400 mb-4">
+            <p className="text-terminal-green mb-4">
               探索廢土，完成挑戰，解鎖成就，獲得獎勵
             </p>
             {user && (
-              <p className="text-gray-400 text-sm">
+              <p className="text-wasteland-lighter text-sm">
                 歡迎回來, <span className="text-pip-boy-green">{user.name}</span>
               </p>
             )}
@@ -165,7 +165,7 @@ export default function AchievementsPage() {
               <div className="text-2xl font-bold text-pip-boy-green">
                 {summary.total_achievements}
               </div>
-              <div className="text-xs text-text-secondary mt-1">總成就</div>
+              <div className="text-xs text-wasteland-lighter mt-1">總成就</div>
             </div>
 
             {/* 已解鎖 */}
@@ -173,10 +173,10 @@ export default function AchievementsPage() {
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="unlock" sizePreset="md" variant="success" decorative />
               </div>
-              <div className="text-2xl font-bold text-green-400">
+              <div className="text-2xl font-bold text-pip-boy-green-bright">
                 {summary.unlocked_count}
               </div>
-              <div className="text-xs text-text-secondary mt-1">已解鎖</div>
+              <div className="text-xs text-wasteland-lighter mt-1">已解鎖</div>
             </div>
 
             {/* 已領取 */}
@@ -184,10 +184,10 @@ export default function AchievementsPage() {
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="check-circle" sizePreset="md" variant="info" decorative />
               </div>
-              <div className="text-2xl font-bold text-blue-400">
+              <div className="text-2xl font-bold text-vault-blue-light">
                 {summary.claimed_count}
               </div>
-              <div className="text-xs text-text-secondary mt-1">已領取</div>
+              <div className="text-xs text-wasteland-lighter mt-1">已領取</div>
             </div>
 
             {/* 完成度 */}
@@ -195,10 +195,10 @@ export default function AchievementsPage() {
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="chart" sizePreset="md" variant="warning" decorative />
               </div>
-              <div className="text-2xl font-bold text-yellow-400">
+              <div className="text-2xl font-bold text-warning-yellow">
                 {summary.completion_percentage.toFixed(1)}%
               </div>
-              <div className="text-xs text-text-secondary mt-1">完成度</div>
+              <div className="text-xs text-wasteland-lighter mt-1">完成度</div>
             </div>
           </motion.div>
         </div>
@@ -223,8 +223,8 @@ export default function AchievementsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="
                 w-full pl-10 pr-4 py-3
-                bg-bg-secondary border-2 border-border-primary
-                text-text-primary placeholder:text-text-secondary
+                bg-wasteland-dark border-2 border-metal-gray-light
+                text-white placeholder:text-wasteland-lighter
                 rounded-md
                 focus:outline-none focus:border-pip-boy-green
                 transition-colors
@@ -241,7 +241,7 @@ export default function AchievementsPage() {
             )}
           </div>
           {searchQuery && (
-            <p className="mt-2 text-sm text-text-secondary">
+            <p className="mt-2 text-sm text-wasteland-lighter">
               找到 {filteredAchievements.length} 個結果
             </p>
           )}
@@ -292,16 +292,16 @@ export default function AchievementsPage() {
                 className="mx-auto mb-4"
                 decorative
               />
-              <h3 className="text-lg font-semibold text-red-400 mb-2">
+              <h3 className="text-lg font-semibold text-radiation-orange mb-2">
                 載入失敗
               </h3>
-              <p className="text-text-secondary mb-4">{error}</p>
+              <p className="text-wasteland-lighter mb-4">{error}</p>
               <button
                 onClick={() => {
                   clearError()
                   fetchUserProgress()
                 }}
-                className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors"
               >
                 <PixelIcon name="refresh-cw" sizePreset="xs" decorative />
                 <span className="ml-2">重試</span>

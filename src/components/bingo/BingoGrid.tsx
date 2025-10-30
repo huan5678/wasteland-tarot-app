@@ -133,16 +133,16 @@ export default function BingoGrid({
     <div className="relative max-w-2xl mx-auto">
       {/* 賓果卡標題 */}
       <div className="mb-4 text-center">
-        <h3 className="text-2xl font-bold text-amber-400 tracking-wider">
+        <h3 className="text-2xl font-bold text-pip-boy-green tracking-wider">
           廢土賓果卡
         </h3>
-        <p className="text-green-400 text-sm mt-1">
+        <p className="text-terminal-green text-sm mt-1">
           領取每日號碼來完成連線
         </p>
       </div>
 
       {/* 賓果卡 Grid 容器 */}
-      <div className="relative bg-black/80 border-2 border-amber-600/50 rounded-lg p-4 backdrop-blur-sm">
+      <div className="relative bg-wasteland-dark/80 border-2 border-pip-boy-green/50 rounded-lg p-4 backdrop-blur-sm">
         {/* 連線 SVG 覆蓋層 */}
         {renderLines()}
 
@@ -165,11 +165,11 @@ export default function BingoGrid({
                   flex items-center justify-center text-2xl sm:text-3xl font-bold
                   transition-all duration-300 border-2
                   ${claimed
-                    ? 'bg-green-600 border-green-400 text-black shadow-lg shadow-green-600/50'
-                    : 'bg-gray-800/80 border-gray-600 text-gray-400'
+                    ? 'bg-pip-boy-green border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
+                    : 'bg-metal-gray/80 border-metal-gray-light text-wasteland-lighter'
                   }
                   ${highlighted
-                    ? 'ring-4 ring-amber-400 ring-offset-2 ring-offset-black animate-pulse'
+                    ? 'ring-4 ring-radiation-orange ring-offset-2 ring-offset-black animate-pulse'
                     : ''
                   }
                 `}
@@ -201,7 +201,7 @@ export default function BingoGrid({
                       repeat: Infinity,
                       ease: 'easeInOut',
                     }}
-                    className="absolute inset-0 bg-amber-400 rounded-lg"
+                    className="absolute inset-0 bg-radiation-orange rounded-lg"
                   />
                 )}
               </motion.div>
@@ -210,10 +210,10 @@ export default function BingoGrid({
         </div>
 
         {/* 角標裝飾 */}
-        <div className="absolute top-2 left-2 text-amber-600 text-xs opacity-50">
+        <div className="absolute top-2 left-2 text-pip-boy-green-medium text-xs opacity-50">
           VAULT-TEC
         </div>
-        <div className="absolute bottom-2 right-2 text-amber-600 text-xs opacity-50">
+        <div className="absolute bottom-2 right-2 text-pip-boy-green-medium text-xs opacity-50">
           BINGO-76
         </div>
       </div>
@@ -221,19 +221,19 @@ export default function BingoGrid({
       {/* 圖例 */}
       <div className="mt-4 flex flex-wrap justify-center gap-4 text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-gray-800 border-2 border-gray-600 rounded" />
-          <span className="text-gray-400">未領取</span>
+          <div className="w-6 h-6 bg-metal-gray border-2 border-metal-gray-light rounded" />
+          <span className="text-wasteland-lighter">未領取</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-green-600 border-2 border-green-400 rounded flex items-center justify-center text-black">
+          <div className="w-6 h-6 bg-pip-boy-green border-2 border-pip-boy-green-bright rounded flex items-center justify-center text-black">
             ✓
           </div>
-          <span className="text-green-400">已領取</span>
+          <span className="text-pip-boy-green">已領取</span>
         </div>
         {highlightNumber && (
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-amber-400 border-2 border-amber-300 rounded animate-pulse" />
-            <span className="text-amber-400">今日號碼</span>
+            <div className="w-6 h-6 bg-radiation-orange border-2 border-radiation-orange-bright rounded animate-pulse" />
+            <span className="text-radiation-orange">今日號碼</span>
           </div>
         )}
       </div>

@@ -52,8 +52,8 @@ export default function DailyCheckin() {
   // 如果沒有今日號碼，顯示載入或錯誤狀態
   if (dailyNumber === null) {
     return (
-      <div className="max-w-md mx-auto p-6 bg-black/80 border-2 border-gray-600 rounded-lg backdrop-blur-sm text-center">
-        <p className="text-gray-400">
+      <div className="max-w-md mx-auto p-6 bg-black/80 border-2 border-metal-gray-light rounded-lg backdrop-blur-sm text-center">
+        <p className="text-wasteland-lighter">
           {isLoading ? '載入今日號碼中...' : '今日號碼尚未生成'}
         </p>
       </div>
@@ -66,11 +66,11 @@ export default function DailyCheckin() {
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="p-6 bg-black/80 border-2 border-amber-600/50 rounded-lg backdrop-blur-sm"
+        className="p-6 bg-black/80 border-2 border-pip-boy-green/50 rounded-lg backdrop-blur-sm"
       >
         {/* 標題 */}
         <div className="text-center mb-4">
-          <h3 className="text-xl font-bold text-amber-400 tracking-wider">
+          <h3 className="text-xl font-bold text-pip-boy-green tracking-wider">
             今日廢土號碼
           </h3>
           <p className="text-green-400 text-sm mt-1">
@@ -99,7 +99,7 @@ export default function DailyCheckin() {
             border-4
             ${hasClaimed
               ? 'bg-green-600 border-green-400 text-black shadow-lg shadow-green-600/50'
-              : 'bg-amber-600 border-amber-400 text-black shadow-lg shadow-amber-600/50'
+              : 'bg-pip-boy-green border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
             }
           `}
         >
@@ -139,7 +139,7 @@ export default function DailyCheckin() {
                 w-full px-6 py-4 rounded-lg font-bold text-lg
                 transition-all duration-200
                 ${isClaiming || isLoading
-                  ? 'bg-gray-700 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
+                  ? 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-light cursor-not-allowed'
                   : 'bg-green-600 border-2 border-green-400 text-black hover:bg-green-500 shadow-lg shadow-green-600/50'
                 }
                 disabled:pointer-events-none
@@ -174,8 +174,8 @@ export default function DailyCheckin() {
         )}
 
         {/* 說明文字 */}
-        <div className="mt-4 p-3 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-xs">
-          <p className="mb-1">💡 <span className="text-amber-400">提示:</span></p>
+        <div className="mt-4 p-3 bg-wasteland-dark/50 border border-metal-gray-light rounded text-wasteland-lighter text-xs">
+          <p className="mb-1">💡 <span className="text-pip-boy-green">提示:</span></p>
           <ul className="list-disc list-inside space-y-1">
             <li>每天只能領取一次號碼</li>
             <li>領取後自動檢查是否連線</li>

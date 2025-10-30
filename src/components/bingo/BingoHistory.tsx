@@ -82,10 +82,10 @@ export default function BingoHistory() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="p-6 bg-black/80 border-2 border-amber-600/50 rounded-lg backdrop-blur-sm">
+      <div className="p-6 bg-black/80 border-2 border-pip-boy-green/50 rounded-lg backdrop-blur-sm">
         {/* 標題 */}
         <div className="text-center mb-6">
-          <h3 className="text-2xl font-bold text-amber-400 tracking-wider">
+          <h3 className="text-2xl font-bold text-pip-boy-green tracking-wider">
             歷史記錄查詢
           </h3>
           <p className="text-green-400 text-sm mt-1">
@@ -97,14 +97,14 @@ export default function BingoHistory() {
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
           {/* 月份選擇器 */}
           <div className="flex-1">
-            <label className="block text-sm text-gray-400 mb-2">
+            <label className="block text-sm text-wasteland-lighter mb-2">
               選擇月份
             </label>
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
               disabled={isLoading}
-              className="w-full px-4 py-3 bg-gray-900 border-2 border-gray-600 rounded-lg text-amber-400 focus:border-amber-600 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 bg-wasteland-dark border-2 border-metal-gray-light rounded-lg text-pip-boy-green focus:border-pip-boy-green focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {monthOptions.map((month) => (
                 <option key={month} value={month}>
@@ -125,8 +125,8 @@ export default function BingoHistory() {
                 w-full sm:w-auto px-8 py-3 rounded-lg font-bold text-lg
                 transition-all duration-200
                 ${isLoading
-                  ? 'bg-gray-700 border-2 border-gray-600 text-gray-500 cursor-not-allowed'
-                  : 'bg-amber-600 border-2 border-amber-400 text-black hover:bg-amber-500 shadow-lg shadow-amber-600/50'
+                  ? 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-light cursor-not-allowed'
+                  : 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black hover:bg-amber-500 shadow-lg shadow-pip-boy-green/50'
                 }
                 disabled:pointer-events-none
               `}
@@ -157,25 +157,25 @@ export default function BingoHistory() {
             {/* 統計資訊 */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* 月份 */}
-              <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg text-center">
-                <p className="text-xs text-gray-400 mb-1">月份</p>
-                <p className="text-lg font-bold text-amber-400">
+              <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg text-center">
+                <p className="text-xs text-wasteland-lighter mb-1">月份</p>
+                <p className="text-lg font-bold text-pip-boy-green">
                   {formatMonthDisplay(historyData.month_year)}
                 </p>
               </div>
 
               {/* 連線數 */}
-              <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg text-center">
-                <p className="text-xs text-gray-400 mb-1">連線數</p>
+              <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg text-center">
+                <p className="text-xs text-wasteland-lighter mb-1">連線數</p>
                 <p className="text-2xl font-bold text-green-400">
                   {historyData.line_count}
                 </p>
               </div>
 
               {/* 獎勵狀態 */}
-              <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg text-center">
-                <p className="text-xs text-gray-400 mb-1">獎勵狀態</p>
-                <p className={`text-lg font-bold ${historyData.has_reward ? 'text-green-400' : 'text-gray-500'}`}>
+              <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg text-center">
+                <p className="text-xs text-wasteland-lighter mb-1">獎勵狀態</p>
+                <p className={`text-lg font-bold ${historyData.has_reward ? 'text-green-400' : 'text-wasteland-light'}`}>
                   {historyData.has_reward ? '✓ 已獲得' : '✗ 未達成'}
                 </p>
               </div>
@@ -183,7 +183,7 @@ export default function BingoHistory() {
 
             {/* 歷史賓果卡 */}
             <div>
-              <h4 className="text-lg font-bold text-amber-400 mb-3">
+              <h4 className="text-lg font-bold text-pip-boy-green mb-3">
                 賓果卡
               </h4>
               <BingoGrid
@@ -194,10 +194,10 @@ export default function BingoHistory() {
 
             {/* 已領取號碼列表 */}
             <div>
-              <h4 className="text-lg font-bold text-amber-400 mb-3">
+              <h4 className="text-lg font-bold text-pip-boy-green mb-3">
                 已領取號碼 ({historyData.claimed_numbers.length} 個)
               </h4>
-              <div className="p-4 bg-gray-900/50 border border-gray-700 rounded-lg">
+              <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg">
                 <div className="flex flex-wrap gap-2">
                   {historyData.claimed_numbers.length > 0 ? (
                     historyData.claimed_numbers.sort((a, b) => a - b).map((num) => (
@@ -209,7 +209,7 @@ export default function BingoHistory() {
                       </span>
                     ))
                   ) : (
-                    <p className="text-gray-400 text-sm">
+                    <p className="text-wasteland-lighter text-sm">
                       該月份沒有領取任何號碼
                     </p>
                   )}
@@ -218,27 +218,27 @@ export default function BingoHistory() {
             </div>
 
             {/* 建立時間 */}
-            <div className="text-center text-xs text-gray-500">
+            <div className="text-center text-xs text-wasteland-light">
               賓果卡建立於: {new Date(historyData.created_at).toLocaleString('zh-TW')}
             </div>
           </motion.div>
         ) : hasQueried && !historyData && !error ? (
-          <div className="text-center p-8 bg-gray-900/50 border border-gray-700 rounded-lg">
-            <p className="text-gray-400 text-sm">
+          <div className="text-center p-8 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg">
+            <p className="text-wasteland-lighter text-sm">
               沒有找到該月份的記錄
             </p>
           </div>
         ) : !hasQueried ? (
-          <div className="text-center p-8 bg-gray-900/50 border border-gray-700 rounded-lg">
-            <p className="text-gray-400 text-sm">
+          <div className="text-center p-8 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg">
+            <p className="text-wasteland-lighter text-sm">
               選擇月份後點擊查詢按鈕
             </p>
           </div>
         ) : null}
 
         {/* 說明文字 */}
-        <div className="mt-6 p-4 bg-gray-900/50 border border-gray-700 rounded text-gray-400 text-xs">
-          <p className="mb-2">💡 <span className="text-amber-400">說明:</span></p>
+        <div className="mt-6 p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded text-wasteland-lighter text-xs">
+          <p className="mb-2">💡 <span className="text-pip-boy-green">說明:</span></p>
           <ul className="list-disc list-inside space-y-1">
             <li>僅顯示最近 12 個月的歷史記錄</li>
             <li>歷史記錄每月自動歸檔</li>

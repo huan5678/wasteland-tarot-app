@@ -72,8 +72,8 @@ export default function BingoPage() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-400 mx-auto mb-4" />
-          <p className="text-amber-400">載入中...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pip-boy-green mx-auto mb-4" />
+          <p className="text-pip-boy-green">載入中...</p>
         </div>
       </div>
     )
@@ -82,22 +82,22 @@ export default function BingoPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="bg-gradient-to-b from-gray-900 to-black border-b-2 border-amber-600/50">
+      <div className="bg-gradient-to-b from-wasteland-medium to-black border-b-2 border-pip-boy-green/50">
         <div className="container mx-auto px-4 py-6">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-5xl font-bold text-amber-400 tracking-wider mb-2">
+            <h1 className="text-4xl md:text-5xl font-bold text-pip-boy-green tracking-wider mb-2">
               廢土賓果簽到
             </h1>
-            <p className="text-green-400">
+            <p className="text-terminal-green">
               每日簽到領取號碼，達成三連線獲得獎勵
             </p>
             {user && (
-              <p className="text-gray-400 text-sm mt-2">
-                歡迎回來, <span className="text-amber-400">{user.name}</span>
+              <p className="text-wasteland-lighter text-sm mt-2">
+                歡迎回來, <span className="text-pip-boy-green">{user.name}</span>
               </p>
             )}
           </motion.div>
@@ -111,13 +111,13 @@ export default function BingoPage() {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-red-900/50 border-2 border-red-600 rounded-lg text-red-300"
+            className="mb-6 p-4 bg-rust-red/20 border-2 border-rust-red rounded-lg text-radiation-orange"
           >
             <div className="flex items-center justify-between">
               <span>{error}</span>
               <button
                 onClick={clearError}
-                className="text-red-400 hover:text-red-300 font-bold"
+                className="text-radiation-orange hover:text-radiation-orange-bright font-bold"
               >
                 ✕
               </button>
@@ -128,8 +128,8 @@ export default function BingoPage() {
         {/* 載入狀態 */}
         {isLoading && !hasCard ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-amber-400 mx-auto mb-4" />
-            <p className="text-amber-400">載入賓果狀態中...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pip-boy-green mx-auto mb-4" />
+            <p className="text-pip-boy-green">載入賓果狀態中...</p>
           </div>
         ) : !hasCard ? (
           /* 賓果卡設定介面 */
@@ -149,8 +149,8 @@ export default function BingoPage() {
                 className={`
                   px-6 py-3 rounded-lg font-bold transition-all duration-200
                   ${activeTab === 'game'
-                    ? 'bg-amber-600 border-2 border-amber-400 text-black'
-                    : 'bg-gray-800 border-2 border-gray-600 text-gray-400 hover:border-amber-600/50'
+                    ? 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
+                    : 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-lighter hover:border-pip-boy-green/50'
                   }
                 `}
               >
@@ -161,8 +161,8 @@ export default function BingoPage() {
                 className={`
                   px-6 py-3 rounded-lg font-bold transition-all duration-200
                   ${activeTab === 'history'
-                    ? 'bg-amber-600 border-2 border-amber-400 text-black'
-                    : 'bg-gray-800 border-2 border-gray-600 text-gray-400 hover:border-amber-600/50'
+                    ? 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
+                    : 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-lighter hover:border-pip-boy-green/50'
                   }
                 `}
               >
@@ -204,12 +204,12 @@ export default function BingoPage() {
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="p-6 bg-green-900/30 border-2 border-green-600 rounded-lg text-center"
+                    className="p-6 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-lg text-center"
                   >
-                    <p className="text-2xl font-bold text-green-400 mb-2">
+                    <p className="text-2xl font-bold text-pip-boy-green mb-2">
                       🏆 本月已達成三連線！
                     </p>
-                    <p className="text-green-500 text-sm">
+                    <p className="text-terminal-green text-sm">
                       獎勵已發放，下個月可以繼續挑戰
                     </p>
                   </motion.div>
@@ -242,9 +242,9 @@ export default function BingoPage() {
       />
 
       {/* Footer */}
-      <div className="mt-12 py-6 border-t-2 border-gray-800">
+      <div className="mt-12 py-6 border-t-2 border-metal-gray">
         <div className="container mx-auto px-4">
-          <div className="text-center text-gray-500 text-sm">
+          <div className="text-center text-wasteland-lighter text-sm">
             <p>每日簽到領取號碼 | 達成三連線獲得獎勵</p>
             <p className="mt-2 text-xs">
               系統每月1日自動重置 | 號碼每25天循環一次
