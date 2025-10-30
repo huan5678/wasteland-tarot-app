@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, useReducedMotion } from 'motion/react'
 import { useAuthStore } from '@/lib/authStore'
+import { useBingoStore } from '@/lib/stores/bingoStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   Sheet,
@@ -31,11 +32,15 @@ export function Header() {
   const logout = useAuthStore(s => s.logout)
   const startTokenExpiryMonitor = useAuthStore(s => s.startTokenExpiryMonitor)
   const stopTokenExpiryMonitor = useAuthStore(s => s.stopTokenExpiryMonitor)
+
+  // 賓果 Store（用於紅點邏輯）
+  const hasClaimed = useBingoStore(s => s.hasClaimed)
+  const dailyNumber = useBingoStore(s => s.dailyNumber)
+
   const router = useRouter()
   const pathname = usePathname()
   const [currentTime, setCurrentTime] = useState<string>('')
   const [isClient, setIsClient] = useState(false)
-  const [showBingoBadge, setShowBingoBadge] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // 滾動控制相關 state
@@ -97,15 +102,19 @@ export function Header() {
                           pathname.startsWith('/bingo') ||
                           pathname.startsWith('/achievements')
 
-  // 檢查今日是否已領取賓果號碼 (僅在客戶端執行)
-  useEffect(() => {
-    if (isClient && user) {
-      // 從 localStorage 讀取上次領取時間
-      const lastClaimDate = localStorage.getItem('bingo-last-claim-date')
-      const today = new Date().toDateString()
-      setShowBingoBadge(lastClaimDate !== today)
-    }
-  }, [isClient, user])
+  /**
+   * 賓果簽到紅點邏輯（修復 2025-10-30）
+   *
+   * 顯示條件：
+   * 1. 使用者已登入
+   * 2. 今日尚未領取號碼（hasClaimed === false）
+   * 3. 有可領取的號碼（dailyNumber !== null，即日期 <= 25 日）
+   *
+   * 隱藏條件：
+   * - 已領取當天號碼
+   * - 超過 25 日（沒有號碼可領取）
+   */
+  const showBingoBadge = user && !hasClaimed && dailyNumber !== null
 
   // 滾動監聽邏輯
   useEffect(() => {
