@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { CardDraw } from '@/components/tarot/CardDraw'
 import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
 import { PixelIcon } from '@/components/ui/icons'
+import { PipBoyButton, PipBoyCard, PipBoyCardHeader, PipBoyCardTitle, PipBoyCardContent } from '@/components/ui/pipboy'
 import { readingsAPI } from '@/lib/api'
 import { SpreadSelector } from '@/components/readings/SpreadSelector'
 import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview'
@@ -621,12 +622,14 @@ export default function NewReadingPage() {
                 <SpreadSelector value={spreadType} onChange={(v)=> setSpreadType(v as any)} />
               </div>
 
-              <button
+              <PipBoyButton
                 type="submit"
-                className="w-full py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors flex items-center justify-center"
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 <PixelIcon name="target" size={16} className="mr-2" decorative />進行卡牌抽取
-              </button>
+              </PipBoyButton>
             </form>
           </div>
         )}
@@ -695,43 +698,53 @@ export default function NewReadingPage() {
             </div>
 
             {/* Pip-Boy Interpretation */}
-            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-              <h3 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
-                <PixelIcon name="android" size={16} className="mr-2" decorative />Pip-Boy 解讀
-              </h3>
-
-              {isGeneratingInterpretation ? (
-                <div className="text-center py-8">
-                  <div className="w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-pip-boy-green text-sm">
-                    分析量子塔羅模式中...
-                  </p>
-                </div>
-              ) : (
-                <div className="prose prose-sm max-w-none">
-                  <div className="text-pip-boy-green/80 text-sm whitespace-pre-line leading-relaxed">
-                    {interpretation}
+            <PipBoyCard variant="default" padding="lg">
+              <PipBoyCardHeader>
+                <PipBoyCardTitle>
+                  <div className="flex items-center gap-2">
+                    <PixelIcon name="android" size={16} decorative />
+                    Pip-Boy 解讀
                   </div>
-                </div>
-              )}
-            </div>
+                </PipBoyCardTitle>
+              </PipBoyCardHeader>
+              <PipBoyCardContent>
+                {isGeneratingInterpretation ? (
+                  <div className="text-center py-8">
+                    <div className="w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-pip-boy-green text-sm">
+                      分析量子塔羅模式中...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="prose prose-sm max-w-none">
+                    <div className="text-pip-boy-green/80 text-sm whitespace-pre-line leading-relaxed">
+                      {interpretation}
+                    </div>
+                  </div>
+                )}
+              </PipBoyCardContent>
+            </PipBoyCard>
 
             {/* Action Buttons */}
             {!isGeneratingInterpretation && (
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
+                <PipBoyButton
                   onClick={handleSaveReading}
                   disabled={isSaving}
-                  className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  variant="default"
+                  size="lg"
+                  className="flex-1"
                 >
                   <PixelIcon name="save" size={16} className="mr-2" decorative />{isSaving ? '保存中...' : '儲存至 Vault'}
-                </button>
-                <button
+                </PipBoyButton>
+                <PipBoyButton
                   onClick={handleNewReading}
-                  className="flex-1 py-3 border-2 border-pip-boy-green text-pip-boy-green font-bold text-lg hover:bg-pip-boy-green/10 transition-colors flex items-center justify-center"
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
                 >
                   <PixelIcon name="reload" size={16} className="mr-2" decorative />新占卜
-                </button>
+                </PipBoyButton>
               </div>
             )}
           </div>

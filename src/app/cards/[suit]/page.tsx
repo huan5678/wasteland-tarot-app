@@ -20,8 +20,7 @@ import { useCardsStore } from '@/stores/cardsStore'
 import { Breadcrumb } from '@/components/navigation/Breadcrumb'
 import { CardThumbnail, CardThumbnailGrid, CardThumbnailSkeleton } from '@/components/cards/CardThumbnail'
 import { PaginationControls } from '@/components/cards/PaginationControls'
-import { PipBoyButton } from '@/components/ui/pipboy'
-import { LoadingSpinner, ErrorDisplay } from '@/components/ui/pipboy'
+import { PipBoyButton, ErrorDisplay } from '@/components/ui/pipboy'
 import {
   getSuitDisplayName,
   getSuitDescription,

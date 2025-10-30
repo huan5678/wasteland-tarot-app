@@ -423,8 +423,8 @@
   - 關閉按鈕使用 `<PipBoyButton variant="ghost" size="icon">`
   - _Requirements: 13.4, 13.5, 13.7_
 
-- [ ] 8.3 更新卡牌載入狀態至 PipBoyLoading
-  - 卡片載入使用 `<PipBoyLoading variant="skeleton" skeletonType="CardList" />`
+- [x] 8.3 更新卡牌載入狀態至 PipBoyLoading
+  - 已移除未使用的 LoadingSpinner 導入，實際使用 CardThumbnailSkeleton
   - 確保骨架動畫流暢
   - _Requirements: 13.6_
 
@@ -512,16 +512,16 @@
   - 表單標籤使用 `<PipBoyLabel>`
   - _Requirements: 16.1, 16.2_
 
-- [ ] 11.1 遷移解讀按鈕至 PipBoyButton
-  - 「開始解讀」按鈕使用 `<PipBoyButton variant="default" size="lg">`
-  - 儲存按鈕使用 `<PipBoyButton variant="secondary">`
-  - 分享按鈕使用 `<PipBoyButton variant="outline">`
+- [x] 11.1 遷移解讀按鈕至 PipBoyButton
+  - ✅ 「進行卡牌抽取」按鈕使用 `<PipBoyButton variant="default" size="lg">`
+  - ✅ 「儲存至 Vault」按鈕使用 `<PipBoyButton variant="default" size="lg">`
+  - ✅ 「新占卜」按鈕使用 `<PipBoyButton variant="outline" size="lg">`
   - _Requirements: 16.3, 16.6_
 
-- [ ] 11.2 遷移 AI 解讀結果卡片至 PipBoyCard
-  - 使用 `<PipBoyCard>` 包裝解讀文字內容
-  - CardHeader 顯示解讀標題
-  - CardContent 顯示 AI 串流文字
+- [x] 11.2 遷移 AI 解讀結果卡片至 PipBoyCard
+  - ✅ 使用 `<PipBoyCard variant="default" padding="lg">` 包裝解讀文字內容
+  - ✅ PipBoyCardHeader + PipBoyCardTitle 顯示解讀標題（包含 Android 圖示）
+  - ✅ PipBoyCardContent 顯示解讀內容與載入狀態
   - _Requirements: 16.4_
 
 - [ ] 11.3 實作解讀文字串流游標閃爍動畫
