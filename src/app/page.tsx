@@ -4,6 +4,7 @@ import React from 'react'
 import { useAuthStore } from '@/lib/authStore'
 import { PixelIcon } from '@/components/ui/icons'
 import { DynamicHeroTitle, DynamicHeroTitleErrorBoundary } from '@/components/hero'
+import { PipBoyButton, PipBoyCard, PipBoyCardHeader, PipBoyCardTitle, PipBoyCardContent } from '@/components/ui/pipboy'
 
 export default function HomePage() {
   const user = useAuthStore(s => s.user)
@@ -54,19 +55,11 @@ export default function HomePage() {
 
           {/* Primary Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-16">
-            <button
+            <PipBoyCard
+              variant="interactive"
+              isClickable
               onClick={handleGetStarted}
-              className="group border-2 border-pip-boy-green p-8 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
-              style={{
-                backgroundColor: 'var(--color-pip-boy-green-20)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-30)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-20)'
-              }}
+              className="group p-8 hover:scale-105"
             >
               <div className="text-center">
                 <PixelIcon name="target" size={48} className="mb-4 mx-auto group-hover:animate-pulse text-pip-boy-green" aria-label={user ? '進入控制台' : '進入 Vault'} />
@@ -77,21 +70,13 @@ export default function HomePage() {
                   {user ? '查看你的占卜記錄並管理個人檔案' : '登入以存取你的個人 Pip-Boy 終端機'}
                 </p>
               </div>
-            </button>
+            </PipBoyCard>
 
-            <button
+            <PipBoyCard
+              variant="interactive"
+              isClickable
               onClick={handleQuickReading}
-              className="group border-2 border-pip-boy-green p-8 transition-all duration-300 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
-              style={{
-                backgroundColor: 'var(--color-pip-boy-green-10)',
-                transition: 'all 0.3s ease'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-20)'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-10)'
-              }}
+              className="group p-8 hover:scale-105"
             >
               <div className="text-center">
                 <PixelIcon name="card-stack" size={48} className="mb-4 mx-auto group-hover:animate-bounce text-pip-boy-green" aria-label={user ? '新占卜' : '快速占卜'} />
@@ -102,7 +87,7 @@ export default function HomePage() {
                   {user ? '開始一場全新的塔羅占卜' : '嘗試樣本占卜 - 無需 Vault 註冊'}
                 </p>
               </div>
-            </button>
+            </PipBoyCard>
           </div>
         </div>
 
@@ -125,35 +110,41 @@ export default function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <PixelIcon name="zap" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
-              <h3 className="text-lg font-bold text-pip-boy-green mb-2">
-                量子占卜
-              </h3>
-              <p className="text-pip-boy-green/60 text-sm">
-                先進演算法透過 Vault-Tec 的量子矩陣處理塔羅牌含義
-              </p>
-            </div>
+            <PipBoyCard variant="default" padding="lg" className="text-center">
+              <PipBoyCardContent>
+                <PixelIcon name="zap" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
+                <h3 className="text-lg font-bold text-pip-boy-green mb-2">
+                  量子占卜
+                </h3>
+                <p className="text-pip-boy-green/60 text-sm">
+                  先進演算法透過 Vault-Tec 的量子矩陣處理塔羅牌含義
+                </p>
+              </PipBoyCardContent>
+            </PipBoyCard>
 
-            <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <PixelIcon name="chart-bar" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
-              <h3 className="text-lg font-bold text-pip-boy-green mb-2">
-                占卜分析
-              </h3>
-              <p className="text-pip-boy-green/60 text-sm">
-                透過 Pip-Boy 整合追蹤你的業力進展和占卜歷史
-              </p>
-            </div>
+            <PipBoyCard variant="default" padding="lg" className="text-center">
+              <PipBoyCardContent>
+                <PixelIcon name="chart-bar" size={40} className="mb-4 mx-auto text-pip-boy-green" decorative />
+                <h3 className="text-lg font-bold text-pip-boy-green mb-2">
+                  占卜分析
+                </h3>
+                <p className="text-pip-boy-green/60 text-sm">
+                  透過 Pip-Boy 整合追蹤你的業力進展和占卜歷史
+                </p>
+              </PipBoyCardContent>
+            </PipBoyCard>
 
-            <div className="border border-pip-boy-green p-6 text-center" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
-              <PixelIcon name="test-tube" remixVariant="fill" sizePreset="lg" variant="primary" className="mb-4 mx-auto" decorative />
-              <h3 className="text-lg font-bold text-pip-boy-green mb-2">
-                廢土主題
-              </h3>
-              <p className="text-pip-boy-green/60 text-sm">
-                專為核災後生存和廢土生活調整的解讀
-              </p>
-            </div>
+            <PipBoyCard variant="default" padding="lg" className="text-center">
+              <PipBoyCardContent>
+                <PixelIcon name="test-tube" remixVariant="fill" sizePreset="lg" variant="primary" className="mb-4 mx-auto" decorative />
+                <h3 className="text-lg font-bold text-pip-boy-green mb-2">
+                  廢土主題
+                </h3>
+                <p className="text-pip-boy-green/60 text-sm">
+                  專為核災後生存和廢土生活調整的解讀
+                </p>
+              </PipBoyCardContent>
+            </PipBoyCard>
           </div>
         </div>
       </section>
@@ -170,39 +161,22 @@ export default function HomePage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
+              <PipBoyButton
+                variant="default"
+                size="lg"
                 onClick={() => window.location.href = '/auth/register'}
-                className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green transition-all duration-200 hover:scale-105"
-                style={{
-                  backgroundColor: 'var(--color-pip-boy-green-20)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-30)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-20)'
-                }}
+                className="hover:scale-105"
               >
                 註冊 Vault 帳號
-              </button>
-              <button
+              </PipBoyButton>
+              <PipBoyButton
+                variant="outline"
+                size="lg"
                 onClick={() => window.location.href = '/cards'}
-                className="px-6 py-3 border-2 border-pip-boy-green text-pip-boy-green/80 hover:text-pip-boy-green
-                         hover:border-pip-boy-green transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2"
-                style={{
-                  backgroundColor: 'var(--color-pip-boy-green-10)',
-                  transition: 'all 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-20)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--color-pip-boy-green-10)'
-                }}
+                className="hover:scale-105"
               >
                 瀏覽卡牌圖書館
-              </button>
+              </PipBoyButton>
             </div>
           </div>
         </div>

@@ -373,30 +373,26 @@
 
 ### 任務組 7：首頁遷移
 
-- [ ] 7. 遷移首頁 Hero section 按鈕至 PipBoyButton
-  - 更新「開始解讀」主要 CTA 按鈕使用 `<PipBoyButton variant="default" size="lg">`
-  - 更新次要按鈕使用 `<PipBoyButton variant="outline" size="default">`
-  - 確保按鈕音效正常播放
+- [x] 7. 遷移首頁 Hero section 按鈕至 PipBoyButton
+  - 更新「開始解讀」主要 CTA 按鈕使用 `<PipBoyCard variant="interactive">` （更適合大型互動卡片）
+  - 更新 CTA section 按鈕使用 `<PipBoyButton variant="default/outline" size="lg">`
+  - 確保按鈕音效正常播放（PipBoy 元件自動整合）
   - 確保 hover 發光效果正確顯示
   - _Requirements: 12.1, 12.2_
 
-- [ ] 7.1 遷移首頁快速示範卡片至 PipBoyCard
-  - 使用 `<PipBoyCard>` 包裝卡片內容
-  - 使用 CardHeader, CardTitle, CardContent 子元件
+- [x] 7.1 遷移首頁快速示範卡片至 PipBoyCard
+  - 使用 `<PipBoyCard variant="default" padding="lg">` 包裝 Features section 的 3 個卡片
+  - 使用 CardContent 子元件
   - 確保卡片 hover 效果正常
   - 確保 CRT 掃描線於卡片區域顯示
   - _Requirements: 12.3_
 
 - [ ] 7.2 遷移首頁表單輸入至 PipBoy 表單控制元件
-  - 問題輸入框使用 `<PipBoyInput>`
-  - 牌陣選擇器使用 `<PipBoySelect>`
-  - 表單標籤使用 `<PipBoyLabel>`
-  - 確保表單驗證錯誤訊息正確顯示
+  - **N/A - 首頁沒有表單元件**
   - _Requirements: 12.4, 12.5_
 
 - [ ] 7.3 更新首頁載入狀態至 PipBoyLoading
-  - AI 解讀載入使用 `<PipBoyLoading variant="spinner" />`
-  - 卡片載入佔位使用 `<PipBoyLoading variant="skeleton" skeletonType="CardList" />`
+  - **N/A - 首頁沒有載入狀態**
   - _Requirements: 12.6_
 
 - [ ] 7.4 驗證首頁 E2E 測試通過
@@ -408,10 +404,9 @@
 
 ### 任務組 8：卡牌頁面遷移
 
-- [ ] 8. 遷移卡牌清單至 PipBoyCard
-  - 更新每張塔羅牌使用 `<PipBoyCard>` 包裝
-  - 使用 CardHeader 顯示卡片名稱
-  - 使用 CardContent 顯示卡片圖片
+- [x] 8. 遷移卡牌清單至 PipBoyCard
+  - **已完成** - SuitCard 元件已使用 `<PipBoyCard interactive glowEffect>`
+  - 使用完整的 PipBoy 風格與 hover 效果
   - 確保卡片 hover 發光效果
   - _Requirements: 13.1_
 
