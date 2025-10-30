@@ -3,6 +3,7 @@
 import { useBingoStore } from '@/lib/stores/bingoStore'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
+import { PixelIcon } from '@/components/ui/icons'
 
 /**
  * 連線指示器元件
@@ -136,8 +137,9 @@ export default function LineIndicator() {
             animate={{ scale: 1, opacity: 1 }}
             className="p-3 bg-green-900/30 border border-green-600 rounded-lg text-center"
           >
-            <p className="text-green-400 text-sm font-bold">
-              🎉 恭喜達成三連線！
+            <p className="text-green-400 text-sm font-bold flex items-center justify-center gap-2">
+              <PixelIcon name="gift" sizePreset="xs" variant="success" decorative />
+              恭喜達成三連線！
             </p>
             <p className="text-green-500 text-xs mt-1">
               獎勵已發放至你的帳戶
@@ -162,7 +164,10 @@ export default function LineIndicator() {
 
         {/* 說明文字 */}
         <div className="mt-4 p-3 bg-wasteland-dark/50 border border-metal-gray-light rounded text-wasteland-lighter text-xs">
-          <p className="mb-1">💡 <span className="text-pip-boy-green">連線規則:</span></p>
+          <p className="mb-1 flex items-center gap-1">
+            <PixelIcon name="info" size={12} variant="info" decorative />
+            <span className="text-pip-boy-green">連線規則:</span>
+          </p>
           <ul className="list-disc list-inside space-y-1">
             <li>橫向、縱向、對角線各算一條連線</li>
             <li>達成三條連線即可獲得獎勵</li>

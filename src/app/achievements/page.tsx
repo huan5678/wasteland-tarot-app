@@ -105,7 +105,7 @@ export default function AchievementsPage() {
   // 等待認證初始化
   if (!isInitialized || !user) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pip-boy-green mx-auto mb-4" />
           <p className="text-pip-boy-green">載入中...</p>
@@ -115,42 +115,23 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-b from-wasteland-medium to-black border-b-2 border-pip-boy-green/50">
-        <div className="container mx-auto px-4 py-6">
-          <motion.div
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="text-center"
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <PixelIcon
-                name="trophy"
-                sizePreset="xl"
-                variant="primary"
-                animation="bounce"
-                decorative
-              />
-              <h1 className="text-4xl md:text-5xl font-bold text-pip-boy-green tracking-wider">
-                廢土成就
-              </h1>
-            </div>
-            <p className="text-terminal-green mb-4">
+    <div className="min-h-screen text-white p-4 md:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <header className="mb-8 md:mb-12">
+          <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-6 md:p-8">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-pip-boy-green tracking-wider mb-2">
+              廢土成就
+            </h1>
+            <p className="text-terminal-green">
               探索廢土，完成挑戰，解鎖成就，獲得獎勵
             </p>
-            {user && (
-              <p className="text-wasteland-lighter text-sm">
-                歡迎回來, <span className="text-pip-boy-green">{user.name}</span>
-              </p>
-            )}
-          </motion.div>
-        </div>
-      </div>
+          </div>
+        </header>
 
-      {/* 統計總覽 */}
-      {summary && (
-        <div className="container mx-auto px-4 py-6">
+        {/* 統計總覽 */}
+        {summary && (
+          <div className="py-6">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -204,8 +185,8 @@ export default function AchievementsPage() {
         </div>
       )}
 
-      {/* 搜尋欄 */}
-      <div className="container mx-auto px-4 py-6">
+        {/* 搜尋欄 */}
+        <div className="py-6">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -248,8 +229,8 @@ export default function AchievementsPage() {
         </motion.div>
       </div>
 
-      {/* 類別篩選 */}
-      <div className="container mx-auto px-4 py-6">
+        {/* 類別篩選 */}
+        <div className="py-6">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -262,8 +243,8 @@ export default function AchievementsPage() {
         </motion.div>
       </div>
 
-      {/* 成就網格 */}
-      <div className="container mx-auto px-4 py-6">
+        {/* 成就網格 */}
+        <div className="py-6">
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -316,35 +297,36 @@ export default function AchievementsPage() {
             />
           )}
         </motion.div>
-      </div>
+        </div>
 
-      {/* 成功訊息提示 */}
-      {showSuccessMessage && (
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
-          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"
-        >
-          <div className="card-wasteland p-4 shadow-[0_0_20px_rgba(0,255,136,0.5)] border-pip-boy-green">
-            <div className="flex items-center gap-3">
-              <PixelIcon name="check-circle" sizePreset="md" variant="success" decorative />
-              <p className="text-pip-boy-green font-semibold">
-                {showSuccessMessage}
-              </p>
+        {/* 成功訊息提示 */}
+        {showSuccessMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"
+          >
+            <div className="card-wasteland p-4 shadow-[0_0_20px_rgba(0,255,136,0.5)] border-pip-boy-green">
+              <div className="flex items-center gap-3">
+                <PixelIcon name="check-circle" sizePreset="md" variant="success" decorative />
+                <p className="text-pip-boy-green font-semibold">
+                  {showSuccessMessage}
+                </p>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
+          </motion.div>
+        )}
 
-      {/* 成就詳細資訊 Modal */}
-      <AchievementDetailModal
-        achievement={selectedAchievement}
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onClaim={handleClaimReward}
-        isClaiming={isClaiming}
-      />
+        {/* 成就詳細資訊 Modal */}
+        <AchievementDetailModal
+          achievement={selectedAchievement}
+          isOpen={isModalOpen}
+          onClose={handleModalClose}
+          onClaim={handleClaimReward}
+          isClaiming={isClaiming}
+        />
+      </div>
     </div>
   )
 }

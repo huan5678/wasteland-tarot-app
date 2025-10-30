@@ -1,0 +1,25 @@
+{
+  "feature_name": "pipboy-ui-vibe-integration",
+  "created_at": "2025-10-30T09:00:00Z",
+  "updated_at": "2025-10-30T12:30:00Z",
+  "language": "zh-tw",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true,
+      "notes": "Regenerated based on gap analysis - scope changed from external package integration to internal component system enhancement"
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "notes": "Comprehensive technical design completed with light discovery process. Includes CVA integration, Radix UI Primitives, React 19 patterns, and gradual migration strategy."
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false,
+      "notes": "56 implementation tasks generated based on user design decisions: Merge & Unify strategy, unified PipBoyLoading, dedicated PipBoyDialog, expanded PipBoyButton/Card. 6-7 week timeline."
+    }
+  },
+  "ready_for_implementation": false
+}

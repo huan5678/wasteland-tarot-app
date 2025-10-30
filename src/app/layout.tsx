@@ -99,7 +99,7 @@ export default function RootLayout({
                   <div className="min-h-screen flex flex-col relative z-10">
                     <ClientLayout>
                       <Header />
-                      <main className="flex-1">{children}</main>
+                      <main className="flex-1 pt-[120px] md:pt-[140px]">{children}</main>
                       <Footer />
                     </ClientLayout>
                   </div>

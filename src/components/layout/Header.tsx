@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import { motion, useReducedMotion } from 'motion/react'
 import { useAuthStore } from '@/lib/authStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
@@ -11,6 +12,19 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+
+interface NavItem {
+  href: string
+  label: string
+  icon: string
+  ariaLabel: string
+  badge?: boolean
+}
+
+interface NavSection {
+  title: string
+  items: NavItem[]
+}
 
 export function Header() {
   const user = useAuthStore(s => s.user)
@@ -23,6 +37,13 @@ export function Header() {
   const [isClient, setIsClient] = useState(false)
   const [showBingoBadge, setShowBingoBadge] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  // 滾動控制相關 state
+  const [lastScrollY, setLastScrollY] = useState(0)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true)
+
+  // 檢測使用者是否偏好減少動畫
+  const prefersReducedMotion = useReducedMotion()
 
   // Update time only on client side to avoid hydration mismatch
   useEffect(() => {
@@ -68,6 +89,14 @@ export function Header() {
     setMobileMenuOpen(false) // Close mobile menu after navigation
   }
 
+  // 檢查是否在 Dashboard 相關頁面（這些頁面會顯示 Dashboard 自己的漢堡按鈕）
+  const isDashboardPage = pathname.startsWith('/dashboard') ||
+                          pathname.startsWith('/readings') ||
+                          pathname.startsWith('/profile') ||
+                          pathname.startsWith('/settings') ||
+                          pathname.startsWith('/bingo') ||
+                          pathname.startsWith('/achievements')
+
   // 檢查今日是否已領取賓果號碼 (僅在客戶端執行)
   useEffect(() => {
     if (isClient && user) {
@@ -78,10 +107,50 @@ export function Header() {
     }
   }, [isClient, user])
 
-  const navLinks = user
+  // 滾動監聽邏輯
+  useEffect(() => {
+    const handleScroll = () => {
+      // 如果手機選單開啟，不處理滾動隱藏
+      if (mobileMenuOpen) return
+
+      const currentScrollY = window.scrollY
+
+      // 向下滾動 且 超過 threshold
+      if (currentScrollY > lastScrollY && currentScrollY > 80) {
+        setIsHeaderVisible(false)
+      }
+      // 向上滾動
+      else if (currentScrollY < lastScrollY) {
+        setIsHeaderVisible(true)
+      }
+
+      // 在頂部時，一定顯示
+      if (currentScrollY <= 10) {
+        setIsHeaderVisible(true)
+      }
+
+      setLastScrollY(currentScrollY)
+    }
+
+    // 使用 passive: true 優化滾動效能
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [lastScrollY, mobileMenuOpen])
+
+  // 手機選單狀態變化時，強制顯示 Header
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      setIsHeaderVisible(true)
+    }
+  }, [mobileMenuOpen])
+
+  const generalNavLinks = user
     ? [
-        { href: '/dashboard', label: '控制台', icon: 'bar-chart-3', ariaLabel: '控制台', badge: false },
-        { href: '/readings', label: '占卜記錄', icon: 'spade', ariaLabel: '占卜記錄', badge: false },
+        { href: '/dashboard', label: '控制台', icon: 'home', ariaLabel: '控制台', badge: false },
+        { href: '/readings', label: '占卜記錄', icon: 'scroll-text', ariaLabel: '占卜記錄', badge: false },
         { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館', badge: false },
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
         { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案', badge: false },
@@ -91,10 +160,62 @@ export function Header() {
         { href: '/auth', label: '啟動終端機', icon: 'door-open', ariaLabel: '啟動終端機', badge: false },
       ]
 
+  const dashboardNavSections: NavSection[] = user ? [
+    {
+      title: '核心功能',
+      items: [
+        { href: '/dashboard', label: '控制台', icon: 'home', ariaLabel: '控制台' },
+        { href: '/readings/new', label: '新占卜', icon: 'spade', ariaLabel: '新占卜' },
+        { href: '/readings', label: '占卜記錄', icon: 'scroll-text', ariaLabel: '占卜記錄' },
+      ],
+    },
+    {
+      title: '工具',
+      items: [
+        { href: '/dashboard/rhythm-editor', label: '節奏編輯器', icon: 'music', ariaLabel: '節奏編輯器' },
+        { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館' },
+      ],
+    },
+    {
+      title: '每日',
+      items: [
+        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
+        { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統' },
+      ],
+    },
+    {
+      title: '設定',
+      items: [
+        { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案' },
+        ...(user?.is_admin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台' }] : []),
+      ],
+    },
+  ] : []
+
   const isActive = (href: string) => pathname === href
 
   return (
-    <header className="border-b-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-wasteland-dark)'}}>
+    <motion.header
+      className="fixed top-0 left-0 right-0 z-50 border-b-2 border-pip-boy-green"
+      style={{
+        backgroundColor: 'var(--color-wasteland-dark)',
+        willChange: 'transform'
+      }}
+      initial={{ y: 0 }}
+      animate={{
+        y: isHeaderVisible ? 0 : '-100%'
+      }}
+      transition={
+        prefersReducedMotion
+          ? { duration: 0 }  // 使用者偏好減少動畫，立即切換
+          : {
+              type: 'spring',
+              stiffness: 300,
+              damping: 30,
+              mass: 0.8
+            }
+      }
+    >
       {/* Top Terminal Bar */}
       <div className="interface-header">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-2 md:px-4">
@@ -140,7 +261,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {generalNavLinks.map((link) => (
               <button
                 key={link.href}
                 onClick={() => handleNavigation(link.href)}
@@ -186,7 +307,7 @@ export function Header() {
             )}
           </nav>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu - 統一在 Header 顯示 */}
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
               <button
@@ -198,66 +319,130 @@ export function Header() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[280px] bg-wasteland-dark border-pip-boy-green/30"
+              className="w-[280px] bg-wasteland-dark border-pip-boy-green/30 p-0 flex flex-col overflow-y-auto overflow-x-hidden"
+              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
             >
-              <SheetHeader>
+              <SheetHeader className="border-b-2 border-pip-boy-green/30 p-4 flex-shrink-0">
                 <SheetTitle className="text-pip-boy-green text-xl font-bold text-glow-green">
-                  導航選單
+                  {isDashboardPage ? '控制台選單' : '導航選單'}
                 </SheetTitle>
               </SheetHeader>
 
-              <nav className="flex flex-col gap-2 mt-6">
-                {navLinks.map((link) => (
-                  <button
-                    key={link.href}
-                    onClick={() => handleNavigation(link.href)}
-                    className={`
-                      relative flex items-center gap-3 px-4 py-3 text-sm cursor-pointer
-                      border border-pip-boy-green/30 hover:border-pip-boy-green
-                      hover:bg-pip-boy-green/10 transition-all duration-200 rounded-sm
-                      ${isActive(link.href)
-                        ? 'bg-pip-boy-green/10 border-pip-boy-green text-pip-boy-green'
-                        : 'text-pip-boy-green/70 hover:text-pip-boy-green'
-                      }
-                    `}
-                  >
-                    <PixelIcon
-                      name={link.icon}
-                      sizePreset="sm"
-                      variant="primary"
-                      aria-label={link.ariaLabel}
-                    />
-                    <span className="flex-1 text-left">{link.label}</span>
-                    {link.badge && (
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    )}
-                  </button>
-                ))}
+              {/* 可滾動選單內容 */}
+              <div
+                className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin"
+                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+              >
+                <nav className="py-4">
+                  {isDashboardPage ? (
+                    // Dashboard 分組選單
+                    <>
+                      {dashboardNavSections.map((section, sectionIndex) => (
+                        <div key={section.title}>
+                          {/* 分隔線 */}
+                          {sectionIndex > 0 && (
+                            <div className="h-px bg-pip-boy-green/30 my-2 mx-2" />
+                          )}
 
-                {user && (
-                  <>
-                    <div className="h-px bg-pip-boy-green/20 my-2" />
-                    <button
-                      onClick={() => {
-                        handleLogout()
-                        setMobileMenuOpen(false)
-                      }}
-                      className="flex items-center gap-3 px-4 py-3 text-sm
-                               border border-red-500/30 hover:border-red-500
-                               hover:bg-red-500/10 text-red-400 hover:text-red-500
-                               transition-all duration-200 rounded-sm"
-                    >
-                      <PixelIcon
-                        name="door-open"
-                        sizePreset="sm"
-                        variant="error"
+                          {/* 分類標題 */}
+                          <div className="px-4 py-2 text-xs font-bold text-pip-boy-green/50 uppercase tracking-wider">
+                            {section.title}
+                          </div>
+
+                          {/* 選單項目 */}
+                          <div>
+                            {section.items.map(item => (
+                              <button
+                                key={item.href}
+                                onClick={() => handleNavigation(item.href)}
+                                className={`
+                                  relative w-full flex items-center gap-3 px-4 py-3 text-sm cursor-pointer
+                                  transition-all duration-200
+                                  ${isActive(item.href)
+                                    ? 'bg-pip-boy-green/20 border-l-4 border-pip-boy-green text-pip-boy-green font-bold'
+                                    : 'text-pip-boy-green/70 hover:bg-pip-boy-green/10 hover:text-pip-boy-green'
+                                  }
+                                `}
+                                aria-label={item.ariaLabel}
+                                aria-current={isActive(item.href) ? 'page' : undefined}
+                              >
+                                <PixelIcon
+                                  name={item.icon}
+                                  sizePreset="sm"
+                                  variant="primary"
+                                  decorative
+                                />
+                                <span className="flex-1 text-left">{item.label}</span>
+                                {item.badge && (
+                                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    // 一般導航選單
+                    <>
+                      {generalNavLinks.map((link) => (
+                        <button
+                          key={link.href}
+                          onClick={() => handleNavigation(link.href)}
+                          className={`
+                            relative w-full flex items-center gap-3 px-4 py-3 text-sm cursor-pointer
+                            border border-pip-boy-green/30 hover:border-pip-boy-green
+                            hover:bg-pip-boy-green/10 transition-all duration-200 rounded-sm mx-2 mb-2
+                            ${isActive(link.href)
+                              ? 'bg-pip-boy-green/10 border-pip-boy-green text-pip-boy-green'
+                              : 'text-pip-boy-green/70 hover:text-pip-boy-green'
+                            }
+                          `}
+                          aria-label={link.ariaLabel}
+                          aria-current={isActive(link.href) ? 'page' : undefined}
+                        >
+                          <PixelIcon
+                            name={link.icon}
+                            sizePreset="sm"
+                            variant="primary"
+                            decorative
+                          />
+                          <span className="flex-1 text-left">{link.label}</span>
+                          {link.badge && (
+                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
+                          )}
+                        </button>
+                      ))}
+                    </>
+                  )}
+
+                  {/* 登出按鈕 (始終在底部) */}
+                  {user && (
+                    <>
+                      <div className="h-px bg-pip-boy-green/20 my-2 mx-2" />
+                      <button
+                        onClick={() => {
+                          handleLogout()
+                          setMobileMenuOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm mx-2
+                                 border border-red-500/30 hover:border-red-500
+                                 hover:bg-red-500/10 text-red-400 hover:text-red-500
+                                 transition-all duration-200 rounded-sm"
                         aria-label="登出"
-                      />
-                      <span className="flex-1 text-left">登出</span>
-                    </button>
-                  </>
-                )}
-              </nav>
+                      >
+                        <PixelIcon
+                          name="door-open"
+                          sizePreset="sm"
+                          variant="error"
+                          decorative
+                        />
+                        <span className="flex-1 text-left">登出</span>
+                      </button>
+                    </>
+                  )}
+                </nav>
+              </div>
             </SheetContent>
           </Sheet>
         </div>
@@ -265,6 +450,6 @@ export function Header() {
 
       {/* Scanline Effect */}
       <div className="h-px bg-gradient-to-r from-transparent via-border-primary to-transparent opacity-50"></div>
-    </header>
+    </motion.header>
   )
 }

@@ -3,6 +3,7 @@
 import { useBingoStore } from '@/lib/stores/bingoStore'
 import { motion } from 'motion/react'
 import { useState } from 'react'
+import { PixelIcon } from '@/components/ui/icons'
 
 /**
  * 每日簽到元件
@@ -113,7 +114,7 @@ export default function DailyCheckin() {
               transition={{ type: 'spring', stiffness: 200, damping: 10 }}
               className="absolute top-0 right-0 w-10 h-10 bg-green-400 rounded-full flex items-center justify-center border-2 border-green-600"
             >
-              <span className="text-2xl">✓</span>
+              <PixelIcon name="check" sizePreset="sm" className="text-black" decorative />
             </motion.div>
           )}
         </motion.div>
@@ -122,8 +123,9 @@ export default function DailyCheckin() {
         <div className="mt-6">
           {hasClaimed ? (
             <div className="text-center p-3 bg-green-900/30 border border-green-600 rounded-lg">
-              <p className="text-green-400 text-sm">
-                ✓ 今日號碼已領取
+              <p className="text-green-400 text-sm flex items-center justify-center gap-2">
+                <PixelIcon name="check" sizePreset="xs" variant="success" decorative />
+                今日號碼已領取
               </p>
               <p className="text-green-500 text-xs mt-1">
                 明天再來領取新號碼吧！
@@ -145,7 +147,17 @@ export default function DailyCheckin() {
                 disabled:pointer-events-none
               `}
             >
-              {isClaiming ? '領取中...' : '🎁 領取今日號碼'}
+              {isClaiming ? (
+                <>
+                  <PixelIcon name="loader" sizePreset="sm" animation="spin" decorative />
+                  領取中...
+                </>
+              ) : (
+                <>
+                  <PixelIcon name="gift" sizePreset="sm" decorative />
+                  領取今日號碼
+                </>
+              )}
             </motion.button>
           )}
         </div>
@@ -167,15 +179,19 @@ export default function DailyCheckin() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            className="mt-4 p-3 bg-green-900/50 border border-green-600 rounded text-green-300 text-sm text-center"
+            className="mt-4 p-3 bg-green-900/50 border border-green-600 rounded text-green-300 text-sm text-center flex items-center justify-center gap-2"
           >
-            🎉 領取成功！號碼已加入你的賓果卡
+            <PixelIcon name="gift" sizePreset="xs" variant="success" decorative />
+            領取成功！號碼已加入你的賓果卡
           </motion.div>
         )}
 
         {/* 說明文字 */}
         <div className="mt-4 p-3 bg-wasteland-dark/50 border border-metal-gray-light rounded text-wasteland-lighter text-xs">
-          <p className="mb-1">💡 <span className="text-pip-boy-green">提示:</span></p>
+          <p className="mb-1 flex items-center gap-1">
+            <PixelIcon name="info" size={12} variant="info" decorative />
+            <span className="text-pip-boy-green">提示:</span>
+          </p>
           <ul className="list-disc list-inside space-y-1">
             <li>每天只能領取一次號碼</li>
             <li>領取後自動檢查是否連線</li>
