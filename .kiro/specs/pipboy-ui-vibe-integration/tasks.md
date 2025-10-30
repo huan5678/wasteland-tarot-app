@@ -448,11 +448,12 @@
   - 取消按鈕使用 PipBoyButton variant="outline"
   - _Requirements: 14.2, 14.3_
 
-- [ ] 9.2 遷移賓果獎勵通知至 PipBoyDialog
+- [x] 9.2 遷移賓果獎勵通知至 PipBoyDialog
   - 使用 `<PipBoyDialog>` 顯示三連線獎勵
   - 套用綠色脈衝動畫（`glowEffect` 或自訂動畫）
   - 整合音效至獎勵通知
   - _Requirements: 14.5, 14.6_
+  - ✅ 已完成：RewardNotification.tsx 已從 shadcn Dialog 遷移至 PipBoyDialog
 
 - [ ] 9.3 遷移賓果頁面按鈕至 PipBoyButton
   - 設定賓果卡按鈕使用 `<PipBoyButton variant="default">`

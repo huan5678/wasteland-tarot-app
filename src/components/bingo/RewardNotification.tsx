@@ -1,9 +1,9 @@
 'use client'
 
 import {
-  Dialog,
-  DialogContent,
-} from '@/components/ui/dialog'
+  PipBoyDialog,
+  PipBoyDialogContent,
+} from '@/components/ui/pipboy'
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
@@ -25,7 +25,7 @@ interface RewardNotificationProps {
  * 獎勵通知元件
  *
  * 功能:
- * - 使用 shadcn/ui Dialog 顯示三連線獎勵通知
+ * - 使用 PipBoyDialog 顯示三連線獎勵通知
  * - Framer Motion 慶祝動畫
  * - 音效播放 (整合 Web Audio 系統)
  * - 自動關閉或手動關閉
@@ -64,8 +64,8 @@ export default function RewardNotification({
   }, [show, onClose])
 
   return (
-    <Dialog open={show} onOpenChange={onClose}>
-      <DialogContent className="max-w-md border-4 border-pip-boy-green shadow-2xl shadow-pip-boy-green/50 bg-black p-0 overflow-hidden">
+    <PipBoyDialog open={show} onOpenChange={onClose}>
+      <PipBoyDialogContent className="max-w-md p-0 overflow-hidden"
         {/* 粒子效果層 */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
           {particles.map((particle) => (
@@ -185,7 +185,7 @@ export default function RewardNotification({
           }}
           className="absolute inset-0 bg-gradient-radial from-pip-boy-green/20 to-transparent pointer-events-none"
         />
-      </DialogContent>
-    </Dialog>
+      </PipBoyDialogContent>
+    </PipBoyDialog>
   )
 }
