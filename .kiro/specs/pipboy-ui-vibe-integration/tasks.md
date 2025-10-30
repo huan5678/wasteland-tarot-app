@@ -24,7 +24,7 @@
 
 ### 任務組 1：PipBoyButton 元件增強
 
-- [ ] 1. 重構 PipBoyButton 使用 CVA 變體系統
+- [x] 1. 重構 PipBoyButton 使用 CVA 變體系統
   - 移除現有的手動 `cn()` 條件邏輯
   - 建立 CVA 變體定義，包含基礎類別與所有變體選項
   - 使用 `VariantProps<typeof buttonVariants>` 生成 TypeScript 類型
@@ -32,7 +32,7 @@
   - 保持向後相容性，現有 2 個變體（default, outline）功能不變
   - _Requirements: 5.1, 5.2, 11.1, 11.2, 11.3_
 
-- [ ] 1.1 擴充 PipBoyButton 變體從 2 個至 9 個
+- [x] 1.1 擴充 PipBoyButton 變體從 2 個至 9 個
   - 新增 7 個變體：destructive, secondary, ghost, link, success, warning, info
   - 每個變體定義 Pip-Boy 風格的色彩與樣式（遵循 Pip-Boy Green 配色系統）
   - destructive 使用 Deep Red (#ef4444)
@@ -42,7 +42,7 @@
   - 確保所有變體對比度符合 WCAG AA 標準（4.5:1）
   - _Requirements: 5.2, 3.6, 3.7_
 
-- [ ] 1.2 擴充 PipBoyButton 尺寸從 3 個至 6 個
+- [x] 1.2 擴充 PipBoyButton 尺寸從 3 個至 6 個
   - 保留現有尺寸：default, sm, lg
   - 新增尺寸：icon, xs, xl
   - xs: 適用於小型控制項（高度 28px，padding 8px）
@@ -51,14 +51,14 @@
   - 確保觸控目標至少 44x44px（行動裝置）
   - _Requirements: 5.3, 9.4_
 
-- [ ] 1.3 整合 useAudioEffect hook 至 PipBoyButton
+- [x] 1.3 整合 useAudioEffect hook 至 PipBoyButton
   - 在按鈕點擊事件中呼叫 `useAudioEffect('button-click')`
   - 確保音效播放不阻塞 UI 互動
   - 提供 `disableAudio` prop 允許停用音效
   - 處理音效系統未載入的降級情境
   - _Requirements: 5.5_
 
-- [ ] 1.4 新增 React 19 ref-as-prop 支援與 TypeScript 類型定義
+- [x] 1.4 新增 React 19 ref-as-prop 支援與 TypeScript 類型定義
   - 移除 `forwardRef` 包裝（React 19 deprecated）
   - 在 props 介面中定義 `ref?: React.RefObject<HTMLButtonElement>`
   - 確保 ref 正確轉發至底層 `<button>` 元素
@@ -66,14 +66,14 @@
   - 新增完整的 JSDoc 註解與使用範例
   - _Requirements: 5.10, 11.1, 11.4, 11.5, 11.11_
 
-- [ ] 1.5 更新 PipBoyIconButton 使用新的 PipBoyButton API
+- [x] 1.5 更新 PipBoyIconButton 使用新的 PipBoyButton API
   - 將 PipBoyIconButton 重構為 PipBoyButton 的 wrapper
   - 預設使用 `size="icon"` 與 `variant="ghost"`
   - 自動套用 `aria-label` 必填驗證（僅圖示按鈕）
   - 保持向後相容性，確保現有使用不受影響
   - _Requirements: 5.9, 10.2_
 
-- [ ] 1.6 撰寫 PipBoyButton 單元測試（目標覆蓋率 ≥80%）
+- [x] 1.6 撰寫 PipBoyButton 單元測試（目標覆蓋率 ≥80%）
   - 測試所有 9 個變體的渲染結果
   - 測試所有 6 個尺寸的樣式套用
   - 測試 onClick 事件與音效播放整合
@@ -85,7 +85,7 @@
 
 ### 任務組 2：PipBoyCard 元件增強
 
-- [ ] 2. 重構 PipBoyCard 使用 CVA 變體系統
+- [x] 2. 重構 PipBoyCard 使用 CVA 變體系統
   - 移除現有的手動 `cn()` 條件邏輯
   - 建立 CVA 變體定義（variant, padding, interactive）
   - 定義 4 個 variant：default, elevated, ghost, interactive
@@ -93,7 +93,7 @@
   - 使用 `VariantProps` 生成 TypeScript 類型
   - _Requirements: 8.1, 11.1_
 
-- [ ] 2.1 整合 shadcn Card API 子元件
+- [x] 2.1 整合 shadcn Card API 子元件
   - 建立 `CardHeader` 子元件（包含底部綠色分隔線）
   - 建立 `CardTitle` 子元件（Cubic 11 字體，Pip-Boy Green 色彩）
   - 建立 `CardDescription` 子元件（次要文字樣式）
@@ -102,7 +102,7 @@
   - 確保所有子元件可獨立使用或組合
   - _Requirements: 8.2, 8.6, 8.7_
 
-- [ ] 2.2 實作 PipBoyCard 視覺效果與互動狀態
+- [x] 2.2 實作 PipBoyCard 視覺效果與互動狀態
   - 套用雙層綠色邊框（外層 #00ff88，內層 rgba(0, 255, 136, 0.3)）
   - 實作 hover 狀態（邊框亮度 +30%，內側綠色陰影）
   - 實作 `glowEffect` prop（外發光動畫）
@@ -111,13 +111,13 @@
   - 確保 CRT 掃描線效果於卡片區域正確顯示
   - _Requirements: 8.3, 8.4, 8.5, 8.8, 8.10, 2.1_
 
-- [ ] 2.3 保留現有 PipBoyCard 特有功能
+- [x] 2.3 保留現有 PipBoyCard 特有功能
   - 維持四個角落 Vault-Tec 裝飾圖示（可選，透過 `showCornerIcons` prop）
   - 確保與現有卡牌頁面整合無破壞性變更
   - 保持半透明黑底背景（opacity 85%）
   - _Requirements: 8.4, 8.9_
 
-- [ ] 2.4 撰寫 PipBoyCard 單元測試（目標覆蓋率 ≥80%）
+- [x] 2.4 撰寫 PipBoyCard 單元測試（目標覆蓋率 ≥80%）
   - 測試所有 4 個變體的渲染
   - 測試所有子元件（Header, Title, Description, Content, Footer）
   - 測試 hover 互動效果
