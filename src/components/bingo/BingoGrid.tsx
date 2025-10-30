@@ -1,6 +1,7 @@
 'use client'
 
 import { motion } from 'motion/react'
+import { PixelIcon } from '@/components/ui/icons'
 
 interface BingoGridProps {
   /** 賓果卡 5x5 grid */
@@ -11,6 +12,10 @@ interface BingoGridProps {
   highlightNumber?: number
   /** 連線類型陣列 (用於繪製連線) */
   lineTypes?: string[]
+  /** 點擊號碼回調（用於手動選號） */
+  onNumberClick?: (number: number) => void
+  /** 是否啟用點擊功能 */
+  enableClick?: boolean
 }
 
 /**
@@ -29,6 +34,8 @@ export default function BingoGrid({
   claimedNumbers,
   highlightNumber,
   lineTypes = [],
+  onNumberClick,
+  enableClick = false,
 }: BingoGridProps) {
   /**
    * 檢查號碼是否已領取
@@ -42,6 +49,16 @@ export default function BingoGrid({
    */
   const isHighlighted = (num: number): boolean => {
     return highlightNumber === num
+  }
+
+  /**
+   * 處理號碼點擊
+   */
+  const handleNumberClick = (num: number) => {
+    // 只有啟用點擊且號碼未領取時才觸發
+    if (enableClick && !isClaimed(num) && onNumberClick) {
+      onNumberClick(num)
+    }
   }
 
   /**
@@ -154,12 +171,17 @@ export default function BingoGrid({
             const row = Math.floor(idx / 5)
             const col = idx % 5
 
+            const isClickable = enableClick && !claimed
+
             return (
-              <motion.div
+              <motion.button
                 key={`${row}-${col}-${num}`}
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: idx * 0.02 }}
+                onClick={() => handleNumberClick(num)}
+                disabled={!isClickable}
+                aria-label={claimed ? `號碼 ${num} 已領取` : `點擊領取號碼 ${num}`}
                 className={`
                   relative aspect-square rounded-lg
                   flex items-center justify-center text-2xl sm:text-3xl font-bold
@@ -171,6 +193,10 @@ export default function BingoGrid({
                   ${highlighted
                     ? 'ring-4 ring-radiation-orange ring-offset-2 ring-offset-black animate-pulse'
                     : ''
+                  }
+                  ${isClickable
+                    ? 'cursor-pointer hover:scale-105 hover:border-pip-boy-green hover:bg-metal-gray-light hover:shadow-md hover:shadow-pip-boy-green/30'
+                    : 'cursor-default'
                   }
                 `}
               >
@@ -185,7 +211,7 @@ export default function BingoGrid({
                     transition={{ type: 'spring', stiffness: 200, damping: 10 }}
                     className="absolute inset-0 flex items-center justify-center"
                   >
-                    <span className="text-4xl sm:text-5xl">✓</span>
+                    <PixelIcon name="check" size={48} className="text-black" decorative />
                   </motion.div>
                 )}
 
@@ -204,7 +230,7 @@ export default function BingoGrid({
                     className="absolute inset-0 bg-radiation-orange rounded-lg"
                   />
                 )}
-              </motion.div>
+              </motion.button>
             )
           })}
         </div>
@@ -226,7 +252,7 @@ export default function BingoGrid({
         </div>
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 bg-pip-boy-green border-2 border-pip-boy-green-bright rounded flex items-center justify-center text-black">
-            ✓
+            <PixelIcon name="check" size={16} decorative />
           </div>
           <span className="text-pip-boy-green">已領取</span>
         </div>

@@ -4,6 +4,7 @@ import { useBingoStore, BingoHistoryRecord } from '@/lib/stores/bingoStore'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import BingoGrid from './BingoGrid'
+import { PixelIcon } from '@/components/ui/icons'
 
 /**
  * 賓果歷史查詢元件
@@ -52,21 +53,81 @@ export default function BingoHistory() {
   const handleQuery = async () => {
     if (isLoading) return
 
+    console.log('[BingoHistory] 開始查詢歷史記錄:', {
+      selectedMonth,
+      timestamp: new Date().toISOString(),
+    })
+
     setError(null)
     setHasQueried(true)
 
     try {
       const result = await fetchHistory(selectedMonth)
 
+      console.log('[BingoHistory] 查詢結果:', {
+        selectedMonth,
+        has_result: !!result,
+        result_preview: result ? {
+          month_year: result.month_year,
+          line_count: result.line_count,
+          has_reward: result.has_reward,
+          claimed_count: result.claimed_numbers?.length,
+          card_data_exists: !!result.card_data,
+        } : null,
+      })
+
       if (result) {
+        // 驗證 card_data 格式
+        if (!result.card_data || !Array.isArray(result.card_data)) {
+          console.error('[BingoHistory] 資料格式錯誤: card_data 不是陣列', {
+            card_data: result.card_data,
+            type: typeof result.card_data,
+          })
+          throw new Error('歷史記錄資料格式錯誤：賓果卡資料無效')
+        }
+
+        if (result.card_data.length !== 5) {
+          console.error('[BingoHistory] 資料格式錯誤: card_data 長度不是 5', {
+            length: result.card_data.length,
+          })
+          throw new Error('歷史記錄資料格式錯誤：賓果卡不是 5x5 陣列')
+        }
+
+        console.log('[BingoHistory] 資料驗證通過，更新顯示')
         setHistoryData(result)
+        setError(null)
       } else {
+        // 沒有記錄是正常情況，不是錯誤
+        console.log('[BingoHistory] 該月份沒有記錄（正常狀態）')
         setHistoryData(null)
-        setError('該月份沒有賓果記錄')
+        setError(null)
       }
     } catch (err: any) {
+      console.error('[BingoHistory] 查詢歷史記錄錯誤:', {
+        selectedMonth,
+        error: err.message,
+        error_type: err.constructor.name,
+        stack: err.stack,
+        timestamp: new Date().toISOString(),
+      })
       setHistoryData(null)
-      setError(err.message || '查詢失敗')
+
+      // 提供更詳細的錯誤訊息
+      let errorMessage = '查詢失敗，請稍後再試'
+
+      if (err.message.includes('404')) {
+        errorMessage = '該月份沒有賓果記錄'
+      } else if (err.message.includes('401') || err.message.includes('Authentication')) {
+        errorMessage = '認證失敗，請重新登入'
+      } else if (err.message.includes('網路')) {
+        errorMessage = '網路連線異常，請檢查網路狀態'
+      } else if (err.message.includes('格式')) {
+        errorMessage = `資料格式錯誤：${err.message}`
+      } else if (err.message) {
+        errorMessage = `查詢失敗：${err.message}`
+      }
+
+      setError(errorMessage)
     }
   }
 
@@ -131,7 +192,17 @@ export default function BingoHistory() {
                 disabled:pointer-events-none
               `}
             >
-              {isLoading ? '查詢中...' : '🔍 查詢'}
+              {isLoading ? (
+                <>
+                  <PixelIcon name="loader" sizePreset="sm" animation="spin" decorative />
+                  查詢中...
+                </>
+              ) : (
+                <>
+                  <PixelIcon name="search" sizePreset="sm" decorative />
+                  查詢
+                </>
+              )}
             </motion.button>
           </div>
         </div>
@@ -175,8 +246,18 @@ export default function BingoHistory() {
               {/* 獎勵狀態 */}
               <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg text-center">
                 <p className="text-xs text-wasteland-lighter mb-1">獎勵狀態</p>
-                <p className={`text-lg font-bold ${historyData.has_reward ? 'text-green-400' : 'text-wasteland-light'}`}>
-                  {historyData.has_reward ? '✓ 已獲得' : '✗ 未達成'}
+                <p className={`text-lg font-bold flex items-center justify-center gap-2 ${historyData.has_reward ? 'text-green-400' : 'text-wasteland-light'}`}>
+                  {historyData.has_reward ? (
+                    <>
+                      <PixelIcon name="check" sizePreset="xs" variant="success" decorative />
+                      已獲得
+                    </>
+                  ) : (
+                    <>
+                      <PixelIcon name="close" sizePreset="xs" variant="muted" decorative />
+                      未達成
+                    </>
+                  )}
                 </p>
               </div>
             </div>
@@ -238,7 +319,10 @@ export default function BingoHistory() {
 
         {/* 說明文字 */}
         <div className="mt-6 p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded text-wasteland-lighter text-xs">
-          <p className="mb-2">💡 <span className="text-pip-boy-green">說明:</span></p>
+          <p className="mb-2 flex items-center gap-1">
+            <PixelIcon name="info" size={12} variant="info" decorative />
+            <span className="text-pip-boy-green">說明:</span>
+          </p>
           <ul className="list-disc list-inside space-y-1">
             <li>僅顯示最近 12 個月的歷史記錄</li>
             <li>歷史記錄每月自動歸檔</li>

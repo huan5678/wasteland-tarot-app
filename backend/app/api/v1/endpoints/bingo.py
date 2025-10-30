@@ -156,7 +156,7 @@ async def create_bingo_card(
         return response
 
     except CardAlreadyExistsError as e:
-        logger.warning(f"Card already exists for user {current_user['id']}")
+        logger.warning(f"Card already exists for user {current_user.id}")
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=format_error_response(
@@ -167,7 +167,7 @@ async def create_bingo_card(
         )
 
     except InvalidCardNumbersError as e:
-        logger.warning(f"Invalid card numbers from user {current_user['id']}")
+        logger.warning(f"Invalid card numbers from user {current_user.id}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=format_error_response(
@@ -178,7 +178,7 @@ async def create_bingo_card(
         )
 
     except Exception as e:
-        logger.error(f"Error creating card for user {current_user['id']}: {e}")
+        logger.error(f"Error creating card for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -246,7 +246,7 @@ async def get_bingo_card(
         )
 
     except Exception as e:
-        logger.error(f"Error getting card for user {current_user['id']}: {e}")
+        logger.error(f"Error getting card for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -461,7 +461,7 @@ async def claim_daily_number(
         )
 
     except Exception as e:
-        logger.error(f"Error claiming number for user {current_user['id']}: {e}")
+        logger.error(f"Error claiming number for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -603,13 +603,13 @@ async def get_line_status(
 
         # Check lines
         line_count, line_types = await line_service.check_lines(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             month_year=month_year
         )
 
         # Check if reward issued
         reward_issued = await line_service.has_received_reward(
-            user_id=current_user["id"],
+            user_id=current_user.id,
             month_year=month_year
         )
 
@@ -631,7 +631,7 @@ async def get_line_status(
         )
 
     except Exception as e:
-        logger.error(f"Error getting lines for user {current_user['id']}: {e}")
+        logger.error(f"Error getting lines for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -695,12 +695,13 @@ async def get_bingo_history(
                 )
             )
 
-        # Query historical card
+        # Query historical card (convert UUID to string for history tables)
+        user_id_str = str(current_user.id)
         result = await db.execute(
             select(UserBingoCardHistory)
             .where(
                 and_(
-                    UserBingoCardHistory.user_id == current_user.id,
+                    UserBingoCardHistory.user_id == user_id_str,
                     UserBingoCardHistory.month_year == month_date
                 )
             )
@@ -722,7 +723,7 @@ async def get_bingo_history(
             select(UserNumberClaimHistory.number)
             .where(
                 and_(
-                    UserNumberClaimHistory.user_id == current_user.id,
+                    UserNumberClaimHistory.user_id == user_id_str,
                     UserNumberClaimHistory.card_id == card_history.id
                 )
             )
@@ -742,7 +743,7 @@ async def get_bingo_history(
             select(BingoRewardHistory)
             .where(
                 and_(
-                    BingoRewardHistory.user_id == current_user.id,
+                    BingoRewardHistory.user_id == user_id_str,
                     BingoRewardHistory.month_year == month_date
                 )
             )
@@ -774,7 +775,7 @@ async def get_bingo_history(
         raise
 
     except Exception as e:
-        logger.error(f"Error getting history for user {current_user['id']}, month {month}: {e}")
+        logger.error(f"Error getting history for user {current_user.id}, month {month}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(
@@ -842,7 +843,7 @@ async def get_rewards(
         return response_list
 
     except Exception as e:
-        logger.error(f"Error getting rewards for user {current_user['id']}: {e}")
+        logger.error(f"Error getting rewards for user {current_user.id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=format_error_response(

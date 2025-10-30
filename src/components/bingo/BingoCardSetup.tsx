@@ -4,6 +4,7 @@ import { useBingoStore } from '@/lib/stores/bingoStore'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
+import NumberPickerModal from '@/components/bingo/NumberPickerModal'
 
 /**
  * 賓果卡設定元件 - 全新 Grid 佈局設計
@@ -32,20 +33,24 @@ export default function BingoCardSetup() {
   // 目前選擇的 cell 位置 (用於彈窗選擇數字)
   const [selectedCell, setSelectedCell] = useState<{ row: number; col: number } | null>(null)
 
+  // Modal 開啟狀態
+  const [showNumberPicker, setShowNumberPicker] = useState(false)
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
   /**
-   * 處理 Grid Cell 點擊
+   * 處理 Grid Cell 點擊 - 彈出 NumberPickerModal
    */
   const handleCellClick = (row: number, col: number) => {
     if (isLoading || isSubmitting) return
     setSelectedCell({ row, col })
+    setShowNumberPicker(true)  // 開啟 modal
     setLocalError(null)
   }
 
   /**
-   * 處理數字選擇
+   * 處理數字選擇（從 Modal 回調）
    */
   const handleNumberSelect = (num: number) => {
     if (!selectedCell) return
@@ -56,6 +61,7 @@ export default function BingoCardSetup() {
     const isNumberUsed = gridNumbers.some(row => row.includes(num))
     if (isNumberUsed) {
       setLocalError(`數字 ${num} 已經被使用了！`)
+      setShowNumberPicker(false)  // 關閉 modal
       return
     }
 
@@ -67,6 +73,7 @@ export default function BingoCardSetup() {
     )
     setGridNumbers(newGrid)
     setSelectedCell(null)
+    setShowNumberPicker(false)  // 關閉 modal
     setLocalError(null)
   }
 
@@ -108,10 +115,17 @@ export default function BingoCardSetup() {
     }
 
     setIsSubmitting(true)
+    setLocalError(null)
+
     try {
       // 將 5x5 grid 展平為一維陣列 (row by row)
       const numbers = flatGrid as number[]
       await createCard(numbers)
+      // 建立成功，狀態會自動更新並顯示遊戲介面
+    } catch (err: any) {
+      // 顯示錯誤訊息
+      setLocalError(err.message || '建立賓果卡失敗，請稍後再試')
+      console.error('建立賓果卡錯誤:', err)
     } finally {
       setIsSubmitting(false)
     }
@@ -128,25 +142,69 @@ export default function BingoCardSetup() {
 
   /**
    * 自動填充隨機號碼
+   * 邏輯：
+   * - 如果有空格子：只填充空格子，保留已填的數字
+   * - 如果全部已滿：重新洗牌全部數字
    */
   const handleAutoFill = () => {
     if (isLoading || isSubmitting) return
 
-    // 生成隨機號碼陣列
-    const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
+    // 收集已填入的數字
+    const usedNumbers = new Set<number>()
+    gridNumbers.flat().forEach(num => {
+      if (num !== null) {
+        usedNumbers.add(num)
+      }
+    })
 
-    // Fisher-Yates shuffle
-    for (let i = numbers.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [numbers[i], numbers[j]] = [numbers[j], numbers[i]]
+    const emptyCount = 25 - usedNumbers.size
+
+    if (emptyCount > 0) {
+      // 情況 1：有空格子 → 只填充空格子
+      // 找出未使用的數字
+      const availableNumbers: number[] = []
+      for (let i = 1; i <= 25; i++) {
+        if (!usedNumbers.has(i)) {
+          availableNumbers.push(i)
+        }
+      }
+
+      // Fisher-Yates shuffle 未使用的數字
+      for (let i = availableNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableNumbers[i], availableNumbers[j]] = [availableNumbers[j], availableNumbers[i]]
+      }
+
+      // 填充空格子（保留已有數字）
+      let availableIndex = 0
+      const newGrid = gridNumbers.map(row =>
+        row.map(cell => {
+          if (cell !== null) {
+            return cell  // 保留已填的數字
+          } else {
+            return availableNumbers[availableIndex++]  // 填入隨機數字
+          }
+        })
+      )
+      setGridNumbers(newGrid)
+      setLocalError(null)
+    } else {
+      // 情況 2：全部已滿 → 重新洗牌全部數字
+      const numbers = Array.from({ length: 25 }, (_, i) => i + 1)
+
+      // Fisher-Yates shuffle
+      for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]]
+      }
+
+      // 填充到 5x5 grid
+      const newGrid = Array.from({ length: 5 }, (_, row) =>
+        Array.from({ length: 5 }, (_, col) => numbers[row * 5 + col])
+      )
+      setGridNumbers(newGrid)
+      setLocalError(null)
     }
-
-    // 填充到 5x5 grid
-    const newGrid = Array.from({ length: 5 }, (_, row) =>
-      Array.from({ length: 5 }, (_, col) => numbers[row * 5 + col])
-    )
-    setGridNumbers(newGrid)
-    setLocalError(null)
   }
 
   const filledCount = gridNumbers.flat().filter(n => n !== null).length
@@ -190,10 +248,8 @@ export default function BingoCardSetup() {
             <div className="grid grid-cols-5 gap-2 sm:gap-3">
               {gridNumbers.map((row, rowIndex) =>
                 row.map((num, colIndex) => (
-                  <motion.button
+                  <motion.div
                     key={`${rowIndex}-${colIndex}`}
-                    onClick={() => handleCellClick(rowIndex, colIndex)}
-                    disabled={isLoading || isSubmitting}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     className={`
@@ -204,73 +260,50 @@ export default function BingoCardSetup() {
                         : 'bg-metal-gray/80 border-metal-gray-light text-wasteland-lighter hover:border-pip-boy-green/50 hover:bg-pip-boy-green/10'
                       }
                       ${(isLoading || isSubmitting) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                      disabled:pointer-events-none
                     `}
                   >
-                    {num !== null ? (
-                      <>
-                        {num}
-                        {/* 刪除按鈕 */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleClearCell(rowIndex, colIndex)
-                          }}
-                          className="absolute -top-1 -right-1 w-5 h-5 bg-rust-red rounded-full flex items-center justify-center hover:bg-radiation-orange transition-colors"
-                          aria-label="清除"
-                        >
-                          <PixelIcon name="close" size={12} className="text-black" decorative />
-                        </button>
-                      </>
-                    ) : (
-                      <PixelIcon name="plus" sizePreset="md" variant="muted" decorative />
+                    {/* 主要點擊區域 */}
+                    <button
+                      onClick={() => handleCellClick(rowIndex, colIndex)}
+                      disabled={isLoading || isSubmitting}
+                      className="absolute inset-0 w-full h-full flex items-center justify-center bg-transparent disabled:pointer-events-none"
+                      aria-label={num !== null ? `已選擇數字 ${num}` : '選擇數字'}
+                    >
+                      {num !== null ? (
+                        num
+                      ) : (
+                        <PixelIcon name="plus" sizePreset="md" variant="muted" decorative />
+                      )}
+                    </button>
+
+                    {/* 清除按鈕 (只在有數字時顯示) */}
+                    {num !== null && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleClearCell(rowIndex, colIndex)
+                        }}
+                        disabled={isLoading || isSubmitting}
+                        className="absolute -top-1 -right-1 w-5 h-5 bg-rust-red rounded-full flex items-center justify-center hover:bg-radiation-orange transition-colors z-10 disabled:pointer-events-none"
+                        aria-label={`清除數字 ${num}`}
+                      >
+                        <PixelIcon name="close" size={12} className="text-black" decorative />
+                      </button>
                     )}
-                  </motion.button>
+                  </motion.div>
                 ))
               )}
             </div>
           </div>
         </div>
 
-        {/* 右側: 數字選擇器 */}
+        {/* 右側: 操作按鈕 */}
         <div className="lg:col-span-1">
           <div className="p-6 bg-wasteland-dark/80 border-2 border-vault-blue-light/50 rounded-lg backdrop-blur-sm">
             <h3 className="text-lg font-bold text-vault-blue-light mb-4 flex items-center gap-2">
               <PixelIcon name="grid" sizePreset="sm" variant="info" decorative />
-              {selectedCell ? `選擇數字 (列 ${selectedCell.row + 1}, 行 ${selectedCell.col + 1})` : '點擊格子選擇數字'}
+              快速操作
             </h3>
-
-            {/* 數字選擇器 Grid */}
-            <div className="grid grid-cols-5 gap-2 mb-4">
-              {Array.from({ length: 25 }, (_, i) => i + 1).map(num => {
-                const isUsed = gridNumbers.flat().includes(num)
-                const isDisabled = isUsed || !selectedCell
-
-                return (
-                  <motion.button
-                    key={num}
-                    onClick={() => handleNumberSelect(num)}
-                    disabled={isDisabled || isLoading || isSubmitting}
-                    whileHover={!isDisabled ? { scale: 1.1 } : {}}
-                    whileTap={!isDisabled ? { scale: 0.9 } : {}}
-                    className={`
-                      aspect-square rounded text-lg font-bold
-                      transition-all duration-200 border
-                      ${isUsed
-                        ? 'bg-concrete-dark/50 border-concrete text-concrete-light line-through cursor-not-allowed'
-                        : selectedCell
-                          ? 'bg-vault-blue/30 border-vault-blue-light text-vault-blue-light hover:bg-vault-blue/50 cursor-pointer'
-                          : 'bg-metal-gray-dark/50 border-metal-gray text-wasteland-lighter cursor-not-allowed'
-                      }
-                      ${(isLoading || isSubmitting) ? 'opacity-50 cursor-not-allowed' : ''}
-                      disabled:pointer-events-none
-                    `}
-                  >
-                    {num}
-                  </motion.button>
-                )
-              })}
-            </div>
 
             {/* 操作按鈕 */}
             <div className="space-y-2">
@@ -289,7 +322,7 @@ export default function BingoCardSetup() {
                 `}
               >
                 <PixelIcon name="shuffle" sizePreset="sm" decorative />
-                隨機填充
+                {filledCount === 25 ? '重新洗牌' : '隨機填充'}
               </motion.button>
 
               <motion.button
@@ -345,13 +378,26 @@ export default function BingoCardSetup() {
           <span className="text-vault-blue-light font-bold">操作提示:</span>
         </p>
         <ul className="list-disc list-inside space-y-1 ml-6">
-          <li>點擊左側空格子，然後從右側選擇要放入的數字 (1-25)</li>
-          <li>每個數字只能使用一次，已使用的數字會標示刪除線</li>
+          <li>點擊左側空格子，會彈出數字選擇視窗</li>
+          <li>每個數字只能使用一次，已使用的數字會標示為不可選</li>
           <li>點擊格子右上角的 × 可以移除該數字</li>
-          <li>使用「隨機填充」可快速生成隨機賓果卡</li>
+          <li>「隨機填充」會自動填滿空格子（已填數字會保留）</li>
+          <li>全部填滿後，「重新洗牌」會重新隨機排列所有數字</li>
           <li>每月只能建立一張賓果卡，建立後無法修改，請謹慎選擇！</li>
         </ul>
       </motion.div>
+
+      {/* 數字選擇 Modal */}
+      <NumberPickerModal
+        isOpen={showNumberPicker}
+        onClose={() => {
+          setShowNumberPicker(false)
+          setSelectedCell(null)
+        }}
+        onSelectNumber={handleNumberSelect}
+        usedNumbers={new Set(gridNumbers.flat().filter((n): n is number => n !== null))}
+        cardNumbers={new Set()}
+      />
     </div>
   )
 }

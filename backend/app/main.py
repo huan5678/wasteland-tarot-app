@@ -74,6 +74,36 @@ async def lifespan(app: FastAPI):
         start_scheduler()
         logger.info("⏰ APScheduler started with bingo jobs registered")
 
+        # Check and generate today's daily number if not exists (fix cold start issue)
+        try:
+            from app.services.daily_number_generator_service import DailyNumberGeneratorService
+            from app.db.session import get_db
+            from datetime import date
+
+            logger.info("🔍 Checking if today's daily bingo number exists...")
+
+            # Get database session
+            async for db in get_db():
+                try:
+                    service = DailyNumberGeneratorService(db)
+                    today_number = await service.get_number_by_date(date.today())
+
+                    if not today_number:
+                        logger.warning("⚠️ Today's bingo number not found, generating now...")
+                        generated_number = await service.generate_daily_number(date.today())
+                        logger.info(f"✅ Today's bingo number generated successfully: {generated_number.number}")
+                    else:
+                        logger.info(f"✅ Today's bingo number already exists: {today_number.number} (Cycle {today_number.cycle_number})")
+
+                except Exception as num_error:
+                    logger.error(f"❌ Failed to check/generate today's number: {str(num_error)}", exc_info=True)
+                finally:
+                    await db.close()
+                break
+
+        except Exception as num_check_error:
+            logger.error(f"❌ Failed to initialize daily number check: {str(num_check_error)}", exc_info=True)
+
     except Exception as e:
         logger.error(f"Failed to start scheduler: {str(e)}", exc_info=True)
 

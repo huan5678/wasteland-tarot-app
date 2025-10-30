@@ -294,8 +294,8 @@ class BingoCardManagerService:
             BingoCardResponse schema
         """
         return BingoCardResponse(
-            id=card.id,
-            user_id=card.user_id,
+            id=str(card.id),
+            user_id=str(card.user_id),
             month_year=card.month_year.strftime('%Y-%m'),
             card_data=card.card_data,
             is_active=card.is_active,

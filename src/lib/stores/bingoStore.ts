@@ -54,15 +54,17 @@ interface LineCheckResult {
 
 /**
  * 賓果遊戲狀態介面
+ *
+ * 注意：後端回傳的是 card 物件，而非直接的 card_data
  */
 interface BingoStatusResponse {
   has_card: boolean
-  card_data: number[][] | null
-  daily_number: number | null
+  card: BingoCardResponse | null  // 後端回傳的是完整的 card 物件
   claimed_numbers: number[]
   line_count: number
   has_reward: boolean
-  has_claimed_today: boolean
+  today_claimed: boolean  // 注意：後端欄位名是 today_claimed，不是 has_claimed_today
+  daily_number: number | null
 }
 
 /**
@@ -155,6 +157,12 @@ interface BingoStore {
    * 領取今日號碼
    */
   claimDailyNumber: () => Promise<void>
+
+  /**
+   * 手動領取指定號碼
+   * @param number - 要領取的號碼 (1-25)
+   */
+  claimManualNumber: (number: number) => Promise<void>
 
   /**
    * 檢查連線狀態
@@ -278,27 +286,47 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 
     // 處理其他錯誤
     if (!response.ok) {
-      const errorData: APIError = await response.json().catch(() => ({ detail: '未知錯誤' }))
+      const errorData: any = await response.json().catch(() => ({ detail: '未知錯誤' }))
+
+      // 提取錯誤訊息（支援多種後端格式）
+      let errorMessage: string
+      if (typeof errorData === 'string') {
+        errorMessage = errorData
+      } else if (typeof errorData === 'object' && errorData !== null) {
+        errorMessage =
+          errorData.message ||      // 後端自訂格式
+          errorData.detail ||        // FastAPI 標準格式
+          errorData.error ||         // 其他格式
+          `HTTP ${response.status}`  // 預設
+      } else {
+        errorMessage = `HTTP ${response.status}`
+      }
 
       console.error(`[BingoStore] API Error: ${endpoint}`, {
         status: response.status,
-        message: errorData.detail,
+        message: errorData,
         endpoint,
         method: options.method || 'GET',
         timestamp: new Date().toISOString(),
       })
 
-      useErrorStore.getState().pushError({
-        source: 'api',
-        message: errorData.detail || `HTTP ${response.status}`,
-        detail: {
-          endpoint,
-          method: options.method || 'GET',
-          statusCode: response.status,
-        },
-      })
+      // 404 錯誤不推送到全域錯誤 Store（可能是正常情況，如無歷史記錄）
+      if (response.status !== 404) {
+        useErrorStore.getState().pushError({
+          source: 'api',
+          message: errorMessage,
+          detail: {
+            endpoint,
+            method: options.method || 'GET',
+            statusCode: response.status,
+          },
+        })
+      }
 
-      throw new Error(errorData.detail || `HTTP ${response.status}`)
+      // 為 404 錯誤建立特殊的錯誤物件，方便呼叫方識別
+      const error = new Error(errorMessage)
+      ;(error as any).status = response.status
+      throw error
     }
 
     return response.json()
@@ -312,15 +340,17 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       timestamp: new Date().toISOString(),
     })
 
-    // 推送錯誤至全域錯誤 Store
-    useErrorStore.getState().pushError({
-      source: 'api',
-      message: err?.message || 'API 請求失敗',
-      detail: {
-        endpoint,
-        method: options.method || 'GET',
-      },
-    })
+    // 404 錯誤不推送到全域錯誤 Store（可能是正常情況，如無歷史記錄）
+    if (err?.status !== 404) {
+      useErrorStore.getState().pushError({
+        source: 'api',
+        message: err?.message || 'API 請求失敗',
+        detail: {
+          endpoint,
+          method: options.method || 'GET',
+        },
+      })
+    }
 
     throw err
   }
@@ -353,20 +383,84 @@ export const useBingoStore = create<BingoStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
+      console.log('[BingoStore] 開始載入賓果狀態...')
       const status = await apiRequest<BingoStatusResponse>('/api/v1/bingo/status')
+
+      // 詳細日誌：API 回應
+      console.log('[BingoStore] fetchBingoStatus 回應:', {
+        has_card: status.has_card,
+        card: status.card,
+        card_exists: !!status.card,
+        card_data_exists: status.card?.card_data ? true : false,
+        claimed_numbers: status.claimed_numbers,
+        claimed_count: status.claimed_numbers?.length,
+        daily_number: status.daily_number,
+        line_count: status.line_count,
+        has_reward: status.has_reward,
+        today_claimed: status.today_claimed,
+      })
+
+      // 提取 card_data（如果 card 物件存在的話）
+      const cardData = status.card?.card_data ?? null
+
+      // 驗證 card_data 格式（如果有卡片的話）
+      if (status.has_card && cardData) {
+        if (!Array.isArray(cardData) || cardData.length !== 5) {
+          console.error('[BingoStore] 無效的賓果卡格式:', {
+            card_data: cardData,
+            is_array: Array.isArray(cardData),
+            length: Array.isArray(cardData) ? cardData.length : 'N/A',
+          })
+          throw new Error('賓果卡資料格式錯誤：不是 5x5 陣列')
+        }
+        // 檢查每一行是否都是長度為 5 的陣列
+        for (let i = 0; i < 5; i++) {
+          if (!Array.isArray(cardData[i]) || cardData[i].length !== 5) {
+            console.error(`[BingoStore] 第 ${i} 行格式錯誤:`, {
+              row: cardData[i],
+              is_array: Array.isArray(cardData[i]),
+              length: Array.isArray(cardData[i]) ? cardData[i].length : 'N/A',
+            })
+            throw new Error(`賓果卡資料格式錯誤：第 ${i} 行不是長度為 5 的陣列`)
+          }
+        }
+        console.log('[BingoStore] 賓果卡格式驗證通過')
+      } else if (status.has_card && !cardData) {
+        console.error('[BingoStore] 嚴重錯誤：has_card 為 true 但 card_data 為空', {
+          has_card: status.has_card,
+          card: status.card,
+          card_is_null: status.card === null,
+          card_data: cardData,
+        })
+
+        // 資料不一致：後端說有卡片但沒有給卡片資料
+        // 這是資料庫狀態異常，需要提示使用者
+        throw new Error('賓果卡資料載入失敗：資料庫狀態異常，請聯繫客服或重新建立賓果卡')
+      }
 
       set({
         hasCard: status.has_card,
-        userCard: status.card_data,
+        userCard: cardData,
         dailyNumber: status.daily_number,
         claimedNumbers: new Set(status.claimed_numbers),
         lineCount: status.line_count,
         hasReward: status.has_reward,
-        hasClaimed: status.has_claimed_today,
+        hasClaimed: status.today_claimed,  // 修正：後端欄位名是 today_claimed
         isLoading: false,
         error: null,
       })
+
+      console.log('[BingoStore] 狀態更新完成:', {
+        hasCard: status.has_card,
+        userCard_exists: !!cardData,
+        claimedNumbers_size: status.claimed_numbers?.length,
+      })
     } catch (err: any) {
+      console.error('[BingoStore] fetchBingoStatus 錯誤:', {
+        error: err.message,
+        stack: err.stack,
+        timestamp: new Date().toISOString(),
+      })
       set({
         error: err.message || '載入賓果狀態失敗',
         isLoading: false,
@@ -387,27 +481,25 @@ export const useBingoStore = create<BingoStore>((set, get) => ({
     }
 
     try {
+      // 將一維陣列轉換為 5x5 二維陣列（後端期望此格式）
+      const grid: number[][] = []
+      for (let i = 0; i < 5; i++) {
+        grid.push(numbers.slice(i * 5, (i + 1) * 5))
+      }
+
       const response = await apiRequest<BingoCardResponse>('/api/v1/bingo/card', {
         method: 'POST',
-        body: JSON.stringify({ numbers }),
+        body: JSON.stringify({ numbers: grid }),
       })
 
-      set({
-        hasCard: true,
-        userCard: response.card_data,
-        isLoading: false,
-        error: null,
-        selectedNumbers: new Set(), // 清除選擇狀態
-        validationError: null,
-      })
-
-      // 建立成功後重新載入狀態
+      // 建立成功後重新載入完整狀態（避免資料不一致）
       await get().fetchBingoStatus()
     } catch (err: any) {
       set({
         error: err.message || '建立賓果卡失敗',
         isLoading: false,
       })
+      throw err // 重新拋出錯誤，讓 UI 層可以處理
     }
   },
 
@@ -443,6 +535,63 @@ export const useBingoStore = create<BingoStore>((set, get) => ({
   },
 
   /**
+   * 手動領取指定號碼
+   */
+  claimManualNumber: async (number: number) => {
+    // 驗證號碼
+    if (number < 1 || number > 25) {
+      set({ error: '號碼必須在 1-25 之間' })
+      return
+    }
+
+    // 檢查是否已領取
+    if (get().claimedNumbers.has(number)) {
+      set({ error: '此號碼已經領取過了' })
+      return
+    }
+
+    // 檢查是否在卡片上
+    const { userCard } = get()
+    if (!userCard) {
+      set({ error: '請先建立賓果卡' })
+      return
+    }
+
+    const isOnCard = userCard.flat().includes(number)
+    if (!isOnCard) {
+      set({ error: '此號碼不在你的賓果卡上' })
+      return
+    }
+
+    set({ isLoading: true, error: null })
+
+    try {
+      // 呼叫手動領取 API
+      const result = await apiRequest<ClaimResult>('/api/v1/bingo/claim/manual', {
+        method: 'POST',
+        body: JSON.stringify({ number }),
+      })
+
+      // 更新狀態
+      const newClaimedNumbers = new Set(get().claimedNumbers)
+      newClaimedNumbers.add(result.number)
+
+      set({
+        claimedNumbers: newClaimedNumbers,
+        lineCount: result.current_lines,
+        hasReward: result.has_reward,
+        isLoading: false,
+        error: null,
+      })
+    } catch (err: any) {
+      set({
+        error: err.message || '手動領取號碼失敗',
+        isLoading: false,
+      })
+    }
+  },
+
+  /**
    * 檢查連線狀態
    */
   checkLines: async () => {
@@ -471,16 +620,77 @@ export const useBingoStore = create<BingoStore>((set, get) => ({
   fetchHistory: async (month: string): Promise<BingoHistoryRecord | null> => {
     set({ isLoading: true, error: null })
 
+    console.log('[BingoStore] fetchHistory 開始:', {
+      month,
+      endpoint: `/api/v1/bingo/history/${month}`,
+      timestamp: new Date().toISOString(),
+    })
+
     try {
       const history = await apiRequest<BingoHistoryRecord>(`/api/v1/bingo/history/${month}`)
 
+      console.log('[BingoStore] fetchHistory API 回應:', {
+        month,
+        has_data: !!history,
+        data_preview: history ? {
+          month_year: history.month_year,
+          line_count: history.line_count,
+          has_reward: history.has_reward,
+          claimed_numbers_count: history.claimed_numbers?.length,
+          card_data_exists: !!history.card_data,
+          card_data_type: typeof history.card_data,
+          card_data_is_array: Array.isArray(history.card_data),
+        } : null,
+      })
+
+      // 驗證歷史記錄格式
+      if (history && history.card_data) {
+        if (!Array.isArray(history.card_data) || history.card_data.length !== 5) {
+          console.error('[BingoStore] 歷史記錄賓果卡格式錯誤:', {
+            card_data: history.card_data,
+            is_array: Array.isArray(history.card_data),
+            length: Array.isArray(history.card_data) ? history.card_data.length : 'N/A',
+          })
+          throw new Error('歷史記錄資料格式錯誤：賓果卡不是 5x5 陣列')
+        }
+
+        // 驗證每一行
+        for (let i = 0; i < 5; i++) {
+          if (!Array.isArray(history.card_data[i]) || history.card_data[i].length !== 5) {
+            console.error('[BingoStore] 歷史記錄第 ${i} 行格式錯誤:', {
+              row: history.card_data[i],
+              is_array: Array.isArray(history.card_data[i]),
+              length: Array.isArray(history.card_data[i]) ? history.card_data[i].length : 'N/A',
+            })
+            throw new Error(`歷史記錄資料格式錯誤：第 ${i} 行不是長度為 5 的陣列`)
+          }
+        }
+
+        console.log('[BingoStore] 歷史記錄格式驗證通過')
+      }
+
       set({ isLoading: false, error: null })
+      console.log('[BingoStore] fetchHistory 成功完成')
       return history
     } catch (err: any) {
+      // 檢查是否為 404 錯誤（該月份沒有記錄）- 使用 status 屬性而非訊息內容
+      const is404 = err.status === 404
+
+      console.log('[BingoStore] fetchHistory 錯誤:', {
+        month,
+        error: err.message,
+        error_type: err.constructor.name,
+        status: err.status,
+        is404,
+        timestamp: new Date().toISOString(),
+      })
+
+      // 404 不是錯誤，而是正常的「沒有記錄」狀態
       set({
-        error: err.message || '查詢歷史記錄失敗',
+        error: is404 ? null : (err.message || '查詢歷史記錄失敗'),
         isLoading: false,
       })
+
       return null
     }
   },
