@@ -13,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { UserMenu } from './UserMenu'
 
 interface NavItem {
   href: string
@@ -216,8 +217,6 @@ export function Header() {
         { href: '/readings', label: '占卜記錄', icon: 'scroll-text', ariaLabel: '占卜記錄', badge: false },
         { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館', badge: false },
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
-        { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案', badge: false },
-        ...(user.is_admin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台', badge: false }] : []),
       ]
     : [
         { href: '/auth', label: '啟動終端機', icon: 'door-open', ariaLabel: '啟動終端機', badge: false },
@@ -242,7 +241,7 @@ export function Header() {
     {
       title: '每日',
       items: [
-        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
+        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge || undefined },
         { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統' },
       ],
     },
@@ -325,6 +324,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
+            {/* 導航連結 */}
             {generalNavLinks.map((link) => (
               <button
                 key={link.href}
@@ -352,22 +352,16 @@ export function Header() {
               </button>
             ))}
 
+            {/* 已登入：顯示 UserMenu */}
             {user && (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-sm
-                         border border-red-500/30 hover:border-red-500
-                         hover:bg-red-500/10 text-red-400 hover:text-red-500
-                         transition-all duration-200"
-              >
-                <PixelIcon
-                  name="door-open"
-                  sizePreset="xs"
-                  variant="error"
-                  aria-label="登出"
-                />
-                <span>登出</span>
-              </button>
+              <UserMenu
+                user={{
+                  name: user.name,
+                  avatarUrl: user.avatar_url,
+                  profilePicture: user.profilePicture
+                }}
+                onLogout={handleLogout}
+              />
             )}
           </nav>
 

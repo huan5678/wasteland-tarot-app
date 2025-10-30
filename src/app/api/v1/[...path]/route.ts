@@ -80,11 +80,21 @@ async function proxyRequest(
     }
 
     // Prepare request body
-    let body: string | undefined
+    let body: BodyInit | undefined
     if (method !== 'GET' && method !== 'HEAD' && method !== 'OPTIONS') {
       try {
-        body = await request.text()
+        const contentType = request.headers.get('content-type')
+
+        // For multipart/form-data (file uploads), preserve binary data
+        if (contentType?.includes('multipart/form-data')) {
+          console.log('[API Proxy] Handling multipart/form-data request')
+          body = await request.arrayBuffer()
+        } else {
+          // For other content types (JSON, text, etc.), convert to text
+          body = await request.text()
+        }
       } catch (error) {
+        console.warn('[API Proxy] Failed to read request body:', error)
         // Body might be empty
       }
     }

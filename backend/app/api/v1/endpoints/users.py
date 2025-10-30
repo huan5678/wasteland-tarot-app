@@ -5,14 +5,18 @@
 """
 
 from typing import Dict, Any, Optional
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel, field_validator
 import uuid
+import httpx
+import hashlib
+from datetime import datetime
 
 from app.db.database import get_db
 from app.core.dependencies import get_current_user
+from app.core.supabase import get_supabase_client
 from app.models.user import User
 from app.models.wasteland_card import FactionAlignment
 import logging
@@ -65,6 +69,12 @@ class ProfileResponse(BaseModel):
     """用戶 Profile 回應"""
     message: str
     user: Dict[str, Any]
+
+
+class AvatarUploadResponse(BaseModel):
+    """頭像上傳回應"""
+    avatar_url: str
+    message: str
 
 
 @router.get("/me/profile", response_model=ProfileResponse)
@@ -263,4 +273,188 @@ async def update_user_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="更新用戶資料時發生錯誤"
+        )
+
+
+# ==================== 頭像上傳 API ====================
+
+# 允許的圖片 MIME types
+ALLOWED_MIME_TYPES = {
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif"
+}
+
+# 最大檔案大小（5 MB）
+MAX_FILE_SIZE = 5 * 1024 * 1024
+
+
+@router.post("/avatar", response_model=AvatarUploadResponse)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    上傳使用者頭像到 Supabase Storage
+
+    流程：
+    1. 驗證檔案類型（MIME type）
+    2. 驗證檔案大小（最大 5 MB）
+    3. 生成唯一的檔案名稱
+    4. 上傳到 Supabase Storage 的 'avatars' bucket
+    5. 刪除舊頭像（如果存在且不是 OAuth 頭像）
+    6. 更新 users 表的 avatar_url
+    7. 返回新的頭像 URL
+
+    Args:
+        file: 上傳的圖片檔案
+        current_user: 當前登入用戶
+        db: 資料庫 session
+
+    Returns:
+        AvatarUploadResponse: 包含新的頭像 URL
+
+    Raises:
+        HTTPException:
+            - 400: 檔案類型不符、檔案過大、無檔案上傳
+            - 500: Storage 上傳失敗、資料庫更新失敗
+    """
+    try:
+        # 步驟 1: 驗證檔案類型
+        if not file.content_type or file.content_type not in ALLOWED_MIME_TYPES:
+            logger.warning(f"Invalid file type: {file.content_type}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"不支援的檔案類型。允許的類型: {', '.join(ALLOWED_MIME_TYPES)}"
+            )
+
+        # 步驟 2: 驗證檔案大小（讀取並檢查）
+        file_content = await file.read()
+        file_size = len(file_content)
+
+        if file_size > MAX_FILE_SIZE:
+            logger.warning(f"File too large: {file_size} bytes (max: {MAX_FILE_SIZE})")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"檔案過大。最大允許大小: {MAX_FILE_SIZE / (1024 * 1024):.1f} MB"
+            )
+
+        if file_size == 0:
+            logger.warning("Empty file uploaded")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="檔案為空，請上傳有效的圖片檔案"
+            )
+
+        # 步驟 3: 生成唯一的檔案名稱
+        # 格式: {user_id}_{timestamp}_{hash}.{ext}
+        timestamp = int(datetime.utcnow().timestamp())
+        file_hash = hashlib.md5(file_content).hexdigest()[:8]
+        file_ext = file.content_type.split("/")[-1]
+        if file_ext == "jpeg":
+            file_ext = "jpg"
+
+        file_name = f"{current_user.id}_{timestamp}_{file_hash}.{file_ext}"
+        file_path = file_name  # 不需要 "avatars/" 前綴，Supabase SDK 會自動處理
+
+        logger.info(f"Uploading avatar for user {current_user.id}: {file_path}")
+
+        # 步驟 4: 上傳到 Supabase Storage
+        supabase = get_supabase_client()
+
+        try:
+            # 上傳檔案到 'avatars' bucket
+            upload_response = supabase.storage.from_("avatars").upload(
+                path=file_path,
+                file=file_content,
+                file_options={
+                    "content-type": file.content_type,
+                    "upsert": "false"  # 不覆蓋同名檔案（檔名已唯一）
+                }
+            )
+
+            logger.info(f"Avatar uploaded successfully: {file_path}")
+
+        except Exception as upload_error:
+            logger.error(f"Supabase Storage upload failed: {str(upload_error)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="頭像上傳失敗，請稍後再試"
+            )
+
+        # 步驟 5: 獲取公開 URL
+        try:
+            public_url = supabase.storage.from_("avatars").get_public_url(file_path)
+            logger.info(f"Avatar public URL: {public_url}")
+
+        except Exception as url_error:
+            logger.error(f"Failed to get public URL: {str(url_error)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="無法獲取頭像 URL"
+            )
+
+        # 步驟 6: 刪除舊頭像（如果存在且不是 OAuth 頭像）
+        old_avatar_url = current_user.avatar_url
+        if old_avatar_url:
+            # 判斷是否為 Supabase Storage 的頭像（不刪除 Google OAuth 頭像）
+            if "supabase" in old_avatar_url and "/avatars/" in old_avatar_url:
+                try:
+                    # 提取舊檔案路徑（移除 query parameters）
+                    old_file_path = old_avatar_url.split("/avatars/")[-1].split("?")[0]
+
+                    # 刪除舊檔案
+                    supabase.storage.from_("avatars").remove([old_file_path])
+                    logger.info(f"Deleted old avatar: {old_file_path}")
+
+                except Exception as delete_error:
+                    # 刪除失敗不影響上傳流程
+                    logger.warning(f"Failed to delete old avatar (non-fatal): {str(delete_error)}")
+
+        # 步驟 7: 更新資料庫
+        try:
+            result = await db.execute(
+                select(User).where(User.id == current_user.id)
+            )
+            user = result.scalar_one_or_none()
+
+            if not user:
+                logger.error(f"User not found for avatar update: {current_user.id}")
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="使用者不存在"
+                )
+
+            user.avatar_url = public_url
+            await db.commit()
+            await db.refresh(user)
+
+            logger.info(f"Avatar URL updated in database for user {current_user.id}")
+
+        except HTTPException:
+            raise
+        except Exception as db_error:
+            await db.rollback()
+            logger.error(f"Database update failed: {str(db_error)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="更新用戶資料失敗"
+            )
+
+        # 步驟 8: 返回結果
+        return AvatarUploadResponse(
+            avatar_url=public_url,
+            message="頭像上傳成功"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Avatar upload error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="頭像上傳時發生錯誤"
         )

@@ -1,0 +1,47 @@
+/**
+ * AvatarUpload.module.css
+ * Fallout-themed customization for react-image-crop
+ */
+
+/* 裁切容器 */
+.reactCrop {
+  max-width: 100%;
+}
+
+/* 裁切框樣式 - Pip-Boy Green with glow effect */
+.reactCrop :global(.ReactCrop__crop-selection) {
+  border: 2px solid #00ff88 !important;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.6) !important;
+}
+
+/* 裁切控制點 - 正方形樣式 */
+.reactCrop :global(.ReactCrop__drag-handle) {
+  background: #00ff88 !important;
+  border: 2px solid #003320 !important;
+  width: 12px !important;
+  height: 12px !important;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.8) !important;
+}
+
+/* 裁切控制點 hover 效果 */
+.reactCrop :global(.ReactCrop__drag-handle:hover) {
+  background: #00cc6a !important;
+  box-shadow: 0 0 12px rgba(0, 255, 136, 1) !important;
+}
+
+/* 裁切區域外的遮罩 - 深色半透明 */
+.reactCrop :global(.ReactCrop__crop-mask) {
+  background: rgba(0, 0, 0, 0.7) !important;
+}
+
+/* 裁切框邊緣線條 - 確保可見性 */
+.reactCrop :global(.ReactCrop__rule-of-thirds-vt),
+.reactCrop :global(.ReactCrop__rule-of-thirds-hz) {
+  border-color: rgba(0, 255, 136, 0.3) !important;
+}
+
+/* 移除預設的虛線 */
+.reactCrop :global(.ReactCrop__crop-selection::before),
+.reactCrop :global(.ReactCrop__crop-selection::after) {
+  display: none;
+}

@@ -55,10 +55,14 @@ interface User {
   experience_level?: string
   total_readings?: number
   created_at: string
+  // 權限相關欄位
+  is_admin?: boolean
   // OAuth 相關欄位
   isOAuthUser?: boolean
   oauthProvider?: string | null // 如 'google'
   profilePicture?: string | null // OAuth 頭像 URL
+  // 用戶上傳的頭像
+  avatar_url?: string | null // 用戶自行上傳的頭像 URL（優先於 OAuth 頭像）
 }
 
 class APIError extends Error {

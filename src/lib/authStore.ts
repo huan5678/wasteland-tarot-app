@@ -42,6 +42,8 @@ interface AuthState {
   // 認證方式管理 (Stage 12.3)
   setAuthMethodsState: (state: { hasPasskey: boolean; hasPassword: boolean; hasOAuth: boolean }) => void
   refreshAuthMethods: () => Promise<void>
+  // 頭像管理
+  updateAvatarUrl: (avatarUrl: string) => void
 }
 
 // Token 儲存在 httpOnly cookies 中，由後端管理
@@ -718,6 +720,29 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       console.warn('❌ 查詢認證方式失敗（靜默處理）:', error.message || error)
       // 靜默處理錯誤，不更新狀態
     }
+  },
+
+  /**
+   * 更新使用者頭像 URL
+   *
+   * @param avatarUrl - 新的頭像 URL
+   */
+  updateAvatarUrl: (avatarUrl: string) => {
+    const state = get()
+
+    if (!state.user) {
+      console.warn('[AuthStore] ⚠️ 無法更新頭像：使用者未登入')
+      return
+    }
+
+    console.log('[AuthStore] 🖼️ 更新頭像 URL:', avatarUrl)
+
+    set({
+      user: {
+        ...state.user,
+        avatar_url: avatarUrl
+      }
+    })
   }
 }), {
   name: 'auth-store',

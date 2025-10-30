@@ -346,6 +346,56 @@ async def oauth_callback(
             # 事件追蹤失敗不應阻擋登入流程
             logger.warning(f"OAuth 事件追蹤失敗（非致命）: {str(e)}")
 
+        # 步驟 4.6: 同步 Google OAuth 頭像到 Supabase Storage（每次登入都同步）
+        if profile_picture_url:
+            try:
+                logger.info(f"Syncing Google OAuth avatar for user {user.id}: {profile_picture_url}")
+
+                # 下載 Google 頭像圖片
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    avatar_response = await client.get(profile_picture_url)
+                    avatar_response.raise_for_status()
+                    avatar_content = avatar_response.content
+
+                    if len(avatar_content) > 0:
+                        # 生成檔案名稱（格式: google_oauth_{user_id}_{timestamp}.jpg）
+                        import hashlib
+                        from datetime import datetime
+                        timestamp = int(datetime.utcnow().timestamp())
+                        file_hash = hashlib.md5(avatar_content).hexdigest()[:8]
+                        file_name = f"google_oauth_{user.id}_{timestamp}_{file_hash}.jpg"
+                        file_path = file_name  # 不需要 "avatars/" 前綴，Supabase SDK 會自動處理
+
+                        # 上傳到 Supabase Storage
+                        supabase = get_supabase_client()
+                        supabase.storage.from_("avatars").upload(
+                            path=file_path,
+                            file=avatar_content,
+                            file_options={
+                                "content-type": "image/jpeg",
+                                "upsert": "false"
+                            }
+                        )
+
+                        # 獲取公開 URL
+                        public_url = supabase.storage.from_("avatars").get_public_url(file_path)
+
+                        # 更新 users 表的 avatar_url
+                        user.avatar_url = public_url
+                        await db.commit()
+                        await db.refresh(user)
+
+                        logger.info(f"Google OAuth avatar synced successfully: {public_url}")
+
+            except httpx.HTTPStatusError as http_error:
+                # 下載失敗不應阻擋登入流程
+                logger.warning(f"Failed to download Google avatar (non-fatal): HTTP {http_error.response.status_code}")
+            except httpx.TimeoutException:
+                logger.warning("Google avatar download timed out (non-fatal)")
+            except Exception as avatar_error:
+                # 頭像同步失敗不應阻擋登入流程
+                logger.warning(f"Google OAuth avatar sync failed (non-fatal): {str(avatar_error)}")
+
         # 步驟 5: 生成 JWT token
         from datetime import datetime, timedelta
         access_token = create_access_token(data={"sub": str(user.id)})

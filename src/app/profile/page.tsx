@@ -8,6 +8,7 @@ import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievement
 import { PixelIcon } from '@/components/ui/icons'
 import { profileAPI } from '@/lib/api/services'
 import { useFactions } from '@/hooks/useCharacterVoices'
+import { AvatarUpload } from '@/components/profile/AvatarUpload'
 
 interface UserProfile {
   username: string
@@ -31,6 +32,7 @@ export default function ProfilePage() {
   const isOAuthUser = useAuthStore(s => s.isOAuthUser)
   const oauthProvider = useAuthStore(s => s.oauthProvider)
   const profilePicture = useAuthStore(s => s.profilePicture)
+  const updateAvatarUrl = useAuthStore(s => s.updateAvatarUrl)
 
   // 音效系統狀態
   const sfxVolume = useAudioStore(s => s.volumes.sfx)
@@ -260,20 +262,17 @@ export default function ProfilePage() {
           {/* Profile Card */}
           <div className="lg:col-span-1">
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-              <div className="text-center mb-6">
-                {/* Profile Picture - Show OAuth avatar if available */}
-                <div className="w-24 h-24 border-2 border-pip-boy-green rounded-full flex items-center justify-center mx-auto mb-4 bg-pip-boy-green/10 overflow-hidden">
-                  {isOAuthUser && profilePicture ? (
-                    <img
-                      src={profilePicture}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <PixelIcon name="user" size={64} className="text-pip-boy-green" decorative />
-                  )}
-                </div>
+              {/* Avatar Upload Component */}
+              <AvatarUpload
+                currentAvatarUrl={user?.avatar_url || (isOAuthUser ? profilePicture : undefined)}
+                onUploadSuccess={(newAvatarUrl) => {
+                  console.log('頭像上傳成功，新 URL:', newAvatarUrl)
+                  // 更新 authStore 中的 user.avatar_url
+                  updateAvatarUrl(newAvatarUrl)
+                }}
+              />
 
+              <div className="text-center mb-6">
                 <h2 className="text-xl font-bold text-pip-boy-green">
                   {user?.name || profile.username}
                 </h2>
