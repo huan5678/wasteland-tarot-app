@@ -1,3 +1,16 @@
+/**
+ * @deprecated This button component has been replaced by PipBoyButton.
+ * Please use `import { PipBoyButton } from '@/components/ui/pipboy'` instead.
+ *
+ * Migration Guide:
+ * - Replace all `<Button>` imports with `<PipBoyButton>`
+ * - PipBoyButton supports the same API with enhanced Pip-Boy styling
+ * - All variants and sizes are compatible
+ *
+ * This file will be removed in a future version.
+ * Last updated: 2025-10-30
+ */
+
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -6,6 +19,8 @@ import { cn } from "@/lib/utils"
 import { useAudioEffect } from "@/hooks/audio/useAudioEffect"
 
 /**
+ * @deprecated Use PipBoyButton from @/components/ui/pipboy instead
+ *
  * Button component variants using class-variance-authority.
  *
  * Variants:

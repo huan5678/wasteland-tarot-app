@@ -1,9 +1,28 @@
+/**
+ * @deprecated This card component has been replaced by PipBoyCard.
+ * Please use `import { PipBoyCard } from '@/components/ui/pipboy'` instead.
+ *
+ * Migration Guide:
+ * - Replace all `<Card>` imports with `<PipBoyCard>`
+ * - Replace `<CardHeader>` with `<PipBoyCardHeader>`
+ * - Replace `<CardTitle>` with `<PipBoyCardTitle>`
+ * - Replace `<CardDescription>` with `<PipBoyCardDescription>`
+ * - Replace `<CardContent>` with `<PipBoyCardContent>`
+ * - Replace `<CardFooter>` with `<PipBoyCardFooter>`
+ * - PipBoyCard supports enhanced Pip-Boy styling with same API
+ *
+ * This file will be removed in a future version.
+ * Last updated: 2025-10-30
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
 /**
+ * @deprecated Use PipBoyCard from @/components/ui/pipboy instead
+ *
  * Card component variants using class-variance-authority.
  *
  * Variants:
