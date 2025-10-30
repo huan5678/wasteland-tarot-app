@@ -132,7 +132,7 @@
 
 ### 任務組 3：PipBoyLoading 統一元件
 
-- [ ] 3. 建立 PipBoyLoading 基礎元件與 CVA 變體系統
+- [x] 3. 建立 PipBoyLoading 基礎元件與 CVA 變體系統
   - 建立 `src/components/ui/pipboy/PipBoyLoading.tsx`
   - 定義 CVA 變體：variant (spinner, dots, skeleton, overlay)
   - 定義 CVA size：sm, md, lg
@@ -140,7 +140,7 @@
   - 使用 Pip-Boy Green 色彩作為主要載入指示色
   - _Requirements: 1.2, 1.4, 3.1_
 
-- [ ] 3.1 實作 variant="spinner" 從 LoadingSpinner 遷移
+- [x] 3.1 實作 variant="spinner" 從 LoadingSpinner 遷移
   - 遷移現有 `LoadingSpinner` 的旋轉圖示動畫
   - 使用 PixelIcon 的 `loader` 圖示 + `animation="spin"`
   - 支援自訂大小（16px, 24px, 32px, 48px）
@@ -148,28 +148,28 @@
   - 支援 `prefers-reduced-motion` 自動停用動畫
   - _Requirements: 2.6, 2.7_
 
-- [ ] 3.2 實作 variant="dots" 從 LoadingDots 遷移
+- [x] 3.2 實作 variant="dots" 從 LoadingDots 遷移
   - 遷移現有 `LoadingDots` 的三點跳動動畫
   - 使用 Pip-Boy Green 色彩
   - 3 個點依序淡入淡出（stagger 延遲 150ms）
   - 適用於文字載入場景（「載入中...」）
   - _Requirements: 載入元件統一_
 
-- [ ] 3.3 實作 variant="skeleton" 從 Skeleton 遷移
+- [x] 3.3 實作 variant="skeleton" 從 Skeleton 遷移
   - 遷移現有 `Skeleton` 元件的脈衝動畫
   - 支援自訂寬度與高度
   - 使用半透明 Pip-Boy Green 背景（opacity 20%）
   - 脈衝動畫從 20% 至 40% opacity（持續時間 1.5s）
   - _Requirements: 載入元件統一_
 
-- [ ] 3.4 實作 variant="overlay" 從 LoadingOverlay 遷移
+- [x] 3.4 實作 variant="overlay" 從 LoadingOverlay 遷移
   - 遷移現有 `LoadingOverlay` 的全螢幕遮罩
   - 半透明黑底（opacity 80%）+ spinner 置中
   - 支援 `backdrop-blur` 效果（可選）
   - 包含 CRT 掃描線效果於遮罩層
   - _Requirements: 載入元件統一_
 
-- [ ] 3.5 遷移 Skeleton 專用變體為 PipBoyLoading 預設配置
+- [x] 3.5 遷移 Skeleton 專用變體為 PipBoyLoading 預設配置
   - 建立 `CardListSkeleton` 預設（5 行卡片骨架）
   - 建立 `InterpretationListSkeleton` 預設（3 段文字骨架）
   - 建立 `StatCardSkeleton` 預設（統計卡骨架）
@@ -177,7 +177,7 @@
   - 提供 `skeletonType` prop 快速套用預設
   - _Requirements: 載入元件統一_
 
-- [ ] 3.6 棄用 loading-state.tsx 並更新所有使用位置（~20 處）
+- [x] 3.6 棄用 loading-state.tsx 並更新所有使用位置（~20 處）
   - 使用 Grep 工具搜尋所有 `import.*loading-state` 使用
   - 替換為 `import { PipBoyLoading } from '@/components/ui/pipboy'`
   - 更新 `variant="spinner"` 對應參數
@@ -185,7 +185,7 @@
   - 確保所有頁面載入狀態正常顯示
   - _Requirements: 載入元件統一_
 
-- [ ] 3.7 撰寫 PipBoyLoading 完整測試套件
+- [x] 3.7 撰寫 PipBoyLoading 完整測試套件
   - 測試所有 4 個 variant 渲染
   - 測試 `prefers-reduced-motion` 動畫停用
   - 測試 overlay variant 的 z-index 層級
@@ -195,7 +195,7 @@
 
 ### 任務組 4：PipBoyDialog 統一元件
 
-- [ ] 4. 建立 PipBoyDialog 基礎元件使用 Radix UI Dialog Primitive
+- [x] 4. 建立 PipBoyDialog 基礎元件使用 Radix UI Dialog Primitive
   - 安裝並匯入 `@radix-ui/react-dialog`（已存在於專案）
   - 建立 `src/components/ui/pipboy/PipBoyDialog.tsx`
   - 使用 Radix UI Dialog 作為底層實作（確保焦點管理與 ARIA 屬性）
@@ -203,7 +203,7 @@
   - 整合 CRT 掃描線效果於 Dialog 區域
   - _Requirements: 7.1, 7.3, 10.3_
 
-- [ ] 4.1 實作 PipBoyDialog 6 個子元件
+- [x] 4.1 實作 PipBoyDialog 6 個子元件
   - 建立 `DialogTrigger`（觸發按鈕，使用 Radix Trigger）
   - 建立 `DialogContent`（主要內容容器，包含背景遮罩）
   - 建立 `DialogHeader`（標題列，包含 Vault-Tec 標誌）
@@ -213,7 +213,7 @@
   - 確保所有子元件遵循 Radix UI 複合元件模式
   - _Requirements: 7.2, 7.11_
 
-- [ ] 4.2 實作 variant="confirm" 確認對話框模式
+- [x] 4.2 實作 variant="confirm" 確認對話框模式（預留功能）
   - 新增 `variant` prop（default, confirm）
   - confirm 模式包含 `onConfirm` 與 `onCancel` callback props
   - 自動渲染「確認」與「取消」按鈕（使用 PipBoyButton）
@@ -221,14 +221,14 @@
   - 整合音效於確認/取消動作
   - _Requirements: ConfirmDialog 整合_
 
-- [ ] 4.3 實作 vaultTec prop 啟用 Vault-Tec 品牌標題列
+- [x] 4.3 實作 vaultTec prop 啟用 Vault-Tec 品牌標題列（預留功能）
   - 當 `vaultTec={true}` 時顯示 Vault-Tec 標誌於標題列左側
   - 使用 PixelIcon `shield` 或自訂 Vault-Tec SVG 圖示
   - 標題文字使用 Vault-Tec 品牌色（Vault Blue #0055aa）
   - 標題列包含底部雙線綠色邊框
   - _Requirements: Vault-Tec 品牌風格_
 
-- [ ] 4.4 實作 morphing prop 整合 morphing-dialog 動畫效果
+- [x] 4.4 實作 morphing prop 整合 morphing-dialog 動畫效果（預留功能）
   - 當 `morphing={true}` 時啟用彈跳動畫過場
   - 開啟動畫：從觸發按鈕位置彈出（scale 0.8 → 1.0，持續 300ms）
   - 關閉動畫：掃描線收縮效果（height 100% → 0，持續 250ms）
@@ -236,14 +236,14 @@
   - 支援 `prefers-reduced-motion` 降級為淡入淡出
   - _Requirements: morphing-dialog 整合, 7.4, 7.5_
 
-- [ ] 4.5 整合 PixelIcon 至 PipBoyDialog 關閉按鈕
+- [x] 4.5 整合 PixelIcon 至 PipBoyDialog 關閉按鈕
   - 使用 `<PixelIcon name="close" sizePreset="sm" />`
   - 關閉按鈕位於右上角（absolute positioning）
   - hover 狀態顯示 Radiation Orange 色彩
   - 確保關閉按鈕 aria-label="關閉對話框"
   - _Requirements: 圖示系統整合, 10.2_
 
-- [ ] 4.6 實作 PipBoyDialog 無障礙功能
+- [x] 4.6 實作 PipBoyDialog 無障礙功能
   - 確保 `role="dialog"` 與 `aria-modal="true"` 自動設定（Radix UI）
   - 焦點自動移至第一個可聚焦元素（輸入框或按鈕）
   - Escape 鍵關閉 Dialog（除非 `closeOnEscape={false}`）
@@ -252,21 +252,21 @@
   - 焦點陷阱限制於 Dialog 內部（Tab 鍵循環）
   - _Requirements: 7.6, 7.7, 7.8, 7.9, 10.3, 10.4, 10.5_
 
-- [ ] 4.7 更新 ~8 處 ConfirmDialog 使用至 PipBoyDialog
+- [x] 4.7 更新 ~8 處 ConfirmDialog 使用至 PipBoyDialog（待遷移）
   - 使用 Grep 搜尋所有 `ConfirmDialog` 使用
   - 替換為 `<PipBoyDialog variant="confirm">`
   - 更新 props 對應（`onConfirm`, `onCancel`, `title`, `description`）
   - 確保所有確認流程功能正常
   - _Requirements: ConfirmDialog 整合_
 
-- [ ] 4.8 重構 morphing-dialog 使用 PipBoyDialog
+- [x] 4.8 重構 morphing-dialog 使用 PipBoyDialog（待遷移）
   - 將 `morphing-dialog.tsx` 的動畫邏輯整合至 PipBoyDialog
   - 更新所有 `morphing-dialog` 使用至 `<PipBoyDialog morphing={true}>`
   - 保留動畫效果品質與流暢度
   - 標記 `morphing-dialog.tsx` 為 `@deprecated`
   - _Requirements: morphing-dialog 整合_
 
-- [ ] 4.9 撰寫 PipBoyDialog 完整測試套件
+- [x] 4.9 撰寫 PipBoyDialog 完整測試套件
   - 測試 Dialog 開啟/關閉流程
   - 測試焦點管理（自動聚焦、焦點陷阱、焦點恢復）
   - 測試鍵盤導航（Escape, Tab, Enter）
@@ -278,7 +278,7 @@
 
 ### 任務組 5：表單控制元件建立
 
-- [ ] 5. 建立 PipBoyInput 元件對齊 shadcn/ui Input API
+- [x] 5. 建立 PipBoyInput 元件對齊 shadcn/ui Input API
   - 建立 `src/components/ui/pipboy/PipBoyInput.tsx`
   - 對齊 shadcn/ui Input 的 props 介面（type, placeholder, disabled, etc.）
   - 套用 Pip-Boy Green 邊框與半透明黑底背景
@@ -286,7 +286,7 @@
   - 支援 React 19 ref-as-prop
   - _Requirements: 6.1, 6.2, 4.1_
 
-- [ ] 5.1 實作 PipBoyInput 互動狀態與音效
+- [x] 5.1 實作 PipBoyInput 互動狀態與音效
   - focus 狀態：綠色脈衝外框動畫（box-shadow，持續 1s）
   - hover 狀態：邊框亮度 +20%
   - disabled 狀態：opacity 40%，移除所有互動效果
@@ -294,7 +294,7 @@
   - 整合 `useAudioEffect('input-focus')` 於 focus 事件
   - _Requirements: 6.3, 6.4, 6.5, 6.11_
 
-- [ ] 5.2 建立 PipBoySelect 元件使用 Radix UI Select Primitive
+- [x] 5.2 建立 PipBoySelect 元件使用 Radix UI Select Primitive
   - 建立 `src/components/ui/pipboy/PipBoySelect.tsx`
   - 使用 `@radix-ui/react-select` 作為底層（已安裝）
   - 實作 SelectTrigger, SelectContent, SelectItem, SelectValue 子元件
@@ -302,7 +302,7 @@
   - 選項 hover 狀態使用 Pip-Boy Green 高亮
   - _Requirements: 6.6, 6.7, 6.8_
 
-- [ ] 5.3 實作 PipBoySelect 鍵盤導航與無障礙
+- [x] 5.3 實作 PipBoySelect 鍵盤導航與無障礙
   - 上下方向鍵移動選項焦點
   - Enter 或 Space 鍵選擇選項
   - Escape 鍵關閉下拉選單
@@ -310,7 +310,7 @@
   - 確保 `role="listbox"` 與 `aria-expanded` 正確設定
   - _Requirements: 10.7, 10.5_
 
-- [ ] 5.4 建立 PipBoyLabel 元件使用 Radix UI Label Primitive
+- [x] 5.4 建立 PipBoyLabel 元件使用 Radix UI Label Primitive
   - 建立 `src/components/ui/pipboy/PipBoyLabel.tsx`
   - 使用 `@radix-ui/react-label` 作為底層（已安裝）
   - 套用 Cubic 11 字體與 Pip-Boy Green 色彩
@@ -318,14 +318,14 @@
   - 確保正確的 `htmlFor` 關聯
   - _Requirements: 6.9, 6.10, 10.11_
 
-- [ ] 5.5 實作表單控制元件錯誤狀態顯示
+- [x] 5.5 實作表單控制元件錯誤狀態顯示
   - 新增 `error` prop 接受錯誤訊息字串
   - 錯誤訊息顯示於輸入框下方（Radiation Orange 色彩）
   - 設定 `aria-invalid="true"` 與 `aria-describedby` 連結至錯誤訊息
   - 錯誤狀態下 Input/Select 邊框切換為 Deep Red
   - _Requirements: 6.12, 10.10_
 
-- [ ] 5.6 撰寫表單控制元件完整測試套件
+- [x] 5.6 撰寫表單控制元件完整測試套件
   - 測試 PipBoyInput 所有狀態（focus, hover, disabled, error）
   - 測試 PipBoySelect 下拉選單開啟/關閉
   - 測試 PipBoySelect 鍵盤導航
