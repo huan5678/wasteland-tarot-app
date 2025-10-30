@@ -347,20 +347,20 @@
   - 提供清晰的註解說明每個元件用途
   - _Requirements: 1.1, 1.2_
 
-- [ ] 6.1 匯出 TypeScript 類型定義與 JSDoc 註解
+- [x] 6.1 匯出 TypeScript 類型定義與 JSDoc 註解
   - 為每個元件匯出完整的 Props 介面
   - 為所有 variant 與 size prop 匯出 Union 類型
   - 新增 JSDoc 註解包含使用範例
   - 確保 IDE 自動完成與懸停提示正確顯示
   - _Requirements: 11.2, 11.11_
 
-- [ ] 6.2 建立元件使用範例於註解中
+- [x] 6.2 建立元件使用範例於註解中
   - 在 index.ts 檔案頂部提供快速開始範例
   - 為每個元件提供至少 1 個完整使用範例
   - 範例涵蓋常見使用情境（表單、對話框、卡片列表）
   - _Requirements: 20.3, 20.8_
 
-- [ ] 6.3 更新全專案 import 路徑至統一匯出
+- [x] 6.3 更新全專案 import 路徑至統一匯出
   - 使用 Grep 搜尋所有 `from '@/components/ui/pipboy/PipBoyButton'` 等獨立匯入
   - 替換為 `from '@/components/ui/pipboy'`
   - 確保所有頁面與元件正確匯入
