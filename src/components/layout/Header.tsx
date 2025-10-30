@@ -50,6 +50,9 @@ export function Header() {
   // 檢測使用者是否偏好減少動畫
   const prefersReducedMotion = useReducedMotion()
 
+  // Header ref 用於測量高度
+  const headerRef = React.useRef<HTMLElement>(null)
+
   // ⚠️ 重要：不要在這裡檢查 httpOnly cookies！
   // httpOnly cookies 無法被 JavaScript 讀取（document.cookie 看不到）
   // 登入狀態驗證由 authStore.initialize() 調用 API 來完成
@@ -161,6 +164,52 @@ export function Header() {
     }
   }, [mobileMenuOpen])
 
+  // 通知 Sidebar Header 的顯示/隱藏狀態（包含高度）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 計算實際應該使用的高度
+      const effectiveHeight = isHeaderVisible && headerRef.current
+        ? headerRef.current.offsetHeight
+        : 0
+
+      window.dispatchEvent(
+        new CustomEvent('header-height-change', {
+          detail: { height: effectiveHeight }
+        })
+      )
+    }
+  }, [isHeaderVisible])
+
+  // 使用 ResizeObserver 監聽 Header 高度變化（僅在可見時）
+  useEffect(() => {
+    if (!headerRef.current || !isHeaderVisible) return
+
+    const broadcastHeaderHeight = () => {
+      if (headerRef.current && isHeaderVisible) {
+        const height = headerRef.current.offsetHeight
+        window.dispatchEvent(
+          new CustomEvent('header-height-change', {
+            detail: { height }
+          })
+        )
+      }
+    }
+
+    // 初始廣播
+    broadcastHeaderHeight()
+
+    // 監聽大小變化（響應式、動態內容等）
+    const resizeObserver = new ResizeObserver(() => {
+      broadcastHeaderHeight()
+    })
+
+    resizeObserver.observe(headerRef.current)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [isClient, isHeaderVisible]) // 依賴 isHeaderVisible
+
   const generalNavLinks = user
     ? [
         { href: '/dashboard', label: '控制台', icon: 'home', ariaLabel: '控制台', badge: false },
@@ -210,6 +259,7 @@ export function Header() {
 
   return (
     <motion.header
+      ref={headerRef}
       className="fixed top-0 left-0 right-0 z-50 border-b-2 border-pip-boy-green"
       style={{
         backgroundColor: 'var(--color-wasteland-dark)',

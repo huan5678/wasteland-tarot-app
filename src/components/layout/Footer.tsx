@@ -25,7 +25,10 @@ export function Footer() {
   ]
 
   return (
-    <footer className="border-t-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-wasteland-dark)'}}>
+    <footer
+      className="border-t-2 border-pip-boy-green"
+      style={{backgroundColor: 'var(--color-wasteland-dark)'}}
+    >
       {/* Main Footer Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">

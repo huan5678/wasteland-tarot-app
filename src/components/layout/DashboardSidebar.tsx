@@ -39,6 +39,7 @@ export function DashboardSidebar() {
 
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [headerHeight, setHeaderHeight] = useState(120) // 預設值
 
   // 初始化：從 localStorage 讀取狀態
   useEffect(() => {
@@ -46,6 +47,19 @@ export function DashboardSidebar() {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY)
     if (saved !== null) {
       setIsCollapsed(saved === 'true')
+    }
+  }, [])
+
+  // 監聽 Header 高度變化
+  useEffect(() => {
+    const handleHeaderHeightChange = ((e: CustomEvent) => {
+      setHeaderHeight(e.detail.height)
+    }) as EventListener
+
+    window.addEventListener('header-height-change', handleHeaderHeightChange)
+
+    return () => {
+      window.removeEventListener('header-height-change', handleHeaderHeightChange)
     }
   }, [])
 
@@ -186,23 +200,28 @@ export function DashboardSidebar() {
   return (
     <aside
       className={`
-        h-screen sticky top-0
+        self-start sticky
         bg-wasteland-darker border-r-2 border-pip-boy-green
-        flex flex-col
+        flex flex-col flex-shrink-0
         transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-16' : 'w-60'}
       `}
+      style={{
+        top: `${headerHeight}px`,
+        height: `calc(100vh - ${headerHeight}px)`
+      }}
       aria-label="主要導航"
     >
-      {/* Sidebar Header */}
+      {/* Sidebar Header - Fixed Top */}
       <div className={`
+        flex-shrink-0
         border-b-2 border-pip-boy-green/30 p-4
         ${isCollapsed ? 'px-2' : ''}
       `}>
         {isCollapsed ? (
           <div className="flex justify-center">
             <PixelIcon
-              name="home"
+              name="grid"
               sizePreset="md"
               variant="primary"
               decorative
@@ -220,7 +239,7 @@ export function DashboardSidebar() {
         )}
       </div>
 
-      {/* Navigation Sections */}
+      {/* Navigation Sections - Scrollable Middle */}
       <nav className="flex-1 overflow-y-auto py-4">
         {navSections.map((section, sectionIndex) => (
           <div key={section.title}>
@@ -246,8 +265,8 @@ export function DashboardSidebar() {
         ))}
       </nav>
 
-      {/* Collapse Toggle Button */}
-      <div className="border-t-2 border-pip-boy-green/30 p-2">
+      {/* Collapse Toggle Button - Fixed Bottom */}
+      <div className="flex-shrink-0 border-t-2 border-pip-boy-green/30 p-2">
         {isCollapsed ? (
           <TooltipProvider delayDuration={300}>
             <Tooltip>
