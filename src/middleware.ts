@@ -51,15 +51,23 @@ const guestAllowedRoutes = [
 function checkTokenExists(request: NextRequest): { isValid: boolean } {
   try {
     const cookieHeader = request.headers.get('cookie') || ''
-
-    // 檢查是否有 access_token cookie
     const hasAccessToken = cookieHeader.includes('access_token=')
 
-    // 檢查 localStorage 中的認證狀態（透過 cookie 傳遞）
-    // 注意：middleware 無法直接訪問 localStorage，
-    // 但前端會在有效登入狀態時設定 access_token cookie
+    // 🔍 監控日誌：追蹤 cookie 檢查結果
+    console.log('[Middleware] 🔍 Token Check', {
+      timestamp: new Date().toISOString(),
+      pathname: request.nextUrl.pathname,
+      hasAccessToken,
+      cookieHeader: hasAccessToken ? 'present' : 'missing',
+    })
+
     return { isValid: hasAccessToken }
   } catch (error) {
+    console.error('[Middleware] ❌ Token Check Error', {
+      timestamp: new Date().toISOString(),
+      pathname: request.nextUrl.pathname,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    })
     return { isValid: false }
   }
 }
@@ -128,6 +136,14 @@ export async function middleware(request: NextRequest) {
 
   // 受保護路由：需要登入
   if (isProtectedRoute && !isValid) {
+    // 🔍 監控日誌：追蹤受保護路由的重導向
+    console.warn('[Middleware] 🔀 Redirect to login (no valid cookie)', {
+      timestamp: new Date().toISOString(),
+      pathname,
+      reason: 'No access_token cookie found',
+      returnUrl: pathname + request.nextUrl.search,
+    })
+
     // 清除無效的 cookies
     const response = NextResponse.redirect(new URL('/auth/login', request.url))
     response.cookies.delete('access_token')

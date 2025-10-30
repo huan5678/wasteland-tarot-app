@@ -278,6 +278,14 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
         },
       })
 
+      // 🔍 監控日誌：追蹤 401 錯誤導致的登出
+      console.warn('[AchievementStore] 🚫 401 Error - Redirecting to login', {
+        timestamp: new Date().toISOString(),
+        endpoint,
+        reason,
+        currentPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+      })
+
       // Task 3.2: 儲存當前 URL 到 sessionStorage 供登入後返回
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('auth-return-url', window.location.pathname)

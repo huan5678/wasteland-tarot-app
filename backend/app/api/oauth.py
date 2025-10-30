@@ -6,6 +6,7 @@ OAuth Authentication API endpoints
 
 from typing import Dict, Any, List, Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
 from app.db.database import get_db
@@ -184,8 +185,7 @@ async def oauth_callback(
 
         if code_verifier:
             logger.info("已從 cookie 取得 code_verifier (PKCE enabled)")
-            # 刪除已使用的 code_verifier cookie
-            response.delete_cookie(key="oauth_code_verifier")
+            # Note: code_verifier cookie 將在返回 response 時被刪除
         else:
             logger.warning("Cookie 中找不到 code_verifier，將使用非 PKCE 流程")
 
@@ -354,34 +354,15 @@ async def oauth_callback(
         # 計算 access token 過期時間（30 分鐘）
         token_expires_at = int((datetime.utcnow() + timedelta(minutes=30)).timestamp())
 
-        # 步驟 6: 設定 httpOnly cookies（安全儲存 token）
-        # 本地開發使用 HTTP，需要 secure=False
+        # 步驟 6: 準備回應資料
         from app.config import settings
         is_production = settings.environment == "production"
 
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=is_production,  # 生產環境使用 HTTPS
-            samesite="lax",
-            max_age=1800  # 30 分鐘
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=is_production,
-            samesite="lax",
-            max_age=604800  # 7 天
-        )
-
-        # 步驟 7: 返回使用者資料和 token
-        return OAuthCallbackResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_expires_at=token_expires_at,
-            user={
+        response_data = {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_expires_at": token_expires_at,
+            "user": {
                 "id": str(user.id),
                 "email": user.email,
                 "name": user.name,
@@ -389,7 +370,40 @@ async def oauth_callback(
                 "profile_picture_url": user.profile_picture_url,
                 "is_oauth_user": True
             }
+        }
+
+        # 步驟 7: 創建 JSONResponse 並設定 httpOnly cookies
+        # 重要：必須返回 JSONResponse 而不是 Pydantic model
+        # 因為 Pydantic model 會導致 FastAPI 創建新的 response，丟失 cookies
+        json_response = JSONResponse(content=response_data)
+
+        # 刪除已使用的 code_verifier cookie（PKCE 一次性使用）
+        if code_verifier:
+            json_response.delete_cookie(key="oauth_code_verifier", path="/")
+            logger.info("已刪除 oauth_code_verifier cookie")
+
+        # 設置認證 tokens 為 httpOnly cookies
+        json_response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=is_production,  # 生產環境使用 HTTPS
+            samesite="lax",
+            max_age=1800,  # 30 分鐘
+            path="/"  # 確保在所有路徑下都可用
         )
+        json_response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+            max_age=604800,  # 7 天
+            path="/"  # 確保在所有路徑下都可用
+        )
+
+        logger.info(f"✅ OAuth callback 成功，已設置 access_token 和 refresh_token cookies: {user.email}")
+        return json_response
 
     except HTTPException:
         # HTTP 異常（包含 409 Conflict），直接拋出

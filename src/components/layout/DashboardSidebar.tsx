@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
+import { useBingoStore } from '@/lib/stores/bingoStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   Tooltip,
@@ -32,8 +33,11 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const user = useAuthStore(s => s.user)
 
+  // 賓果 Store（用於紅點邏輯）
+  const hasClaimed = useBingoStore(s => s.hasClaimed)
+  const dailyNumber = useBingoStore(s => s.dailyNumber)
+
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [showBingoBadge, setShowBingoBadge] = useState(false)
   const [isClient, setIsClient] = useState(false)
 
   // 初始化：從 localStorage 讀取狀態
@@ -45,14 +49,19 @@ export function DashboardSidebar() {
     }
   }, [])
 
-  // 檢查賓果紅點提示
-  useEffect(() => {
-    if (isClient && user) {
-      const lastClaimDate = localStorage.getItem('bingo-last-claim-date')
-      const today = new Date().toDateString()
-      setShowBingoBadge(lastClaimDate !== today)
-    }
-  }, [isClient, user])
+  /**
+   * 賓果簽到紅點邏輯（修復 2025-10-30）
+   *
+   * 顯示條件：
+   * 1. 使用者已登入
+   * 2. 今日尚未領取號碼（hasClaimed === false）
+   * 3. 有可領取的號碼（dailyNumber !== null，即日期 <= 25 日）
+   *
+   * 隱藏條件：
+   * - 已領取當天號碼
+   * - 超過 25 日（沒有號碼可領取）
+   */
+  const showBingoBadge = user && !hasClaimed && dailyNumber !== null
 
   // 切換收合狀態
   const toggleCollapse = () => {

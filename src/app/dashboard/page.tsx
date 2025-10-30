@@ -58,7 +58,14 @@ export default function DashboardPage() {
 
     // 初始化完成後，檢查是否有使用者
     if (isInitialized && !user) {
-      console.warn('[Dashboard] ⚠️ 未登入，重導向至登入頁')
+      // 🔍 監控日誌：追蹤路由導向
+      console.log('[Dashboard] 🔀 Auth check redirect', {
+        timestamp: new Date().toISOString(),
+        from: '/dashboard',
+        to: '/auth/login',
+        reason: 'User not authenticated',
+        isInitialized
+      })
       router.push('/auth/login')
       return
     }

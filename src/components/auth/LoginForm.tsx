@@ -38,6 +38,7 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const pushError = useErrorStore(s => s.pushError)
 
   const login = useAuthStore(s => s.login)
+  const initialize = useAuthStore(s => s.initialize)
   const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
   const {
     authenticateWithPasskey,
@@ -72,6 +73,12 @@ export function LoginForm({ hideHeader = false }: LoginFormProps) {
   const [showTraditionalForm, setShowTraditionalForm] = useState(false)
   const [reasonMessage, setReasonMessage] = useState<string | null>(null)
   const loading = false
+
+  // 方案 B: 在登入頁也觸發 initialize() 以檢查狀態
+  useEffect(() => {
+    console.log('[LoginForm] 🔄 Initializing auth store to check state sync')
+    initialize()
+  }, [initialize])
 
   // Task 3.1: Parse reason parameter and display message
   useEffect(() => {

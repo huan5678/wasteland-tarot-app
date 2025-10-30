@@ -50,6 +50,11 @@ export function Header() {
   // 檢測使用者是否偏好減少動畫
   const prefersReducedMotion = useReducedMotion()
 
+  // ⚠️ 重要：不要在這裡檢查 httpOnly cookies！
+  // httpOnly cookies 無法被 JavaScript 讀取（document.cookie 看不到）
+  // 登入狀態驗證由 authStore.initialize() 調用 API 來完成
+  // 如果 API 返回 401，authStore 會自動清除狀態
+
   // Update time only on client side to avoid hydration mismatch
   useEffect(() => {
     setIsClient(true)

@@ -122,16 +122,18 @@ async function proxyRequest(
     // Use NextResponse cookies for reliable cookie handling
     const setCookieHeaders = response.headers.getSetCookie()
     if (setCookieHeaders.length > 0) {
-      console.log(`[API Proxy] Processing ${setCookieHeaders.length} Set-Cookie headers`)
+      console.log(`[API Proxy] 🍪 Processing ${setCookieHeaders.length} Set-Cookie headers from backend`)
 
-      setCookieHeaders.forEach(cookieHeader => {
+      setCookieHeaders.forEach((cookieHeader, index) => {
+        console.log(`[API Proxy] 🍪 Raw Set-Cookie[${index}]: ${cookieHeader}`)
+
         // Parse cookie header: "name=value; attribute1; attribute2"
         const parts = cookieHeader.split(';').map(p => p.trim())
         const [nameValue, ...attributes] = parts
         const [name, value] = nameValue.split('=')
 
         if (!name || value === undefined) {
-          console.warn('[API Proxy] Invalid cookie header:', cookieHeader)
+          console.warn('[API Proxy] ⚠️ Invalid cookie header:', cookieHeader)
           return
         }
 
@@ -163,11 +165,22 @@ async function proxyRequest(
         // Set cookie using NextResponse.cookies API
         try {
           nextResponse.cookies.set(name, value, options)
-          console.log(`[API Proxy] Set cookie: ${name} (httpOnly: ${options.httpOnly}, maxAge: ${options.maxAge})`)
+          console.log(`[API Proxy] ✅ Set cookie: ${name}`, {
+            httpOnly: options.httpOnly,
+            secure: options.secure,
+            sameSite: options.sameSite,
+            maxAge: options.maxAge,
+            path: options.path,
+            valueLength: value.length
+          })
         } catch (error) {
-          console.error(`[API Proxy] Failed to set cookie ${name}:`, error)
+          console.error(`[API Proxy] ❌ Failed to set cookie ${name}:`, error)
         }
       })
+
+      console.log(`[API Proxy] 🍪 Cookie forwarding complete for ${method} ${path}`)
+    } else {
+      console.log(`[API Proxy] ℹ️ No Set-Cookie headers from backend for ${method} ${path}`)
     }
 
     return nextResponse

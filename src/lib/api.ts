@@ -146,9 +146,20 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
         // 401 Unauthorized - 嘗試刷新 token（使用全域鎖）
         if (response.status === 401 && endpoint !== '/api/v1/auth/refresh' && endpoint !== '/api/v1/auth/login') {
+          console.warn('[API] 🚫 401 Unauthorized - Attempting token refresh', {
+            timestamp: new Date().toISOString(),
+            endpoint,
+            method: options.method || 'GET'
+          })
+
           const refreshSucceeded = await refreshToken()
 
           if (refreshSucceeded) {
+            console.log('[API] ✅ Token refresh succeeded, retrying request', {
+              timestamp: new Date().toISOString(),
+              endpoint
+            })
+
             // Token 刷新成功，重試原始請求
             const retryResponse = await timedFetch(url, {
               ...options,
@@ -167,10 +178,21 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               return retryResponse.json()
             } else {
               // Retry also failed - token might be expired
+              console.warn('[API] ⚠️ Retry after token refresh failed', {
+                timestamp: new Date().toISOString(),
+                endpoint,
+                status: retryResponse.status
+              })
               const retryError = await retryResponse.json().catch(() => ({ detail: 'Unknown error' }))
               throw new APIError(retryError.detail || `HTTP ${retryResponse.status}`, retryResponse.status)
             }
           } else {
+            console.warn('[API] ❌ Token refresh failed - Clearing auth state', {
+              timestamp: new Date().toISOString(),
+              endpoint,
+              currentPath: typeof window !== 'undefined' ? window.location.pathname : 'N/A'
+            })
+
             // Refresh failed - clear auth state and redirect to login (only for protected routes)
             if (typeof window !== 'undefined') {
               // Clear localStorage auth state
@@ -202,7 +224,17 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               const isPublicPath = publicPaths.includes(currentPath) || currentPath.startsWith('/auth')
 
               if (!isPublicPath) {
+                console.log('[API] 🔀 Redirecting to login (protected route)', {
+                  timestamp: new Date().toISOString(),
+                  from: currentPath,
+                  to: `/auth/login?returnUrl=${encodeURIComponent(currentPath)}`
+                })
                 window.location.href = `/auth/login?returnUrl=${encodeURIComponent(currentPath)}`
+              } else {
+                console.log('[API] ℹ️ Skipping redirect (public route)', {
+                  timestamp: new Date().toISOString(),
+                  currentPath
+                })
               }
             }
             throw new APIError('Authentication expired', 401)
