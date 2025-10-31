@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
-import { LoadingSpinner } from '@/components/ui/pipboy/LoadingSpinner'
+import { LoadingSpinner } from '@/components/ui/pipboy'
 import { AsciiLoading } from '@/components/loading/AsciiLoading'
 
 export function ZustandAuthInitializer({ children }: { children: React.ReactNode }) {

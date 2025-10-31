@@ -4,6 +4,7 @@ import { useBingoStore } from '@/lib/stores/bingoStore'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
+import { PipBoyButton } from '@/components/ui/pipboy'
 import NumberPickerModal from '@/components/bingo/NumberPickerModal'
 
 /**
@@ -307,60 +308,38 @@ export default function BingoCardSetup() {
 
             {/* 操作按鈕 */}
             <div className="space-y-2">
-              <motion.button
+              <PipBoyButton
                 onClick={handleAutoFill}
                 disabled={isLoading || isSubmitting}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`
-                  w-full px-4 py-3 rounded-lg font-bold flex items-center justify-center gap-2
-                  bg-radiation-orange/20 border-2 border-radiation-orange text-radiation-orange
-                  hover:bg-radiation-orange/30 hover:border-radiation-orange-bright
-                  transition-all duration-200
-                  ${(isLoading || isSubmitting) ? 'opacity-50 cursor-not-allowed' : ''}
-                  disabled:pointer-events-none
-                `}
+                variant="secondary"
+                size="default"
+                className="w-full"
               >
                 <PixelIcon name="shuffle" sizePreset="sm" decorative />
                 {filledCount === 25 ? '重新洗牌' : '隨機填充'}
-              </motion.button>
+              </PipBoyButton>
 
-              <motion.button
+              <PipBoyButton
                 onClick={handleClearGrid}
                 disabled={isLoading || isSubmitting || filledCount === 0}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className={`
-                  w-full px-4 py-3 rounded-lg font-bold flex items-center justify-center gap-2
-                  bg-rust-red/20 border-2 border-rust-red text-rust-light
-                  hover:bg-rust-red/30 hover:border-rust-light
-                  transition-all duration-200
-                  ${(isLoading || isSubmitting || filledCount === 0) ? 'opacity-50 cursor-not-allowed' : ''}
-                  disabled:pointer-events-none
-                `}
+                variant="destructive"
+                size="default"
+                className="w-full"
               >
                 <PixelIcon name="trash" sizePreset="sm" decorative />
                 清空格子
-              </motion.button>
+              </PipBoyButton>
 
-              <motion.button
+              <PipBoyButton
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                whileHover={canSubmit ? { scale: 1.02 } : {}}
-                whileTap={canSubmit ? { scale: 0.98 } : {}}
-                className={`
-                  w-full px-4 py-3 rounded-lg font-bold text-lg flex items-center justify-center gap-2
-                  transition-all duration-200
-                  ${canSubmit
-                    ? 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black hover:bg-pip-boy-green-bright shadow-lg shadow-pip-boy-green/50'
-                    : 'bg-concrete-dark border-2 border-concrete text-concrete-light cursor-not-allowed'
-                  }
-                  disabled:pointer-events-none
-                `}
+                variant="default"
+                size="lg"
+                className="w-full"
               >
                 <PixelIcon name="check" sizePreset="sm" decorative />
                 {isSubmitting ? '建立中...' : '確認建立'}
-              </motion.button>
+              </PipBoyButton>
             </div>
           </div>
         </div>

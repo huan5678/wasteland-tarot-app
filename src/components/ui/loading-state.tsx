@@ -1,9 +1,27 @@
+/**
+ * @deprecated This loading component has been replaced by PipBoyLoading.
+ * Please use `import { PipBoyLoading } from '@/components/ui/pipboy'` instead.
+ *
+ * Migration Guide:
+ * - Replace `<LoadingState>` with `<PipBoyLoading variant="spinner">`
+ * - size="sm" → size="sm"
+ * - size="md" → size="md" (default)
+ * - size="lg" → size="lg"
+ * - message prop → text prop
+ * - PipBoyLoading supports 4 variants: spinner, dots, skeleton, overlay
+ *
+ * This file will be removed in a future version.
+ * Last updated: 2025-10-30
+ */
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
 /**
+ * @deprecated Use PipBoyLoading from @/components/ui/pipboy instead
+ *
  * LoadingState component with size variants.
  *
  * Sizes:

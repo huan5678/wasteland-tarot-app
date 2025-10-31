@@ -368,6 +368,52 @@ Phase 3: 測試與優化 (Week 5)
 - **獲得**：簡潔代碼、未來相容、更好的 TypeScript 支援
 - **犧牲**：無（專案已使用 React 19）
 
+#### 決策 5: 完全移除 lucide-react，統一使用 PixelIcon 圖示系統
+
+**決策**：所有 PipBoy 元件與專案頁面統一使用 PixelIcon 圖示系統（基於 RemixIcon），完全移除 lucide-react 依賴
+
+**背景**：專案已完成 pixel-icon-replacement 規格，建立基於 RemixIcon 4.7.0 的 PixelIcon 元件系統（2800+ 圖示），並在 CLAUDE.md 中明確禁止使用 lucide-react。所有圖示需符合 Fallout 像素風格美學。
+
+**替代方案**：
+1. **保留 lucide-react 與 PixelIcon 雙軌並行**
+   - 優點：無需遷移工作
+   - 缺點：圖示風格不一致（lucide-react 為線性風格，與像素風格衝突），增加 bundle size，維護兩套圖示系統
+2. **使用其他像素圖示庫（如 pixelarticons）**
+   - 優點：原生像素風格
+   - 缺點：圖示數量少（僅 486 個），不足以覆蓋專案需求
+3. **PixelIcon（RemixIcon，選擇）**
+   - 優點：2800+ 圖示豐富度高，Apache License 2.0 商用友善，CSS class name 實作（無 React 依賴），24×24px 基準尺寸符合 PipBoy 設計
+   - 缺點：需遷移現有 lucide-react 使用（已完成）
+
+**選擇方法**：
+- 所有 PipBoy 元件使用 `<PixelIcon name="xxx" />` API
+- 驗證指令：`rg "import.*lucide-react" src --type tsx`（應返回 0 matches）
+- 提供 7 種動畫效果（pulse, spin, bounce, ping, fade, wiggle, float）
+- 提供 8 種語意化顏色變體（primary, secondary, success, warning, error, info, muted）
+- 提供 6 種尺寸預設（xs: 16px, sm: 24px, md: 32px, lg: 48px, xl: 72px, xxl: 96px）
+
+**理由**：
+- **視覺一致性**：PixelIcon 透過 CSS 渲染（`ri-{name}-{style}`），可完美搭配 Pip-Boy Green 配色與 CRT 掃描線效果
+- **效能優化**：RemixIcon 使用 CSS class name 而非 SVG 元件，減少 React reconciliation 開銷
+- **開發體驗**：統一的 `<PixelIcon name="..." />` API，降低認知負擔（vs lucide-react 的 `<IconName />` 命名匯入）
+- **無障礙支援**：內建 `aria-label` 與 `decorative` 屬性支援
+- **符合專案規範**：CLAUDE.md 明確規定「絕對禁止使用 lucide-react」
+
+**驗證方法**：
+```bash
+# 驗證 lucide-react 完全移除
+rg "import.*lucide-react" src --type tsx
+# 預期結果：0 matches
+
+# 驗證 PixelIcon 使用
+rg "<PixelIcon" src --type tsx -c
+# 預期結果：>= 50 matches（覆蓋所有頁面與元件）
+```
+
+**取捨**：
+- **獲得**：視覺風格統一、bundle size 減少（~15KB gzipped）、單一圖示系統維護、符合專案規範
+- **犧牲**：需遷移現有 lucide-react 使用（已完成於 Phase 4）
+
 ---
 
 ## 系統流程
