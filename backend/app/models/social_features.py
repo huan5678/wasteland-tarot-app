@@ -408,6 +408,81 @@ class KarmaHistory(BaseModel):
         }
 
 
+class EventParticipant(BaseModel):
+    """
+    P2.2: Participant tracking for community events
+    追蹤個別使用者的事件參與狀態和統計
+    """
+
+    __tablename__ = "event_participants"
+
+    # Core Relations
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    event_id = Column(UUID(as_uuid=True), ForeignKey("community_events.id"), nullable=False, index=True)
+
+    # Participation Status
+    joined_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    status = Column(String(30), default="joined")  # joined, completed, dropped, disqualified
+    completion_percentage = Column(Float, default=0.0)  # 0.0 to 100.0
+    last_activity_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Performance Metrics
+    contribution_score = Column(Integer, default=0)  # 貢獻分數
+    ranking_position = Column(Integer)  # 在排行榜上的位置（如適用）
+    performance_data = Column(JSON)  # 事件特定的表現數據
+
+    # Rewards
+    rewards_claimed = Column(Boolean, default=False)
+    rewards_claimed_at = Column(DateTime(timezone=True))
+    bonus_rewards = Column(JSON)  # 額外獎勵（例如特殊成就）
+
+    # Relationships
+    user = relationship("User")
+    event = relationship("CommunityEvent", back_populates="participants")
+
+    # Unique constraint: one participation per user per event
+    __table_args__ = (
+        UniqueConstraint('user_id', 'event_id', name='uq_event_participant'),
+    )
+
+    def is_active_participant(self) -> bool:
+        """檢查是否為活躍參與者"""
+        return self.status in ["joined", "completed"]
+
+    def complete(self) -> None:
+        """標記為已完成"""
+        self.status = "completed"
+        self.completion_percentage = 100.0
+        self.last_activity_at = datetime.utcnow()
+
+    def update_activity(self, contribution: int = 0, performance: Optional[Dict] = None) -> None:
+        """更新活動數據"""
+        self.last_activity_at = datetime.utcnow()
+        if contribution > 0:
+            self.contribution_score += contribution
+        if performance:
+            current_data = self.performance_data or {}
+            current_data.update(performance)
+            self.performance_data = current_data
+
+    def to_dict(self) -> Dict[str, Any]:
+        """轉換為字典"""
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "event_id": self.event_id,
+            "joined_at": self.joined_at.isoformat() if self.joined_at else None,
+            "status": self.status,
+            "completion_percentage": self.completion_percentage,
+            "last_activity_at": self.last_activity_at.isoformat() if self.last_activity_at else None,
+            "contribution_score": self.contribution_score,
+            "ranking_position": self.ranking_position,
+            "performance_data": self.performance_data,
+            "rewards_claimed": self.rewards_claimed,
+            "bonus_rewards": self.bonus_rewards,
+        }
+
+
 class CommunityEvent(BaseModel):
     """
     Community events and activities in the wasteland
@@ -449,6 +524,9 @@ class CommunityEvent(BaseModel):
     status = Column(String(30), default="upcoming")  # upcoming, active, completed, cancelled
     completion_rate = Column(Float, default=0.0)  # Percentage of participants who completed
     success_metrics = Column(JSON)  # Metrics to measure event success
+
+    # P2.2: Relationships
+    participants = relationship("EventParticipant", back_populates="event", cascade="all, delete-orphan")
 
     def is_currently_active(self) -> bool:
         """Check if event is currently active"""
