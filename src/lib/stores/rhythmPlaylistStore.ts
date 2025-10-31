@@ -120,19 +120,14 @@ const STORAGE_KEY = 'wasteland-tarot-rhythm-playlists';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 /**
- * 取得 Supabase session 檢查是否為訪客
+ * 檢查是否為訪客
+ * 注意：初始值為 true（訪客模式）
+ * 組件應使用 useAuthStore 檢查用戶狀態並調用 _setIsGuest() 更新此值
  */
 const checkIsGuest = (): boolean => {
-  // TODO: 整合 Supabase session 檢查
-  // 暫時使用 localStorage 模擬
-  if (typeof window === 'undefined') return true;
-
-  try {
-    const session = localStorage.getItem('supabase.auth.token');
-    return !session;
-  } catch {
-    return true;
-  }
+  // 初始化時預設為訪客模式
+  // 實際的用戶狀態應由組件通過 useAuthStore 檢查並更新
+  return true;
 };
 
 /**
