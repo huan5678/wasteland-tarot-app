@@ -9,6 +9,7 @@ import { PixelIcon } from '@/components/ui/icons'
 import { profileAPI } from '@/lib/api/services'
 import { useFactions } from '@/hooks/useCharacterVoices'
 import { AvatarUpload } from '@/components/profile/AvatarUpload'
+import { toast } from 'sonner'
 
 interface UserProfile {
   username: string
@@ -160,11 +161,16 @@ export default function ProfilePage() {
       setIsEditing(false)
 
       console.log('Profile updated successfully:', response.message)
-      // TODO: Show success toast
+      toast.success('檔案更新成功', {
+        description: '你的個人資料已成功儲存',
+        duration: 3000,
+      })
     } catch (error) {
       console.error('Failed to save profile:', error)
-      // TODO: Show error toast
-      alert('儲存失敗，請稍後再試')
+      toast.error('儲存失敗', {
+        description: error instanceof Error ? error.message : '請稍後再試',
+        duration: 4000,
+      })
     } finally {
       setIsSaving(false)
     }

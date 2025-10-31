@@ -337,11 +337,12 @@ async def oauth_callback(
                     metadata={"email": email}
                 )
             else:
-                # 現有用戶登入
+                # 現有用戶登入 - 查詢是否有 Passkey
+                auth_info = await coordinator.get_auth_methods(user.id, db)
                 await tracker.track_oauth_login_success(
                     user_id=str(user.id),
                     provider=provider,
-                    metadata={"has_passkey": False}  # TODO: 從 result 取得實際值
+                    metadata={"has_passkey": auth_info.has_passkey}
                 )
         except Exception as e:
             # 事件追蹤失敗不應阻擋登入流程

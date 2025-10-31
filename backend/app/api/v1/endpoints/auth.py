@@ -465,9 +465,7 @@ async def get_current_user(
     # 取得使用者統計資料（可選）
     statistics = {}
     try:
-        # TODO: 實作完整的統計資料查詢
-        # statistics = await user_service.get_user_statistics(user_id)
-        pass
+        statistics = await user_service.get_user_statistics(user_id)
     except Exception as e:
         logger.warning(f"Failed to fetch user statistics: {str(e)}")
 
