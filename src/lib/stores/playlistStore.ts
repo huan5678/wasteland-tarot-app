@@ -425,11 +425,73 @@ export const usePlaylistStore = create<PlaylistState>()(
 
       // === Actions: Realtime 同步 ===
       subscribeToPlaylistChanges: () => {
-        // TODO: Implement Supabase Realtime subscription
-        // Requirements 18: 跨裝置即時同步
-        console.log('[PlaylistStore] Realtime subscription not yet implemented');
+        /**
+         * 實作 Requirements 18: 跨裝置即時同步（5 秒內完成）
+         *
+         * 實作策略：輕量級輪詢（Polling）
+         * - 每 5 秒輪詢一次 fetchPlaylists API
+         * - 當 tab 不可見時暫停輪詢（節省電池和流量）
+         * - 靜默更新（不觸發 loading 狀態，避免 UI 閃爍）
+         *
+         * 為何選擇輪詢而非 WebSocket/SSE：
+         * 1. P3 優先級，避免過度工程化（符合 CLAUDE.md 原則）
+         * 2. 5 秒延遲足夠滿足需求（非即時聊天，不需毫秒級同步）
+         * 3. 實作簡單，無需後端 WebSocket 基礎設施
+         * 4. 未來可升級為 WebSocket（保持介面相容）
+         */
+
+        const SYNC_INTERVAL = 5000; // 5 秒（符合 Requirements 18）
+
+        // 靜默同步函式（不觸發 loading 狀態）
+        const silentSync = async () => {
+          try {
+            // 只在 tab 可見時同步（省電）
+            if (document.visibilityState === 'hidden') {
+              return;
+            }
+
+            const response = await fetch(`${API_BASE_URL}/playlists`, {
+              credentials: 'include',
+            });
+
+            if (response.ok) {
+              const playlists: Playlist[] = await response.json();
+
+              // 只更新 playlists，不觸發 loading/error 狀態
+              // 比較是否有變化（避免不必要的 re-render）
+              const currentPlaylists = get().playlists;
+              const hasChanges = JSON.stringify(currentPlaylists) !== JSON.stringify(playlists);
+
+              if (hasChanges) {
+                set({ playlists });
+                console.log('[PlaylistStore] Synced playlists from server (changes detected)');
+              }
+            }
+          } catch (error) {
+            // 靜默失敗（不干擾使用者體驗）
+            console.warn('[PlaylistStore] Silent sync failed:', error);
+          }
+        };
+
+        // 啟動輪詢
+        const intervalId = setInterval(silentSync, SYNC_INTERVAL);
+
+        // 監聽 visibility change（tab 切換時立即同步）
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            silentSync();
+          }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        console.log('[PlaylistStore] Realtime sync started (polling every 5s)');
+
+        // 返回取消訂閱函式
         return () => {
-          console.log('[PlaylistStore] Unsubscribed from Realtime');
+          clearInterval(intervalId);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          console.log('[PlaylistStore] Realtime sync stopped');
         };
       },
 
