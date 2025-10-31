@@ -160,6 +160,7 @@ class SessionResponseSchema(BaseModel):
     Schema for API responses containing session data.
 
     Includes all session fields plus timestamps for complete client representation.
+    Optionally includes client_id for offline sync ID remapping (P3.3).
     """
     id: str = Field(..., description="Session UUID")
     user_id: str = Field(..., description="User UUID")
@@ -171,6 +172,10 @@ class SessionResponseSchema(BaseModel):
     created_at: datetime = Field(..., description="Creation timestamp")
     updated_at: datetime = Field(..., description="Last update timestamp")
     last_accessed_at: Optional[datetime] = Field(default=None, description="Last access timestamp")
+    client_id: Optional[str] = Field(
+        default=None,
+        description="Client-side temporary UUID (only populated during offline sync for ID remapping)"
+    )
 
     class Config:
         from_attributes = True

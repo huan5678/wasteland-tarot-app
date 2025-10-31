@@ -644,7 +644,9 @@ class SessionService:
                     "status": existing_session.status,
                     "created_at": existing_session.created_at,
                     "updated_at": existing_session.updated_at,
-                    "last_accessed_at": existing_session.last_accessed_at
+                    "last_accessed_at": existing_session.last_accessed_at,
+                    # P3.3: Include client_id for ID remapping
+                    "client_id": offline_data.client_id
                 }
                 return (
                     SessionResponseSchema(**session_dict),
@@ -664,8 +666,11 @@ class SessionService:
         # Create session (this will generate server-side UUID)
         new_session = await self.create_session(session_create)
 
-        # TODO: Store client_id -> server_id mapping for client reference
-        # This allows client to update local references
+        # P3.3: Store client_id -> server_id mapping for client reference
+        # This allows client to update local references from temporary IDs to server UUIDs
+
+        # Add client_id to the response for ID remapping
+        new_session.client_id = offline_data.client_id
 
         return (new_session, None)
 
