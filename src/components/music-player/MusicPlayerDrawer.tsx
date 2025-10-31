@@ -289,7 +289,10 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                 <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <h3 className="text-sm font-bold mb-3">音訊視覺化</h3>
                   <div className="h-48 sm:h-56">
-                    <MusicVisualizer isPlaying={isPlaying} />
+                    <MusicVisualizer
+                      isPlaying={isPlaying}
+                      analyserNode={synth?.getAnalyserNode() ?? null}
+                    />
                   </div>
                 </div>
 

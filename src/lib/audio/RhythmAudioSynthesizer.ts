@@ -80,6 +80,9 @@ export class RhythmAudioSynthesizer {
   private masterGainNode: GainNode;
   private currentVolume: number = 0.7;
 
+  // P3.4: AnalyserNode - 用於音訊視覺化
+  private analyserNode: AnalyserNode | null = null;
+
   // 白噪音 Buffer（預先生成，避免重複計算）
   private noiseBuffer: AudioBuffer | null = null;
 
@@ -112,7 +115,18 @@ export class RhythmAudioSynthesizer {
     // 創建 master gain node 用於音量控制
     this.masterGainNode = this.audioContext.createGain();
     this.masterGainNode.gain.value = this.currentVolume;
-    this.masterGainNode.connect(this.destination);
+
+    // P3.4: 建立 AnalyserNode 用於音訊視覺化
+    // 插入在 masterGainNode 和 destination 之間
+    this.analyserNode = this.audioContext.createAnalyser();
+    this.analyserNode.fftSize = 64; // 產生 32 個頻率 bins (適合 16 個柱狀圖)
+    this.analyserNode.smoothingTimeConstant = 0.8; // 平滑度 (0-1)
+    this.analyserNode.minDecibels = -90;
+    this.analyserNode.maxDecibels = -10;
+
+    // 連接音訊圖: masterGainNode -> analyserNode -> destination
+    this.masterGainNode.connect(this.analyserNode);
+    this.analyserNode.connect(this.destination);
 
     // 預先生成白噪音 Buffer
     this.noiseBuffer = this.createNoiseBuffer();
@@ -137,6 +151,14 @@ export class RhythmAudioSynthesizer {
       currentStep: this.currentStep,
       currentLoop: this.currentLoop,
     };
+  }
+
+  /**
+   * P3.4: 取得 AnalyserNode 用於音訊視覺化
+   * @returns AnalyserNode instance for real-time frequency analysis
+   */
+  public getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
   }
 
   /**
@@ -573,6 +595,18 @@ export class RhythmAudioSynthesizer {
    */
   public destroy(): void {
     this.stop();
+
+    // P3.4: 清理 AnalyserNode
+    if (this.analyserNode) {
+      this.analyserNode.disconnect();
+      this.analyserNode = null;
+    }
+
+    // 清理 Master GainNode
+    if (this.masterGainNode) {
+      this.masterGainNode.disconnect();
+    }
+
     // 注意：不關閉 AudioContext，因為它可能被其他組件共用
     // 如果需要完全釋放，由外部呼叫 audioContext.close()
   }

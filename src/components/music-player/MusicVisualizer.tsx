@@ -16,36 +16,50 @@ import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 export interface MusicVisualizerProps {
   isPlaying: boolean;
   className?: string;
+  analyserNode?: AnalyserNode | null; // P3.4: 真實的音訊分析節點
 }
 
 /**
  * MusicVisualizer Component
  * Requirements: Canvas 繪製頻譜圖、60 FPS 動畫、記憶體優化
+ * P3.4: 整合 RhythmAudioSynthesizer 的 AnalyserNode 以顯示真實音訊數據
  */
 export const MusicVisualizer = React.memo(function MusicVisualizer({
   isPlaying,
   className,
+  analyserNode,
 }: MusicVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationFrameIdRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
 
-  // ========== Initialize Audio Analyser (Simulated for now) ==========
+  // ========== Initialize Audio Analyser ==========
+  // P3.4: 使用傳入的 AnalyserNode（從 RhythmAudioSynthesizer 或 ProceduralMusicEngine）
   useEffect(() => {
-    // Note: 實際的 AnalyserNode 整合需要 AudioContext 和 ProceduralMusicEngine
-    // 這裡先使用模擬數據
-    // TODO: 在 ProceduralMusicEngine 整合後連接真實的 AnalyserNode
+    if (analyserNode) {
+      analyserRef.current = analyserNode;
 
-    // 清理函數：當元件卸載時清理 AnalyserNode
+      // 建立頻率數據陣列
+      const bufferLength = analyserNode.frequencyBinCount;
+      dataArrayRef.current = new Uint8Array(bufferLength);
+
+      console.log('[MusicVisualizer] Connected to AnalyserNode', {
+        fftSize: analyserNode.fftSize,
+        frequencyBinCount: bufferLength,
+      });
+    } else {
+      // 沒有 AnalyserNode 時清空
+      analyserRef.current = null;
+      dataArrayRef.current = null;
+    }
+
+    // 清理函數：不 disconnect，因為 analyserNode 由外部管理
     return () => {
-      if (analyserRef.current) {
-        analyserRef.current.disconnect();
-        analyserRef.current = null;
-      }
+      // 清空參考，但不 disconnect
       dataArrayRef.current = null;
     };
-  }, []);
+  }, [analyserNode]);
 
   // ========== Draw Visualizer ==========
   const drawVisualizer = useCallback(() => {
@@ -67,12 +81,27 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
     const barWidth = width / barCount;
     const barGap = 2;
 
+    // P3.4: 從 AnalyserNode 取得真實頻率數據
+    let frequencyData: Uint8Array | null = null;
+    if (analyserRef.current && dataArrayRef.current && isPlaying) {
+      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      frequencyData = dataArrayRef.current;
+    }
+
     for (let i = 0; i < barCount; i++) {
-      // 模擬頻率數據 (0-255)
-      // TODO: 使用真實的 AnalyserNode 數據
-      const value = isPlaying
-        ? Math.random() * 255 * (0.5 + Math.sin(Date.now() / 1000 + i) * 0.5)
-        : 0;
+      let value: number;
+
+      if (frequencyData) {
+        // 使用真實的頻率數據（取樣 bins）
+        // frequencyBinCount = 32 (fftSize/2), 取每 2 個 bin 平均得到 16 個柱狀圖
+        const binIndex = Math.floor((i * frequencyData.length) / barCount);
+        value = frequencyData[binIndex] || 0;
+      } else {
+        // 降級：使用模擬數據（當沒有 AnalyserNode 或暫停時）
+        value = isPlaying
+          ? Math.random() * 255 * (0.5 + Math.sin(Date.now() / 1000 + i) * 0.5)
+          : 0;
+      }
 
       const barHeight = (value / 255) * height * 0.8;
       const x = i * barWidth + barGap / 2;
