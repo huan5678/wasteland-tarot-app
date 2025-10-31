@@ -233,6 +233,10 @@
 
 **Objective:** 作為開發人員，我需要將首頁的所有 UI 元件遷移至 PipBoy 元件系統，以確保首頁視覺風格一致。
 
+**實作範疇**：
+- ✅ **元件替換**：將現有首頁 UI 元件（按鈕、卡片、輸入框、選擇器）從 shadcn/ui 遷移至 PipBoy 元件
+- ⏭️ **Future Work（新功能開發）**：若現有首頁未包含表單輸入或選擇器，此為未來擴充功能，不在本次遷移範疇
+
 #### Acceptance Criteria
 
 1. WHEN 首頁 Hero section 渲染 THEN UI 系統 SHALL 使用 PipBoyButton 元件取代現有 shadcn/ui Button
@@ -250,17 +254,23 @@
 
 **Objective:** 作為開發人員，我需要將卡牌瀏覽頁面的所有 UI 元件遷移至 PipBoy 元件系統，以提供一致的廢土風格卡片展示。
 
+**實作範疇**：
+- ✅ **元件替換**：將現有卡牌頁面 UI 元件（卡片列表、載入狀態、按鈕）從 shadcn/ui 遷移至 PipBoy 元件
+- ⏭️ **Future Work（新功能開發）**：
+  - AC 2-3：卡片詳情 Dialog（現有實作使用全頁面導航 `/cards/[suit]/[cardId]`，若未來改為 Dialog 則需新開發）
+  - AC 5：卡片搜尋功能（若現有頁面未實作搜尋框，則為未來擴充功能）
+
 #### Acceptance Criteria
 
-1. WHEN 卡牌頁面渲染卡片清單 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝每張塔羅牌
-2. WHEN 使用者點擊卡片查看詳情 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示卡片詳細資訊
-3. WHEN 卡片 Dialog 顯示 THEN 元件系統 SHALL 在標題列顯示卡片名稱與 Vault-Tec 標誌
-4. WHERE 卡牌頁面包含花色篩選 THEN UI 系統 SHALL 使用 PipBoySelect 元件
-5. WHEN 使用者搜尋卡片 THEN UI 系統 SHALL 使用 PipBoyInput 元件作為搜尋框
-6. WHEN 卡片載入中 THEN UI 系統 SHALL 使用 Skeleton 元件顯示載入佔位符
-7. IF 使用者點擊卡片關閉按鈕 THEN UI 系統 SHALL 使用 PipBoyButton（variant="ghost", size="icon"）
-8. WHEN 卡牌頁面完成遷移 THEN 測試系統 SHALL 驗證卡片詳情 Dialog 的所有互動功能正常
-9. WHEN 卡牌頁面完成遷移 THEN 無障礙測試 SHALL 確認所有卡片都可以鍵盤導航
+1. ✅ **[元件替換]** WHEN 卡牌頁面渲染卡片清單 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝每張塔羅牌
+2. ⏭️ **[Future Work]** WHEN 使用者點擊卡片查看詳情 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示卡片詳細資訊
+3. ⏭️ **[Future Work]** WHEN 卡片 Dialog 顯示 THEN 元件系統 SHALL 在標題列顯示卡片名稱與 Vault-Tec 標誌
+4. ✅ **[元件替換]** WHERE 卡牌頁面包含花色篩選 THEN UI 系統 SHALL 使用 PipBoySelect 元件
+5. ⏭️ **[Future Work]** WHEN 使用者搜尋卡片 THEN UI 系統 SHALL 使用 PipBoyInput 元件作為搜尋框
+6. ✅ **[元件替換]** WHEN 卡片載入中 THEN UI 系統 SHALL 使用 Skeleton 元件顯示載入佔位符
+7. ✅ **[元件替換]** IF 使用者點擊卡片關閉按鈕 THEN UI 系統 SHALL 使用 PipBoyButton（variant="ghost", size="icon"）
+8. ⏭️ **[Future Work]** WHEN 卡牌頁面完成遷移 THEN 測試系統 SHALL 驗證卡片詳情 Dialog 的所有互動功能正常
+9. ✅ **[元件替換]** WHEN 卡牌頁面完成遷移 THEN 無障礙測試 SHALL 確認所有卡片都可以鍵盤導航
 
 ---
 
@@ -268,17 +278,22 @@
 
 **Objective:** 作為開發人員，我需要將每日賓果簽到頁面的所有 UI 元件遷移至 PipBoy 元件系統，以強化遊戲化體驗。
 
+**實作範疇**：
+- ✅ **元件替換**：將現有賓果頁面 UI 元件（賓果卡片、按鈕、數字顯示）從 shadcn/ui 遷移至 PipBoy 元件
+- ⏭️ **Future Work（新功能開發）**：
+  - AC 2-3：賓果設定 Dialog（若現有頁面未實作設定介面，則為未來擴充功能）
+
 #### Acceptance Criteria
 
-1. WHEN 賓果頁面渲染簽到卡片 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝賓果卡
-2. WHEN 使用者設定賓果卡 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示設定介面
-3. WHEN 賓果設定 Dialog 顯示 THEN 元件系統 SHALL 使用 PipBoyButton 作為確認與取消按鈕
-4. WHERE 賓果卡顯示每日數字 THEN UI 系統 SHALL 使用 PipBoy 元件的終端機風格數字顯示
-5. WHEN 使用者完成三連線 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示獎勵通知
-6. WHEN 獎勵通知顯示 THEN 元件系統 SHALL 套用綠色脈衝動畫與 Pip-Boy 音效
-7. IF 賓果卡尚未設定 THEN UI 系統 SHALL 使用 PipBoyButton 引導使用者設定
-8. WHEN 賓果頁面完成遷移 THEN 測試系統 SHALL 驗證所有賓果遊戲邏輯與 UI 互動正常
-9. WHEN 賓果頁面完成遷移 THEN 視覺測試 SHALL 確認賓果卡網格對齊與間距正確
+1. ✅ **[元件替換]** WHEN 賓果頁面渲染簽到卡片 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝賓果卡
+2. ⏭️ **[Future Work]** WHEN 使用者設定賓果卡 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示設定介面
+3. ⏭️ **[Future Work]** WHEN 賓果設定 Dialog 顯示 THEN 元件系統 SHALL 使用 PipBoyButton 作為確認與取消按鈕
+4. ✅ **[元件替換]** WHERE 賓果卡顯示每日數字 THEN UI 系統 SHALL 使用 PipBoy 元件的終端機風格數字顯示
+5. ✅ **[元件替換]** WHEN 使用者完成三連線 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示獎勵通知
+6. ✅ **[元件替換]** WHEN 獎勵通知顯示 THEN 元件系統 SHALL 套用綠色脈衝動畫與 Pip-Boy 音效
+7. ✅ **[元件替換]** IF 賓果卡尚未設定 THEN UI 系統 SHALL 使用 PipBoyButton 引導使用者設定
+8. ✅ **[元件替換]** WHEN 賓果頁面完成遷移 THEN 測試系統 SHALL 驗證所有賓果遊戲邏輯與 UI 互動正常
+9. ✅ **[元件替換]** WHEN 賓果頁面完成遷移 THEN 視覺測試 SHALL 確認賓果卡網格對齊與間距正確
 
 ---
 
@@ -286,17 +301,22 @@
 
 **Objective:** 作為開發人員，我需要將成就系統頁面的所有 UI 元件遷移至 PipBoy 元件系統，以提供統一的成就展示風格。
 
+**實作範疇**：
+- ✅ **元件替換**：將現有成就頁面 UI 元件（成就卡片、按鈕、篩選器）從 shadcn/ui 遷移至 PipBoy 元件
+- ⏭️ **Future Work（新功能開發）**：
+  - AC 6：成就解鎖通知（若現有頁面未實作即時通知功能，則為未來擴充功能）
+
 #### Acceptance Criteria
 
-1. WHEN 成就頁面渲染成就清單 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝每個成就
-2. WHEN 成就卡片顯示已解鎖成就 THEN 元件系統 SHALL 套用 Bright Green 邊框與綠色發光效果
-3. WHEN 成就卡片顯示未解鎖成就 THEN 元件系統 SHALL 套用灰色調並降低不透明度至 50%
-4. WHEN 使用者點擊成就查看詳情 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示成就說明
-5. WHERE 成就 Dialog 顯示進度條 THEN UI 系統 SHALL 使用 PipBoyProgressBar 元件（如已建立）或保留現有進度條元件
-6. WHEN 使用者解鎖新成就 THEN UI 系統 SHALL 使用 PipBoyDialog 或 Toast 顯示恭喜訊息
-7. IF 成就頁面包含分類篩選 THEN UI 系統 SHALL 使用 PipBoySelect 或 Tabs 元件
-8. WHEN 成就頁面完成遷移 THEN 測試系統 SHALL 驗證成就解鎖動畫與通知正常顯示
-9. WHEN 成就頁面完成遷移 THEN 無障礙測試 SHALL 確認螢幕閱讀器能正確朗讀成就狀態
+1. ✅ **[元件替換]** WHEN 成就頁面渲染成就清單 THEN UI 系統 SHALL 使用 PipBoyCard 元件包裝每個成就
+2. ✅ **[元件替換]** WHEN 成就卡片顯示已解鎖成就 THEN 元件系統 SHALL 套用 Bright Green 邊框與綠色發光效果
+3. ✅ **[元件替換]** WHEN 成就卡片顯示未解鎖成就 THEN 元件系統 SHALL 套用灰色調並降低不透明度至 50%
+4. ✅ **[元件替換]** WHEN 使用者點擊成就查看詳情 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示成就說明
+5. ✅ **[元件替換]** WHERE 成就 Dialog 顯示進度條 THEN UI 系統 SHALL 使用 PipBoyProgressBar 元件（如已建立）或保留現有進度條元件
+6. ⏭️ **[Future Work]** WHEN 使用者解鎖新成就 THEN UI 系統 SHALL 使用 PipBoyDialog 或 Toast 顯示恭喜訊息
+7. ✅ **[元件替換]** IF 成就頁面包含分類篩選 THEN UI 系統 SHALL 使用 PipBoySelect 或 Tabs 元件
+8. ⏭️ **[Future Work]** WHEN 成就頁面完成遷移 THEN 測試系統 SHALL 驗證成就解鎖動畫與通知正常顯示
+9. ✅ **[元件替換]** WHEN 成就頁面完成遷移 THEN 無障礙測試 SHALL 確認螢幕閱讀器能正確朗讀成就狀態
 
 ---
 
@@ -304,19 +324,24 @@
 
 **Objective:** 作為開發人員，我需要將塔羅解讀頁面的所有 UI 元件遷移至 PipBoy 元件系統，以提供沉浸式的解讀體驗。
 
+**實作範疇**：
+- ✅ **元件替換**：將現有解讀頁面 UI 元件（選擇器、輸入框、按鈕、卡片、錯誤顯示）從 shadcn/ui 遷移至 PipBoy 元件
+- ⏭️ **Future Work（新功能開發）**：
+  - AC 2：Textarea 元件（若現有頁面僅使用單行 Input，則多行 Textarea 為未來擴充）
+
 #### Acceptance Criteria
 
-1. WHEN 解讀頁面顯示牌陣選擇器 THEN UI 系統 SHALL 使用 PipBoySelect 元件
-2. WHEN 使用者輸入解讀問題 THEN UI 系統 SHALL 使用 PipBoyInput 或 Textarea 元件
-3. WHEN 使用者點擊「開始解讀」按鈕 THEN UI 系統 SHALL 使用 PipBoyButton（variant="default", size="lg"）
-4. WHEN AI 解讀串流顯示 THEN UI 系統 SHALL 使用 PipBoyCard 包裝解讀文字內容
-5. WHEN 解讀文字串流中 THEN 元件系統 SHALL 顯示綠色游標閃爍動畫模擬終端機輸出
-6. WHEN 解讀完成 THEN UI 系統 SHALL 使用 PipBoyButton 提供儲存與分享選項
-7. WHERE 解讀歷史清單顯示 THEN UI 系統 SHALL 使用 PipBoyCard 包裝每筆歷史記錄
-8. WHEN 使用者點擊歷史記錄 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示完整解讀內容
-9. IF 解讀發生錯誤 THEN UI 系統 SHALL 使用 ErrorDisplay 或 PipBoyDialog 顯示錯誤訊息
-10. WHEN 解讀頁面完成遷移 THEN 測試系統 SHALL 驗證 AI 串流顯示與所有互動功能正常
-11. WHEN 解讀頁面完成遷移 THEN E2E 測試 SHALL 確認解讀流程從問題輸入到結果顯示完整可用
+1. ✅ **[元件替換]** WHEN 解讀頁面顯示牌陣選擇器 THEN UI 系統 SHALL 使用 PipBoySelect 元件
+2. ✅ **[元件替換]** WHEN 使用者輸入解讀問題 THEN UI 系統 SHALL 使用 PipBoyInput 或 Textarea 元件
+3. ✅ **[元件替換]** WHEN 使用者點擊「開始解讀」按鈕 THEN UI 系統 SHALL 使用 PipBoyButton（variant="default", size="lg"）
+4. ✅ **[元件替換]** WHEN AI 解讀串流顯示 THEN UI 系統 SHALL 使用 PipBoyCard 包裝解讀文字內容
+5. ✅ **[元件替換]** WHEN 解讀文字串流中 THEN 元件系統 SHALL 顯示綠色游標閃爍動畫模擬終端機輸出
+6. ✅ **[元件替換]** WHEN 解讀完成 THEN UI 系統 SHALL 使用 PipBoyButton 提供儲存與分享選項
+7. ✅ **[元件替換]** WHERE 解讀歷史清單顯示 THEN UI 系統 SHALL 使用 PipBoyCard 包裝每筆歷史記錄
+8. ✅ **[元件替換]** WHEN 使用者點擊歷史記錄 THEN UI 系統 SHALL 使用 PipBoyDialog 顯示完整解讀內容
+9. ✅ **[元件替換]** IF 解讀發生錯誤 THEN UI 系統 SHALL 使用 ErrorDisplay 或 PipBoyDialog 顯示錯誤訊息
+10. ✅ **[元件替換]** WHEN 解讀頁面完成遷移 THEN 測試系統 SHALL 驗證 AI 串流顯示與所有互動功能正常
+11. ✅ **[元件替換]** WHEN 解讀頁面完成遷移 THEN E2E 測試 SHALL 確認解讀流程從問題輸入到結果顯示完整可用
 
 ---
 

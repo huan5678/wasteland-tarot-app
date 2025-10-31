@@ -26,7 +26,7 @@ const RadioGroupItem = React.forwardRef<
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <PixelIcon name="circle-fill" className="text-[10px]" />
+        <PixelIcon name="circle" remixVariant="fill" style={{ fontSize: '8px', lineHeight: '1', display: 'block', transform: 'translateY(4px)' }} />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );

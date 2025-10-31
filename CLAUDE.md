@@ -190,6 +190,18 @@ To ensure reliable, efficient, and reproducible file search behavior across all 
 fd [OPTIONS] [PATTERN] [PATH]
 ```
 
+**Platform Notes:**
+- On some Linux distributions (Debian/Ubuntu), the executable is named `fdfind` instead of `fd` to avoid naming conflicts.
+- **MUST** use `fdfind` if `fd` command is not available:
+  ```bash
+  # Check availability
+  command -v fd >/dev/null 2>&1 || alias fd='fdfind'
+
+  # Or use fdfind directly
+  fdfind [OPTIONS] [PATTERN] [PATH]
+  ```
+- All examples below work with both `fd` and `fdfind` commands.
+
 **Standard Usage Examples:**
 ```bash
 # Basic file search (respects .gitignore)
@@ -236,7 +248,8 @@ fd -g "test_*.py" -X vim
 ```
 
 **Behavioral Rules:**
-- **MUST** use `fd` instead of `find` for all file discovery tasks.
+- **MUST** use `fd` (or `fdfind` on Debian/Ubuntu systems) instead of `find` for all file discovery tasks.
+- If `fd` command is not found, **MUST** fall back to `fdfind` command.
 - **MUST** include `--hidden` (`-H`) when hidden files should be considered.
 - **MUST** include `--exclude .git` (`-E .git`) to avoid unnecessary repository indexing.
 - Default `fd` behavior respects `.gitignore`, which **MUST** be maintained.
@@ -368,13 +381,17 @@ rg --type-add 'web:*.{html,css,js}' -tweb "pattern"
 
 Agents performing file search **MUST** follow these chained patterns:
 
+> **Note:** Replace `fd` with `fdfind` if the `fd` command is not available on your system (common on Debian/Ubuntu).
+
 **Pattern 1: Find files then search content**
 ```bash
 # Find TypeScript files, then search for pattern
 fd -e ts -e tsx | xargs rg "useState" --no-heading --line-number
+# Or: fdfind -e ts -e tsx | xargs rg "useState" --no-heading --line-number
 
 # More precise control
 fd -tf -e ts -e tsx --exclude node_modules | xargs rg -i "error" -n
+# Or: fdfind -tf -e ts -e tsx --exclude node_modules | xargs rg -i "error" -n
 ```
 
 **Pattern 2: Direct content search with type filtering**
@@ -390,6 +407,7 @@ rg "async function" -tts -tjs -C 2
 ```bash
 # Find non-test TypeScript files, search for pattern
 fd -e ts -E "*.test.ts" -E "*.spec.ts" | xargs rg "export class" -n
+# Or: fdfind -e ts -E "*.test.ts" -E "*.spec.ts" | xargs rg "export class" -n
 
 # Search excluding multiple directories
 rg "TODO" -g "!node_modules/*" -g "!dist/*" -g "!.git/*"
@@ -402,13 +420,17 @@ This ensures that file discovery and content scanning remain tightly controlled,
 All agents executing file discovery or content lookup tasks **MUST** adhere to the above conventions.
 
 **Prohibited Commands:**
-- ❌ `find` - Use `fd` instead
+- ❌ `find` - Use `fd` (or `fdfind` on Debian/Ubuntu) instead
 - ❌ `grep` - Use `rg` instead
 - ❌ `grep -r` - Use `rg` instead
 - ❌ `ack` - Use `rg` instead
 - ❌ `ag` (The Silver Searcher) - Use `rg` instead
 
 Direct invocation of `find`, `grep`, or any legacy search command is **prohibited** unless explicitly authorized by the system configuration.
+
+**Command Availability:**
+- If `fd` is not available, **MUST** use `fdfind` as a direct replacement (all options and syntax are identical).
+- To check availability: `command -v fd || command -v fdfind`
 
 #### 2.3.5 Rationale
 
@@ -710,5 +732,9 @@ Check `.kiro/specs/` for active specifications. Use `/kiro:spec-status [feature-
 
 ---
 
-**文件版本**: 2.0 (重組優化版)
-**最後更新**: 2025-10-29
+**文件版本**: 2.1 (新增 fdfind 支援)
+**最後更新**: 2025-10-31
+
+**更新記錄**:
+- v2.1 (2025-10-31): 新增 `fdfind` 命令支援，確保在 Debian/Ubuntu 系統上的相容性
+- v2.0 (2025-10-29): 重組優化版

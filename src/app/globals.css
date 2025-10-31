@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 /* === CUBIC 11 FONT DECLARATION === */
 /**
@@ -359,6 +360,30 @@
   --color-tarot-gold: #fbbf24;
   --color-tarot-gold-dark: #f59e0b;
   --color-tarot-mystical: #663399;
+
+  /* === ANIMATION VARIABLES === */
+  /* Accordion Animations - Required by tailwindcss-animate and Radix UI components */
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  /* Accordion Keyframes */
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
 }
 
 
@@ -995,6 +1020,45 @@
   /* 確保所有文字元素繼承字體 */
   h1, h2, h3, h4, h5, h6, p, span, div, a, button, input, textarea, select, label {
     font-family: inherit; /* 繼承 body 的字體設定 */
+  }
+
+  /* === 全域 CRT 視覺效果 === */
+  /* CRT 掃描線效果 - 覆蓋整個頁面 */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      transparent 50%,
+      rgba(0, 255, 136, 0.03) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+    z-index: 9999;
+    animation: crt-scanlines 0.1s linear infinite;
+  }
+
+  /* CRT 螢幕閃爍效果 */
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 255, 136, 0.02);
+    pointer-events: none;
+    z-index: 9998;
+    animation: crt-flicker 0.15s infinite;
+  }
+
+  /* Terminal 文字光暈效果 - 標題元素 */
+  h1, h2, h3, h4, h5, h6 {
+    text-shadow: 0 0 3px rgba(0, 255, 136, 0.4),
+                 0 0 6px rgba(0, 255, 136, 0.2);
   }
 }
 

@@ -603,70 +603,7 @@
   - _Requirements: 19.2_
   - ⚠️ 測試環境缺少依賴，無法執行。測試檔案已更新完成。
 
-### 任務組 13：E2E 測試更新
-
-- [ ] 13. 更新 Playwright 測試：首頁
-  - 更新 `02-navigation-functionality.spec.ts` 確認首頁導航正常
-  - 更新 `04-interactive-elements.spec.ts` 確認首頁互動元素可點擊
-  - 確保所有現有測試案例通過
-  - _Requirements: 測試覆蓋保證_
-
-- [ ] 13.1 更新 Playwright 測試：賓果頁面
-  - 更新賓果頁面測試確認 Dialog 互動正常
-  - 確認賓果卡設定流程可用
-  - 確認三連線獎勵通知正常顯示
-  - _Requirements: 測試覆蓋保證_
-
-- [ ] 13.2 更新 Playwright 測試：成就頁面
-  - 確認成就清單渲染正常
-  - 確認成就詳情 Dialog 開啟/關閉正常
-  - 確認成就篩選功能正常
-  - _Requirements: 測試覆蓋保證_
-
-- [ ] 13.3 更新 Playwright 測試：解讀頁面
-  - 確認解讀表單提交流程正常
-  - 確認 AI 串流顯示正常
-  - 確認解讀歷史查看功能正常
-  - _Requirements: 測試覆蓋保證_
-
-- [ ] 13.4 更新 Playwright 測試：卡牌頁面（驗證無回歸）
-  - 執行卡牌頁面測試確認無破壞性變更
-  - 確認卡片詳情 Dialog 互動正常
-  - _Requirements: 測試覆蓋保證_
-
-### 任務組 14：無障礙與效能測試
-
-- [ ] 14. 執行 axe-core 無障礙測試於所有頁面
-  - 使用 Playwright + @axe-core/playwright 執行自動化無障礙測試
-  - 確認所有頁面無 WCAG AA 違規
-  - 修復所有檢測到的無障礙問題
-  - _Requirements: 10.14_
-
-- [ ] 14.1 驗證 WCAG AA 色彩對比度合規（4.5:1）
-  - 使用自動化工具檢測所有文字與背景對比度
-  - 確認 Pip-Boy Green (#00ff88) 在黑底上對比度 ≥ 4.5:1
-  - 確認所有狀態色彩（成功、警告、錯誤）對比度合規
-  - _Requirements: 10.8, 10.9_
-
-- [ ] 14.2 測試 CRT 掃描線效果效能（60fps 目標）
-  - 使用 Chrome DevTools Performance 分析 CRT 動畫效能
-  - 確保動畫不造成主執行緒阻塞
-  - 確保低階裝置動畫自動降級或停用
-  - _Requirements: 2.6, 18.3_
-
-- [ ] 14.3 執行 Lighthouse 效能稽核（≥90 分目標）
-  - 對所有 5 個頁面執行 Lighthouse 測試
-  - 確認 Performance Score ≥ 90
-  - 確認 FCP < 1.5s, TBT < 300ms
-  - 修復所有效能問題
-  - _Requirements: 18.8, 18.1, 18.2_
-
-- [ ] 14.4 驗證鍵盤導航於所有互動元件
-  - 手動測試 Tab 鍵導航順序正確
-  - 測試 Enter/Space 鍵觸發按鈕
-  - 測試 Escape 鍵關閉 Dialog
-  - 測試方向鍵於 Select 元件
-  - _Requirements: 10.5, 10.6, 10.7_
+**注意**：任務組 13 與 14 已移至「階段 5.5：品質驗證（環境測試）」，因這些測試需要特定執行環境（dev server、Playwright、Lighthouse CLI）。
 
 ### 任務組 15：清理與文件
 
@@ -728,6 +665,95 @@
   - 提供遷移步驟建議
   - _Requirements: 20.9, 17.10_
   - ⏸️ 待完成：需要更新專案 CHANGELOG.md
+
+---
+
+## 階段 5.5：品質驗證（環境測試）
+
+**目的**：執行需要特定環境的測試任務，確保元件系統品質與效能符合標準。
+
+**前置需求**：
+- ✅ Dev server 正常啟動（`bun dev` 或 `bun dev:https`）
+- ✅ Playwright 已安裝並配置（`@playwright/test`）
+- ✅ Lighthouse CLI 已安裝（`@lhci/cli`）
+- ✅ Chrome DevTools 可用於效能分析
+
+**說明**：本階段測試因需要執行環境（開發伺服器、瀏覽器自動化、效能分析工具）而從階段 5 分離。這允許核心開發任務（階段 1-5）先行驗收，環境測試可在環境就緒後補充執行。
+
+### 任務組 13：E2E 測試更新
+
+- [ ] 13. 更新 Playwright 測試：首頁
+  - 更新 `02-navigation-functionality.spec.ts` 確認首頁導航正常
+  - 更新 `04-interactive-elements.spec.ts` 確認首頁互動元素可點擊
+  - 確保所有現有測試案例通過
+  - _Requirements: 測試覆蓋保證_
+  - **執行指令**：`bun test:playwright tests/e2e/02-navigation-functionality.spec.ts tests/e2e/04-interactive-elements.spec.ts`
+
+- [ ] 13.1 更新 Playwright 測試：賓果頁面
+  - 更新賓果頁面測試確認 Dialog 互動正常
+  - 確認賓果卡設定流程可用
+  - 確認三連線獎勵通知正常顯示
+  - _Requirements: 測試覆蓋保證_
+  - **執行指令**：`bun test:playwright tests/e2e/*bingo*.spec.ts`
+
+- [ ] 13.2 更新 Playwright 測試：成就頁面
+  - 確認成就清單渲染正常
+  - 確認成就詳情 Dialog 開啟/關閉正常
+  - 確認成就篩選功能正常
+  - _Requirements: 測試覆蓋保證_
+  - **執行指令**：`bun test:playwright tests/e2e/*achievements*.spec.ts`
+
+- [ ] 13.3 更新 Playwright 測試：解讀頁面
+  - 確認解讀表單提交流程正常
+  - 確認 AI 串流顯示正常
+  - 確認解讀歷史查看功能正常
+  - _Requirements: 測試覆蓋保證_
+  - **執行指令**：`bun test:playwright tests/e2e/*reading*.spec.ts`
+
+- [ ] 13.4 更新 Playwright 測試：卡牌頁面（驗證無回歸）
+  - 執行卡牌頁面測試確認無破壞性變更
+  - 確認卡片詳情 Dialog 互動正常
+  - _Requirements: 測試覆蓋保證_
+  - **執行指令**：`bun test:playwright tests/e2e/*cards*.spec.ts`
+
+### 任務組 14：無障礙與效能測試
+
+- [ ] 14. 執行 axe-core 無障礙測試於所有頁面
+  - 使用 Playwright + @axe-core/playwright 執行自動化無障礙測試
+  - 確認所有頁面無 WCAG AA 違規
+  - 修復所有檢測到的無障礙問題
+  - _Requirements: 10.14_
+  - **執行指令**：`bun test:accessibility`
+
+- [ ] 14.1 驗證 WCAG AA 色彩對比度合規（4.5:1）
+  - 使用自動化工具檢測所有文字與背景對比度
+  - 確認 Pip-Boy Green (#00ff88) 在黑底上對比度 ≥ 4.5:1
+  - 確認所有狀態色彩（成功、警告、錯誤）對比度合規
+  - _Requirements: 10.8, 10.9_
+  - **執行指令**：`bun test:accessibility:color-contrast`
+
+- [ ] 14.2 測試 CRT 掃描線效果效能（60fps 目標）
+  - 使用 Chrome DevTools Performance 分析 CRT 動畫效能
+  - 確保動畫不造成主執行緒阻塞
+  - 確保低階裝置動畫自動降級或停用
+  - _Requirements: 2.6, 18.3_
+  - **手動測試**：開啟 Chrome DevTools → Performance → 錄製 5 秒 → 檢查 FPS 圖表
+
+- [ ] 14.3 執行 Lighthouse 效能稽核（≥90 分目標）
+  - 對所有 5 個頁面執行 Lighthouse 測試
+  - 確認 Performance Score ≥ 90
+  - 確認 FCP < 1.5s, TBT < 300ms
+  - 修復所有效能問題
+  - _Requirements: 18.8, 18.1, 18.2_
+  - **執行指令**：`bun test:perf`（Lighthouse CI）
+
+- [ ] 14.4 驗證鍵盤導航於所有互動元件
+  - 手動測試 Tab 鍵導航順序正確
+  - 測試 Enter/Space 鍵觸發按鈕
+  - 測試 Escape 鍵關閉 Dialog
+  - 測試方向鍵於 Select 元件
+  - _Requirements: 10.5, 10.6, 10.7_
+  - **手動測試**：使用鍵盤逐一測試所有互動元件
 
 ---
 
