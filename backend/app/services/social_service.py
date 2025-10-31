@@ -642,7 +642,30 @@ class SocialService:
             if bonus_rewards:
                 participant.bonus_rewards = bonus_rewards
 
-            # TODO: Apply rewards to user (karma, items, etc.)
+            # Apply rewards to user
+            event_result = await self.db.execute(
+                select(CommunityEvent).where(CommunityEvent.id == event_id)
+            )
+            event = event_result.scalar_one_or_none()
+
+            if event and event.completion_rewards:
+                user = await self._get_user_with_validation(user_id)
+
+                # Apply karma reward
+                karma_reward = event.completion_rewards.get("karma", 0)
+                if karma_reward > 0:
+                    user.karma_score = min(100, user.karma_score + karma_reward)
+
+                # Store other rewards in bonus_rewards for future processing
+                # (e.g., items, badges, special unlocks)
+                other_rewards = {
+                    k: v for k, v in event.completion_rewards.items()
+                    if k not in ["karma"]
+                }
+                if other_rewards:
+                    current_bonus = participant.bonus_rewards or {}
+                    current_bonus.update(other_rewards)
+                    participant.bonus_rewards = current_bonus
 
         await self.db.commit()
         return participant
@@ -753,9 +776,46 @@ class SocialService:
         )
         average_accuracy = result.scalar() or 0
 
-        # TODO: Calculate consecutive days, suits explored, etc.
-        consecutive_days = 0  # Placeholder
-        suits_explored = 4  # Placeholder - assume all suits explored
+        # Import models for card analysis
+        from app.models.reading_enhanced import ReadingCardPosition
+        from app.models.wasteland_card import WastelandCard
+
+        # Calculate consecutive days streak
+        # Get all reading dates (distinct days only)
+        result = await self.db.execute(
+            select(func.date(CompletedReading.created_at))
+            .where(CompletedReading.user_id == user_id)
+            .distinct()
+            .order_by(func.date(CompletedReading.created_at))
+        )
+        reading_dates = [row[0] for row in result.fetchall()]
+
+        # Calculate longest consecutive streak
+        consecutive_days = 0
+        if reading_dates:
+            current_streak = 1
+            max_streak = 1
+
+            for i in range(1, len(reading_dates)):
+                # Check if dates are consecutive (1 day apart)
+                delta = (reading_dates[i] - reading_dates[i-1]).days
+                if delta == 1:
+                    current_streak += 1
+                    max_streak = max(max_streak, current_streak)
+                elif delta > 1:
+                    current_streak = 1
+
+            consecutive_days = max_streak
+
+        # Calculate suits explored
+        result = await self.db.execute(
+            select(func.count(func.distinct(WastelandCard.suit)))
+            .select_from(CompletedReading)
+            .join(ReadingCardPosition, ReadingCardPosition.completed_reading_id == CompletedReading.id)
+            .join(WastelandCard, WastelandCard.id == ReadingCardPosition.card_id)
+            .where(CompletedReading.user_id == user_id)
+        )
+        suits_explored = result.scalar() or 0
 
         return {
             "readings_count": readings_count,
