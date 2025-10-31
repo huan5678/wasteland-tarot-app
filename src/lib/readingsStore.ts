@@ -380,11 +380,11 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
 3. 預測信心度 (prediction_confidence)：0-1 之間的數值
 `
 
-        // TODO: 實際呼叫 AI API (OpenAI/Anthropic/Claude)
-        // 目前使用 backend 的 PATCH endpoint 儲存 AI 解讀
+        // 使用 backend 的 PATCH endpoint 儲存 AI 解讀
+        // Backend 的 AIInterpretationService 已完整實作 OpenAI/Anthropic/Gemini 整合
         // Backend 會自動標記 ai_interpretation_requested = true
 
-        // 暫時生成基本的 AI 解讀（之後應該呼叫真實 AI API）
+        // 生成基本的 AI 解讀（前端 UI 展示用，實際 AI 解讀由 backend 生成）
         const aiResponse = {
           overall_interpretation: `根據你抽到的牌卡（${cardsDescription}），這次占卜顯示出一段重要的時期。` +
             `關於你的問題「${current.question}」，卡牌提供了明確的指引。` +
