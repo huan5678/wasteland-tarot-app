@@ -144,6 +144,7 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "web-streams-polyfill": "^4.2.0",
+    "webpack-bundle-analyzer": "^4.10.2",
     "whatwg-fetch": "^3.6.20"
   }
 }

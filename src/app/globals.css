@@ -355,11 +355,32 @@
   animation: float 2s ease-in-out infinite;
 }
 
+/* Glitch Animation - 故障效果（適合 404 頁面） */
+@keyframes glitch-1 {
+  0%, 100% {
+    transform: translate(0);
+    opacity: 0.8;
+  }
+  33% {
+    transform: translate(-2px, 2px);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translate(2px, -2px);
+    opacity: 0.7;
+  }
+}
+
+.animate-glitch-1 {
+  animation: glitch-1 3s infinite;
+}
+
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-out,
   .animate-wiggle,
-  .animate-float {
+  .animate-float,
+  .animate-glitch-1 {
     animation: none;
   }
 }

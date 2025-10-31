@@ -173,8 +173,8 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     if (get().isInitialized) return
     set({ isLoading: true })
 
-    // 最小 loading 時間：5 秒（讓使用者有時間欣賞 WebGL 動畫）
-    const minLoadingTime = 5000 // ms
+    // 最小 loading 時間：開發環境 100ms，生產環境 5 秒（讓使用者有時間欣賞 WebGL 動畫）
+    const minLoadingTime = process.env.NODE_ENV === 'development' ? 100 : 5000 // ms
     const startTime = Date.now()
 
     // Helper function to report progress

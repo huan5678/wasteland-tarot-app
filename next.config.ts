@@ -1,7 +1,9 @@
 import type { NextConfig } from 'next'
+import path from 'path'
 
 const nextConfig: NextConfig = {
   // Performance optimizations
+  // 註：swcMinify 在 Next.js 13+ 已預設啟用，不需要手動設定
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },
@@ -32,7 +34,20 @@ const nextConfig: NextConfig = {
   },
 
   // Webpack configuration
-  webpack: (config) => {
+  webpack: (config, { dev, isServer }) => {
+    // 開發環境優化：改善 webpack cache 效能
+    if (dev) {
+      config.cache = {
+        type: 'filesystem',
+        compression: 'gzip',
+        // 使用絕對路徑指定 cache 目錄（Webpack 要求絕對路徑）
+        cacheDirectory: path.resolve(process.cwd(), '.next/cache/webpack'),
+        buildDependencies: {
+          config: [__filename],
+        },
+      };
+    }
+
     return config;
   },
 
@@ -45,7 +60,17 @@ const nextConfig: NextConfig = {
         },
       },
     },
-    optimizePackageImports: ['@/components', '@/lib', '@/hooks'],
+    // 優化套件 import，自動進行 tree-shaking
+    optimizePackageImports: [
+      '@/components',
+      '@/lib',
+      '@/hooks',
+      'remixicon',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-select',
+    ],
+    // 實驗性功能：更積極的 code splitting
+    optimizeCss: true,
   },
 
   typescript: {
