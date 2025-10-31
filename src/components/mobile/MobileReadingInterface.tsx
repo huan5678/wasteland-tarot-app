@@ -64,6 +64,9 @@ export function MobileReadingInterface({
   const [showNotes, setShowNotes] = useState(false)
 
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const recognitionRef = useRef<any>(null)
   const speechSynthesis = typeof window !== 'undefined' ? window.speechSynthesis : null
 
   const { isTouchDevice, screenSize, isIOS } = useAdvancedDeviceCapabilities()
@@ -148,12 +151,114 @@ export function MobileReadingInterface({
     }
   }, [speechSynthesis])
 
-  // Handle voice recording (placeholder for future implementation)
-  const startRecording = useCallback(() => {
-    setIsRecording(true)
-    // TODO: Implement voice recording functionality
-    setTimeout(() => setIsRecording(false), 3000) // Mock recording
-  }, [])
+  // P3.5: Voice Recording Implementation
+  const startRecording = useCallback(async () => {
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
+      setIsRecording(false)
+      return
+    }
+
+    // Start recording
+    try {
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+
+      // Initialize MediaRecorder for audio recording
+      const mediaRecorder = new MediaRecorder(stream)
+      mediaRecorderRef.current = mediaRecorder
+      audioChunksRef.current = []
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      mediaRecorder.onstop = () => {
+        // Create audio blob from recorded chunks
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+
+        // Optional: Save audio blob for future processing
+        // You could upload to server or save locally
+        console.log('Audio recorded:', audioBlob.size, 'bytes')
+
+        // Stop all audio tracks
+        stream.getTracks().forEach(track => track.stop())
+
+        // Clear refs
+        mediaRecorderRef.current = null
+        audioChunksRef.current = []
+      }
+
+      // Start recording
+      mediaRecorder.start()
+      setIsRecording(true)
+
+      // Initialize Web Speech API for speech-to-text (if available)
+      if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+        const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+        const recognition = new SpeechRecognition()
+        recognitionRef.current = recognition
+
+        recognition.lang = 'zh-TW'
+        recognition.continuous = true
+        recognition.interimResults = true
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = ''
+          let finalTranscript = ''
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' '
+            } else {
+              interimTranscript += transcript
+            }
+          }
+
+          // Update notes with recognized text
+          if (finalTranscript) {
+            setNotes(prev => prev + finalTranscript)
+          }
+        }
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error)
+          // Continue with audio recording even if speech-to-text fails
+        }
+
+        recognition.onend = () => {
+          recognitionRef.current = null
+        }
+
+        try {
+          recognition.start()
+        } catch (error) {
+          console.warn('Speech recognition not available:', error)
+          // Continue with audio recording only
+        }
+      }
+
+    } catch (error) {
+      console.error('Failed to start recording:', error)
+      setIsRecording(false)
+
+      // Show user-friendly error message
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        alert('無法存取麥克風。請允許麥克風權限以使用語音筆記功能。')
+      } else {
+        alert('無法啟動錄音功能。請確認您的裝置支援麥克風錄音。')
+      }
+    }
+  }, [isRecording])
 
   // Gesture handlers
   const handleCardSwipe = useCallback((direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => {
@@ -203,6 +308,14 @@ export function MobileReadingInterface({
         clearTimeout(controlsTimeoutRef.current)
       }
       stopSpeaking()
+
+      // P3.5: Cleanup voice recording resources
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop()
+      }
+      if (recognitionRef.current) {
+        recognitionRef.current.stop()
+      }
     }
   }, [stopSpeaking])
 
