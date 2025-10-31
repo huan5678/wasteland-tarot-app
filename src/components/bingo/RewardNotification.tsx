@@ -65,7 +65,7 @@ export default function RewardNotification({
 
   return (
     <PipBoyDialog open={show} onOpenChange={onClose}>
-      <PipBoyDialogContent className="max-w-md p-0 overflow-hidden"
+      <PipBoyDialogContent className="max-w-md p-0 overflow-hidden">
         {/* 粒子效果層 */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
           {particles.map((particle) => (
