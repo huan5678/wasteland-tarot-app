@@ -13,6 +13,7 @@
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
+import { playAchievementSound } from '@/lib/audio/rewardSounds'
 
 interface LoyaltyRewardNotificationProps {
   /** 是否顯示通知 */
@@ -54,8 +55,8 @@ export default function LoyaltyRewardNotification({
       }))
       setParticles(newParticles)
 
-      // TODO: 整合 Web Audio 系統播放 Pip-Boy 開啟音效
-      // 例如: audioSystem.play('pip-boy-notification')
+      // 播放成就解鎖音效（Pip-Boy 風格）
+      playAchievementSound()
 
       // 5秒後自動關閉
       const timer = setTimeout(() => {
