@@ -28,6 +28,7 @@ from app.core.exceptions import (
 )
 from app.core.retry import retry_async, SUPABASE_RETRY_CONFIG
 import logging
+import httpx
 
 logger = logging.getLogger(__name__)
 

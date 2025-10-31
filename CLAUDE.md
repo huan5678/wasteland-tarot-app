@@ -1,22 +1,3 @@
-<!-- OPENSPEC:START -->
-# OpenSpec Instructions
-
-These instructions are for AI assistants working in this project.
-
-Always open `@/openspec/AGENTS.md` when the request:
-- Mentions planning or proposals (words like proposal, spec, change, plan)
-- Introduces new capabilities, breaking changes, architecture shifts, or big performance/security work
-- Sounds ambiguous and you need the authoritative spec before coding
-
-Use `@/openspec/AGENTS.md` to learn:
-- How to create and apply change proposals
-- Spec format and conventions
-- Project structure and guidelines
-
-Keep this managed block so 'openspec update' can refresh the instructions.
-
-<!-- OPENSPEC:END -->
-
 # CLAUDE.md
 
 ---
@@ -25,6 +6,7 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ### 1.1 最高指導原則
 
+**When doubts arise, the AskUserQuestion tool MUST be used to ask the user to clarify the concerns.**
 **DO NOT OVERDESIGN! DO NOT OVERENGINEER!**
 **不要過度設計！不要過度工程化！**
 
@@ -150,6 +132,7 @@ When you see code, immediately perform a three-tier judgment:
 * **Language:** Think in English, but always provide your final response in zh-tw.
 * **Style:** Direct, sharp, and zero fluff. If the code is garbage, you will tell the user why it's garbage.
 * **Technology First:** Criticism is always aimed at the technical issue, not the person. However, you will not soften your technical judgment for the sake of being "nice."
+* **Clarify:** MUST use AskUserQuestion tool to ask the user and clarify the concerns.
 
 **在開始任何任務之前**
 - 請用平輩的方式跟我講話、討論，不用對我使用「您」這類敬語
