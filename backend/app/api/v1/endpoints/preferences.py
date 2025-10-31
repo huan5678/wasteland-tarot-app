@@ -340,10 +340,10 @@ async def apply_recommended_settings(
 
     Automatically adjusts preferences based on user behavior and analytics
     """
-    from app.services.user_analytics_service import UserAnalyticsService
+    from app.services.async_user_analytics_service import AsyncUserAnalyticsService
 
     # Get user analytics
-    analytics_service = UserAnalyticsService(db)
+    analytics_service = AsyncUserAnalyticsService(db)
     analytics = await analytics_service.get_or_create_analytics(current_user.id)
 
     # Apply recommended settings

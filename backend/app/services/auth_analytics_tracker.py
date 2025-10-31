@@ -6,7 +6,7 @@
 
 from typing import Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.services.user_analytics_service import UserAnalyticsService
+from app.services.async_user_analytics_service import AsyncUserAnalyticsService
 import logging
 
 logger = logging.getLogger(__name__)
@@ -21,9 +21,8 @@ class AuthAnalyticsTracker:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        # TODO: UserAnalyticsService 使用同步 Session，但這裡是 AsyncSession
-        # 暫時停用事件追蹤功能，直到 UserAnalyticsService 重構為異步
-        # self.analytics_service = UserAnalyticsService(db)
+        # 使用異步版本的 UserAnalyticsService
+        self.analytics_service = AsyncUserAnalyticsService(db)
 
     async def track_oauth_registration_success(
         self,
@@ -37,19 +36,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - OAuth 註冊成功事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "provider": provider,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="oauth_registration_success",
-            #     event_category="authentication",
-            #     event_action="register",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "provider": provider,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="oauth_registration_success",
+                event_category="authentication",
+                event_action="register",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] OAuth 註冊成功: user_id={user_id}, provider={provider}"
@@ -71,19 +69,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - OAuth 登入成功事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "provider": provider,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="oauth_login_success",
-            #     event_category="authentication",
-            #     event_action="login",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "provider": provider,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="oauth_login_success",
+                event_category="authentication",
+                event_action="login",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] OAuth 登入成功: user_id={user_id}, provider={provider}"
@@ -105,23 +102,22 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - 帳號衝突偵測事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "email": email,
-            #     "existing_methods": existing_methods,
-            #     "oauth_provider": oauth_provider,
-            #     **(metadata or {})
-            # }
-            #
-            # # Note: user_id 在衝突情況下使用現有用戶的 ID（從 email 查詢）
-            # # 如果無法取得用戶 ID，則使用 "unknown"
-            # await self.analytics_service.track_event(
-            #     user_id="system",  # 系統級事件
-            #     event_type="oauth_account_conflict_detected",
-            #     event_category="authentication",
-            #     event_action="conflict_detected",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "email": email,
+                "existing_methods": existing_methods,
+                "oauth_provider": oauth_provider,
+                **(metadata or {})
+            }
+
+            # Note: user_id 在衝突情況下使用現有用戶的 ID（從 email 查詢）
+            # 如果無法取得用戶 ID，則使用 "system"
+            await self.analytics_service.track_event(
+                user_id="system",  # 系統級事件
+                event_type="oauth_account_conflict_detected",
+                event_category="authentication",
+                event_action="conflict_detected",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] 帳號衝突偵測: email={email}, existing_methods={existing_methods}"
@@ -143,20 +139,19 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - OAuth 連結至現有帳號事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "oauth_provider": oauth_provider,
-            #     "source": source,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="oauth_linked_to_existing_account",
-            #     event_category="authentication",
-            #     event_action="link_oauth",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "oauth_provider": oauth_provider,
+                "source": source,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="oauth_linked_to_existing_account",
+                event_category="authentication",
+                event_action="link_oauth",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] OAuth 連結成功: user_id={user_id}, provider={oauth_provider}, source={source}"
@@ -177,19 +172,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - 帳號衝突解決成功事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "resolution_method": resolution_method,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="oauth_conflict_resolved_success",
-            #     event_category="authentication",
-            #     event_action="resolve_conflict",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "resolution_method": resolution_method,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="oauth_conflict_resolved_success",
+                event_category="authentication",
+                event_action="resolve_conflict",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] 帳號衝突解決成功: user_id={user_id}, method={resolution_method}"
@@ -210,19 +204,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - 認證方式移除事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "method_type": method_type,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="auth_method_removed",
-            #     event_category="authentication",
-            #     event_action="remove_method",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "method_type": method_type,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="auth_method_removed",
+                event_category="authentication",
+                event_action="remove_method",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] 認證方式移除: user_id={user_id}, method={method_type}"
@@ -242,16 +235,15 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - Passkey 升級引導接受事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = metadata or {}
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="passkey_upgrade_prompt_accepted",
-            #     event_category="authentication",
-            #     event_action="accept_upgrade",
-            #     event_data=event_data
-            # )
+            event_data = metadata or {}
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="passkey_upgrade_prompt_accepted",
+                event_category="authentication",
+                event_action="accept_upgrade",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] Passkey 升級引導接受: user_id={user_id}"
@@ -272,19 +264,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - Passkey 升級引導跳過事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "skip_count": skip_count,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="passkey_upgrade_prompt_skipped",
-            #     event_category="authentication",
-            #     event_action="skip_upgrade",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "skip_count": skip_count,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="passkey_upgrade_prompt_skipped",
+                event_category="authentication",
+                event_action="skip_upgrade",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] Passkey 升級引導跳過: user_id={user_id}, skip_count={skip_count}"
@@ -305,19 +296,18 @@ class AuthAnalyticsTracker:
         需求 9: 監控與分析 - Passkey 升級完成事件記錄
         """
         try:
-            # TODO: 暫時停用事件追蹤（等待 UserAnalyticsService 異步重構）
-            # event_data = {
-            #     "source": source,
-            #     **(metadata or {})
-            # }
-            #
-            # await self.analytics_service.track_event(
-            #     user_id=user_id,
-            #     event_type="passkey_upgrade_completed",
-            #     event_category="authentication",
-            #     event_action="complete_upgrade",
-            #     event_data=event_data
-            # )
+            event_data = {
+                "source": source,
+                **(metadata or {})
+            }
+
+            await self.analytics_service.track_event(
+                user_id=user_id,
+                event_type="passkey_upgrade_completed",
+                event_category="authentication",
+                event_action="complete_upgrade",
+                event_data=event_data
+            )
 
             logger.info(
                 f"[事件追蹤] Passkey 升級完成: user_id={user_id}, source={source}"
