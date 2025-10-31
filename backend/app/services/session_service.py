@@ -118,9 +118,8 @@ class SessionService:
             "last_accessed_at": session.last_accessed_at
         }
 
-        # TODO: Cache in Redis with 15-minute TTL
-        # if self.redis:
-        #     await self._cache_session(session)
+        # Cache in Redis with 15-minute TTL
+        await self._cache_session(session)
 
         return SessionResponseSchema(**session_dict)
 
@@ -138,11 +137,10 @@ class SessionService:
         Returns:
             SessionResponseSchema if found, None otherwise
         """
-        # TODO: Check Redis cache first
-        # if self.redis:
-        #     cached = await self._get_cached_session(session_id)
-        #     if cached:
-        #         return cached
+        # Check Redis cache first
+        cached = await self._get_cached_session(session_id)
+        if cached:
+            return cached
 
         # Fetch from database
         result = await self.db.execute(
@@ -168,9 +166,8 @@ class SessionService:
             "last_accessed_at": session.last_accessed_at
         }
 
-        # TODO: Cache the result
-        # if self.redis:
-        #     await self._cache_session(session)
+        # Cache the result
+        await self._cache_session(session)
 
         return SessionResponseSchema(**session_dict)
 
@@ -333,9 +330,8 @@ class SessionService:
             "last_accessed_at": session.last_accessed_at
         }
 
-        # TODO: Invalidate cache
-        # if self.redis:
-        #     await self._invalidate_cache(session_id)
+        # Invalidate cache (will be updated on next read)
+        await self._invalidate_cache(session_id)
 
         return SessionResponseSchema(**session_dict)
 
@@ -369,9 +365,8 @@ class SessionService:
             await self.db.rollback()
             raise InvalidRequestError(f"Failed to delete session: {str(e)}")
 
-        # TODO: Invalidate cache
-        # if self.redis:
-        #     await self._invalidate_cache(session_id)
+        # Invalidate cache
+        await self._invalidate_cache(session_id)
 
         return True
 
@@ -589,9 +584,8 @@ class SessionService:
             await self.db.rollback()
             raise InvalidRequestError(f"Failed to complete session: {str(e)}")
 
-        # TODO: Invalidate cache
-        # if self.redis:
-        #     await self._invalidate_cache(session_id)
+        # Invalidate cache (session is now completed)
+        await self._invalidate_cache(session_id)
 
         return {
             "session_id": str(session.id),
@@ -829,21 +823,114 @@ class SessionService:
             "last_accessed_at": server_session.last_accessed_at
         }
 
-        # TODO: Invalidate cache
-        # if self.redis:
-        #     await self._invalidate_cache(resolution_data.session_id)
+        # Invalidate cache (session has been updated via conflict resolution)
+        await self._invalidate_cache(resolution_data.session_id)
 
         return SessionResponseSchema(**session_dict)
 
-    # Helper methods for Redis caching (to be implemented when Redis is added)
-    # async def _cache_session(self, session: ReadingSession) -> None:
-    #     """Cache session in Redis with TTL."""
-    #     pass
-    #
-    # async def _get_cached_session(self, session_id: str) -> Optional[SessionResponseSchema]:
-    #     """Retrieve session from Redis cache."""
-    #     pass
-    #
-    # async def _invalidate_cache(self, session_id: str) -> None:
-    #     """Remove session from Redis cache."""
-    #     pass
+    # Helper methods for Redis caching
+    async def _cache_session(self, session: ReadingSession) -> None:
+        """
+        Cache session in Redis with 15-minute TTL.
+
+        Args:
+            session: ReadingSession model instance to cache
+        """
+        if not self.redis:
+            return
+
+        try:
+            import json
+            from datetime import datetime
+
+            cache_key = f"session:{session.id}"
+
+            # Serialize session to JSON
+            session_data = {
+                "id": str(session.id),
+                "user_id": str(session.user_id),
+                "spread_type": session.spread_type,
+                "spread_config": session.session_data.get("spread_config") if session.session_data else None,
+                "question": session.question,
+                "session_state": session.session_data.get("session_state", {}) if session.session_data else {},
+                "status": session.status,
+                "created_at": session.created_at.isoformat() if session.created_at else None,
+                "updated_at": session.updated_at.isoformat() if session.updated_at else None,
+                "last_accessed_at": session.last_accessed_at.isoformat() if session.last_accessed_at else None,
+            }
+
+            # Store in Redis with TTL
+            await self.redis.setex(
+                cache_key,
+                self.cache_ttl,  # 15 minutes
+                json.dumps(session_data)
+            )
+
+        except Exception as e:
+            # Log error but don't fail the operation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to cache session {session.id}: {e}")
+
+    async def _get_cached_session(self, session_id: str) -> Optional[SessionResponseSchema]:
+        """
+        Retrieve session from Redis cache.
+
+        Args:
+            session_id: UUID of the session to retrieve
+
+        Returns:
+            SessionResponseSchema if found in cache, None otherwise
+        """
+        if not self.redis:
+            return None
+
+        try:
+            import json
+            from datetime import datetime
+
+            cache_key = f"session:{session_id}"
+            cached_data = await self.redis.get(cache_key)
+
+            if not cached_data:
+                return None
+
+            # Deserialize from JSON
+            session_dict = json.loads(cached_data)
+
+            # Convert ISO format strings back to datetime objects
+            if session_dict.get("created_at"):
+                session_dict["created_at"] = datetime.fromisoformat(session_dict["created_at"])
+            if session_dict.get("updated_at"):
+                session_dict["updated_at"] = datetime.fromisoformat(session_dict["updated_at"])
+            if session_dict.get("last_accessed_at"):
+                session_dict["last_accessed_at"] = datetime.fromisoformat(session_dict["last_accessed_at"])
+
+            return SessionResponseSchema(**session_dict)
+
+        except Exception as e:
+            # Log error but don't fail the operation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to retrieve cached session {session_id}: {e}")
+            return None
+
+    async def _invalidate_cache(self, session_id: str) -> None:
+        """
+        Remove session from Redis cache.
+
+        Args:
+            session_id: UUID of the session to invalidate
+        """
+        if not self.redis:
+            return
+
+        try:
+            cache_key = f"session:{session_id}"
+            await self.redis.delete(cache_key)
+
+        except Exception as e:
+            # Log error but don't fail the operation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to invalidate cache for session {session_id}: {e}")
