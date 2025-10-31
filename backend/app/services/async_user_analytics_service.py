@@ -16,7 +16,7 @@ from app.models.user_analytics import (
     ReadingPattern,
     UserRecommendation
 )
-from app.services.recommendation_engine import RecommendationEngine
+from app.services.async_recommendation_engine import AsyncRecommendationEngine
 
 
 class AsyncUserAnalyticsService:
@@ -346,12 +346,11 @@ class AsyncUserAnalyticsService:
         context: Optional[Dict[str, Any]] = None
     ) -> List[UserRecommendation]:
         """Generate personalized recommendations using advanced engine"""
-        # Initialize recommendation engine (暫時使用同步版本)
-        # TODO: 未來需將 RecommendationEngine 也改為異步
-        engine = RecommendationEngine(self.db)
+        # P2.4: 使用異步版本的 RecommendationEngine
+        engine = AsyncRecommendationEngine(self.db)
 
-        # Get comprehensive recommendations from engine
-        raw_recommendations = engine.generate_comprehensive_recommendations(
+        # Get comprehensive recommendations from engine (async call)
+        raw_recommendations = await engine.generate_comprehensive_recommendations(
             user_id=user_id,
             context=context
         )
@@ -393,8 +392,9 @@ class AsyncUserAnalyticsService:
         question: str
     ) -> Optional[Dict[str, Any]]:
         """Get spread recommendation based on question analysis"""
-        engine = RecommendationEngine(self.db)
-        return engine.recommend_spread_by_question(user_id, question)
+        # P2.4: 使用異步版本
+        engine = AsyncRecommendationEngine(self.db)
+        return await engine.recommend_spread_by_question(user_id, question)
 
     async def get_interpretation_style_recommendation(
         self,
@@ -402,8 +402,9 @@ class AsyncUserAnalyticsService:
         card_ids: List[str]
     ) -> Dict[str, Any]:
         """Get interpretation style recommendation"""
-        engine = RecommendationEngine(self.db)
-        return engine.recommend_interpretation_style(user_id, card_ids)
+        # P2.4: 使用異步版本
+        engine = AsyncRecommendationEngine(self.db)
+        return await engine.recommend_interpretation_style(user_id, card_ids)
 
     async def get_user_recommendations(
         self,
