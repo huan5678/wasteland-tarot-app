@@ -23,6 +23,7 @@ export default function DailyCheckin() {
     isLoading,
     error,
     claimDailyNumber,
+    lineCount,
   } = useBingoStore()
 
   const [isClaiming, setIsClaiming] = useState(false)
@@ -50,14 +51,113 @@ export default function DailyCheckin() {
     }
   }
 
-  // 如果沒有今日號碼，顯示載入或錯誤狀態
+  /**
+   * 超過 25 日時顯示 Fallout 風格的結束訊息
+   *
+   * 計算邏輯：
+   * - 取得當前日期
+   * - 計算距離下個月 1 日還有幾天
+   * - 顯示本月達成的線數
+   */
   if (dailyNumber === null) {
+    // 如果正在載入，顯示載入畫面
+    if (isLoading) {
+      return (
+        <div className="max-w-md mx-auto p-6 bg-black/80 border-2 border-metal-gray-light rounded-lg backdrop-blur-sm text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pip-boy-green mx-auto mb-2" />
+          <p className="text-wasteland-lighter">載入今日號碼中...</p>
+        </div>
+      )
+    }
+
+    // 計算倒數天數（到下個月 1 日）
+    const today = new Date()
+    const currentDay = today.getDate()
+    const currentMonth = today.getMonth()
+    const currentYear = today.getFullYear()
+
+    // 下個月 1 日
+    const nextMonth = new Date(currentYear, currentMonth + 1, 1)
+    const daysUntilNextMonth = Math.ceil((nextMonth.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+    // Fallout 風格的結束訊息
     return (
-      <div className="max-w-md mx-auto p-6 bg-black/80 border-2 border-metal-gray-light rounded-lg backdrop-blur-sm text-center">
-        <p className="text-wasteland-lighter">
-          {isLoading ? '載入今日號碼中...' : '今日號碼尚未生成'}
-        </p>
-      </div>
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="max-w-md mx-auto"
+      >
+        <div className="p-6 bg-black/80 border-2 border-radiation-orange/50 rounded-lg backdrop-blur-sm">
+          {/* 標題 */}
+          <div className="text-center mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <PixelIcon name="alert-triangle" sizePreset="md" variant="warning" decorative />
+              <h3 className="text-xl font-bold text-radiation-orange tracking-wider">
+                輻射讀數已達上限
+              </h3>
+            </div>
+            <p className="text-metal-gray-light text-sm">
+              Pip-Boy 避難所系統正在重新校準
+            </p>
+          </div>
+
+          {/* 主要訊息區塊 */}
+          <div className="bg-wasteland-dark/50 border border-radiation-orange/30 rounded p-4 mb-4">
+            <div className="text-center space-y-3">
+              {/* 倒數計時器 */}
+              <div>
+                <div className="text-5xl font-bold text-pip-boy-green mb-2 text-glow-green">
+                  {daysUntilNextMonth}
+                </div>
+                <div className="text-pip-boy-green/70 text-sm">
+                  天後系統重置
+                </div>
+              </div>
+
+              {/* 分隔線 */}
+              <div className="h-px bg-metal-gray-light/30 my-3" />
+
+              {/* 本月成績 */}
+              <div>
+                <div className="text-sm text-wasteland-lighter mb-1 flex items-center justify-center gap-2">
+                  <PixelIcon name="trophy" sizePreset="xs" variant="primary" decorative />
+                  本月廢土探索成果
+                </div>
+                <div className="text-3xl font-bold text-pip-boy-green">
+                  {lineCount} 條線
+                </div>
+                {lineCount >= 3 && (
+                  <div className="mt-2 text-xs text-green-400 flex items-center justify-center gap-1">
+                    <PixelIcon name="check-circle" size={12} variant="success" decorative />
+                    已達成本月目標！
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Fallout 風格的狀態訊息 */}
+          <div className="bg-pip-boy-green/5 border border-pip-boy-green/30 rounded p-3 text-xs text-pip-boy-green/80 space-y-2">
+            <div className="flex items-start gap-2">
+              <PixelIcon name="info" size={12} variant="info" decorative />
+              <div>
+                <p className="font-bold text-pip-boy-green mb-1">系統狀態報告：</p>
+                <ul className="space-y-1 text-pip-boy-green/70">
+                  <li>→ 本月賓果號碼週期已結束</li>
+                  <li>→ 避難所資料庫正在進行月度維護</li>
+                  <li>→ 下個月 1 日將啟動新的號碼生成程序</li>
+                  <li>→ 請在輻射冷卻期間檢查你的裝備</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* 廢土生存者的黑色幽默 */}
+          <div className="mt-4 text-center text-xs text-wasteland-lighter/60 italic">
+            "在廢土上，等待也是一種生存技能。" - Vault-Tec 生存手冊
+          </div>
+        </div>
+      </motion.div>
     )
   }
 

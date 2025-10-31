@@ -478,6 +478,7 @@ async def get_current_user(
             "email": user.email,
             "name": user.name,
             "display_name": user.display_name,
+            "avatar_url": user.avatar_url,  # 加入頭像 URL
             "oauth_provider": user.oauth_provider,
             "profile_picture_url": user.profile_picture_url,
             "karma_score": user.karma_score,

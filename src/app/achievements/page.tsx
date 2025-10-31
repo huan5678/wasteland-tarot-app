@@ -49,6 +49,14 @@ export default function AchievementsPage() {
   // 認證檢查
   useEffect(() => {
     if (isInitialized && !user) {
+      // 🔍 監控日誌：追蹤路由導向
+      console.log('[AchievementsPage] 🔀 Auth check redirect', {
+        timestamp: new Date().toISOString(),
+        from: '/achievements',
+        to: '/auth/login',
+        reason: 'User not authenticated',
+        isInitialized
+      })
       router.push('/auth/login')
     }
   }, [isInitialized, user, router])

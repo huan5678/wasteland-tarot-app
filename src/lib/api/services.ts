@@ -349,4 +349,33 @@ export const profileAPI = {
     const data = await apiClient.patch('/api/v1/users/me/profile', updates)
     return data as { message: string; user: User }
   },
+
+  /**
+   * 上傳使用者頭像
+   * @param file - 圖片檔案 (JPEG/PNG/WebP/GIF, 最大 5MB)
+   * @returns 上傳結果包含新的頭像 URL
+   */
+  async uploadAvatar(file: File): Promise<{ avatar_url: string; message: string }> {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 注意：不能使用 apiClient.post()，因為它會自動 JSON.stringify body
+    // 必須直接使用底層的 request() 方法並傳入 FormData
+    const url = `${typeof window !== 'undefined' ? '' : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/users/avatar`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      credentials: 'include', // 包含 httpOnly cookies
+      body: formData,
+      // 不設定 Content-Type，讓瀏覽器自動設定（包含 boundary）
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }))
+      throw new Error(errorData.detail || `HTTP ${response.status}`)
+    }
+
+    const data = await response.json()
+    return data as { avatar_url: string; message: string }
+  },
 }

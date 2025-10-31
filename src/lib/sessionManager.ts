@@ -35,7 +35,15 @@ export async function refreshSession(): Promise<boolean> {
     const { data, error } = await supabase.auth.refreshSession()
 
     if (error || !data.session) {
-      console.error('Session refresh failed:', error)
+      console.error('[SessionManager] ❌ Session refresh failed:', error)
+
+      // 🔍 監控日誌：追蹤 Session 刷新失敗導致的登出
+      console.warn('[SessionManager] 🚫 Session refresh failed - Logging out', {
+        timestamp: new Date().toISOString(),
+        error: error?.message,
+        hasSession: !!data.session
+      })
+
       // 清除會話並重導向登入
       useAuthStore.getState().logout()
       if (typeof window !== 'undefined') {
@@ -62,7 +70,14 @@ export async function refreshSession(): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('Session refresh error:', error)
+    console.error('[SessionManager] ❌ Session refresh error:', error)
+
+    // 🔍 監控日誌：追蹤 Session 刷新異常導致的登出
+    console.warn('[SessionManager] 🚫 Exception during session refresh - Logging out', {
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : String(error)
+    })
+
     useAuthStore.getState().logout()
     return false
   }

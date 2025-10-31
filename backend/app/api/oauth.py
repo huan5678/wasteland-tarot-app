@@ -6,6 +6,7 @@ OAuth Authentication API endpoints
 
 from typing import Dict, Any, List, Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
 from app.db.database import get_db
@@ -184,8 +185,7 @@ async def oauth_callback(
 
         if code_verifier:
             logger.info("已從 cookie 取得 code_verifier (PKCE enabled)")
-            # 刪除已使用的 code_verifier cookie
-            response.delete_cookie(key="oauth_code_verifier")
+            # Note: code_verifier cookie 將在返回 response 時被刪除
         else:
             logger.warning("Cookie 中找不到 code_verifier，將使用非 PKCE 流程")
 
@@ -346,6 +346,56 @@ async def oauth_callback(
             # 事件追蹤失敗不應阻擋登入流程
             logger.warning(f"OAuth 事件追蹤失敗（非致命）: {str(e)}")
 
+        # 步驟 4.6: 同步 Google OAuth 頭像到 Supabase Storage（每次登入都同步）
+        if profile_picture_url:
+            try:
+                logger.info(f"Syncing Google OAuth avatar for user {user.id}: {profile_picture_url}")
+
+                # 下載 Google 頭像圖片
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    avatar_response = await client.get(profile_picture_url)
+                    avatar_response.raise_for_status()
+                    avatar_content = avatar_response.content
+
+                    if len(avatar_content) > 0:
+                        # 生成檔案名稱（格式: google_oauth_{user_id}_{timestamp}.jpg）
+                        import hashlib
+                        from datetime import datetime
+                        timestamp = int(datetime.utcnow().timestamp())
+                        file_hash = hashlib.md5(avatar_content).hexdigest()[:8]
+                        file_name = f"google_oauth_{user.id}_{timestamp}_{file_hash}.jpg"
+                        file_path = file_name  # 不需要 "avatars/" 前綴，Supabase SDK 會自動處理
+
+                        # 上傳到 Supabase Storage
+                        supabase = get_supabase_client()
+                        supabase.storage.from_("avatars").upload(
+                            path=file_path,
+                            file=avatar_content,
+                            file_options={
+                                "content-type": "image/jpeg",
+                                "upsert": "false"
+                            }
+                        )
+
+                        # 獲取公開 URL
+                        public_url = supabase.storage.from_("avatars").get_public_url(file_path)
+
+                        # 更新 users 表的 avatar_url
+                        user.avatar_url = public_url
+                        await db.commit()
+                        await db.refresh(user)
+
+                        logger.info(f"Google OAuth avatar synced successfully: {public_url}")
+
+            except httpx.HTTPStatusError as http_error:
+                # 下載失敗不應阻擋登入流程
+                logger.warning(f"Failed to download Google avatar (non-fatal): HTTP {http_error.response.status_code}")
+            except httpx.TimeoutException:
+                logger.warning("Google avatar download timed out (non-fatal)")
+            except Exception as avatar_error:
+                # 頭像同步失敗不應阻擋登入流程
+                logger.warning(f"Google OAuth avatar sync failed (non-fatal): {str(avatar_error)}")
+
         # 步驟 5: 生成 JWT token
         from datetime import datetime, timedelta
         access_token = create_access_token(data={"sub": str(user.id)})
@@ -354,34 +404,15 @@ async def oauth_callback(
         # 計算 access token 過期時間（30 分鐘）
         token_expires_at = int((datetime.utcnow() + timedelta(minutes=30)).timestamp())
 
-        # 步驟 6: 設定 httpOnly cookies（安全儲存 token）
-        # 本地開發使用 HTTP，需要 secure=False
+        # 步驟 6: 準備回應資料
         from app.config import settings
         is_production = settings.environment == "production"
 
-        response.set_cookie(
-            key="access_token",
-            value=access_token,
-            httponly=True,
-            secure=is_production,  # 生產環境使用 HTTPS
-            samesite="lax",
-            max_age=1800  # 30 分鐘
-        )
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=True,
-            secure=is_production,
-            samesite="lax",
-            max_age=604800  # 7 天
-        )
-
-        # 步驟 7: 返回使用者資料和 token
-        return OAuthCallbackResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_expires_at=token_expires_at,
-            user={
+        response_data = {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_expires_at": token_expires_at,
+            "user": {
                 "id": str(user.id),
                 "email": user.email,
                 "name": user.name,
@@ -389,7 +420,40 @@ async def oauth_callback(
                 "profile_picture_url": user.profile_picture_url,
                 "is_oauth_user": True
             }
+        }
+
+        # 步驟 7: 創建 JSONResponse 並設定 httpOnly cookies
+        # 重要：必須返回 JSONResponse 而不是 Pydantic model
+        # 因為 Pydantic model 會導致 FastAPI 創建新的 response，丟失 cookies
+        json_response = JSONResponse(content=response_data)
+
+        # 刪除已使用的 code_verifier cookie（PKCE 一次性使用）
+        if code_verifier:
+            json_response.delete_cookie(key="oauth_code_verifier", path="/")
+            logger.info("已刪除 oauth_code_verifier cookie")
+
+        # 設置認證 tokens 為 httpOnly cookies
+        json_response.set_cookie(
+            key="access_token",
+            value=access_token,
+            httponly=True,
+            secure=is_production,  # 生產環境使用 HTTPS
+            samesite="lax",
+            max_age=1800,  # 30 分鐘
+            path="/"  # 確保在所有路徑下都可用
         )
+        json_response.set_cookie(
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+            max_age=604800,  # 7 天
+            path="/"  # 確保在所有路徑下都可用
+        )
+
+        logger.info(f"✅ OAuth callback 成功，已設置 access_token 和 refresh_token cookies: {user.email}")
+        return json_response
 
     except HTTPException:
         # HTTP 異常（包含 409 Conflict），直接拋出

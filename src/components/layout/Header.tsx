@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { motion, useReducedMotion } from 'motion/react'
 import { useAuthStore } from '@/lib/authStore'
+import { useBingoStore } from '@/lib/stores/bingoStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   Sheet,
@@ -12,6 +13,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import { UserMenu } from './UserMenu'
 
 interface NavItem {
   href: string
@@ -31,11 +33,15 @@ export function Header() {
   const logout = useAuthStore(s => s.logout)
   const startTokenExpiryMonitor = useAuthStore(s => s.startTokenExpiryMonitor)
   const stopTokenExpiryMonitor = useAuthStore(s => s.stopTokenExpiryMonitor)
+
+  // 賓果 Store（用於紅點邏輯）
+  const hasClaimed = useBingoStore(s => s.hasClaimed)
+  const dailyNumber = useBingoStore(s => s.dailyNumber)
+
   const router = useRouter()
   const pathname = usePathname()
   const [currentTime, setCurrentTime] = useState<string>('')
   const [isClient, setIsClient] = useState(false)
-  const [showBingoBadge, setShowBingoBadge] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   // 滾動控制相關 state
@@ -44,6 +50,14 @@ export function Header() {
 
   // 檢測使用者是否偏好減少動畫
   const prefersReducedMotion = useReducedMotion()
+
+  // Header ref 用於測量高度
+  const headerRef = React.useRef<HTMLElement>(null)
+
+  // ⚠️ 重要：不要在這裡檢查 httpOnly cookies！
+  // httpOnly cookies 無法被 JavaScript 讀取（document.cookie 看不到）
+  // 登入狀態驗證由 authStore.initialize() 調用 API 來完成
+  // 如果 API 返回 401，authStore 會自動清除狀態
 
   // Update time only on client side to avoid hydration mismatch
   useEffect(() => {
@@ -97,15 +111,19 @@ export function Header() {
                           pathname.startsWith('/bingo') ||
                           pathname.startsWith('/achievements')
 
-  // 檢查今日是否已領取賓果號碼 (僅在客戶端執行)
-  useEffect(() => {
-    if (isClient && user) {
-      // 從 localStorage 讀取上次領取時間
-      const lastClaimDate = localStorage.getItem('bingo-last-claim-date')
-      const today = new Date().toDateString()
-      setShowBingoBadge(lastClaimDate !== today)
-    }
-  }, [isClient, user])
+  /**
+   * 賓果簽到紅點邏輯（修復 2025-10-30）
+   *
+   * 顯示條件：
+   * 1. 使用者已登入
+   * 2. 今日尚未領取號碼（hasClaimed === false）
+   * 3. 有可領取的號碼（dailyNumber !== null，即日期 <= 25 日）
+   *
+   * 隱藏條件：
+   * - 已領取當天號碼
+   * - 超過 25 日（沒有號碼可領取）
+   */
+  const showBingoBadge = user && !hasClaimed && dailyNumber !== null
 
   // 滾動監聽邏輯
   useEffect(() => {
@@ -147,14 +165,58 @@ export function Header() {
     }
   }, [mobileMenuOpen])
 
+  // 通知 Sidebar Header 的顯示/隱藏狀態（包含高度）
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // 計算實際應該使用的高度
+      const effectiveHeight = isHeaderVisible && headerRef.current
+        ? headerRef.current.offsetHeight
+        : 0
+
+      window.dispatchEvent(
+        new CustomEvent('header-height-change', {
+          detail: { height: effectiveHeight }
+        })
+      )
+    }
+  }, [isHeaderVisible])
+
+  // 使用 ResizeObserver 監聽 Header 高度變化（僅在可見時）
+  useEffect(() => {
+    if (!headerRef.current || !isHeaderVisible) return
+
+    const broadcastHeaderHeight = () => {
+      if (headerRef.current && isHeaderVisible) {
+        const height = headerRef.current.offsetHeight
+        window.dispatchEvent(
+          new CustomEvent('header-height-change', {
+            detail: { height }
+          })
+        )
+      }
+    }
+
+    // 初始廣播
+    broadcastHeaderHeight()
+
+    // 監聽大小變化（響應式、動態內容等）
+    const resizeObserver = new ResizeObserver(() => {
+      broadcastHeaderHeight()
+    })
+
+    resizeObserver.observe(headerRef.current)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [isClient, isHeaderVisible]) // 依賴 isHeaderVisible
+
   const generalNavLinks = user
     ? [
         { href: '/dashboard', label: '控制台', icon: 'home', ariaLabel: '控制台', badge: false },
         { href: '/readings', label: '占卜記錄', icon: 'scroll-text', ariaLabel: '占卜記錄', badge: false },
         { href: '/cards', label: '卡牌圖書館', icon: 'library', ariaLabel: '卡牌圖書館', badge: false },
         { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
-        { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案', badge: false },
-        ...(user.is_admin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台', badge: false }] : []),
       ]
     : [
         { href: '/auth', label: '啟動終端機', icon: 'door-open', ariaLabel: '啟動終端機', badge: false },
@@ -179,7 +241,7 @@ export function Header() {
     {
       title: '每日',
       items: [
-        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge },
+        { href: '/bingo', label: '賓果簽到', icon: 'dices', ariaLabel: '賓果簽到', badge: showBingoBadge || undefined },
         { href: '/achievements', label: '成就系統', icon: 'trophy', ariaLabel: '成就系統' },
       ],
     },
@@ -196,6 +258,7 @@ export function Header() {
 
   return (
     <motion.header
+      ref={headerRef}
       className="fixed top-0 left-0 right-0 z-50 border-b-2 border-pip-boy-green"
       style={{
         backgroundColor: 'var(--color-wasteland-dark)',
@@ -261,6 +324,7 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
+            {/* 導航連結 */}
             {generalNavLinks.map((link) => (
               <button
                 key={link.href}
@@ -288,22 +352,16 @@ export function Header() {
               </button>
             ))}
 
+            {/* 已登入：顯示 UserMenu */}
             {user && (
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 text-sm
-                         border border-red-500/30 hover:border-red-500
-                         hover:bg-red-500/10 text-red-400 hover:text-red-500
-                         transition-all duration-200"
-              >
-                <PixelIcon
-                  name="door-open"
-                  sizePreset="xs"
-                  variant="error"
-                  aria-label="登出"
-                />
-                <span>登出</span>
-              </button>
+              <UserMenu
+                user={{
+                  name: user.name,
+                  avatarUrl: user.avatar_url,
+                  profilePicture: user.profilePicture
+                }}
+                onLogout={handleLogout}
+              />
             )}
           </nav>
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
+import { useBingoStore } from '@/lib/stores/bingoStore'
 import { PixelIcon } from '@/components/ui/icons'
 import {
   Tooltip,
@@ -32,9 +33,13 @@ export function DashboardSidebar() {
   const pathname = usePathname()
   const user = useAuthStore(s => s.user)
 
+  // 賓果 Store（用於紅點邏輯）
+  const hasClaimed = useBingoStore(s => s.hasClaimed)
+  const dailyNumber = useBingoStore(s => s.dailyNumber)
+
   const [isCollapsed, setIsCollapsed] = useState(false)
-  const [showBingoBadge, setShowBingoBadge] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [headerHeight, setHeaderHeight] = useState(120) // 預設值
 
   // 初始化：從 localStorage 讀取狀態
   useEffect(() => {
@@ -45,14 +50,32 @@ export function DashboardSidebar() {
     }
   }, [])
 
-  // 檢查賓果紅點提示
+  // 監聽 Header 高度變化
   useEffect(() => {
-    if (isClient && user) {
-      const lastClaimDate = localStorage.getItem('bingo-last-claim-date')
-      const today = new Date().toDateString()
-      setShowBingoBadge(lastClaimDate !== today)
+    const handleHeaderHeightChange = ((e: CustomEvent) => {
+      setHeaderHeight(e.detail.height)
+    }) as EventListener
+
+    window.addEventListener('header-height-change', handleHeaderHeightChange)
+
+    return () => {
+      window.removeEventListener('header-height-change', handleHeaderHeightChange)
     }
-  }, [isClient, user])
+  }, [])
+
+  /**
+   * 賓果簽到紅點邏輯（修復 2025-10-30）
+   *
+   * 顯示條件：
+   * 1. 使用者已登入
+   * 2. 今日尚未領取號碼（hasClaimed === false）
+   * 3. 有可領取的號碼（dailyNumber !== null，即日期 <= 25 日）
+   *
+   * 隱藏條件：
+   * - 已領取當天號碼
+   * - 超過 25 日（沒有號碼可領取）
+   */
+  const showBingoBadge = user && !hasClaimed && dailyNumber !== null
 
   // 切換收合狀態
   const toggleCollapse = () => {
@@ -177,23 +200,28 @@ export function DashboardSidebar() {
   return (
     <aside
       className={`
-        h-screen sticky top-0
+        self-start sticky
         bg-wasteland-darker border-r-2 border-pip-boy-green
-        flex flex-col
+        flex flex-col flex-shrink-0
         transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-16' : 'w-60'}
       `}
+      style={{
+        top: `${headerHeight}px`,
+        height: `calc(100vh - ${headerHeight}px)`
+      }}
       aria-label="主要導航"
     >
-      {/* Sidebar Header */}
+      {/* Sidebar Header - Fixed Top */}
       <div className={`
+        flex-shrink-0
         border-b-2 border-pip-boy-green/30 p-4
         ${isCollapsed ? 'px-2' : ''}
       `}>
         {isCollapsed ? (
           <div className="flex justify-center">
             <PixelIcon
-              name="home"
+              name="grid"
               sizePreset="md"
               variant="primary"
               decorative
@@ -211,7 +239,7 @@ export function DashboardSidebar() {
         )}
       </div>
 
-      {/* Navigation Sections */}
+      {/* Navigation Sections - Scrollable Middle */}
       <nav className="flex-1 overflow-y-auto py-4">
         {navSections.map((section, sectionIndex) => (
           <div key={section.title}>
@@ -237,8 +265,8 @@ export function DashboardSidebar() {
         ))}
       </nav>
 
-      {/* Collapse Toggle Button */}
-      <div className="border-t-2 border-pip-boy-green/30 p-2">
+      {/* Collapse Toggle Button - Fixed Bottom */}
+      <div className="flex-shrink-0 border-t-2 border-pip-boy-green/30 p-2">
         {isCollapsed ? (
           <TooltipProvider delayDuration={300}>
             <Tooltip>

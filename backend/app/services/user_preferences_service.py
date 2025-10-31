@@ -4,7 +4,8 @@ Business logic for user preferences management
 """
 
 from typing import Optional, Dict, Any
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 import uuid
 
 from app.models.user import UserPreferences
@@ -13,16 +14,17 @@ from app.models.user import UserPreferences
 class UserPreferencesService:
     """Service for user preferences management"""
 
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
     # ==================== CRUD Operations ====================
 
-    def get_or_create_preferences(self, user_id: str) -> UserPreferences:
+    async def get_or_create_preferences(self, user_id: str) -> UserPreferences:
         """Get or create user preferences"""
-        preferences = self.db.query(UserPreferences).filter(
-            UserPreferences.user_id == user_id
-        ).first()
+        result = await self.db.execute(
+            select(UserPreferences).filter(UserPreferences.user_id == user_id)
+        )
+        preferences = result.scalars().first()
 
         if not preferences:
             preferences = UserPreferences(
@@ -30,38 +32,39 @@ class UserPreferencesService:
                 user_id=user_id
             )
             self.db.add(preferences)
-            self.db.commit()
-            self.db.refresh(preferences)
+            await self.db.commit()
+            await self.db.refresh(preferences)
 
         return preferences
 
-    def get_preferences(self, user_id: str) -> Optional[UserPreferences]:
+    async def get_preferences(self, user_id: str) -> Optional[UserPreferences]:
         """Get user preferences"""
-        return self.db.query(UserPreferences).filter(
-            UserPreferences.user_id == user_id
-        ).first()
+        result = await self.db.execute(
+            select(UserPreferences).filter(UserPreferences.user_id == user_id)
+        )
+        return result.scalars().first()
 
-    def update_preferences(
+    async def update_preferences(
         self,
         user_id: str,
         updates: Dict[str, Any]
     ) -> UserPreferences:
         """Update user preferences"""
-        preferences = self.get_or_create_preferences(user_id)
+        preferences = await self.get_or_create_preferences(user_id)
 
         # Update preferences
         for key, value in updates.items():
             if hasattr(preferences, key):
                 setattr(preferences, key, value)
 
-        self.db.commit()
-        self.db.refresh(preferences)
+        await self.db.commit()
+        await self.db.refresh(preferences)
 
         return preferences
 
-    def reset_preferences(self, user_id: str) -> UserPreferences:
+    async def reset_preferences(self, user_id: str) -> UserPreferences:
         """Reset preferences to defaults"""
-        preferences = self.get_or_create_preferences(user_id)
+        preferences = await self.get_or_create_preferences(user_id)
 
         # Reset to defaults (matching existing model defaults)
         preferences.default_character_voice = "pip_boy"
@@ -93,14 +96,14 @@ class UserPreferencesService:
         preferences.screen_reader_mode = False
         preferences.reduced_motion = False
 
-        self.db.commit()
-        self.db.refresh(preferences)
+        await self.db.commit()
+        await self.db.refresh(preferences)
 
         return preferences
 
     # ==================== Grouped Updates ====================
 
-    def update_visual_settings(
+    async def update_visual_settings(
         self,
         user_id: str,
         theme: Optional[str] = None,
@@ -125,9 +128,9 @@ class UserPreferencesService:
         if preferred_card_back is not None:
             updates["preferred_card_back"] = preferred_card_back
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
-    def update_audio_settings(
+    async def update_audio_settings(
         self,
         user_id: str,
         geiger_counter_volume: Optional[float] = None,
@@ -146,9 +149,9 @@ class UserPreferencesService:
         if ambient_volume is not None:
             updates["ambient_volume"] = max(0.0, min(1.0, ambient_volume))
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
-    def update_reading_settings(
+    async def update_reading_settings(
         self,
         user_id: str,
         default_character_voice: Optional[str] = None,
@@ -173,9 +176,9 @@ class UserPreferencesService:
         if notification_frequency is not None:
             updates["notification_frequency"] = notification_frequency
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
-    def update_privacy_settings(
+    async def update_privacy_settings(
         self,
         user_id: str,
         public_profile: Optional[bool] = None,
@@ -194,9 +197,9 @@ class UserPreferencesService:
         if data_collection_consent is not None:
             updates["data_collection_consent"] = data_collection_consent
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
-    def update_notification_settings(
+    async def update_notification_settings(
         self,
         user_id: str,
         email_notifications: Optional[bool] = None,
@@ -215,9 +218,9 @@ class UserPreferencesService:
         if community_updates is not None:
             updates["community_updates"] = community_updates
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
-    def update_accessibility_settings(
+    async def update_accessibility_settings(
         self,
         user_id: str,
         high_contrast_mode: Optional[bool] = None,
@@ -236,17 +239,17 @@ class UserPreferencesService:
         if reduced_motion is not None:
             updates["reduced_motion"] = reduced_motion
 
-        return self.update_preferences(user_id, updates)
+        return await self.update_preferences(user_id, updates)
 
     # ==================== Adaptive Experience ====================
 
-    def apply_recommended_settings(
+    async def apply_recommended_settings(
         self,
         user_id: str,
         analytics_data: Dict[str, Any]
     ) -> UserPreferences:
         """Apply recommended settings based on analytics"""
-        preferences = self.get_or_create_preferences(user_id)
+        preferences = await self.get_or_create_preferences(user_id)
 
         # Set default character voice based on most used
         favorite_voice = analytics_data.get("favorite_character_voice")
@@ -263,18 +266,18 @@ class UserPreferencesService:
             preferences.background_radiation_level = 0.1
             preferences.ambient_volume = 0.2
 
-        self.db.commit()
-        self.db.refresh(preferences)
+        await self.db.commit()
+        await self.db.refresh(preferences)
 
         return preferences
 
-    def get_adaptive_settings(
+    async def get_adaptive_settings(
         self,
         user_id: str,
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """Get adaptive settings based on context"""
-        preferences = self.get_or_create_preferences(user_id)
+        preferences = await self.get_or_create_preferences(user_id)
         settings = preferences.to_dict()
 
         # Apply contextual adjustments

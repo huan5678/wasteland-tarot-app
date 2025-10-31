@@ -20,6 +20,7 @@ import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
 import { FontLoadMonitor } from '@/components/system/FontLoadMonitor';
 import { DailyCardBackProvider } from '@/components/providers/DailyCardBackProvider';
 import { NotificationProvider } from '@/components/providers/NotificationProvider';
+import { DynamicMainContent } from '@/components/layout/DynamicMainContent';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
@@ -98,8 +99,15 @@ export default function RootLayout({
                   <MusicPlayerInitializer />
                   <div className="min-h-screen flex flex-col relative z-10">
                     <ClientLayout>
+                      {/* Header - 固定高度 */}
                       <Header />
-                      <main className="flex-1 pt-[120px] md:pt-[140px]">{children}</main>
+
+                      {/* Main Content - 動態 padding-top 根據 Header 實際高度 */}
+                      <DynamicMainContent>
+                        {children}
+                      </DynamicMainContent>
+
+                      {/* Footer - 固定高度 */}
                       <Footer />
                     </ClientLayout>
                   </div>
