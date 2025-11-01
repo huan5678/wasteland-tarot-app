@@ -3,6 +3,7 @@ Async User Analytics Service
 Async business logic for user behavior tracking and analytics
 """
 
+import uuid
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 from collections import Counter
@@ -36,6 +37,7 @@ class AsyncUserAnalyticsService:
 
         if not analytics:
             analytics = UserAnalytics(
+                id=str(uuid.uuid4()),
                 user_id=user_id,
                 most_drawn_cards=[],
                 favorited_cards=[],
@@ -175,7 +177,12 @@ class AsyncUserAnalyticsService:
         duration: Optional[int] = None
     ) -> AnalyticsEvent:
         """Track an analytics event"""
+        # Get or create user analytics record to get analytics_id
+        analytics = await self.get_or_create_analytics(user_id)
+
         event = AnalyticsEvent(
+            id=str(uuid.uuid4()),
+            analytics_id=analytics.id,
             user_id=user_id,
             event_type=event_type,
             event_category=event_category,
@@ -423,7 +430,8 @@ class AsyncUserAnalyticsService:
             )
 
         if is_active:
-            query = query.where(UserRecommendation.is_active == True)
+            # is_active is a string field: "active", "dismissed", "accepted"
+            query = query.where(UserRecommendation.is_active == "active")
 
         query = query.order_by(
             desc(UserRecommendation.priority),
@@ -468,7 +476,7 @@ class AsyncUserAnalyticsService:
 
         if rec:
             rec.accepted_at = datetime.utcnow()
-            rec.is_active = False
+            rec.is_active = "accepted"  # String field: "active", "dismissed", "accepted"
             await self.db.commit()
             await self.db.refresh(rec)
 
@@ -488,7 +496,7 @@ class AsyncUserAnalyticsService:
 
         if rec:
             rec.rejected_at = datetime.utcnow()
-            rec.is_active = False
+            rec.is_active = "dismissed"  # String field: "active", "dismissed", "accepted"
             await self.db.commit()
             await self.db.refresh(rec)
 

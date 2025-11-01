@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/authStore'
 import { useAudioStore } from '@/lib/audio/audioStore'
 import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore'
 import { PixelIcon } from '@/components/ui/icons'
-import { profileAPI } from '@/lib/api/services'
+import { profileAPI, analyticsAPI, readingsAPI, cardsAPI } from '@/lib/api/services'
 import { useFactions } from '@/hooks/useCharacterVoices'
 import { AvatarUpload } from '@/components/profile/AvatarUpload'
 import { toast } from 'sonner'
@@ -18,6 +18,9 @@ interface UserProfile {
   karmaLevel: string
   totalReadings: number
   favoriteCard: string
+  favoriteCardName: string  // 新增：最常抽到的卡片名稱
+  monthlyReadings: number    // 新增：本月占卜次數
+  favoritedCount: number     // 新增：收藏數量
   faction: string
   pipBoyModel: string
   notificationPreferences: {
@@ -62,22 +65,68 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const loadProfile = async () => {
-      if (!user?.id) return
+      // 確保認證狀態已初始化且用戶存在
+      if (!useAuthStore.getState().isInitialized || !user?.id) {
+        console.log('[Profile] ⏳ 等待認證初始化...')
+        return
+      }
 
+      console.log('[Profile] 📊 開始載入 Profile 資料...')
       setIsLoading(true)
 
       try {
-        // Construct profile from user data and readings stats
-        // Note: We could add a dedicated /api/v1/users/profile endpoint in the future
+        // 載入 analytics 數據
+        let favoriteCardName = '無'
+        let monthlyReadings = 0
+        let favoritedCount = 0
+
+        try {
+          const analytics = await analyticsAPI.getUserAnalytics()
+          const mostDrawnCards = analytics.user_analytics.most_drawn_cards || []
+          favoritedCount = (analytics.user_analytics.favorited_cards || []).length
+
+          // 取得最常抽到的卡片名稱
+          if (mostDrawnCards.length > 0) {
+            try {
+              const mostDrawnCardId = mostDrawnCards[0]
+              const card = await cardsAPI.getById(mostDrawnCardId)
+              favoriteCardName = card.name
+            } catch (err) {
+              console.warn('Failed to load favorite card:', err)
+            }
+          }
+
+          // 計算本月占卜次數
+          try {
+            const response = await readingsAPI.getUserReadings(user.id)
+            const now = new Date()
+            const thisMonth = now.getMonth()
+            const thisYear = now.getFullYear()
+
+            monthlyReadings = response.readings.filter(reading => {
+              const readingDate = new Date(reading.created_at)
+              return readingDate.getMonth() === thisMonth && readingDate.getFullYear() === thisYear
+            }).length
+          } catch (err) {
+            console.warn('Failed to calculate monthly readings:', err)
+          }
+        } catch (err) {
+          console.warn('Failed to load analytics:', err)
+        }
+
+        // Construct profile from user data and analytics
         const userProfile: UserProfile = {
-          username: user.username || user.name || 'Vault Dweller',
+          username: user.name || 'Vault Dweller',  // User model 只有 name，沒有 username
           email: user.email || 'dweller@vault-tec.com',
           joinDate: user.created_at || new Date().toISOString(),
-          karmaLevel: user.experience_level || '新手流浪者', // From user data
-          totalReadings: user.total_readings || 0, // From user data
-          favoriteCard: user.favorite_card_suit || '未知', // From user data
-          faction: user.faction_alignment || 'independent', // ✅ 從用戶資料讀取
-          pipBoyModel: '3000 Mark IV', // Default value
+          karmaLevel: user.experience_level || '新手流浪者',
+          totalReadings: user.total_readings || 0,
+          favoriteCard: user.favorite_card_suit || '未知',
+          favoriteCardName,     // 最常抽到的卡片名稱
+          monthlyReadings,      // 本月占卜次數
+          favoritedCount,       // 收藏數量
+          faction: user.faction_alignment || 'independent',
+          pipBoyModel: '3000 Mark IV',
           notificationPreferences: {
             dailyReadings: true,
             weeklyInsights: false,
@@ -85,29 +134,22 @@ export default function ProfilePage() {
           }
         }
 
-        // Optionally fetch reading statistics to populate totalReadings and favoriteCard
-        // Uncomment when readings stats endpoint is ready:
-        // try {
-        //   const stats = await readingsAPI.getStats(user.id)
-        //   userProfile.totalReadings = stats.total_readings
-        //   userProfile.favoriteCard = stats.most_common_card
-        // } catch (err) {
-        //   console.warn('Failed to fetch reading stats:', err)
-        // }
-
         setProfile(userProfile)
         setEditForm(userProfile)
       } catch (error) {
         console.error('Failed to load profile:', error)
         // Fallback to basic user data
         const fallbackProfile: UserProfile = {
-          username: user.username || user.name || 'Vault Dweller',
+          username: user.name || 'Vault Dweller',  // User model 只有 name，沒有 username
           email: user.email || '',
           joinDate: user.created_at || new Date().toISOString(),
           karmaLevel: user.experience_level || '新手居民',
           totalReadings: user.total_readings || 0,
           favoriteCard: user.favorite_card_suit || '未知',
-          faction: user.faction_alignment || 'independent', // ✅ 從用戶資料讀取
+          favoriteCardName: '無',
+          monthlyReadings: 0,
+          favoritedCount: 0,
+          faction: user.faction_alignment || 'independent',
           pipBoyModel: '3000 Mark IV',
           notificationPreferences: {
             dailyReadings: true,
@@ -714,25 +756,25 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-pip-boy-green">
+                  <div className="text-xl font-bold text-pip-boy-green numeric tabular-nums">
                     {profile.totalReadings}
                   </div>
                   <div className="text-pip-boy-green/70 text-xs">總占卜次數</div>
                 </div>
 
                 <div className="text-center">
-                  <div className="text-xl font-bold text-pip-boy-green">12</div>
+                  <div className="text-xl font-bold text-pip-boy-green numeric tabular-nums">{profile.monthlyReadings}</div>
                   <div className="text-pip-boy-green/70 text-xs">本月</div>
                 </div>
 
                 <div className="text-center">
-                  <div className="text-xl font-bold text-pip-boy-green">7</div>
+                  <div className="text-xl font-bold text-pip-boy-green numeric tabular-nums">{profile.favoritedCount}</div>
                   <div className="text-pip-boy-green/70 text-xs">收藏</div>
                 </div>
 
                 <div className="text-center">
                   <div className="text-sm font-bold text-pip-boy-green">
-                    {profile.favoriteCard}
+                    {profile.favoriteCardName}
                   </div>
                   <div className="text-pip-boy-green/70 text-xs">最常抽到</div>
                 </div>

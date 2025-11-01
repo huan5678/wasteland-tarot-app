@@ -470,15 +470,16 @@ async def get_current_user(
         logger.warning(f"Failed to fetch user statistics: {str(e)}")
 
     # 返回完整使用者資訊(包含 token 過期時間)
+    # 注意：與 OAuth callback 返回的資料結構保持一致
     return MeResponse(
         user={
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
             "display_name": user.display_name,
-            "avatar_url": user.avatar_url,  # 加入頭像 URL
+            "avatar_url": user.avatar_url,  # 使用者上傳的頭像（優先）
             "oauth_provider": user.oauth_provider,
-            "profile_picture_url": user.profile_picture_url,
+            "profile_picture_url": user.profile_picture_url,  # Google OAuth 頭像
             "karma_score": user.karma_score,
             "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
             "faction_alignment": user.faction_alignment,
@@ -487,7 +488,11 @@ async def get_current_user(
             "is_verified": user.is_verified,
             "is_active": user.is_active,
             "is_admin": user.is_admin if hasattr(user, 'is_admin') else False,
-            "created_at": user.created_at.isoformat() if user.created_at else None
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            # 新增：與 OAuth callback 一致的統計欄位
+            "total_readings": user.total_readings or 0,
+            "experience_level": user.experience_level,
+            "favorite_card_suit": user.favorite_card_suit,
         },
         statistics=statistics,
         token_expires_at=payload.get("exp")  # 返回 JWT exp timestamp

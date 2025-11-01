@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/authStore'
-import { readingsAPI, cardsAPI } from '@/lib/api'
+import { readingsAPI, cardsAPI, analyticsAPI } from '@/lib/api'
 import { PixelIcon } from '@/components/ui/icons'
 import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
 import { useActivityTracker } from '@/hooks/useActivityTracker'
@@ -37,6 +37,7 @@ export default function DashboardPage() {
     totalReadings: 0,
     karmaLevel: '中立漆泊者',
     favoriteCard: null as any,
+    favoriteCardDrawCount: 0,
     daysInVault: 0
   })
   const [isLoading, setIsLoading] = useState(true)
@@ -76,7 +77,20 @@ export default function DashboardPage() {
   // Load real data from API
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!user?.id) return
+      // 確保認證狀態已初始化且用戶存在
+      if (!isInitialized || !user?.id) {
+        console.log('[Dashboard] ⏳ 等待認證初始化...', {
+          isInitialized,
+          hasUser: !!user?.id
+        })
+        return
+      }
+
+      console.log('[Dashboard] 📊 開始載入 Dashboard 資料...', {
+        userId: user.id,
+        userEmail: user.email,
+        isOAuthUser: user.isOAuthUser
+      })
 
       setIsLoading(true)
 
@@ -126,21 +140,33 @@ export default function DashboardPage() {
         else if (totalReadings >= 10) karmaLevel = '好業力漂泊者'
         else if (totalReadings >= 5) karmaLevel = '中立漂泊者'
 
-        // Find most frequent card (simplified)
+        // Get user's most drawn card from analytics
         let favoriteCard = null
-        if (transformedReadings.length > 0) {
-          try {
-            const allCards = await cardsAPI.getAll()
-            favoriteCard = allCards[0] // Simplified - just take first card
-          } catch (error) {
-            console.error('Failed to load favorite card:', error)
+        let cardDrawCount = 0
+        try {
+          const analytics = await analyticsAPI.getUserAnalytics()
+          const mostDrawnCards = analytics.user_analytics.most_drawn_cards || []
+
+          if (mostDrawnCards.length > 0) {
+            // Get the most frequently drawn card (first in the array)
+            const mostDrawnCardId = mostDrawnCards[0]
+            favoriteCard = await cardsAPI.getById(mostDrawnCardId)
+
+            // Count how many times this card appears in all user's readings
+            cardDrawCount = transformedReadings.reduce((count, reading) => {
+              const cardsInReading = reading.cards_drawn || reading.cards || []
+              return count + cardsInReading.filter((c: any) => c.id === mostDrawnCardId || c === mostDrawnCardId).length
+            }, 0)
           }
+        } catch (error) {
+          console.error('Failed to load favorite card from analytics:', error)
         }
 
         setStats({
           totalReadings,
           karmaLevel,
           favoriteCard,
+          favoriteCardDrawCount: cardDrawCount,
           daysInVault
         })
 
@@ -160,14 +186,14 @@ export default function DashboardPage() {
     }
 
     loadDashboardData()
-  }, [user])
+  }, [user, isInitialized])
 
   // 載入成就資料
   useEffect(() => {
-    if (user) {
+    if (isInitialized && user) {
       fetchUserProgress()
     }
-  }, [user, fetchUserProgress])
+  }, [user, isInitialized, fetchUserProgress])
 
   // 計算最近解鎖的成就（最多3個）
   const recentAchievements = useMemo(() => {
@@ -377,7 +403,7 @@ export default function DashboardPage() {
                       {stats.favoriteCard.name}
                     </p>
                     <p className="text-pip-boy-green/70 text-xs">
-                      已抽取 8 次
+                      已抽取 {stats.favoriteCardDrawCount} 次
                     </p>
                   </div>
                 </div>

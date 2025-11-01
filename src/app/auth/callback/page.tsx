@@ -59,22 +59,34 @@ function CallbackContent() {
             console.error('❌ [Callback] Missing tokenExpiresAt in result!')
           }
           // 更新 auth store
-          // 重構變更：傳遞 token_expires_at 以儲存登入狀態
+          // 重構變更：傳遞完整的 user 資料和 token_expires_at 以儲存登入狀態
           setOAuthUser({
             id: result.user.id,
             email: result.user.email,
-            name: result.user.name,
+            name: result.user.name,  // User model 只有 name，沒有 username
             isOAuthUser: true,
             oauthProvider: result.user.oauth_provider,
-            profilePicture: result.user.profile_picture_url,
+            profilePicture: result.user.profile_picture_url,  // Google OAuth 頭像
+            avatar_url: result.user.avatar_url,  // 使用者上傳的頭像（優先）
+            created_at: result.user.created_at,  // 註冊時間（用於計算服務天數）
+            total_readings: result.user.total_readings,
+            karma_score: result.user.karma_score,
+            experience_level: result.user.experience_level,
+            faction_alignment: result.user.faction_alignment,
+            favorite_card_suit: result.user.favorite_card_suit,
           }, result.tokenExpiresAt) // 傳遞 token 過期時間
+
+          console.log('✅ [Callback] Auth store updated, waiting for persist...')
 
           setStatus('success')
 
-          // 延遲重導向
+          // 延遲重導向，確保 Zustand persist middleware 完成寫入
+          // 增加延遲至 2 秒，給 localStorage 足夠時間持久化
           setTimeout(() => {
-            router.push('/dashboard')
-          }, 1500)
+            console.log('🔄 [Callback] Redirecting to dashboard with fresh state')
+            // 使用 router.replace 而非 push，避免返回時回到 callback 頁面
+            router.replace('/dashboard')
+          }, 2000)
         } else {
           setStatus('error')
           setErrorMessage(result.error || 'OAuth 回調處理失敗')
