@@ -3,12 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import type { WastelandCard, Story } from '@/types/database';
 import Image from 'next/image';
-import { StorySection } from '@/components/tarot/StorySection';
-import { CharacterVoiceSelector } from '@/components/tarot/CharacterVoiceSelector';
-import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer';
+import { WastelandStorySection } from '@/components/cards/WastelandStorySection';
 import { PixelIcon } from '@/components/ui/icons';
-import { useStoryAudio } from '@/hooks/useStoryAudio';
 import { getCardWithStory } from '@/lib/api';
+import { getSuitDisplayName } from '@/types/suits';
+
+interface ReadingContext {
+  question?: string;
+  spreadType?: string;
+  positionName?: string;
+  positionMeaning?: string;
+  cardIndex?: number;
+  totalCards?: number;
+}
 
 interface CardDetailModalProps {
   card: WastelandCard & {
@@ -17,29 +24,48 @@ interface CardDetailModalProps {
   };
   isOpen: boolean;
   onClose: () => void;
+  readingContext?: ReadingContext; // 占卜情境（選填）
 }
 
-export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps) {
+export function CardDetailModal({ card, isOpen, onClose, readingContext }: CardDetailModalProps) {
   const [selectedVoice, setSelectedVoice] = useState<string>('pip_boy');
-  const [selectedCharacterKey, setSelectedCharacterKey] = useState<string>('');
-  const [isStoryExpanded, setIsStoryExpanded] = useState<boolean>(true);
   const [loadedCard, setLoadedCard] = useState<WastelandCard & { story?: Story; audioUrls?: Record<string, string> }>(card);
   const [isLoadingStory, setIsLoadingStory] = useState(false);
 
-  // Auto-fetch story data if not provided
+  // Auto-fetch complete card data if any critical fields are missing
   useEffect(() => {
-    if (isOpen && !card.story && card.id) {
+    // 檢查是否缺少關鍵欄位（圖片、故事、音頻、角色語音、Fallout 參考資料）
+    const needsFullData =
+      !card.image_url ||
+      !card.story ||
+      !card.audioUrls ||
+      !card.character_voices ||
+      !card.fallout_reference;
+
+    if (isOpen && card.id && needsFullData) {
+      console.log('[CardDetailModal] Fetching complete card data for:', card.id, {
+        hasImageUrl: !!card.image_url,
+        hasStory: !!card.story,
+        hasAudioUrls: !!card.audioUrls,
+        hasCharacterVoices: !!card.character_voices,
+        hasFalloutReference: !!card.fallout_reference,
+      })
       setIsLoadingStory(true);
       getCardWithStory(card.id)
         .then((cardWithStory) => {
-          setLoadedCard({
-            ...card,
-            story: cardWithStory.story,
-            audioUrls: cardWithStory.audioUrls,
-          });
+          console.log('[CardDetailModal] Complete card data loaded:', {
+            hasStory: !!cardWithStory.story,
+            hasAudioUrls: !!cardWithStory.audioUrls,
+            audioUrlsKeys: cardWithStory.audioUrls ? Object.keys(cardWithStory.audioUrls) : [],
+            hasCharacterVoices: !!cardWithStory.character_voices,
+            characterVoicesKeys: cardWithStory.character_voices ? Object.keys(cardWithStory.character_voices) : [],
+            hasFalloutReference: !!cardWithStory.fallout_reference,
+          })
+          // 使用完整的 cardWithStory 資料，而不是只合併部分欄位
+          setLoadedCard(cardWithStory);
         })
         .catch((error) => {
-          console.error('Failed to load card story:', error);
+          console.error('[CardDetailModal] Failed to load complete card data:', error);
           // Keep using original card data if fetch fails
           setLoadedCard(card);
         })
@@ -47,32 +73,18 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           setIsLoadingStory(false);
         });
     } else {
+      console.log('[CardDetailModal] Using existing complete card data:', {
+        hasImageUrl: !!card.image_url,
+        hasStory: !!card.story,
+        hasAudioUrls: !!card.audioUrls,
+        audioUrlsKeys: card.audioUrls ? Object.keys(card.audioUrls) : [],
+        hasCharacterVoices: !!card.character_voices,
+        characterVoicesKeys: card.character_voices ? Object.keys(card.character_voices) : [],
+        hasFalloutReference: !!card.fallout_reference,
+      })
       setLoadedCard(card);
     }
   }, [isOpen, card]);
-
-  // Use story audio hook for delayed generation
-  const {
-    audioUrls,
-    isLoading: isAudioLoading,
-    error: audioError,
-    shouldUseFallback,
-    generateAudio,
-    resetError,
-  } = useStoryAudio({
-    cardId: loadedCard.id,
-    story: loadedCard.story,
-    initialAudioUrls: loadedCard.audioUrls,
-    autoGenerate: true, // Auto-generate if no URLs provided
-  });
-
-  // Initialize selected character when audioUrls change
-  useEffect(() => {
-    if (audioUrls && Object.keys(audioUrls).length > 0) {
-      const firstKey = Object.keys(audioUrls)[0];
-      setSelectedCharacterKey(firstKey);
-    }
-  }, [audioUrls]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -87,6 +99,25 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
   if (!isOpen) {
     return null;
+  }
+
+  // Show loading state while fetching complete card data
+  if (isLoadingStory) {
+    return (
+      <div
+        data-testid="modal-backdrop"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <div
+          className="bg-black border-2 border-green-900 rounded-lg p-8 flex flex-col items-center justify-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mb-4"></div>
+          <p className="text-green-400 text-sm">載入卡牌資訊中...</p>
+        </div>
+      </div>
+    );
   }
 
   const getKarmaColor = (karma: string): string => {
@@ -117,11 +148,20 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
     }
   };
 
-  const availableVoices = Object.keys(loadedCard.character_voice_interpretations || {});
+  // 角色語音中文映射
+  const voiceNameMap: Record<string, string> = {
+    'pip_boy': 'Pip-Boy 分析',
+    'vault_dweller': '避難所居民觀點',
+    'wasteland_trader': '廢土商人智慧',
+    'super_mutant': '超級變種人視角',
+    'codsworth': 'Codsworth 分析',
+  };
+
+  const availableVoices = Object.keys(loadedCard.character_voices || {});
   const currentInterpretation =
-    (loadedCard.character_voice_interpretations && loadedCard.character_voice_interpretations[selectedVoice]) ||
+    (loadedCard.character_voices && loadedCard.character_voices[selectedVoice]) ||
     loadedCard.pip_boy_interpretation ||
-    'No interpretation available';
+    '暫無解讀內容';
 
   return (
     <div
@@ -156,29 +196,37 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
         {/* Header */}
         <div className="bg-green-900/20 border-b border-green-900 p-6">
           <div className="flex items-start gap-4">
-            <div className="relative w-32 h-48 flex-shrink-0">
-              <Image
-                src={loadedCard.image_url}
-                alt={`${loadedCard.name} card`}
-                fill
-                className="object-cover rounded border-2 border-green-700"
-              />
-            </div>
+            {loadedCard.image_url && (
+              <div className="relative w-32 h-48 flex-shrink-0">
+                <Image
+                  src={loadedCard.image_url}
+                  alt={`${loadedCard.name} card`}
+                  fill
+                  className="object-cover rounded border-2 border-green-700"
+                />
+              </div>
+            )}
 
             <div className="flex-1">
               <h2 className="text-3xl font-bold text-green-400 mb-2">
                 {loadedCard.name}
               </h2>
               <div className="flex flex-wrap gap-2 mb-3">
-                <span className={`px-3 py-1 rounded text-sm font-bold ${getRarityColor(loadedCard.rarity_level)}`}>
-                  {loadedCard.rarity_level.toUpperCase()}
-                </span>
-                <span className={`px-3 py-1 rounded text-sm ${getKarmaColor(loadedCard.karma_alignment)}`}>
-                  {loadedCard.karma_alignment}
-                </span>
-                <span className="px-3 py-1 bg-blue-900/50 text-blue-300 rounded text-sm">
-                  {loadedCard.suit.replace(/_/g, ' ')}
-                </span>
+                {loadedCard.rarity_level && (
+                  <span className={`px-3 py-1 rounded text-sm font-bold ${getRarityColor(loadedCard.rarity_level)}`}>
+                    {loadedCard.rarity_level.toUpperCase()}
+                  </span>
+                )}
+                {loadedCard.karma_alignment && (
+                  <span className={`px-3 py-1 rounded text-sm ${getKarmaColor(loadedCard.karma_alignment)}`}>
+                    {loadedCard.karma_alignment}
+                  </span>
+                )}
+                {loadedCard.suit && (
+                  <span className="px-3 py-1 bg-blue-900/50 text-blue-300 rounded text-sm">
+                    {getSuitDisplayName(loadedCard.suit)}
+                  </span>
+                )}
               </div>
 
               {loadedCard.description && (
@@ -190,11 +238,68 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
         {/* Main content */}
         <div className="p-6 space-y-6">
+          {/* Reading Context (占卜情境) - Only show when provided */}
+          {readingContext && (
+            <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-2">
+                <PixelIcon name="compass" sizePreset="sm" variant="info" decorative />
+                <h3 className="text-blue-400 font-semibold text-sm uppercase">
+                  占卜情境
+                </h3>
+              </div>
+
+              {readingContext.question && (
+                <div>
+                  <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                    問題
+                  </h4>
+                  <p className="text-gray-300 text-sm">{readingContext.question}</p>
+                </div>
+              )}
+
+              <div className="grid md:grid-cols-2 gap-3">
+                {readingContext.spreadType && (
+                  <div>
+                    <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                      牌陣類型
+                    </h4>
+                    <p className="text-gray-300 text-sm">{readingContext.spreadType}</p>
+                  </div>
+                )}
+
+                {readingContext.positionName && (
+                  <div>
+                    <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                      位置
+                    </h4>
+                    <p className="text-gray-300 text-sm">
+                      {readingContext.positionName}
+                      {readingContext.cardIndex !== undefined && readingContext.totalCards && (
+                        <span className="text-blue-400 ml-2">
+                          ({readingContext.cardIndex + 1}/{readingContext.totalCards})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {readingContext.positionMeaning && (
+                <div>
+                  <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                    位置意義
+                  </h4>
+                  <p className="text-gray-300 text-sm">{readingContext.positionMeaning}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Keywords */}
           {loadedCard.keywords && loadedCard.keywords.length > 0 && (
             <div>
               <h3 className="text-green-400 font-semibold mb-2 text-sm uppercase">
-                Keywords
+                關鍵字
               </h3>
               <div className="flex flex-wrap gap-2">
                 {loadedCard.keywords.map((keyword, index) => (
@@ -213,14 +318,14 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-green-900/10 border border-green-900/50 rounded p-4">
               <h3 className="text-green-400 font-semibold mb-2 uppercase text-sm">
-                Upright
+                正位牌義
               </h3>
               <p className="text-gray-300 text-sm">{loadedCard.upright_meaning}</p>
             </div>
 
             <div className="bg-red-900/10 border border-red-900/50 rounded p-4">
               <h3 className="text-red-400 font-semibold mb-2 uppercase text-sm">
-                Reversed
+                逆位牌義
               </h3>
               <p className="text-gray-300 text-sm">{loadedCard.reversed_meaning}</p>
             </div>
@@ -229,7 +334,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Character Voice Interpretations */}
           <div>
             <h3 className="text-green-400 font-semibold mb-3 text-sm uppercase">
-              Character Interpretations
+              角色解讀
             </h3>
             <div className="flex flex-wrap gap-2 mb-3">
               {availableVoices.map((voice) => (
@@ -243,7 +348,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
                   }`}
                   aria-label={`${voice} voice`}
                 >
-                  {voice.replace(/_/g, ' ').toUpperCase()}
+                  {voiceNameMap[voice] || voice.replace(/_/g, ' ').toUpperCase()}
                 </button>
               ))}
             </div>
@@ -257,16 +362,16 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
             {loadedCard.fallout_reference && (
               <div>
                 <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
-                  Fallout Reference
+                  Fallout 參考
                 </h4>
                 <p className="text-gray-300 text-sm">{loadedCard.fallout_reference}</p>
               </div>
             )}
 
-            {loadedCard.vault_reference !== undefined && (
+            {loadedCard.vault_reference !== undefined && loadedCard.vault_reference !== null && (
               <div>
                 <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
-                  Vault Reference
+                  避難所編號
                 </h4>
                 <p className="text-gray-300 text-sm">Vault {loadedCard.vault_reference}</p>
               </div>
@@ -275,30 +380,32 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
 
           {/* Wasteland stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-              <div className="text-xs text-gray-400 mb-1 uppercase">Radiation</div>
-              <div className="text-green-400 font-bold">
-                {(loadedCard.radiation_factor * 100).toFixed(0)}%
-              </div>
-            </div>
-
-            {loadedCard.threat_level !== undefined && (
+            {loadedCard.radiation_factor !== undefined && !isNaN(loadedCard.radiation_factor) && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 mb-1 uppercase">Threat Level</div>
+                <div className="text-xs text-gray-400 mb-1 uppercase">輻射等級</div>
+                <div className="text-green-400 font-bold">
+                  {(loadedCard.radiation_factor * 100).toFixed(0)}%
+                </div>
+              </div>
+            )}
+
+            {loadedCard.threat_level !== undefined && loadedCard.threat_level !== null && (
+              <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
+                <div className="text-xs text-gray-400 mb-1 uppercase">威脅等級</div>
                 <div className="text-red-400 font-bold">{loadedCard.threat_level}</div>
               </div>
             )}
 
             {loadedCard.element && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 mb-1 uppercase">Element</div>
+                <div className="text-xs text-gray-400 mb-1 uppercase">元素</div>
                 <div className="text-blue-400 font-bold">{loadedCard.element}</div>
               </div>
             )}
 
             {loadedCard.astrological_association && (
               <div className="bg-black/40 border border-green-900/50 rounded p-3 text-center">
-                <div className="text-xs text-gray-400 mb-1 uppercase">Astrology</div>
+                <div className="text-xs text-gray-400 mb-1 uppercase">星座</div>
                 <div className="text-purple-400 font-bold">
                   {loadedCard.astrological_association}
                 </div>
@@ -310,7 +417,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {loadedCard.symbolism && (
             <div>
               <h4 className="text-green-400 font-semibold mb-2 text-xs uppercase">
-                Symbolism
+                象徵意義
               </h4>
               <p className="text-gray-300 text-sm">{loadedCard.symbolism}</p>
             </div>
@@ -320,7 +427,7 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {loadedCard.wasteland_humor && (
             <div className="bg-amber-900/20 border border-amber-800/50 rounded p-4">
               <h4 className="text-amber-400 font-semibold mb-2 text-xs uppercase">
-                Wasteland Wisdom
+                廢土智慧
               </h4>
               <p className="text-amber-300 text-sm italic">{loadedCard.wasteland_humor}</p>
             </div>
@@ -329,117 +436,11 @@ export function CardDetailModal({ card, isOpen, onClose }: CardDetailModalProps)
           {/* Story Mode Section */}
           {loadedCard.story && (
             <div className="mt-6 border-t border-green-900/50 pt-6">
-              {/* Story Header with Collapse/Expand Button */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-green-400 font-semibold text-lg uppercase flex items-center gap-2">
-                  <PixelIcon name="book" sizePreset="sm" variant="primary" decorative />
-                  <span>廢土故事模式</span>
-                </h3>
-                <button
-                  onClick={() => setIsStoryExpanded(!isStoryExpanded)}
-                  className="px-3 py-1 text-xs text-green-400 border border-green-700 rounded hover:bg-green-900/30 transition-colors flex items-center gap-1"
-                  aria-label={isStoryExpanded ? '收起故事' : '展開故事'}
-                  aria-expanded={isStoryExpanded}
-                >
-                  {isStoryExpanded ? (
-                    <>
-                      <PixelIcon name="chevron-up" sizePreset="xs" decorative />
-                      <span>收起</span>
-                    </>
-                  ) : (
-                    <>
-                      <PixelIcon name="chevron-down" sizePreset="xs" decorative />
-                      <span>展開</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Story Content (Collapsible) */}
-              {isStoryExpanded && (
-                <div className="space-y-4">
-                  {/* Story Section */}
-                  <StorySection story={loadedCard.story} audioUrls={audioUrls || {}} />
-
-                  {/* Loading State */}
-                  {isAudioLoading && (
-                    <div className="bg-blue-900/20 border border-blue-800/50 rounded p-3 flex items-start gap-2">
-                      <PixelIcon name="loader" sizePreset="xs" variant="info" animation="spin" decorative />
-                      <div className="text-blue-400 text-xs">
-                        <p className="font-semibold mb-1">載入中</p>
-                        <p className="text-blue-300/80">
-                          正在生成語音檔案，請稍候...
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Error State */}
-                  {audioError && !shouldUseFallback && (
-                    <div className="bg-red-900/20 border border-red-800/50 rounded p-3 flex items-start gap-2">
-                      <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" decorative />
-                      <div className="text-red-400 text-xs">
-                        <p className="font-semibold mb-1">錯誤</p>
-                        <p className="text-red-300/80">{audioError}</p>
-                        <button
-                          onClick={generateAudio}
-                          className="mt-2 px-2 py-1 bg-red-700/50 hover:bg-red-700 rounded text-xs transition-colors"
-                        >
-                          重試
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Fallback Message */}
-                  {shouldUseFallback && (
-                    <div className="bg-yellow-900/20 border border-yellow-800/50 rounded p-3 flex items-start gap-2">
-                      <PixelIcon name="alert-triangle" sizePreset="xs" variant="warning" decorative />
-                      <div className="text-yellow-400 text-xs">
-                        <p className="font-semibold mb-1">使用瀏覽器朗讀</p>
-                        <p className="text-yellow-300/80">
-                          伺服器音檔暫時無法使用，已切換至瀏覽器朗讀功能。
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Audio Player Section */}
-                  {!isAudioLoading && audioUrls && Object.keys(audioUrls).length > 0 && (
-                    <div className="space-y-3">
-                      {/* Character Voice Selector */}
-                      <div>
-                        <h4 className="text-green-400 text-sm font-semibold mb-2 flex items-center gap-2">
-                          <PixelIcon name="user" sizePreset="xs" variant="primary" decorative />
-                          <span>角色語音</span>
-                        </h4>
-                        <CharacterVoiceSelector
-                          characters={Object.keys(audioUrls)}
-                          selectedCharacter={selectedCharacterKey}
-                          onSelect={setSelectedCharacterKey}
-                        />
-                      </div>
-
-                      {/* Audio Player */}
-                      {selectedCharacterKey && audioUrls[selectedCharacterKey] && (
-                        <div>
-                          <h4 className="text-green-400 text-sm font-semibold mb-2 flex items-center gap-2">
-                            <PixelIcon name="music" sizePreset="xs" variant="primary" decorative />
-                            <span>故事朗讀</span>
-                          </h4>
-                          <StoryAudioPlayer
-                            audioUrl={audioUrls[selectedCharacterKey]}
-                            characterName={selectedCharacterKey.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
-                            characterKey={selectedCharacterKey}
-                            storyText={loadedCard.story?.background}
-                            useFallback={shouldUseFallback}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <WastelandStorySection
+                story={loadedCard.story}
+                audioUrls={loadedCard.audioUrls}
+                cardName={loadedCard.name}
+              />
             </div>
           )}
         </div>
