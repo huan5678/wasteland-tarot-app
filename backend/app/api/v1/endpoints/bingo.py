@@ -695,8 +695,11 @@ async def get_bingo_history(
                 )
             )
 
-        # Query historical card (convert UUID to string for history tables)
+        # 智能查詢：先查歷史表，找不到再查當前表
+        # 這樣可以處理尚未歸檔的當月資料
         user_id_str = str(current_user.id)
+
+        # Step 1: 嘗試查詢歷史表
         result = await db.execute(
             select(UserBingoCardHistory)
             .where(
@@ -708,66 +711,129 @@ async def get_bingo_history(
         )
         card_history = result.scalar_one_or_none()
 
+        # Step 2: 如果歷史表沒有，查詢當前表（處理尚未歸檔的情況）
+        card_current = None
         if not card_history:
+            result = await db.execute(
+                select(UserBingoCard)
+                .where(
+                    and_(
+                        UserBingoCard.user_id == current_user.id,
+                        UserBingoCard.month_year == month_date
+                    )
+                )
+            )
+            card_current = result.scalar_one_or_none()
+
+        # Step 3: 兩個表都沒有才回傳 404
+        if not card_history and not card_current:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=format_error_response(
                     error_code="NO_HISTORY_DATA",
-                    message=f"{month} 無歷史記錄",
+                    message=f"{month} 無記錄",
                     path=f"/api/v1/bingo/history/{month}"
                 )
             )
 
-        # Query claim history
-        claim_result = await db.execute(
-            select(UserNumberClaimHistory.number)
-            .where(
-                and_(
-                    UserNumberClaimHistory.user_id == user_id_str,
-                    UserNumberClaimHistory.card_id == card_history.id
+        # 根據資料來源選擇查詢方式
+        if card_history:
+            # 資料在歷史表
+            card_id = card_history.id
+            card_data = card_history.card_data
+
+            # 查詢歷史領取記錄
+            claim_result = await db.execute(
+                select(UserNumberClaimHistory.number)
+                .where(
+                    and_(
+                        UserNumberClaimHistory.user_id == user_id_str,
+                        UserNumberClaimHistory.card_id == card_id
+                    )
+                )
+                .order_by(UserNumberClaimHistory.claim_date)
+            )
+            claimed_numbers = list(claim_result.scalars().all())
+
+            # 查詢歷史獎勵
+            reward_result = await db.execute(
+                select(BingoRewardHistory)
+                .where(
+                    and_(
+                        BingoRewardHistory.user_id == user_id_str,
+                        BingoRewardHistory.month_year == month_date
+                    )
                 )
             )
-            .order_by(UserNumberClaimHistory.claim_date)
-        )
-        claimed_numbers = list(claim_result.scalars().all())
+            reward_record = reward_result.scalar_one_or_none()
 
-        # Calculate line count
+            reward_response = None
+            if reward_record:
+                reward_response = RewardResponse(
+                    id=reward_record.id,
+                    user_id=reward_record.user_id,
+                    card_id=card_id,
+                    month_year=month,
+                    line_types=reward_record.line_types,
+                    line_count=len(reward_record.line_types),
+                    issued_at=reward_record.issued_at_original.isoformat()
+                )
+
+        else:
+            # 資料在當前表（尚未歸檔）
+            card_id = str(card_current.id)
+            card_data = card_current.card_data
+
+            # 查詢當前領取記錄
+            claim_result = await db.execute(
+                select(UserNumberClaim.number)
+                .where(
+                    and_(
+                        UserNumberClaim.user_id == current_user.id,
+                        UserNumberClaim.card_id == card_current.id
+                    )
+                )
+                .order_by(UserNumberClaim.claim_date)
+            )
+            claimed_numbers = list(claim_result.scalars().all())
+
+            # 查詢當前獎勵
+            reward_result = await db.execute(
+                select(BingoReward)
+                .where(
+                    and_(
+                        BingoReward.user_id == current_user.id,
+                        BingoReward.month_year == month_date
+                    )
+                )
+            )
+            reward_record = reward_result.scalar_one_or_none()
+
+            reward_response = None
+            if reward_record:
+                reward_response = RewardResponse(
+                    id=str(reward_record.id),
+                    user_id=str(reward_record.user_id),
+                    card_id=card_id,
+                    month_year=month,
+                    line_types=reward_record.line_types,
+                    line_count=len(reward_record.line_types),
+                    issued_at=reward_record.issued_at.isoformat()
+                )
+
+        # 計算連線數
         line_service = LineDetectionService(db)
         line_count = line_service.detect_lines_static(
-            card_data=card_history.card_data,
+            card_data=card_data,
             claimed_numbers=claimed_numbers
         )
 
-        # Query reward history
-        reward_result = await db.execute(
-            select(BingoRewardHistory)
-            .where(
-                and_(
-                    BingoRewardHistory.user_id == user_id_str,
-                    BingoRewardHistory.month_year == month_date
-                )
-            )
-        )
-        reward_history = reward_result.scalar_one_or_none()
-
-        reward_response = None
-        if reward_history:
-            reward_response = RewardResponse(
-                id=reward_history.id,
-                user_id=reward_history.user_id,
-                card_id=card_history.id,
-                month_year=month,
-                line_types=reward_history.line_types,
-                line_count=len(reward_history.line_types),
-                issued_at=reward_history.issued_at_original.isoformat()
-            )
-
         return BingoHistoryResponse(
             month_year=month,
-            card_data=card_history.card_data,
+            card_data=card_data,
             claimed_numbers=claimed_numbers,
             line_count=line_count,
-            had_reward=reward_history is not None,
+            had_reward=reward_record is not None if 'reward_record' in locals() else False,
             reward=reward_response
         )
 
