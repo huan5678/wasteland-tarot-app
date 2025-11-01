@@ -26,11 +26,15 @@
 1. WHEN 使用者訪問 `/profile` 頁面並開啟願望彈窗時 THEN 願望系統 SHALL 檢查該使用者當日（UTC+8 時區）是否已提交願望
 
 2. IF 使用者當日尚未提交願望 THEN 願望系統 SHALL 顯示願望輸入表單，包含：
-   - 文字輸入框（支援多行文字）
+   - Markdown 編輯器（上下兩欄佈局：上方編輯區、下方即時預覽區）
+   - Markdown 工具列（快速插入語法按鈕）
    - 提交按鈕
-   - 字數統計顯示（最多 500 字）
+   - 字數統計顯示（最多 500 字，計算**渲染後純文字長度**）
 
-3. WHEN 使用者在輸入框輸入文字時 THEN 願望系統 SHALL 即時更新字數統計，並在超過 500 字時顯示警告訊息
+3. WHEN 使用者在編輯器輸入 Markdown 文字時 THEN 願望系統 SHALL 執行以下操作：
+   - 即時更新下方預覽區的渲染結果
+   - 即時更新字數統計（計算渲染後純文字長度）
+   - 在超過 500 字時顯示警告訊息
 
 4. WHEN 使用者點擊提交按鈕時 AND 願望內容為空白 THEN 願望系統 SHALL 顯示錯誤訊息「願望內容不可為空」並阻止提交
 
@@ -52,9 +56,9 @@
 #### Acceptance Criteria
 
 1. WHERE 願望彈窗的下半部分 THE 願望系統 SHALL 顯示該使用者的歷史願望列表，包含以下資訊：
-   - 願望內容（文字）
+   - 願望內容（**Markdown 渲染後的 HTML**）
    - 提交時間（格式：YYYY-MM-DD HH:mm，UTC+8 時區）
-   - 管理員回覆內容（如有回覆）
+   - 管理員回覆內容（如有回覆，**Markdown 渲染後的 HTML**）
    - 管理員回覆時間（如有回覆）
    - 編輯按鈕（符合編輯條件時顯示）
 
@@ -80,9 +84,9 @@
 2. IF 願望已收到管理員回覆 OR 願望已被編輯過（`has_been_edited = true`） THEN 願望系統 SHALL 隱藏「編輯」按鈕，使該願望進入鎖定狀態
 
 3. WHEN 使用者點擊「編輯」按鈕時 THEN 願望系統 SHALL 將該願望卡片切換為編輯模式：
-   - 顯示可編輯的文字輸入框，預填原願望內容
+   - 顯示 Markdown 編輯器（上下兩欄：編輯區 + 預覽區），預填原願望 Markdown 內容
    - 顯示「儲存」與「取消」按鈕
-   - 顯示字數統計（最多 500 字）
+   - 顯示字數統計（最多 500 字，計算渲染後純文字長度）
 
 4. WHEN 使用者點擊「取消」按鈕時 THEN 願望系統 SHALL 恢復原願望內容並退出編輯模式
 
@@ -136,9 +140,9 @@
 #### Acceptance Criteria
 
 1. WHEN 管理員點擊願望卡片的「回覆」按鈕時 THEN 願望系統 SHALL 展開該願望的回覆表單，包含：
-   - 多行文字輸入框
+   - Markdown 編輯器（上下兩欄：編輯區 + 預覽區）
    - 「提交回覆」與「取消」按鈕
-   - 字數統計（最多 1000 字）
+   - 字數統計（最多 1000 字，計算渲染後純文字長度）
 
 2. WHEN 管理員輸入回覆內容並點擊「提交回覆」按鈕時 AND 回覆內容有效（1-1000 字） THEN 願望系統 SHALL 執行以下操作：
    - 儲存回覆內容至資料庫（`admin_reply` 欄位）
@@ -296,6 +300,68 @@
 
 ---
 
+### Requirement 11: Markdown 格式支援
+**Objective:** 作為使用者或管理員，我希望能使用 Markdown 格式編寫願望和回覆，以便更清楚地表達結構化內容
+
+#### Acceptance Criteria
+
+1. WHERE 願望輸入表單或管理員回覆表單 THE 願望系統 SHALL 提供 Markdown 編輯器，包含以下元件：
+   - 上方編輯區：多行文字輸入框（接受 Markdown 語法）
+   - 下方預覽區：即時渲染的 HTML 預覽
+   - Markdown 工具列：快速插入語法的按鈕（粗體、斜體、清單、連結等）
+
+2. WHEN 使用者或管理員在編輯區輸入 Markdown 文字時 THEN 願望系統 SHALL 即時渲染預覽區的 HTML 內容，延遲時間 < 200ms
+
+3. WHERE Markdown 語法支援範圍 THE 願望系統 SHALL 支援以下基礎語法：
+   - **標題**：`#`（H1）、`##`（H2）、`###`（H3）
+   - **粗體**：`**text**` 或 `__text__`
+   - **斜體**：`*text*` 或 `_text_`
+   - **無序清單**：`-`、`*`、`+`
+   - **有序清單**：`1.`、`2.`
+   - **連結**：`[text](url)`
+   - **引用區塊**：`>`
+   - **行內程式碼**：`` `code` ``
+   - **程式碼區塊**：` ```language ` （支援語法高亮）
+
+4. WHERE Markdown 安全性限制 THE 願望系統 SHALL 禁止以下語法與功能：
+   - 圖片嵌入（`![alt](url)`）
+   - 原始 HTML 標籤（防止 XSS 攻擊）
+   - 表格語法（複雜度過高）
+   - JavaScript 連結（`javascript:` 協定）
+
+5. WHEN 使用者或管理員嘗試使用禁止的語法時 THEN 願望系統 SHALL 在預覽區忽略該語法（顯示為純文字），並在工具列旁顯示提示訊息「不支援此語法」
+
+6. WHERE 字數統計邏輯 THE 願望系統 SHALL 計算**渲染後的純文字長度**，而非原始 Markdown 長度：
+   - 範例：`**粗體**` 計為 2 字（「粗體」），而非 6 字
+   - 範例：`[連結](https://example.com)` 計為 2 字（「連結」），而非完整 URL 長度
+
+7. WHEN 願望或回覆內容儲存至資料庫時 THEN 願望系統 SHALL 儲存原始 Markdown 文字至 `content` 或 `admin_reply` 欄位
+
+8. WHEN 願望或回覆內容顯示於歷史列表時 THEN 願望系統 SHALL 使用 `react-markdown` 函式庫渲染 Markdown 為 HTML，並套用以下設定：
+   - 啟用 `rehype-sanitize` 插件（清除潛在危險的 HTML）
+   - 啟用 `rehype-highlight` 插件（程式碼語法高亮）
+   - 套用 Fallout Pip-Boy 主題樣式（綠色系配色）
+
+9. WHERE Markdown 編輯器 UI 設計 THE 願望系統 SHALL 遵循以下設計規範：
+   - 編輯區與預覽區等高，並排或上下佈局（依彈窗寬度自適應）
+   - 使用 Cubic 11 像素字體顯示編輯區內容
+   - 預覽區背景色稍深於編輯區，以視覺區隔
+   - Markdown 工具列使用 PixelIcon 圖示（如 `bold`、`italic`、`list`）
+
+10. WHEN 使用者點擊 Markdown 工具列按鈕時 THEN 願望系統 SHALL 執行以下操作：
+    - 在游標位置插入對應的 Markdown 語法
+    - 如有選取文字，則包裹選取文字（例如選取「文字」後點擊粗體 → `**文字**`）
+    - 自動聚焦至編輯區並將游標移至適當位置
+
+11. WHERE 無障礙性考量 THE Markdown 編輯器 SHALL 包含以下 ARIA 標籤：
+    - `role="textbox"` 與 `aria-multiline="true"`：編輯區
+    - `role="region"` 與 `aria-label="Markdown 預覽"`：預覽區
+    - `aria-label` 與 `aria-pressed`：工具列按鈕（標示選取狀態）
+
+12. WHEN 管理員回覆使用 Markdown 格式時 THEN 使用者端的願望卡片 SHALL 正確渲染管理員回覆的 Markdown 內容，並套用相同的安全性過濾
+
+---
+
 ## Non-Functional Requirements
 
 ### 效能需求
@@ -354,14 +420,19 @@
 ```
 - id: UUID (PK)
 - user_id: UUID (FK to User)
-- content: String (1-500 字)
+- content: String (1-500 字，儲存原始 Markdown 文字)
 - created_at: Timestamp (UTC)
 - updated_at: Timestamp (UTC)
 - has_been_edited: Boolean (預設 false)
-- admin_reply: String (nullable, 1-1000 字)
+- admin_reply: String (nullable, 1-1000 字，儲存原始 Markdown 文字)
 - admin_reply_timestamp: Timestamp (nullable, UTC)
 - is_hidden: Boolean (預設 false)
 ```
+
+**說明：**
+- `content` 和 `admin_reply` 欄位儲存原始 Markdown 文字
+- 前端渲染時使用 `react-markdown` 轉換為 HTML
+- 字數限制計算渲染後的純文字長度（不含 Markdown 語法符號）
 
 ### API Endpoints 概要
 
@@ -403,6 +474,81 @@
 6. 成功 → 回覆內容顯示 + 狀態更新為「已回覆」
 7. 失敗 → 顯示錯誤訊息 + 保留輸入內容
 ```
+
+---
+
+## Appendix C: Markdown 技術堆疊
+
+### 前端函式庫
+
+**Markdown 渲染器**
+- **套件**：`react-markdown` (^9.0.0)
+- **用途**：將 Markdown 文字轉換為 React 元件（HTML）
+- **特性**：
+  - 安全性高（預設不渲染原始 HTML）
+  - 可擴展（透過 remark/rehype 插件）
+  - 輕量且效能佳
+
+**安全性插件**
+- **套件**：`rehype-sanitize` (^6.0.0)
+- **用途**：清除潛在危險的 HTML 標籤與屬性
+- **配置**：
+  - 禁止 `<script>`、`<iframe>`、`<object>` 等標籤
+  - 禁止 `javascript:` 協定連結
+  - 禁止 `on*` 事件屬性（如 `onclick`）
+
+**程式碼高亮插件**
+- **套件**：`rehype-highlight` (^7.0.0)
+- **用途**：為程式碼區塊提供語法高亮
+- **主題**：自訂 Fallout Pip-Boy 配色（綠色系）
+
+**Markdown 編輯器（可選）**
+- **選項 1（推薦）**：自訂 Textarea + Preview（最輕量）
+  - 使用原生 `<textarea>` + `react-markdown` 預覽
+  - 完全自訂 UI 以符合 Fallout 風格
+
+- **選項 2**：`react-simplemde-editor`
+  - 功能完整的 Markdown 編輯器
+  - 需要自訂 CSS 以符合 Pip-Boy 主題
+
+### 字數計算工具
+
+**套件**：`strip-markdown` (^6.0.0) 或自訂函式
+- **用途**：移除 Markdown 語法符號，取得純文字
+- **範例**：
+  ```javascript
+  import stripMarkdown from 'strip-markdown'
+  import { remark } from 'remark'
+
+  function getPlainTextLength(markdown: string): number {
+    const processed = remark()
+      .use(stripMarkdown)
+      .processSync(markdown)
+    return processed.toString().trim().length
+  }
+  ```
+
+### Markdown 工具列圖示
+
+**套件**：PixelIcon（基於 RemixIcon）
+- `bold-fill` - 粗體按鈕
+- `italic-fill` - 斜體按鈕
+- `list-unordered` - 無序清單
+- `list-ordered` - 有序清單
+- `link` - 插入連結
+- `code-box-line` - 程式碼區塊
+- `double-quotes-l` - 引用區塊
+
+### 安全性策略
+
+**XSS 防護**
+1. 使用 `rehype-sanitize` 清除危險標籤
+2. 禁止 `dangerouslySetInnerHTML`（`react-markdown` 不使用此屬性）
+3. 後端額外驗證：檢查 Markdown 是否包含禁止語法
+
+**URL 白名單（連結）**
+- 僅允許 `http://` 和 `https://` 協定
+- 禁止 `javascript:`、`data:`、`file://` 等協定
 
 ---
 
