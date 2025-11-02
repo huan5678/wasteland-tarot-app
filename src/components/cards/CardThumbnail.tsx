@@ -282,7 +282,6 @@ export function CardThumbnail({
             {/* 卡背 */}
             <div className="absolute inset-0 w-full h-full [backface-visibility:hidden]">
               <PipBoyCard
-                interactive={false}
                 padding="none"
                 className="h-full overflow-hidden relative"
               >
@@ -324,7 +323,7 @@ export function CardThumbnail({
             {/* 卡面 - 需要先旋轉 180 度，這樣外層翻轉時才會正面朝前 */}
             <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
               <PipBoyCard
-                interactive={!!onClick}
+                isClickable={!!onClick}
                 padding="none"
                 className="h-full overflow-hidden transition-all duration-300 relative"
               >
@@ -463,7 +462,7 @@ export function CardThumbnail({
       style={tiltStyle}
     >
       <PipBoyCard
-        interactive
+        isClickable
         padding="none"
         className="h-full overflow-hidden transition-all duration-300 relative"
       >
