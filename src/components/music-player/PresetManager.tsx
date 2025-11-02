@@ -49,47 +49,52 @@ const PresetButton: React.FC<PresetButtonProps> = ({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => onLoad(preset)}
-        className={cn(
-          'relative w-full px-4 py-3 rounded-lg border-2 text-left',
-          'transition-all duration-200',
-          'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-          'group',
-          // 啟用狀態：綠色背景填滿
-          isActive
-            ? 'bg-pip-boy-green/30 border-pip-boy-green text-pip-boy-green'
-            : 'bg-gray-800 border-gray-600 text-pip-boy-green hover:border-pip-boy-green/70'
-        )}
-      >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="font-medium text-sm truncate">{preset.name}</div>
-            {preset.description && (
-              <div className="text-xs text-gray-400 mt-1 line-clamp-2">
-                {preset.description}
-              </div>
-            )}
-          </div>
-
-          {/* 刪除按鈕（僅使用者 Preset） */}
-          {!isSystemPreset && onDelete && (
-            <button
-              type="button"
-              onClick={handleDelete}
-              className={cn(
-                'opacity-0 group-hover:opacity-100 transition-opacity',
-                'p-1 rounded hover:bg-red-900/50',
-                'focus:outline-none focus:opacity-100'
-              )}
-              aria-label="刪除"
-            >
-              <PixelIcon name="delete-bin" sizePreset="xs" variant="error" aria-label="刪除" />
-            </button>
+      <div className="relative group">
+        <button
+          type="button"
+          onClick={() => onLoad(preset)}
+          className={cn(
+            'relative w-full px-4 py-3 rounded-lg border-2 text-left',
+            'transition-all duration-200',
+            'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
+            // 啟用狀態：綠色背景填滿
+            isActive
+              ? 'bg-pip-boy-green/30 border-pip-boy-green text-pip-boy-green'
+              : 'bg-gray-800 border-gray-600 text-pip-boy-green hover:border-pip-boy-green/70'
           )}
-        </div>
-      </button>
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="font-medium text-sm truncate">{preset.name}</div>
+              {preset.description && (
+                <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+                  {preset.description}
+                </div>
+              )}
+            </div>
+            {/* 預留刪除按鈕空間 */}
+            {!isSystemPreset && onDelete && <div className="w-6" />}
+          </div>
+        </button>
+
+        {/* 刪除按鈕（移到按鈕外面，使用絕對定位） */}
+        {!isSystemPreset && onDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            className={cn(
+              'absolute top-3 right-3',
+              'opacity-0 group-hover:opacity-100 transition-opacity',
+              'p-1 rounded hover:bg-red-900/50',
+              'focus:outline-none focus:opacity-100',
+              'z-10'
+            )}
+            aria-label="刪除"
+          >
+            <PixelIcon name="delete-bin" sizePreset="xs" variant="error" aria-label="刪除" />
+          </button>
+        )}
+      </div>
 
       {/* 刪除確認對話框 */}
       {showDeleteDialog && (
@@ -163,35 +168,26 @@ const PresetButton: React.FC<PresetButtonProps> = ({
  * ```
  */
 export const PresetManager: React.FC = () => {
-  const {
-    pattern,
-    systemPresets,
-    userPresets,
-    loadPreset,
-    deletePreset,
-    fetchSystemPresets,
-    fetchUserPresets,
-    isLoading,
-    error,
-  } = useRhythmEditorStore((state) => ({
-    pattern: state.pattern,
-    systemPresets: state.systemPresets,
-    userPresets: state.userPresets,
-    loadPreset: state.loadPreset,
-    deletePreset: state.deletePreset,
-    fetchSystemPresets: state.fetchSystemPresets,
-    fetchUserPresets: state.fetchUserPresets,
-    isLoading: state.isLoading,
-    error: state.error,
-  }));
+  // 使用穩定的 selector 避免無限迴圈
+  const systemPresets = useRhythmEditorStore((state) => state.systemPresets);
+  const userPresets = useRhythmEditorStore((state) => state.userPresets);
+  const loadPreset = useRhythmEditorStore((state) => state.loadPreset);
+  const deletePreset = useRhythmEditorStore((state) => state.deletePreset);
+  const isLoading = useRhythmEditorStore((state) => state.isLoading);
+  const error = useRhythmEditorStore((state) => state.error);
 
   const [activePresetId, setActivePresetId] = useState<string | null>(null);
+  const [hasLoadedPresets, setHasLoadedPresets] = useState(false);
 
-  // 載入 Presets
+  // 載入 Presets（只執行一次）
+  // 注意：fetchUserPresets 會同時取得系統預設和使用者預設
   useEffect(() => {
-    fetchSystemPresets();
-    fetchUserPresets();
-  }, [fetchSystemPresets, fetchUserPresets]);
+    if (!hasLoadedPresets) {
+      const store = useRhythmEditorStore.getState();
+      store.fetchUserPresets();
+      setHasLoadedPresets(true);
+    }
+  }, [hasLoadedPresets]);
 
   // 載入 Preset
   const handleLoadPreset = (preset: UserRhythmPreset) => {

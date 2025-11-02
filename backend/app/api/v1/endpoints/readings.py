@@ -61,6 +61,7 @@ from app.core.dependencies import get_current_user  # Placeholder for auth
 from app.services.analytics_service import AnalyticsService
 from app.services.achievement_service import AchievementService
 from app.services.achievement_background_tasks import schedule_achievement_check
+from app.services.tasks_background_tasks import schedule_task_progress_update
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -272,6 +273,19 @@ async def create_reading(
         )
         logger.debug(
             f"Scheduled achievement check for user {current_user.id} "
+            f"after completing reading {reading_session.id}"
+        )
+
+        # ===== Task Progress Update Integration =====
+        # Update daily_reading and weekly_readings task progress
+        background_tasks.add_task(
+            schedule_task_progress_update,
+            user_id=current_user.id,
+            task_keys=['daily_reading', 'weekly_readings'],
+            increment=1
+        )
+        logger.debug(
+            f"Scheduled task progress update for user {current_user.id} "
             f"after completing reading {reading_session.id}"
         )
 

@@ -82,6 +82,16 @@ from .achievement import (
 from .reading_journal import (
     ReadingJournal,
 )
+from .gamification import (
+    KarmaLog,
+    UserKarma,
+    DailyTask,
+    UserDailyTask,
+    WeeklyTask,
+    UserWeeklyTask,
+    UserActivityStats,
+    UserLoginStreak,
+)
 
 __all__ = [
     "Base",
@@ -151,4 +161,13 @@ __all__ = [
     "AchievementStatus",
     # Journal Models
     "ReadingJournal",
+    # Dashboard Gamification Models
+    "KarmaLog",
+    "UserKarma",
+    "DailyTask",
+    "UserDailyTask",
+    "WeeklyTask",
+    "UserWeeklyTask",
+    "UserActivityStats",
+    "UserLoginStreak",
 ]

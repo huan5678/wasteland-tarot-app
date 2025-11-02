@@ -24,7 +24,7 @@ const cardVariants = cva(
   // 基礎樣式 - 所有變體共用
   [
     'border-2 border-pip-boy-green',
-    'bg-black/80 backdrop-blur-sm',
+    'bg-black/75 backdrop-blur-sm',
     'text-pip-boy-green',
     'transition-all duration-300',
   ],

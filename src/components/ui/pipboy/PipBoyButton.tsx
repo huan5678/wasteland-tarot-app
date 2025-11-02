@@ -53,12 +53,12 @@ const buttonVariants = cva(
           'hover:bg-[#ef4444]/80 hover:shadow-[0_0_15px_rgba(239,68,68,0.5)]',
           'active:bg-[#ef4444]/60',
         ],
-        // secondary: 次要操作 - Radiation Orange
+        // secondary: 次要操作 - Pip-Boy Bright Green (參考 Fallout 4 Pip-Boy UI)
         secondary: [
-          'bg-[#ff8800] text-black',
-          'border-2 border-[#ff8800]',
-          'hover:bg-[#ff8800]/80 hover:shadow-[0_0_15px_rgba(255,136,0,0.5)]',
-          'active:bg-[#ff8800]/60',
+          'bg-[#4cfe51] text-black',
+          'border-2 border-[#4cfe51]',
+          'hover:bg-[#4cfe51]/85 hover:shadow-[0_0_20px_rgba(76,254,81,0.6)]',
+          'active:bg-[#4cfe51]/70 active:shadow-[0_0_10px_rgba(76,254,81,0.4)]',
         ],
         // ghost: 幽靈按鈕 - 無邊框
         ghost: [

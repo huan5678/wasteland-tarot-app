@@ -30,6 +30,8 @@ from app.api.v1.endpoints import (
     share,
     achievements,
     journal,
+    karma,
+    tasks,
 )
 from app.api import oauth, webauthn
 
@@ -194,4 +196,16 @@ api_router.include_router(
 api_router.include_router(
     journal.router,
     tags=["📔 Journal"]
+)
+
+# Karma endpoints - 業力系統
+api_router.include_router(
+    karma.router,
+    tags=["💫 Karma"]
+)
+
+# Tasks endpoints - 任務系統
+api_router.include_router(
+    tasks.router,
+    tags=["📋 Tasks"]
 )

@@ -101,24 +101,27 @@ export const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
   return (
     <div className="flex items-center gap-2 sm:gap-3">
       {/* 軌道標籤 */}
-      <div className="w-16 sm:w-20 text-left">
+      <div className="w-16 sm:w-20 flex-shrink-0 text-left">
         <span className="text-pip-boy-green text-xs sm:text-sm font-medium uppercase tracking-wide">
           {TRACK_LABELS[track]}
         </span>
       </div>
 
-      {/* 16 個步驟按鈕 */}
-      <div className="flex-1 grid grid-cols-16 gap-1 sm:gap-2">
+      {/* 16 個步驟按鈕 - 使用固定寬度確保不換行 */}
+      <div className="flex gap-1">
         {pattern.map((isActive, step) => {
           const isPlayhead = isPlaying && currentStep === step;
-          const showDivider = step % 4 === 0 && step !== 0;
+          // 每 4 步驟增加右側間距作為視覺分組
+          const isGroupEnd = (step + 1) % 4 === 0 && step !== 15;
 
           return (
-            <React.Fragment key={step}>
-              {/* 每 4 步驟顯示視覺分隔線 */}
-              {showDivider && (
-                <div className="w-px bg-pip-boy-green/30 -mx-0.5" aria-hidden="true" />
+            <div
+              key={step}
+              className={cn(
+                'w-8 sm:w-10 flex-shrink-0',
+                isGroupEnd && 'mr-1'
               )}
+            >
               <StepButton
                 track={track}
                 step={step}
@@ -126,7 +129,7 @@ export const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
                 isPlayhead={isPlayhead}
                 onClick={onToggleStep}
               />
-            </React.Fragment>
+            </div>
           );
         })}
       </div>

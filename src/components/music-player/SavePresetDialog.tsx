@@ -47,12 +47,11 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
   onClose,
   onSaveSuccess,
 }) => {
-  const { savePreset, isLoading, error, clearError } = useRhythmEditorStore((state) => ({
-    savePreset: state.savePreset,
-    isLoading: state.isLoading,
-    error: state.error,
-    clearError: state.clearError,
-  }));
+  // 使用穩定的 selector 避免無限迴圈
+  const savePreset = useRhythmEditorStore((state) => state.savePreset);
+  const isLoading = useRhythmEditorStore((state) => state.isLoading);
+  const error = useRhythmEditorStore((state) => state.error);
+  const clearError = useRhythmEditorStore((state) => state.clearError);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');

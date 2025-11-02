@@ -143,6 +143,11 @@ async def test_engine(temp_db_url):
             UserAnalytics, AnalyticsEvent,
             UserBingoCard, DailyBingoNumber
         )
+        from app.models.gamification import (
+            KarmaLog, UserKarma,
+            DailyTask, WeeklyTask, UserDailyTask, UserWeeklyTask,
+            UserActivityStats, UserLoginStreak
+        )
         from app.models.base import Base
 
         async with engine.begin() as conn:

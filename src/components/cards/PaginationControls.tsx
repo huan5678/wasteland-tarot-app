@@ -103,7 +103,8 @@ export function PaginationControls({
         disabled={disabled}
         className={cn(
           'min-w-[44px] min-h-[44px]', // 行動裝置最小觸控尺寸
-          'flex items-center gap-2'
+          'flex items-center gap-2',
+          'px-6 md:px-8' // 增加左右 padding
         )}
         aria-label={ariaLabel}
         aria-disabled={disabled}

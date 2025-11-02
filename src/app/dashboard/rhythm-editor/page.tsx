@@ -63,93 +63,72 @@ export default function RhythmEditorPage() {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* 響應式佈局：桌面 3 欄，手機單欄 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column: 音序器 + 控制 (桌面佔 2 欄) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* 音序器網格 */}
-            <section
-              className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6"
-              aria-labelledby="sequencer-heading"
+        {/* 音序器與播放控制 */}
+        <section
+          className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6 space-y-6"
+          aria-labelledby="sequencer-heading"
+        >
+          {/* 16 步驟音序器 */}
+          <div>
+            <h2
+              id="sequencer-heading"
+              className="text-xl font-bold mb-4 flex items-center gap-2"
             >
-              <h2
-                id="sequencer-heading"
-                className="text-xl font-bold mb-4 flex items-center gap-2"
-              >
-                <PixelIcon
-                  name="grid"
-                  sizePreset="sm"
-                  variant="primary"
-                  decorative
-                />
-                16 步驟音序器
-              </h2>
-              <RhythmGrid />
-            </section>
-
-            {/* 編輯器控制 */}
-            <section
-              className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6"
-              aria-labelledby="controls-heading"
-            >
-              <h2
-                id="controls-heading"
-                className="text-xl font-bold mb-4 flex items-center gap-2"
-              >
-                <PixelIcon
-                  name="settings"
-                  sizePreset="sm"
-                  variant="primary"
-                  decorative
-                />
-                播放控制
-              </h2>
-              <RhythmEditorControls />
-            </section>
+              <PixelIcon
+                name="grid"
+                sizePreset="sm"
+                variant="primary"
+                decorative
+              />
+              16 步驟音序器
+            </h2>
+            <RhythmGrid />
           </div>
 
-          {/* Right Column: Preset + AI */}
-          <div className="space-y-6">
-            {/* Preset 管理 */}
-            <section
-              className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6"
-              aria-labelledby="preset-heading"
+          {/* 播放控制 */}
+          <div>
+            <h2
+              id="controls-heading"
+              className="text-xl font-bold mb-4 flex items-center gap-2"
             >
-              <h2
-                id="preset-heading"
-                className="text-xl font-bold mb-4 flex items-center gap-2"
-              >
-                <PixelIcon
-                  name="bookmark"
-                  sizePreset="sm"
-                  variant="primary"
-                  decorative
-                />
-                Preset 管理
-              </h2>
-              <PresetManager />
-            </section>
-
-            {/* AI 生成面板 */}
-            <section
-              className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6"
-              aria-labelledby="ai-heading"
-            >
-              <h2
-                id="ai-heading"
-                className="text-xl font-bold mb-4 flex items-center gap-2"
-              >
-                <PixelIcon
-                  name="magic"
-                  sizePreset="sm"
-                  variant="primary"
-                  decorative
-                />
-                AI 生成節奏
-              </h2>
-              <AIGenerationPanel />
-            </section>
+              <PixelIcon
+                name="settings"
+                sizePreset="sm"
+                variant="primary"
+                decorative
+              />
+              播放控制
+            </h2>
+            <RhythmEditorControls />
           </div>
+        </section>
+
+        {/* 響應式佈局：桌面 2 欄，手機單欄 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Preset 管理 */}
+          <section
+            className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6"
+            aria-labelledby="preset-heading"
+          >
+            <h2
+              id="preset-heading"
+              className="text-xl font-bold mb-4 flex items-center gap-2"
+            >
+              <PixelIcon
+                name="bookmark"
+                sizePreset="sm"
+                variant="primary"
+                decorative
+              />
+              Preset 管理
+            </h2>
+            <PresetManager />
+          </section>
+
+          {/* AI 生成面板 */}
+          <section className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6">
+            <AIGenerationPanel />
+          </section>
         </div>
 
         {/* Help Section */}

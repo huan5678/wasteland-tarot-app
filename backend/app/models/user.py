@@ -92,6 +92,14 @@ class User(BaseModel):
     credentials = relationship("Credential", back_populates="user", cascade="all, delete-orphan")  # WebAuthn credentials
     journals = relationship("ReadingJournal", back_populates="user", cascade="all, delete-orphan")
 
+    # Dashboard Gamification Relationships
+    karma_logs = relationship("KarmaLog", back_populates="user", cascade="all, delete-orphan")
+    karma = relationship("UserKarma", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    daily_tasks = relationship("UserDailyTask", back_populates="user", cascade="all, delete-orphan")
+    weekly_tasks = relationship("UserWeeklyTask", back_populates="user", cascade="all, delete-orphan")
+    activity_stats = relationship("UserActivityStats", back_populates="user", cascade="all, delete-orphan")
+    login_streak = relationship("UserLoginStreak", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', faction='{self.faction_alignment}', karma={self.karma_score})>"
 

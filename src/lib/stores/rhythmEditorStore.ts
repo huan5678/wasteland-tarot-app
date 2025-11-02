@@ -33,6 +33,7 @@ export interface RhythmEditorState {
   tempo: number;           // BPM（60-180，預設 120）
   isPlaying: boolean;
   currentStep: number;     // 當前步驟（0-15）
+  loop: boolean;           // 循環播放（預設 true）
 
   // === Preset 狀態 ===
   systemPresets: UserRhythmPreset[];
@@ -55,6 +56,7 @@ export interface RhythmEditorState {
   pause: () => void;
   stop: () => void;
   setCurrentStep: (step: number) => void;
+  setLoop: (loop: boolean) => void;
 
   // === Actions: Preset 管理 ===
   loadPreset: (preset: UserRhythmPreset) => void;
@@ -87,7 +89,7 @@ const STORAGE_KEY = 'wasteland-tarot-rhythm-editor';
 /**
  * API Base URL
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 /**
  * 建立空白 Pattern
@@ -129,6 +131,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
       tempo: 120,
       isPlaying: false,
       currentStep: 0,
+      loop: true,
       systemPresets: [],
       userPresets: [],
       aiQuota: null,
@@ -177,6 +180,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
         set({ currentStep: step });
       },
 
+      setLoop: (loop: boolean) => {
+        set({ loop });
+      },
+
       // === Actions: Preset 管理 ===
       loadPreset: (preset: UserRhythmPreset) => {
         if (!isValidPattern(preset.pattern)) {
@@ -221,7 +228,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // 啟用 httpOnly cookie 傳輸
             body: JSON.stringify({
               name,
               description,
@@ -252,7 +259,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
 
           const response = await fetch(`${API_BASE_URL}/music/presets/${presetId}`, {
             method: 'DELETE',
-            credentials: 'include',
+            credentials: 'include', // 啟用 httpOnly cookie 傳輸
           });
 
           if (!response.ok) {
@@ -285,7 +292,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
           });
 
           if (!response.ok) {
-            throw new Error('載入系統 Presets 失敗');
+            // API 尚未實作，靜默失敗
+            console.warn('[RhythmEditorStore] System presets API not available:', response.status);
+            set({ systemPresets: [], isLoading: false, error: null });
+            return;
           }
 
           const data = await response.json();
@@ -293,9 +303,9 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
 
           set({ systemPresets, isLoading: false });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : '載入系統 Presets 失敗';
-          set({ error: errorMessage, isLoading: false });
-          console.error('[RhythmEditorStore]', error);
+          // 網路錯誤，靜默失敗，不顯示錯誤訊息
+          console.warn('[RhythmEditorStore] Failed to fetch system presets:', error);
+          set({ systemPresets: [], isLoading: false, error: null });
         }
       },
 
@@ -308,24 +318,44 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // 啟用 httpOnly cookie 傳輸
           });
 
           if (!response.ok) {
             if (response.status === 401) {
               // 未登入，不載入使用者 Presets
-              set({ userPresets: [], isLoading: false });
+              set({ userPresets: [], systemPresets: [], isLoading: false, error: null });
               return;
             }
-            throw new Error('載入使用者 Presets 失敗');
+            // API 尚未實作，靜默失敗
+            console.warn('[RhythmEditorStore] User presets API not available:', response.status);
+            set({ userPresets: [], systemPresets: [], isLoading: false, error: null });
+            return;
           }
 
-          const userPresets: UserRhythmPreset[] = await response.json();
-          set({ userPresets, isLoading: false });
+          const allPresetsRaw: any[] = await response.json();
+
+          // 轉換欄位名稱並分離系統預設和使用者預設
+          const allPresets: UserRhythmPreset[] = allPresetsRaw.map((p) => ({
+            id: p.id,
+            userId: p.user_id,
+            name: p.name,
+            description: p.description,
+            pattern: p.pattern,
+            isSystemPreset: p.is_system_preset,
+            isPublic: p.is_public,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+          }));
+
+          const systemPresets = allPresets.filter(p => p.isSystemPreset === true);
+          const userPresets = allPresets.filter(p => p.isSystemPreset !== true);
+
+          set({ systemPresets, userPresets, isLoading: false });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : '載入使用者 Presets 失敗';
-          set({ error: errorMessage, isLoading: false });
-          console.error('[RhythmEditorStore]', error);
+          // 網路錯誤，靜默失敗，不顯示錯誤訊息
+          console.warn('[RhythmEditorStore] Failed to fetch user presets:', error);
+          set({ userPresets: [], systemPresets: [], isLoading: false, error: null });
         }
       },
 
@@ -343,53 +373,74 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             throw new Error('提示不得超過 200 字元');
           }
 
-          // 檢查配額
-          const { aiQuota } = get();
-          if (aiQuota && aiQuota.used >= aiQuota.limit) {
-            throw new Error(`今日配額已用完（${aiQuota.used}/${aiQuota.limit}），明日重置`);
-          }
-
+          // 呼叫後端 API（使用 httpOnly cookies 認證）
           const response = await fetch(`${API_BASE_URL}/music/generate-rhythm`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // 啟用 httpOnly cookie 傳輸
             body: JSON.stringify({ prompt }),
           });
 
+          // 處理 API 回應
           if (!response.ok) {
-            if (response.status === 400) {
-              const errorData = await response.json();
-              // 配額用盡
-              if (errorData.error === 'Daily quota exceeded') {
-                const quota: AIQuota = {
-                  limit: errorData.quotaLimit || 20,
-                  used: errorData.quotaUsed || 20,
-                  remaining: 0,
-                  resetAt: errorData.resetAt || new Date().toISOString(),
-                };
-                set({ aiQuota: quota });
-                throw new Error(`今日配額已用完（${quota.used}/${quota.limit}），明日重置`);
-              }
+            let errorData;
+            try {
+              errorData = await response.json();
+            } catch (e) {
+              // JSON 解析失敗
+              throw new Error(`API 錯誤 (${response.status}): ${response.statusText}`);
             }
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'AI 生成失敗');
+
+            // 401 未認證
+            if (response.status === 401) {
+              throw new Error('請先登入才能使用 AI 生成功能');
+            }
+
+            // 配額用盡
+            if (response.status === 400 && errorData.error === 'Daily quota exceeded') {
+              const quota: AIQuota = {
+                limit: errorData.quotaLimit || 20,
+                used: errorData.quotaUsed || 20,
+                remaining: 0,
+                resetAt: errorData.resetAt || new Date().toISOString(),
+              };
+              set({ aiQuota: quota, isLoading: false });
+              throw new Error(`今日配額已用完（${quota.used}/${quota.limit}），明日重置`);
+            }
+
+            // 其他錯誤 - 確保錯誤訊息是字串
+            let errorMessage = `API 錯誤 (${response.status})`;
+            if (typeof errorData.detail === 'string' && errorData.detail) {
+              errorMessage = errorData.detail;
+            } else if (typeof errorData.error === 'string' && errorData.error) {
+              errorMessage = errorData.error;
+            } else if (typeof errorData.message === 'string' && errorData.message) {
+              errorMessage = errorData.message;
+            }
+
+            console.error('[RhythmEditorStore] API Error:', {
+              status: response.status,
+              data: errorData,
+              message: errorMessage,
+            });
+
+            throw new Error(errorMessage);
           }
 
+          // 解析成功回應
           const data = await response.json();
-          const pattern: Pattern = data.pattern;
-          const quotaRemaining = data.quotaRemaining || 0;
+          const pattern = data.pattern;
 
           // 驗證生成的 Pattern
           if (!isValidPattern(pattern)) {
-            throw new Error('AI 生成的 Pattern 格式錯誤');
+            throw new Error('生成的節奏格式錯誤');
           }
 
-          // 更新 Pattern
-          set({ pattern, isLoading: false });
-
           // 更新配額
+          const quotaRemaining = data.quotaRemaining || 0;
+          const { aiQuota } = get();
           if (aiQuota) {
             set({
               aiQuota: {
@@ -398,14 +449,14 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
                 remaining: quotaRemaining,
               },
             });
-          } else {
-            // 如果還沒有配額資訊，重新載入
-            await get().fetchQuota();
           }
+
+          // 更新 Pattern
+          set({ pattern, isLoading: false });
 
           return pattern;
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'AI 生成失敗';
+          const errorMessage = error instanceof Error ? error.message : '生成失敗';
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
@@ -418,7 +469,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include', // 啟用 httpOnly cookie 傳輸
           });
 
           if (!response.ok) {
@@ -427,7 +478,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
               set({ aiQuota: null });
               return;
             }
-            throw new Error('載入配額失敗');
+            // API 尚未實作，靜默失敗
+            console.warn('[RhythmEditorStore] Quota API not available:', response.status);
+            set({ aiQuota: null });
+            return;
           }
 
           const data = await response.json();
@@ -440,8 +494,9 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
 
           set({ aiQuota: quota });
         } catch (error) {
-          console.error('[RhythmEditorStore] Failed to fetch quota:', error);
-          // 不設定錯誤狀態，配額載入失敗不影響其他功能
+          // 網路錯誤，靜默失敗，不影響其他功能
+          console.warn('[RhythmEditorStore] Failed to fetch quota:', error);
+          set({ aiQuota: null });
         }
       },
 
