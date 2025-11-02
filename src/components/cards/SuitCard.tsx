@@ -65,13 +65,13 @@ export function SuitCard({ suit, className }: SuitCardProps) {
       onKeyDown={handleKeyDown}
     >
       <PipBoyCard
-        interactive
+        isClickable
         glowEffect
-        padding="md"
-        className="h-full transition-all duration-300"
+        padding="lg"
+        className="h-full transition-all duration-300 flex flex-col"
       >
         {/* 花色圖示 */}
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-center mb-6">
           <div className="transition-transform duration-300 group-hover:scale-110">
             <SuitIcon
               iconName={metadata.iconName}
@@ -95,12 +95,12 @@ export function SuitCard({ suit, className }: SuitCardProps) {
         </div>
 
         {/* 描述 */}
-        <p className="text-xs md:text-sm text-pip-boy-green/60 text-center mt-3 mb-4 px-2">
+        <p className="text-xs md:text-sm text-pip-boy-green/60 text-center mt-4 mb-6 px-2">
           {metadata.description}
         </p>
 
         {/* 卡牌數量指示器 */}
-        <div className="flex items-center justify-center gap-2 mt-auto pt-4 border-t border-pip-boy-green/30">
+        <div className="flex items-center justify-center gap-2 mt-auto pt-6 border-t border-pip-boy-green/30">
           <PixelIcon
             name="stack-line"
             size={20}
