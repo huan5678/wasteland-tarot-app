@@ -275,6 +275,10 @@ class UserProfile(BaseModel):
     badges_earned = Column(JSON, default=list)
     milestone_dates = Column(JSON, default={})
 
+    # Titles (稱號系統)
+    current_title = Column(String(100), nullable=True, default=None)
+    unlocked_titles = Column(JSON, default=list)
+
     # Social Stats
     friends_count = Column(Integer, default=0)
     readings_shared = Column(Integer, default=0)
@@ -339,6 +343,8 @@ class UserProfile(BaseModel):
             "achievements": self.achievements,
             "badges_earned": self.badges_earned,
             "milestone_dates": self.milestone_dates,
+            "current_title": self.current_title,
+            "unlocked_titles": self.unlocked_titles,
             "friends_count": self.friends_count,
             "readings_shared": self.readings_shared,
             "community_contributions": self.community_contributions

@@ -228,6 +228,9 @@ export class ProceduralMusicEngine {
   // Master GainNode - 用於即時音量控制
   private masterGain: GainNode;
 
+  // P3.4: AnalyserNode - 用於音訊視覺化
+  private analyserNode: AnalyserNode | null = null;
+
   // 合成器實例
   private bassManager: VoiceManager<BassSynthesizer>;
   private padManager: VoiceManager<PadSynthesizer>;
@@ -266,7 +269,18 @@ export class ProceduralMusicEngine {
     // 建立 Master GainNode 用於即時音量控制
     this.masterGain = audioContext.createGain();
     this.masterGain.gain.setValueAtTime(this.config.volume, audioContext.currentTime);
-    this.masterGain.connect(destination);
+
+    // P3.4: 建立 AnalyserNode 用於音訊視覺化
+    // 插入在 masterGain 和 destination 之間
+    this.analyserNode = audioContext.createAnalyser();
+    this.analyserNode.fftSize = 64; // 產生 32 個頻率 bins (適合 16 個柱狀圖)
+    this.analyserNode.smoothingTimeConstant = 0.8; // 平滑度 (0-1)
+    this.analyserNode.minDecibels = -90;
+    this.analyserNode.maxDecibels = -10;
+
+    // 連接音訊圖: masterGain -> analyserNode -> destination
+    this.masterGain.connect(this.analyserNode);
+    this.analyserNode.connect(destination);
 
     // 載入和弦進行
     this.currentProgression = this.loadChordProgression(this.config.chordProgression!);
@@ -606,6 +620,21 @@ export class ProceduralMusicEngine {
   }
 
   /**
+   * P3.4: 取得 AnalyserNode 用於音訊視覺化
+   * @returns AnalyserNode instance for real-time frequency analysis
+   *
+   * 使用範例：
+   * ```typescript
+   * const analyser = engine.getAnalyserNode();
+   * const dataArray = new Uint8Array(analyser.frequencyBinCount);
+   * analyser.getByteFrequencyData(dataArray);
+   * ```
+   */
+  getAnalyserNode(): AnalyserNode | null {
+    return this.analyserNode;
+  }
+
+  /**
    * 設定 BPM
    * @param bpm - BPM 值 (60-140)
    */
@@ -665,6 +694,12 @@ export class ProceduralMusicEngine {
     this.padManager.cleanup();
     this.leadManager.cleanup();
     this.crossfadeManager.cleanup(); // Task 2: 清理 crossfade 資源
+
+    // P3.4: 清理 AnalyserNode
+    if (this.analyserNode) {
+      this.analyserNode.disconnect();
+      this.analyserNode = null;
+    }
 
     // 清理 Master GainNode
     if (this.masterGain) {

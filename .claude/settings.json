@@ -1,6 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "input=$(cat); cwd=$(echo \"$input\" | jq -r '.workspace.current_dir'); username=$(whoami); hostname=$(hostname -s); if [[ \"$cwd\" == \"$HOME\"* ]]; then path=\"~${cwd#$HOME}\"; else path=\"$cwd\"; fi; cd \"$cwd\" 2>/dev/null && if git rev-parse --git-dir >/dev/null 2>&1; then branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo 'detached'); upstream=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null); if [ -n \"$upstream\" ]; then ahead=$(git rev-list --count HEAD ^\"$upstream\" 2>/dev/null || echo '0'); behind=$(git rev-list --count \"$upstream\" ^HEAD 2>/dev/null || echo '0'); git_info=\" [$branch\"; [ \"$ahead\" -gt 0 ] && git_info=\"$git_info ↑$ahead\"; [ \"$behind\" -gt 0 ] && git_info=\"$git_info ↓$behind\"; git_info=\"$git_info]\"; else git_info=\" [$branch]\"; fi; else git_info=''; fi; transcript=$(echo \"$input\" | jq -r '.transcript_path'); if [ -n \"$transcript\" ] && [ -f \"$transcript\" ]; then tokens=$(jq -r 'if .message.usage then (.message.usage.input_tokens // 0) + (.message.usage.output_tokens // 0) + (.message.usage.cache_creation_input_tokens // 0) + (.message.usage.cache_read_input_tokens // 0) else 0 end' \"$transcript\" 2>/dev/null | awk '{sum+=$1} END {print sum+0}'); limit=200000; if [ \"$tokens\" != \"0\" ]; then pct=$(awk \"BEGIN {printf \\\"%.1f\\\", ($tokens/$limit)*100}\"); ctx_info=\" [ctx: ${tokens}/${limit} ${pct}%]\"; else ctx_info=''; fi; else ctx_info=''; fi; echo \"$username@$hostname $path$git_info$ctx_info\""
+    "command": "bash /Users/sean/Documents/React/tarot-card-nextjs-app/.claude/statusline-plan-b.sh",
+    "padding": 0
   }
 }

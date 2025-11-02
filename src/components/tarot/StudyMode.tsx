@@ -130,11 +130,11 @@ function generateQuestions(card: DetailedTarotCard): StudyQuestion[] {
   }
 
   // Character voice questions
-  if (card.character_voice_interpretations) {
-    const voices = Object.keys(card.character_voice_interpretations)
+  if (card.character_voices) {
+    const voices = Object.keys(card.character_voices)
     if (voices.length > 0) {
       const randomVoice = voices[Math.floor(Math.random() * voices.length)]
-      const interpretation = card.character_voice_interpretations[randomVoice]
+      const interpretation = card.character_voices[randomVoice]
       
       questions.push({
         id: `${card.id}-voice-${randomVoice}`,

@@ -250,7 +250,9 @@ export function logPerf(name: string, durationMs: number, extra?: any) {
     console.warn('[Performance Warning]', name, `${durationMs}ms`, extra)
   }
 
-  if (process.env.NODE_ENV !== 'production') {
+  // Only log detailed performance metrics if explicitly enabled
+  // This prevents console spam from high-frequency metrics like layout_shift and memory:usage
+  if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_PERF_LOGS === 'true') {
     // eslint-disable-next-line no-console
     console.debug('[Perf]', name, `${durationMs}ms`, extra)
   }

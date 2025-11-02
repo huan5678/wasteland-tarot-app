@@ -357,45 +357,164 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
       set({ isLoading: true, error: null })
 
       try {
-        // Generate AI interpretation from the cards
-        const cards = current.cards_drawn || []
+        // Debug: log the COMPLETE reading object
+        console.log('[requestAIInterpretation] 完整的 Reading 物件:', JSON.parse(JSON.stringify(current)))
 
-        // Build a comprehensive prompt for AI interpretation
-        const cardsDescription = cards.map(card => {
-          const cardInfo = typeof card === 'object' && card.card_name ? card.card_name : '未知卡牌'
-          const position = typeof card === 'object' && card.position ? card.position : 'upright'
-          return `${cardInfo} (${position === 'upright' ? '正位' : '逆位'})`
-        }).join(', ')
+        // Debug: log the reading structure
+        console.log('[requestAIInterpretation] Reading 資料結構分析:', {
+          hasCardPositions: 'card_positions' in current,
+          cardPositionsLength: (current as any).card_positions?.length,
+          cardPositionsData: (current as any).card_positions,
+          hasCardsDrawn: 'cards_drawn' in current,
+          cardsDrawnLength: (current as any).cards_drawn?.length,
+          cardsDrawnData: (current as any).cards_drawn,
+          keys: Object.keys(current),
+          readingId: current.id,
+          createdAt: current.created_at,
+        })
 
-        const aiPrompt = `
-根據以下塔羅占卜資訊，提供深入的解讀：
+        // Extract card IDs from card_positions
+        const cardIds: string[] = []
 
-問題：${current.question || '未指定問題'}
-牌陣：${current.spread_type || '單牌'}
-抽到的卡牌：${cardsDescription}
+        // Support both new (card_positions) and legacy (cards_drawn) structures
+        if ('card_positions' in current && current.card_positions && current.card_positions.length > 0) {
+          console.log('[requestAIInterpretation] 使用 card_positions')
+          cardIds.push(...current.card_positions.map(pos => {
+            console.log('[requestAIInterpretation] Position:', pos)
+            return pos.card_id
+          }))
+        } else if ('cards_drawn' in current && (current as any).cards_drawn && (current as any).cards_drawn.length > 0) {
+          // Legacy: extract card_id from cards_drawn
+          console.log('[requestAIInterpretation] 使用 cards_drawn (legacy)')
+          cardIds.push(...(current as any).cards_drawn
+            .map((card: any) => {
+              console.log('[requestAIInterpretation] Card:', card)
+              return card.card_id || card.id
+            })
+            .filter(Boolean))
+        }
 
-請提供：
-1. 整體解讀 (overall_interpretation)：綜合分析這些卡牌對問題的回應
-2. 簡短摘要 (summary_message)：一句話的核心訊息
-3. 預測信心度 (prediction_confidence)：0-1 之間的數值
-`
+        console.log('[requestAIInterpretation] 提取的 card IDs:', cardIds)
 
-        // TODO: 實際呼叫 AI API (OpenAI/Anthropic/Claude)
-        // 目前使用 backend 的 PATCH endpoint 儲存 AI 解讀
-        // Backend 會自動標記 ai_interpretation_requested = true
+        if (cardIds.length === 0) {
+          const errorDetails = {
+            hasCardPositions: 'card_positions' in current,
+            cardPositionsIsArray: Array.isArray((current as any).card_positions),
+            cardPositionsLength: (current as any).card_positions?.length,
+            hasCardsDrawn: 'cards_drawn' in current,
+            cardsDrawnIsArray: Array.isArray((current as any).cards_drawn),
+            cardsDrawnLength: (current as any).cards_drawn?.length,
+            readingId: current.id,
+            createdAt: current.created_at,
+            spreadType: current.spread_type,
+          }
+          console.error('[requestAIInterpretation] 找不到卡牌資料，詳細資訊:', errorDetails)
+          throw new Error(
+            '此占卜記錄沒有卡牌資料。' +
+            '\n可能原因：' +
+            '\n1. 這是舊的占卜記錄（在新架構之前建立）' +
+            '\n2. 占卜尚未完成' +
+            '\n3. 資料庫記錄不完整' +
+            '\n\n建議：請建立一個新的占卜來使用 AI 解讀功能。'
+          )
+        }
 
-        // 暫時生成基本的 AI 解讀（之後應該呼叫真實 AI API）
+        console.log('[requestAIInterpretation] 呼叫後端 streaming API', {
+          readingId: id,
+          cardIds,
+          question: current.question,
+          spread_type: current.spread_type,
+          character_voice: current.character_voice_used,
+          karma: current.karma_context,
+          faction: current.faction_influence,
+        })
+
+        // Call backend streaming API
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+        const response = await fetch(`${API_BASE_URL}/api/v1/readings/interpretation/stream-multi`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('pip-boy-token') || ''}`,
+          },
+          body: JSON.stringify({
+            card_ids: cardIds,
+            question: current.question || '未指定問題',
+            character_voice: current.character_voice_used || 'PIP_BOY',
+            karma_alignment: current.karma_context || 'NEUTRAL',
+            faction_alignment: current.faction_influence || null,
+            spread_type: current.spread_type || 'three_card',
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        // Read SSE stream
+        const reader = response.body?.getReader()
+        const decoder = new TextDecoder()
+        let interpretation = ''
+
+        if (!reader) {
+          throw new Error('無法讀取回應串流')
+        }
+
+        console.log('[requestAIInterpretation] 開始接收 AI 串流')
+
+        while (true) {
+          const { done, value } = await reader.read()
+
+          if (done) {
+            console.log('[requestAIInterpretation] 串流結束')
+            break
+          }
+
+          // Decode chunk
+          const chunk = decoder.decode(value, { stream: true })
+
+          // Parse SSE format: "data: {text}\n\n"
+          const lines = chunk.split('\n')
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.substring(6).trim()
+
+              // Check for completion signal
+              if (data === '[DONE]') {
+                console.log('[requestAIInterpretation] 收到完成信號')
+                break
+              }
+
+              // Check for error signal
+              if (data.startsWith('[ERROR]')) {
+                const errorMsg = data.substring(7).trim()
+                console.error('[requestAIInterpretation] 收到錯誤:', errorMsg)
+                throw new Error(errorMsg)
+              }
+
+              // Append to interpretation
+              interpretation += data
+            }
+          }
+        }
+
+        console.log('[requestAIInterpretation] AI 解讀完成', {
+          length: interpretation.length,
+          preview: interpretation.substring(0, 100),
+        })
+
+        // Prepare AI response data
         const aiResponse = {
-          overall_interpretation: `根據你抽到的牌卡（${cardsDescription}），這次占卜顯示出一段重要的時期。` +
-            `關於你的問題「${current.question}」，卡牌提供了明確的指引。` +
-            `建議你專注於內在力量的培養，並信任自己的直覺。`,
-          summary_message: "相信你的直覺，保持開放的心態。",
-          prediction_confidence: 0.80,
+          overall_interpretation: interpretation,
+          summary_message: "AI 已完成解讀",
+          prediction_confidence: 0.85,
           ai_interpretation_requested: true,
+          ai_interpretation_at: new Date().toISOString(),
           ai_interpretation_provider: provider,
         }
 
         // 使用 PATCH 更新 Reading（Backend 會檢查一次性限制）
+        console.log('[requestAIInterpretation] 儲存 AI 解讀到資料庫')
         const updated = await readingsAPI.patch(id, aiResponse)
 
         const newState = {
@@ -408,8 +527,10 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
         saveToLocalStorage(newState.readings)
 
         set(newState)
+        console.log('[requestAIInterpretation] 成功完成')
         return updated
       } catch (e: any) {
+        console.error('[requestAIInterpretation] 錯誤:', e)
         // Check if 403 error (already requested)
         if (e?.status === 403) {
           set({ error: 'AI 解讀已經使用過，無法再次請求', isLoading: false })
@@ -612,17 +733,34 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
       })
 
       // Calculate card usage
+      // Support both new (card_positions) and legacy (cards_drawn) structures
       readings.forEach(r => {
-        r.cards_drawn?.forEach(card => {
-          const cardName = card.name || 'Unknown'
-          stats.most_used_cards[cardName] = (stats.most_used_cards[cardName] || 0) + 1
-        })
+        // New structure: card_positions
+        if ('card_positions' in r && (r as any).card_positions) {
+          (r as any).card_positions.forEach((pos: any) => {
+            const cardName = pos.card?.name || pos.name || 'Unknown'
+            stats.most_used_cards[cardName] = (stats.most_used_cards[cardName] || 0) + 1
+          })
+        }
+        // Legacy structure: cards_drawn
+        else if (r.cards_drawn) {
+          r.cards_drawn.forEach(card => {
+            const cardName = card.name || 'Unknown'
+            stats.most_used_cards[cardName] = (stats.most_used_cards[cardName] || 0) + 1
+          })
+        }
       })
 
       // Calculate average interpretation length
-      const interpretations = readings.filter(r => r.interpretation)
+      // Support both new (overall_interpretation) and legacy (interpretation) fields
+      const interpretations = readings.filter(r =>
+        (r as any).overall_interpretation || r.interpretation
+      )
       if (interpretations.length > 0) {
-        const totalLength = interpretations.reduce((sum, r) => sum + (r.interpretation?.length || 0), 0)
+        const totalLength = interpretations.reduce((sum, r) => {
+          const text = (r as any).overall_interpretation || r.interpretation || ''
+          return sum + text.length
+        }, 0)
         stats.average_interpretation_length = Math.round(totalLength / interpretations.length)
       }
 

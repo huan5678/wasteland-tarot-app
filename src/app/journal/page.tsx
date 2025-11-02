@@ -6,7 +6,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { AuthLoading } from '@/components/auth/AuthLoading'
 import { useJournalStore } from '@/stores/journalStore'
 import { JournalList } from '@/components/journal/JournalList'
 import { JournalEditor } from '@/components/journal/JournalEditor'
@@ -24,12 +25,15 @@ const PAGE_SIZE = 20
 // ============================================================================
 
 export default function JournalPage() {
-  const router = useRouter()
+  // 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth()
 
   // ========== State ==========
   const [currentPage, setCurrentPage] = useState(1)
   const [isCreating, setIsCreating] = useState(false)
   const [selectedJournal, setSelectedJournal] = useState<Journal | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   // ========== Store ==========
   const {
@@ -38,6 +42,7 @@ export default function JournalPage() {
     isLoading,
     error,
     fetchJournals,
+    updateJournal,
     deleteJournal,
     clearError,
   } = useJournalStore()
@@ -45,9 +50,11 @@ export default function JournalPage() {
   // ========== Effects ==========
 
   useEffect(() => {
+    // 簡潔的檢查
+    if (!isReady) return
     const skip = (currentPage - 1) * PAGE_SIZE
     fetchJournals(skip, PAGE_SIZE)
-  }, [currentPage, fetchJournals])
+  }, [isReady, currentPage, fetchJournals])
 
   // ========== Handlers ==========
 
@@ -59,6 +66,33 @@ export default function JournalPage() {
   const handleCancelEdit = () => {
     setIsCreating(false)
     setSelectedJournal(null)
+    setIsEditing(false)
+  }
+
+  const handleEditJournal = () => {
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = async (data: any) => {
+    if (!selectedJournal) return
+
+    setIsSaving(true)
+    try {
+      await updateJournal(selectedJournal.id, {
+        content: data.content,
+        mood_tags: data.mood_tags,
+        is_private: data.is_private,
+      })
+      setIsEditing(false)
+    } catch (err) {
+      console.error('Failed to update journal:', err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleCancelEditMode = () => {
+    setIsEditing(false)
   }
 
   const handleSaveNew = async (data: any) => {
@@ -93,6 +127,11 @@ export default function JournalPage() {
   }
 
   // ========== Render ==========
+
+  // 統一載入畫面
+  if (!isReady || isLoading) {
+    return <AuthLoading isVerifying={!isReady} />
+  }
 
   return (
     <div className="min-h-screen bg-wasteland-dark py-8 px-4">
@@ -156,7 +195,7 @@ export default function JournalPage() {
             <div className="mb-4 pb-4 border-b border-pip-boy-green flex items-center justify-between">
               <button
                 type="button"
-                onClick={() => setSelectedJournal(null)}
+                onClick={() => { setSelectedJournal(null); setIsEditing(false); }}
                 className="text-sm font-cubic text-pip-boy-green hover:text-pip-boy-green/70 transition-colors flex items-center gap-2"
                 aria-label="返回列表"
               >
@@ -164,41 +203,78 @@ export default function JournalPage() {
                 返回列表
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleDeleteJournal(selectedJournal.id)}
-                className="text-sm font-cubic text-red-500 hover:text-red-400 transition-colors flex items-center gap-2"
-                aria-label="刪除日記"
-              >
-                <PixelIcon name="trash" sizePreset="xs" decorative />
-                刪除
-              </button>
+              <div className="flex items-center gap-4">
+                {!isEditing && (
+                  <button
+                    type="button"
+                    onClick={handleEditJournal}
+                    className="text-sm font-cubic text-pip-boy-green hover:text-pip-boy-green/70 transition-colors flex items-center gap-2"
+                    aria-label="編輯日記"
+                  >
+                    <PixelIcon name="edit" sizePreset="xs" decorative />
+                    編輯
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteJournal(selectedJournal.id)}
+                  className="text-sm font-cubic text-red-500 hover:text-red-400 transition-colors flex items-center gap-2"
+                  aria-label="刪除日記"
+                >
+                  <PixelIcon name="trash" sizePreset="xs" decorative />
+                  刪除
+                </button>
+              </div>
             </div>
 
-            {/* TODO: Show journal details/editor here */}
-            <div className="text-pip-boy-green font-cubic">
-              <p className="text-xs text-pip-boy-green/70 mb-4">
-                建立時間：{new Date(selectedJournal.created_at).toLocaleString('zh-TW')}
-              </p>
-              <div className="prose prose-invert prose-green max-w-none">
-                <pre className="whitespace-pre-wrap">{selectedJournal.content}</pre>
-              </div>
-              {selectedJournal.mood_tags.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-pip-boy-green">
-                  <p className="text-xs text-pip-boy-green/70 mb-2">心情標籤：</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedJournal.mood_tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 text-xs bg-pip-boy-green/20 text-pip-boy-green border border-pip-boy-green/50"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+            {/* Journal Details/Editor */}
+            {isEditing ? (
+              /* Edit Mode */
+              <JournalEditor
+                initialData={{
+                  content: selectedJournal.content,
+                  mood_tags: selectedJournal.mood_tags,
+                  is_private: selectedJournal.is_private,
+                }}
+                onSave={handleSaveEdit}
+                onCancel={handleCancelEditMode}
+                isSaving={isSaving}
+              />
+            ) : (
+              /* View Mode */
+              <div className="text-pip-boy-green font-cubic">
+                <p className="text-xs text-pip-boy-green/70 mb-4">
+                  建立時間：{new Date(selectedJournal.created_at).toLocaleString('zh-TW')}
+                </p>
+                <div className="prose prose-invert prose-green max-w-none">
+                  <pre className="whitespace-pre-wrap font-cubic">{selectedJournal.content}</pre>
                 </div>
-              )}
-            </div>
+                {selectedJournal.mood_tags.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-pip-boy-green">
+                    <p className="text-xs text-pip-boy-green/70 mb-2">心情標籤：</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedJournal.mood_tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-1 text-xs bg-pip-boy-green/20 text-pip-boy-green border border-pip-boy-green/50"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedJournal.is_private && (
+                  <div className="mt-4 pt-4 border-t border-pip-boy-green/50">
+                    <p className="text-xs text-pip-boy-green/50 flex items-center gap-2">
+                      <PixelIcon name="lock" sizePreset="xs" decorative />
+                      私密日記
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           /* Journal List */

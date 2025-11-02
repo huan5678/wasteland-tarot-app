@@ -69,14 +69,18 @@ interface BingoStatusResponse {
 
 /**
  * 歷史記錄介面
+ *
+ * 注意：與後端 BingoHistoryResponse 對應
+ * - had_reward: 該月份是否獲得獎勵（過去式）
+ * - reward: 獎勵詳細資訊（如果有）
  */
 interface BingoHistoryRecord {
   month_year: string
   card_data: number[][]
   claimed_numbers: number[]
   line_count: number
-  has_reward: boolean
-  created_at: string
+  had_reward: boolean  // 注意：後端使用 had_reward，不是 has_reward
+  reward?: RewardRecord | null  // 獎勵詳細資訊（可選）
 }
 
 /**
@@ -301,18 +305,31 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
       if (typeof errorData === 'string') {
         errorMessage = errorData
       } else if (typeof errorData === 'object' && errorData !== null) {
-        errorMessage =
-          errorData.message ||      // 後端自訂格式
-          errorData.detail ||        // FastAPI 標準格式
-          errorData.error ||         // 其他格式
-          `HTTP ${response.status}`  // 預設
+        // FastAPI 標準格式：{detail: {...}} 或 {detail: "string"}
+        if (typeof errorData.detail === 'object' && errorData.detail !== null) {
+          // detail 是物件，提取其中的 message
+          errorMessage =
+            errorData.detail.message ||
+            errorData.detail.error ||
+            `HTTP ${response.status}`
+        } else {
+          // detail 是字串，或其他格式
+          errorMessage =
+            errorData.message ||      // 後端自訂格式
+            errorData.detail ||        // FastAPI 標準格式（字串）
+            errorData.error ||         // 其他格式
+            `HTTP ${response.status}`  // 預設
+        }
       } else {
         errorMessage = `HTTP ${response.status}`
       }
 
-      console.error(`[BingoStore] API Error: ${endpoint}`, {
+      // 404 是正常情況（如無歷史記錄），使用 log 而非 error
+      const logLevel = response.status === 404 ? console.log : console.error
+      logLevel(`[BingoStore] API ${response.status === 404 ? 'Info' : 'Error'}: ${endpoint}`, {
         status: response.status,
-        message: errorData,
+        errorMessage,
+        errorData,
         endpoint,
         method: options.method || 'GET',
         timestamp: new Date().toISOString(),
@@ -340,7 +357,9 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     return response.json()
   } catch (err: any) {
     // 捕獲所有錯誤（包括網路錯誤、ReferenceError 等）
-    console.error(`[BingoStore] API Error: ${endpoint}`, {
+    // 404 是正常情況（如無歷史記錄），使用 log 而非 error
+    const logLevel = err?.status === 404 ? console.log : console.error
+    logLevel(`[BingoStore] API ${err?.status === 404 ? 'Info' : 'Error'}: ${endpoint}`, {
       error: err?.message || '未知錯誤',
       stack: err?.stack,
       endpoint,

@@ -7,6 +7,7 @@ import {
 import { motion } from 'motion/react'
 import { useEffect, useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
+import { playRewardSound } from '@/lib/audio/rewardSounds'
 
 interface RewardNotificationProps {
   /** 是否顯示通知 */
@@ -51,8 +52,8 @@ export default function RewardNotification({
       }))
       setParticles(newParticles)
 
-      // TODO: 整合 Web Audio 系統播放音效
-      // 例如: audioSystem.play('reward-celebration')
+      // 播放獎勵音效
+      playRewardSound()
 
       // 5秒後自動關閉
       const timer = setTimeout(() => {

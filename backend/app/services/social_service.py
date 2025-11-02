@@ -13,6 +13,7 @@ from app.models.social_features import (
     UserFriendship,
     UserAchievement,
     CommunityEvent,
+    EventParticipant,
     FriendshipStatus,
     AchievementCategory
 )
@@ -438,12 +439,236 @@ class SocialService:
         if event.max_participants and event.current_participants >= event.max_participants:
             raise InsufficientPermissionsError("Event is full")
 
-        # TODO: Add participant tracking table
-        # For now, just increment counter
+        # P2.2: Check if user already joined
+        existing_participant = await self.db.execute(
+            select(EventParticipant).where(
+                and_(
+                    EventParticipant.user_id == user_id,
+                    EventParticipant.event_id == event_id
+                )
+            )
+        )
+        if existing_participant.scalar_one_or_none():
+            raise ValueError("User already joined this event")
+
+        # P2.2: Create EventParticipant record
+        participant = EventParticipant(
+            user_id=user_id,
+            event_id=event_id,
+            status="joined",
+            joined_at=datetime.utcnow(),
+            last_activity_at=datetime.utcnow()
+        )
+        self.db.add(participant)
+
+        # Increment participant counter
         event.current_participants += 1
         await self.db.commit()
 
         return True
+
+    async def leave_community_event(
+        self,
+        user_id: str,
+        event_id: str
+    ) -> bool:
+        """Leave a community event"""
+
+        result = await self.db.execute(
+            select(EventParticipant).where(
+                and_(
+                    EventParticipant.user_id == user_id,
+                    EventParticipant.event_id == event_id
+                )
+            )
+        )
+        participant = result.scalar_one_or_none()
+
+        if not participant:
+            raise ResourceNotFoundError("Participation record not found")
+
+        if not participant.is_active_participant():
+            raise ValueError("User is not actively participating in this event")
+
+        # Update participant status
+        participant.status = "dropped"
+        participant.last_activity_at = datetime.utcnow()
+
+        # Decrement participant counter
+        event_result = await self.db.execute(
+            select(CommunityEvent).where(CommunityEvent.id == event_id)
+        )
+        event = event_result.scalar_one_or_none()
+        if event:
+            event.current_participants = max(0, event.current_participants - 1)
+
+        await self.db.commit()
+        return True
+
+    async def get_event_participants(
+        self,
+        event_id: str,
+        status_filter: Optional[str] = None,
+        limit: int = 100
+    ) -> List[EventParticipant]:
+        """Get participants for a community event"""
+
+        query = select(EventParticipant).where(EventParticipant.event_id == event_id)
+
+        if status_filter:
+            query = query.where(EventParticipant.status == status_filter)
+
+        query = query.order_by(desc(EventParticipant.contribution_score)).limit(limit)
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def get_user_event_participation(
+        self,
+        user_id: str,
+        active_only: bool = True
+    ) -> List[EventParticipant]:
+        """Get user's participation in community events"""
+
+        query = select(EventParticipant).where(EventParticipant.user_id == user_id)
+
+        if active_only:
+            query = query.where(EventParticipant.status.in_(["joined", "completed"]))
+
+        query = query.order_by(desc(EventParticipant.joined_at))
+
+        result = await self.db.execute(query)
+        return result.scalars().all()
+
+    async def update_participant_progress(
+        self,
+        user_id: str,
+        event_id: str,
+        contribution: int = 0,
+        completion_percentage: Optional[float] = None,
+        performance_data: Optional[Dict[str, Any]] = None
+    ) -> EventParticipant:
+        """Update participant's progress and contribution"""
+
+        result = await self.db.execute(
+            select(EventParticipant).where(
+                and_(
+                    EventParticipant.user_id == user_id,
+                    EventParticipant.event_id == event_id
+                )
+            )
+        )
+        participant = result.scalar_one_or_none()
+
+        if not participant:
+            raise ResourceNotFoundError("Participation record not found")
+
+        # Update activity
+        participant.update_activity(contribution=contribution, performance=performance_data)
+
+        # Update completion percentage
+        if completion_percentage is not None:
+            participant.completion_percentage = min(100.0, max(0.0, completion_percentage))
+
+            # Auto-complete if reached 100%
+            if participant.completion_percentage >= 100.0:
+                participant.complete()
+
+        await self.db.commit()
+        return participant
+
+    async def get_event_leaderboard(
+        self,
+        event_id: str,
+        limit: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Get leaderboard for community event"""
+
+        result = await self.db.execute(
+            select(EventParticipant, User.display_name, User.faction_alignment)
+            .join(User, EventParticipant.user_id == User.id)
+            .where(EventParticipant.event_id == event_id)
+            .order_by(desc(EventParticipant.contribution_score))
+            .limit(limit)
+        )
+
+        leaderboard = []
+        for i, (participant, display_name, faction) in enumerate(result.fetchall(), 1):
+            # Update ranking position
+            participant.ranking_position = i
+
+            leaderboard.append({
+                "rank": i,
+                "user_id": participant.user_id,
+                "display_name": display_name,
+                "faction": faction,
+                "contribution_score": participant.contribution_score,
+                "completion_percentage": participant.completion_percentage,
+                "status": participant.status,
+                "joined_at": participant.joined_at.isoformat() if participant.joined_at else None
+            })
+
+        await self.db.commit()
+        return leaderboard
+
+    async def complete_event_participation(
+        self,
+        user_id: str,
+        event_id: str,
+        bonus_rewards: Optional[Dict[str, Any]] = None
+    ) -> EventParticipant:
+        """Mark event participation as completed and claim rewards"""
+
+        result = await self.db.execute(
+            select(EventParticipant).where(
+                and_(
+                    EventParticipant.user_id == user_id,
+                    EventParticipant.event_id == event_id
+                )
+            )
+        )
+        participant = result.scalar_one_or_none()
+
+        if not participant:
+            raise ResourceNotFoundError("Participation record not found")
+
+        # Complete participation
+        participant.complete()
+
+        # Claim rewards
+        if not participant.rewards_claimed:
+            participant.rewards_claimed = True
+            participant.rewards_claimed_at = datetime.utcnow()
+            if bonus_rewards:
+                participant.bonus_rewards = bonus_rewards
+
+            # Apply rewards to user
+            event_result = await self.db.execute(
+                select(CommunityEvent).where(CommunityEvent.id == event_id)
+            )
+            event = event_result.scalar_one_or_none()
+
+            if event and event.completion_rewards:
+                user = await self._get_user_with_validation(user_id)
+
+                # Apply karma reward
+                karma_reward = event.completion_rewards.get("karma", 0)
+                if karma_reward > 0:
+                    user.karma_score = min(100, user.karma_score + karma_reward)
+
+                # Store other rewards in bonus_rewards for future processing
+                # (e.g., items, badges, special unlocks)
+                other_rewards = {
+                    k: v for k, v in event.completion_rewards.items()
+                    if k not in ["karma"]
+                }
+                if other_rewards:
+                    current_bonus = participant.bonus_rewards or {}
+                    current_bonus.update(other_rewards)
+                    participant.bonus_rewards = current_bonus
+
+        await self.db.commit()
+        return participant
 
     # Helper Methods
     async def _get_user_with_validation(self, user_id: str) -> User:
@@ -551,9 +776,46 @@ class SocialService:
         )
         average_accuracy = result.scalar() or 0
 
-        # TODO: Calculate consecutive days, suits explored, etc.
-        consecutive_days = 0  # Placeholder
-        suits_explored = 4  # Placeholder - assume all suits explored
+        # Import models for card analysis
+        from app.models.reading_enhanced import ReadingCardPosition
+        from app.models.wasteland_card import WastelandCard
+
+        # Calculate consecutive days streak
+        # Get all reading dates (distinct days only)
+        result = await self.db.execute(
+            select(func.date(CompletedReading.created_at))
+            .where(CompletedReading.user_id == user_id)
+            .distinct()
+            .order_by(func.date(CompletedReading.created_at))
+        )
+        reading_dates = [row[0] for row in result.fetchall()]
+
+        # Calculate longest consecutive streak
+        consecutive_days = 0
+        if reading_dates:
+            current_streak = 1
+            max_streak = 1
+
+            for i in range(1, len(reading_dates)):
+                # Check if dates are consecutive (1 day apart)
+                delta = (reading_dates[i] - reading_dates[i-1]).days
+                if delta == 1:
+                    current_streak += 1
+                    max_streak = max(max_streak, current_streak)
+                elif delta > 1:
+                    current_streak = 1
+
+            consecutive_days = max_streak
+
+        # Calculate suits explored
+        result = await self.db.execute(
+            select(func.count(func.distinct(WastelandCard.suit)))
+            .select_from(CompletedReading)
+            .join(ReadingCardPosition, ReadingCardPosition.completed_reading_id == CompletedReading.id)
+            .join(WastelandCard, WastelandCard.id == ReadingCardPosition.card_id)
+            .where(CompletedReading.user_id == user_id)
+        )
+        suits_explored = result.scalar() or 0
 
         return {
             "readings_count": readings_count,

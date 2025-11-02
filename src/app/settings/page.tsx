@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { AuthLoading } from '@/components/auth/AuthLoading'
 import { usePreferences } from '@/hooks/usePreferences'
 import { Card } from '@/components/ui/card'
 import { PixelIcon } from '@/components/ui/icons'
@@ -9,6 +11,9 @@ import { AuthMethodsManagement } from '@/components/auth/AuthMethodsManagement'
 type TabType = 'reading' | 'interpretation' | 'notifications' | 'privacy' | 'security'
 
 export default function SettingsPage() {
+  // 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth()
+
   const {
     preferences,
     loading,
@@ -24,14 +29,9 @@ export default function SettingsPage() {
 
   console.log('[SettingsPage] Render - loading:', loading, 'preferences:', preferences)
 
-  if (loading && !preferences) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pip-boy-green" />
-        </div>
-      </div>
-    )
+  // 統一載入畫面
+  if (!isReady || (loading && !preferences)) {
+    return <AuthLoading isVerifying={!isReady} />
   }
 
   if (!preferences) {

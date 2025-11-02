@@ -48,6 +48,11 @@ from .journal import (
     JournalResponse,
     JournalListResponse,
 )
+from .user import (
+    UserTitlesResponse,
+    UpdateTitleRequest,
+    UpdateTitleResponse,
+)
 
 __all__ = [
     "SessionCreateSchema",
@@ -91,4 +96,8 @@ __all__ = [
     "JournalUpdate",
     "JournalResponse",
     "JournalListResponse",
+    # User schemas (Titles)
+    "UserTitlesResponse",
+    "UpdateTitleRequest",
+    "UpdateTitleResponse",
 ]

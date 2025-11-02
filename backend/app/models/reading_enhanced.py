@@ -16,13 +16,13 @@ from .wasteland_card import CharacterVoice, KarmaAlignment, FactionAlignment
 
 class SpreadType(str, PyEnum):
     """Available spread types in the Wasteland Tarot system"""
-    SINGLE_WASTELAND = "single_wasteland"
-    VAULT_TEC_SPREAD = "vault_tec_spread"  # 3 cards: past/present/future
-    WASTELAND_SURVIVAL = "wasteland_survival"  # 5 cards
-    BROTHERHOOD_COUNCIL = "brotherhood_council"  # 7 cards
-    CELTIC_CROSS = "celtic_cross"  # 10 cards: classic Celtic Cross adapted for Fallout
-    HORSESHOE = "horseshoe"  # 7 cards: horseshoe pattern for journey readings
-    CUSTOM_SPREAD = "custom_spread"
+    SINGLE_WASTELAND = "single_wasteland"  # 單卡廢土占卜（1張）
+    VAULT_TEC_SPREAD = "vault_tec_spread"  # 避難所科技三牌陣（3張）
+    RAIDER_CHAOS = "raider_chaos"  # 掠奪者混沌陣（4張）
+    WASTELAND_SURVIVAL = "wasteland_survival"  # 廢土生存五牌陣（5張）
+    NCR_STRATEGIC = "ncr_strategic"  # NCR戰略陣（6張）
+    BROTHERHOOD_COUNCIL = "brotherhood_council"  # 兄弟會議會（7張）
+    CELTIC_CROSS = "celtic_cross"  # 十字路口抉擇陣（10張）
 
 
 class InterpretationStyle(str, PyEnum):
@@ -111,7 +111,7 @@ class SpreadTemplate(BaseModel):
         karma_preferences = {
             KarmaAlignment.GOOD: ["vault_tec_spread", "brotherhood_council"],
             KarmaAlignment.NEUTRAL: ["single_wasteland", "wasteland_survival"],
-            KarmaAlignment.EVIL: ["custom_spread", "wasteland_survival"]
+            KarmaAlignment.EVIL: ["raider_chaos", "wasteland_survival"]
         }
         return self.spread_type in karma_preferences.get(karma, [self.spread_type])
 
@@ -303,6 +303,7 @@ class CompletedReading(BaseModel):
     ai_interpretation_requested = Column(Boolean, default=False, nullable=False)
     ai_interpretation_at = Column(DateTime(timezone=True), nullable=True)
     ai_interpretation_provider = Column(String(50), nullable=True)  # "openai", "anthropic", etc.
+    interpretation_audio_url = Column(Text, nullable=True)  # TTS audio URL for AI interpretation
 
     # Share Link Feature
     share_token = Column(UUID(as_uuid=True), nullable=True, unique=True, index=True)  # Unique token for sharing

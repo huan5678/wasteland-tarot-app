@@ -14,10 +14,10 @@ import { SimpleProgressBar } from '@/components/ui/ProgressBar'
 import { PipBoyButton } from '@/components/ui/pipboy'
 import { cn } from '@/lib/utils'
 import {
-  UserAchievementProgress,
-  AchievementStatus,
-  AchievementRarity,
-  AchievementCategory
+  type UserAchievementProgress,
+  type AchievementRarity,
+  type AchievementCategory,
+  type AchievementStatus,
 } from '@/lib/stores/achievementStore'
 
 // ============================================================================
@@ -52,13 +52,6 @@ const getRarityConfig = (rarity: AchievementRarity): {
         bgColor: 'bg-gray-900/50',
         label: '普通',
         glow: 'shadow-[0_0_5px_rgba(156,163,175,0.3)]'
-      }
-    case 'UNCOMMON':
-      return {
-        color: 'text-green-400',
-        bgColor: 'bg-green-900/50',
-        label: '罕見',
-        glow: 'shadow-[0_0_8px_rgba(74,222,128,0.4)]'
       }
     case 'RARE':
       return {
@@ -96,15 +89,15 @@ const getRarityConfig = (rarity: AchievementRarity): {
  */
 const getCategoryIcon = (category: AchievementCategory): string => {
   switch (category) {
-    case AchievementCategory.READING:
+    case 'READING':
       return 'book'
-    case AchievementCategory.SOCIAL:
+    case 'SOCIAL':
       return 'users'
-    case AchievementCategory.BINGO:
+    case 'BINGO':
       return 'grid'
-    case AchievementCategory.KARMA:
+    case 'KARMA':
       return 'zap'
-    case AchievementCategory.EXPLORATION:
+    case 'EXPLORATION':
       return 'compass'
     default:
       return 'trophy'
@@ -120,19 +113,19 @@ const getStatusConfig = (status: AchievementStatus): {
   icon: string
 } => {
   switch (status) {
-    case AchievementStatus.IN_PROGRESS:
+    case 'IN_PROGRESS':
       return {
         label: '進行中',
         color: 'text-yellow-400',
         icon: 'clock'
       }
-    case AchievementStatus.UNLOCKED:
+    case 'UNLOCKED':
       return {
         label: '已解鎖',
         color: 'text-pip-boy-green',
         icon: 'unlock'
       }
-    case AchievementStatus.CLAIMED:
+    case 'CLAIMED':
       return {
         label: '已領取',
         color: 'text-green-400',
@@ -163,9 +156,9 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   const statusConfig = getStatusConfig(status)
   const categoryIcon = getCategoryIcon(achievementDef.category)
 
-  const isUnlocked = status === AchievementStatus.UNLOCKED
-  const isClaimed = status === AchievementStatus.CLAIMED
-  const isInProgress = status === AchievementStatus.IN_PROGRESS
+  const isUnlocked = status === 'UNLOCKED'
+  const isClaimed = status === 'CLAIMED'
+  const isInProgress = status === 'IN_PROGRESS'
 
   const handleClaim = () => {
     if (isUnlocked && onClaim) {
@@ -187,6 +180,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
       onClick={handleCardClick}
       className={cn(
         'relative overflow-hidden transition-all duration-300',
+        'bg-gray-900/80 backdrop-blur-sm',
         rarityConfig.glow,
         isUnlocked && 'border-pip-boy-green/50',
         isClaimed && 'opacity-50',

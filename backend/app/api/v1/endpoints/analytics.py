@@ -5,12 +5,12 @@ Handles user behavior tracking and analytics data
 from typing import List, Optional
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 
 from app.core.dependencies import get_db, get_current_user
 from app.models.user import User
-from app.services.user_analytics_service import UserAnalyticsService
+from app.services.async_user_analytics_service import AsyncUserAnalyticsService
 from app.models.user_analytics import (
     UserAnalytics,
     AnalyticsEvent,
@@ -79,19 +79,19 @@ class AnalyticsResponse(BaseModel):
 async def track_events(
     batch: EventBatch,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Track multiple analytics events
 
     This endpoint accepts a batch of events from the client
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
     tracked_events = []
 
     for event_data in batch.events:
         try:
-            event = service.track_event(
+            event = await service.track_event(
                 user_id=current_user.id,
                 event_type=event_data.event_type,
                 event_category=event_data.event_category,
@@ -120,14 +120,14 @@ async def track_events(
 async def update_session(
     session_data: SessionUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update user session statistics
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    analytics = service.update_session_stats(
+    analytics = await service.update_session_stats(
         user_id=current_user.id,
         session_duration=session_data.duration,
         device_type=session_data.device_type
@@ -143,14 +143,14 @@ async def update_session(
 async def update_reading_stats(
     reading_data: ReadingStatsUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update user reading statistics
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    analytics = service.update_reading_stats(
+    analytics = await service.update_reading_stats(
         user_id=current_user.id,
         spread_type=reading_data.spread_type,
         character_voice=reading_data.character_voice,
@@ -167,27 +167,27 @@ async def update_reading_stats(
 @router.get("/user", response_model=AnalyticsResponse)
 async def get_user_analytics(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get comprehensive analytics for current user
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
     # Get user analytics
-    analytics = service.get_or_create_analytics(current_user.id)
+    analytics = await service.get_or_create_analytics(current_user.id)
 
     # Get recent events
-    recent_events = service.get_user_events(
+    recent_events = await service.get_user_events(
         user_id=current_user.id,
         limit=50
     )
 
     # Get patterns
-    patterns = service.get_user_patterns(current_user.id)
+    patterns = await service.get_user_patterns(current_user.id)
 
     # Get recommendations
-    recommendations = service.get_user_recommendations(current_user.id)
+    recommendations = await service.get_user_recommendations(current_user.id)
 
     return {
         "user_analytics": analytics.to_dict(),
@@ -204,14 +204,14 @@ async def get_events(
     end_date: Optional[datetime] = None,
     limit: int = Query(100, le=1000),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get user events with optional filters
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    events = service.get_user_events(
+    events = await service.get_user_events(
         user_id=current_user.id,
         event_type=event_type,
         start_date=start_date,
@@ -230,14 +230,14 @@ async def get_statistics(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get event statistics for user
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    stats = service.get_event_statistics(
+    stats = await service.get_event_statistics(
         user_id=current_user.id,
         start_date=start_date,
         end_date=end_date
@@ -249,14 +249,14 @@ async def get_statistics(
 @router.post("/patterns/analyze", status_code=200)
 async def analyze_patterns(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Analyze user's reading patterns
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    patterns = service.analyze_reading_patterns(current_user.id)
+    patterns = await service.analyze_reading_patterns(current_user.id)
 
     return {
         "message": "Pattern analysis completed",
@@ -269,14 +269,14 @@ async def analyze_patterns(
 async def get_patterns(
     pattern_type: Optional[str] = None,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get user's reading patterns
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    patterns = service.get_user_patterns(
+    patterns = await service.get_user_patterns(
         user_id=current_user.id,
         pattern_type=pattern_type
     )
@@ -291,7 +291,7 @@ async def get_patterns(
 async def generate_recommendations(
     context: Optional[dict] = None,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Generate personalized recommendations with optional context
@@ -300,9 +300,9 @@ async def generate_recommendations(
     - question: Current question text for spread recommendation
     - card_ids: Cards in current reading
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendations = service.generate_recommendations(
+    recommendations = await service.generate_recommendations(
         user_id=current_user.id,
         context=context
     )
@@ -318,14 +318,14 @@ async def generate_recommendations(
 async def get_spread_for_question(
     request: QuestionRecommendationRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get spread recommendation based on question analysis
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendation = service.get_spread_recommendation_for_question(
+    recommendation = await service.get_spread_recommendation_for_question(
         user_id=current_user.id,
         question=request.question
     )
@@ -346,14 +346,14 @@ async def get_spread_for_question(
 async def get_interpretation_style(
     request: InterpretationStyleRequest,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get interpretation style recommendation based on user experience and cards
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    style = service.get_interpretation_style_recommendation(
+    style = await service.get_interpretation_style_recommendation(
         user_id=current_user.id,
         card_ids=request.card_ids
     )
@@ -369,14 +369,14 @@ async def get_recommendations(
     recommendation_type: Optional[str] = None,
     is_active: bool = True,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Get user recommendations
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendations = service.get_user_recommendations(
+    recommendations = await service.get_user_recommendations(
         user_id=current_user.id,
         recommendation_type=recommendation_type,
         is_active=is_active
@@ -392,14 +392,14 @@ async def get_recommendations(
 async def mark_recommendation_shown(
     recommendation_id: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Mark recommendation as shown to user
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendation = service.mark_recommendation_shown(recommendation_id)
+    recommendation = await service.mark_recommendation_shown(recommendation_id)
 
     if not recommendation:
         raise HTTPException(status_code=404, detail="Recommendation not found")
@@ -414,14 +414,14 @@ async def mark_recommendation_shown(
 async def accept_recommendation(
     recommendation_id: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Accept a recommendation
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendation = service.accept_recommendation(recommendation_id)
+    recommendation = await service.accept_recommendation(recommendation_id)
 
     if not recommendation:
         raise HTTPException(status_code=404, detail="Recommendation not found")
@@ -436,14 +436,14 @@ async def accept_recommendation(
 async def reject_recommendation(
     recommendation_id: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Reject a recommendation
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    recommendation = service.reject_recommendation(recommendation_id)
+    recommendation = await service.reject_recommendation(recommendation_id)
 
     if not recommendation:
         raise HTTPException(status_code=404, detail="Recommendation not found")
@@ -458,14 +458,14 @@ async def reject_recommendation(
 async def favorite_card(
     card_id: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Add card to favorites
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    analytics = service.add_favorited_card(current_user.id, card_id)
+    analytics = await service.add_favorited_card(current_user.id, card_id)
 
     return {
         "message": "Card added to favorites",
@@ -477,14 +477,14 @@ async def favorite_card(
 async def unfavorite_card(
     card_id: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Remove card from favorites
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    analytics = service.remove_favorited_card(current_user.id, card_id)
+    analytics = await service.remove_favorited_card(current_user.id, card_id)
 
     return {
         "message": "Card removed from favorites",
@@ -496,7 +496,7 @@ async def unfavorite_card(
 async def increment_engagement(
     metric_type: str,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Increment engagement metrics (share, note, export)
@@ -504,9 +504,9 @@ async def increment_engagement(
     if metric_type not in ["share", "note", "export"]:
         raise HTTPException(status_code=400, detail="Invalid metric type")
 
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
-    analytics = service.increment_engagement_metric(current_user.id, metric_type)
+    analytics = await service.increment_engagement_metric(current_user.id, metric_type)
 
     return {
         "message": f"{metric_type.capitalize()} count incremented",
@@ -549,7 +549,7 @@ class TokenExtensionHistoryResponse(BaseModel):
 async def track_token_extension(
     event: TokenExtensionEventCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     追蹤 Token 延長事件
@@ -560,7 +560,7 @@ async def track_token_extension(
     - 成功/失敗狀態
     - 額外 metadata
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
     # 建立事件資料
     event_data = {
@@ -572,7 +572,7 @@ async def track_token_extension(
     }
 
     # 追蹤事件
-    tracked_event = service.track_event(
+    tracked_event = await service.track_event(
         user_id=current_user.id,
         event_type="token_extension",
         event_category="security",
@@ -591,7 +591,7 @@ async def get_token_extension_stats(
     start_date: Optional[datetime] = Query(None, description="統計起始日期"),
     end_date: Optional[datetime] = Query(None, description="統計結束日期"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     取得 Token 延長統計資料
@@ -605,7 +605,7 @@ async def get_token_extension_stats(
     - 成功率
     - 每日統計趨勢
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
     # 如果沒有指定日期範圍，預設為最近 30 天
     if not end_date:
@@ -614,7 +614,7 @@ async def get_token_extension_stats(
         start_date = end_date - timedelta(days=30)
 
     # 取得所有 token extension 事件
-    events = service.get_user_events(
+    events = await service.get_user_events(
         user_id=current_user.id,
         event_type="token_extension",
         start_date=start_date,
@@ -679,7 +679,7 @@ async def get_token_extension_history(
     end_date: Optional[datetime] = Query(None, description="結束日期"),
     limit: int = Query(50, le=500, description="最多回傳筆數"),
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     取得 Token 延長歷史記錄
@@ -691,7 +691,7 @@ async def get_token_extension_history(
 
     用於前端監控儀表板顯示詳細記錄
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
     # 如果沒有指定日期範圍，預設為最近 30 天
     if not end_date:
@@ -700,7 +700,7 @@ async def get_token_extension_history(
         start_date = end_date - timedelta(days=30)
 
     # 取得事件
-    events = service.get_user_events(
+    events = await service.get_user_events(
         user_id=current_user.id,
         event_type="token_extension",
         start_date=start_date,
@@ -742,7 +742,7 @@ class AuthEventCreate(BaseModel):
 async def track_auth_event(
     event: AuthEventCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     追蹤認證相關事件
@@ -753,10 +753,10 @@ async def track_auth_event(
     - passkey_upgrade_completed: Passkey 升級完成
     - oauth_conflict_resolution_abandoned: 帳號衝突解決放棄
     """
-    service = UserAnalyticsService(db)
+    service = AsyncUserAnalyticsService(db)
 
     # 追蹤事件
-    tracked_event = service.track_event(
+    tracked_event = await service.track_event(
         user_id=current_user.id,
         event_type=event.event_type,
         event_category="authentication",

@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -54,6 +55,7 @@ export default function ContactForm() {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     setSubmitSuccess(false);
+    setSubmitError(null);
 
     try {
       // Simulate API call (replace with actual API endpoint)
@@ -72,7 +74,13 @@ export default function ContactForm() {
       }, 3000);
     } catch (error) {
       console.error('Form submission error:', error);
-      // TODO: Add error handling UI
+      const errorMessage = error instanceof Error ? error.message : '傳送失敗，請稍後再試';
+      setSubmitError(errorMessage);
+
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setSubmitError(null);
+      }, 5000);
     } finally {
       setIsSubmitting(false);
     }
@@ -100,6 +108,30 @@ export default function ContactForm() {
           </p>
           <p className="mt-2 text-xs text-green-700">
             &gt;&gt; Signal strength: 100% | Encryption: AES-256
+          </p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {submitError && (
+        <div
+          className="mb-6 border-2 border-red-600 bg-red-950/50 p-4 animate-pulse"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="mb-2 flex items-center text-red-400">
+            <span className="mr-2 text-xl" aria-hidden="true">
+              ✗
+            </span>
+            <span className="font-bold">
+              [TRANSMISSION FAILED]
+            </span>
+          </div>
+          <p className="text-sm text-red-500">
+            {submitError}
+          </p>
+          <p className="mt-2 text-xs text-red-700">
+            &gt;&gt; System error detected | Please retry
           </p>
         </div>
       )}

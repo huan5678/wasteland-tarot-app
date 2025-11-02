@@ -44,7 +44,7 @@ export interface DetailedTarotCard {
   meaning_reversed?: string
   keywords?: string[]
   fallout_reference?: string
-  character_voice_interpretations?: {
+  character_voices?: {
     [voice: string]: string
   }
   radiation_factor?: number
@@ -97,6 +97,15 @@ interface CardInteractionState {
   lastViewed?: Date
 }
 
+interface ReadingContext {
+  question?: string
+  spreadType?: string
+  positionName?: string
+  positionMeaning?: string
+  cardIndex?: number
+  totalCards?: number
+}
+
 interface CardDetailModalProps {
   card: DetailedTarotCard | null
   isOpen: boolean
@@ -119,6 +128,8 @@ interface CardDetailModalProps {
   showPersonalNotes?: boolean
   // Faction filtering
   factionInfluence?: string
+  // Reading context (for /readings/[id] page)
+  readingContext?: ReadingContext
 }
 
 // Tab configuration for the modal interface
@@ -206,12 +217,12 @@ const CharacterVoiceSelector = ({
   }
 
   const handlePlayAudio = useCallback(async (voice: string) => {
-    if (!audioEnabled || !card?.character_voice_interpretations?.[voice]) return
+    if (!audioEnabled || !card?.character_voices?.[voice]) return
 
     setIsPlaying(true)
     try {
       // Get the interpretation text for this voice
-      const text = card.character_voice_interpretations[voice]
+      const text = card.character_voices[voice]
       if (text) {
         // Use external handleSpeakText function
         if (typeof window !== 'undefined' && (window as any).handleCardSpeech) {
@@ -320,7 +331,8 @@ export function CardDetailModal({
   showBookmark = true,
   showShare = true,
   showPersonalNotes = true,
-  factionInfluence
+  factionInfluence,
+  readingContext
 }: CardDetailModalProps) {
   // ✅ 使用 API 載入角色資料
   const { characters, isLoading: isLoadingCharacters } = useCharacters()
@@ -396,11 +408,11 @@ export function CardDetailModal({
 
   // Auto-select first available voice when faction changes or card changes
   useEffect(() => {
-    if (!card?.character_voice_interpretations) return
+    if (!card?.character_voices) return
 
     // 根據陣營過濾角色聲音
     const filteredVoices = filterCharacterVoicesByFaction(
-      card.character_voice_interpretations,
+      card.character_voices,
       factionInfluence
     )
     const availableVoices = Object.keys(filteredVoices)
@@ -605,10 +617,69 @@ export function CardDetailModal({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+      className="space-y-6"
     >
-      {/* Left Column - Card Image */}
-      <div className="space-y-4">
+      {/* Reading Context (占卜情境) - Only show when provided */}
+      {readingContext && (
+        <div className="bg-blue-900/20 border border-blue-800/50 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2 mb-2">
+            <PixelIcon name="compass" sizePreset="sm" variant="info" decorative />
+            <h3 className="text-blue-400 font-semibold text-sm uppercase">
+              占卜情境
+            </h3>
+          </div>
+
+          {readingContext.question && (
+            <div>
+              <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                問題
+              </h4>
+              <p className="text-gray-300 text-sm">{readingContext.question}</p>
+            </div>
+          )}
+
+          <div className="grid md:grid-cols-2 gap-3">
+            {readingContext.spreadType && (
+              <div>
+                <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                  牌陣類型
+                </h4>
+                <p className="text-gray-300 text-sm">{readingContext.spreadType}</p>
+              </div>
+            )}
+
+            {readingContext.positionName && (
+              <div>
+                <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                  位置
+                </h4>
+                <p className="text-gray-300 text-sm">
+                  {readingContext.positionName}
+                  {readingContext.cardIndex !== undefined && readingContext.totalCards && (
+                    <span className="text-blue-400 ml-2">
+                      ({readingContext.cardIndex + 1}/{readingContext.totalCards})
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {readingContext.positionMeaning && (
+            <div>
+              <h4 className="text-blue-300 font-semibold mb-1 text-xs uppercase">
+                位置意義
+              </h4>
+              <p className="text-gray-300 text-sm">{readingContext.positionMeaning}</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column - Card Image */}
+        <div className="space-y-4">
         <div className="relative" ref={imageContainerRef}>
           <div className="w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative">
             {imageError ? (
@@ -854,6 +925,8 @@ export function CardDetailModal({
           </div>
         )}
       </div>
+      {/* End of Main Content Grid */}
+      </div>
     </motion.div>
   )
 
@@ -964,8 +1037,8 @@ export function CardDetailModal({
 
   const renderCharactersTab = () => {
     // 根據陣營過濾角色聲音
-    const filteredVoices = card.character_voice_interpretations
-      ? filterCharacterVoicesByFaction(card.character_voice_interpretations, factionInfluence)
+    const filteredVoices = card.character_voices
+      ? filterCharacterVoicesByFaction(card.character_voices, factionInfluence)
       : {}
 
     return (
@@ -977,7 +1050,7 @@ export function CardDetailModal({
         exit="exit"
         className="space-y-6"
       >
-        {Object.keys(filteredVoices).length > 0 && (
+        {Object.keys(filteredVoices).length > 0 ? (
           <div>
             <CharacterVoiceSelector
               voices={filteredVoices}
@@ -1063,8 +1136,26 @@ export function CardDetailModal({
             )}
           </motion.div>
         </div>
-      )}
-    </motion.div>
+        ) : (
+          <div className="text-center py-12">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <PixelIcon name="group" size={48} className="mx-auto text-pip-boy-green/40" decorative />
+              <div className="space-y-2">
+                <p className="text-pip-boy-green/80 text-sm font-bold">
+                  暫無角色解讀資料
+                </p>
+                <p className="text-pip-boy-green/60 text-xs">
+                  這張卡片尚未被廢土角色解讀
+                </p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </motion.div>
     )
   }
 

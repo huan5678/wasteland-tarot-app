@@ -160,11 +160,149 @@ When you see code, immediately perform a three-tier judgment:
 - 只使用 `<PixelIcon>` 元件 (`@/components/ui/icons`)
 - 使用參數與說明：訪問 `src/components/ui/icons/README.md`
 
-### 2.3 檔案搜尋政策 (File Search Policy)
+### 2.3 編碼規範 (Coding Standards)
+
+#### 2.3.1 硬編碼消除原則
+
+**MUST 規則：Return 語句中的陣列映射 (Array Mapping in Return Statements)**
+
+所有寫在 `return` 裡的硬編碼重複內容，**最低限度都必須使用陣列映射的方法**來實現。這是強制性的代碼質量要求。
+
+**核心原則**
+- ❌ **禁止**: 在 JSX return 中直接複製貼上相似的元素
+- ✅ **必須**: 使用 `.map()` 從資料陣列生成元素
+- 🎯 **目標**: 單一資料來源 (Single Source of Truth)
+
+**適用情境**
+1. 重複的列表項目
+2. 相似的卡片元件
+3. 多個選項按鈕
+4. 表單欄位組
+5. 任何結構相同但資料不同的 UI 元素
+
+**正確範例**
+
+```tsx
+// ✅ 優秀：使用陣列映射
+const ACHIEVEMENT_CATEGORIES = [
+  { id: 'reading', label: '解讀成就', icon: 'book' },
+  { id: 'social', label: '社交成就', icon: 'user' },
+  { id: 'bingo', label: '賓果成就', icon: 'grid' },
+  { id: 'exploration', label: '探索成就', icon: 'compass' }
+] as const
+
+return (
+  <div className="categories">
+    {ACHIEVEMENT_CATEGORIES.map(category => (
+      <button
+        key={category.id}
+        onClick={() => handleCategoryChange(category.id)}
+        className="category-btn"
+      >
+        <PixelIcon name={category.icon} />
+        {category.label}
+      </button>
+    ))}
+  </div>
+)
+```
+
+```tsx
+// ✅ 優秀：表單欄位映射
+const FORM_FIELDS = [
+  { name: 'username', label: '使用者名稱', type: 'text', required: true },
+  { name: 'email', label: '電子郵件', type: 'email', required: true },
+  { name: 'bio', label: '個人簡介', type: 'textarea', required: false }
+] as const
+
+return (
+  <form>
+    {FORM_FIELDS.map(field => (
+      <div key={field.name} className="form-field">
+        <label htmlFor={field.name}>
+          {field.label}
+          {field.required && <span className="required">*</span>}
+        </label>
+        {field.type === 'textarea' ? (
+          <textarea id={field.name} name={field.name} />
+        ) : (
+          <input id={field.name} name={field.name} type={field.type} />
+        )}
+      </div>
+    ))}
+  </form>
+)
+```
+
+**錯誤範例**
+
+```tsx
+// ❌ 垃圾代碼：硬編碼重複
+return (
+  <div className="categories">
+    <button onClick={() => handleCategoryChange('reading')} className="category-btn">
+      <PixelIcon name="book" />
+      解讀成就
+    </button>
+    <button onClick={() => handleCategoryChange('social')} className="category-btn">
+      <PixelIcon name="user" />
+      社交成就
+    </button>
+    <button onClick={() => handleCategoryChange('bingo')} className="category-btn">
+      <PixelIcon name="grid" />
+      賓果成就
+    </button>
+    <button onClick={() => handleCategoryChange('exploration')} className="category-btn">
+      <PixelIcon name="compass" />
+      探索成就
+    </button>
+  </div>
+)
+// ⚠️ 問題：4 個按鈕的結構完全相同，只有資料不同
+// 🔧 解決：抽取資料到陣列，使用 .map() 生成
+```
+
+```tsx
+// ❌ 垃圾代碼：重複的表單欄位
+return (
+  <form>
+    <div className="form-field">
+      <label htmlFor="username">使用者名稱<span className="required">*</span></label>
+      <input id="username" name="username" type="text" />
+    </div>
+    <div className="form-field">
+      <label htmlFor="email">電子郵件<span className="required">*</span></label>
+      <input id="email" name="email" type="email" />
+    </div>
+    <div className="form-field">
+      <label htmlFor="bio">個人簡介</label>
+      <textarea id="bio" name="bio" />
+    </div>
+  </form>
+)
+// ⚠️ 問題：結構重複，難以維護，新增欄位需要複製整個 block
+// 🔧 解決：定義欄位陣列，統一渲染邏輯
+```
+
+**強制執行**
+- Code Review 時若發現硬編碼重複，**必須要求重構**
+- 任何 PR 中出現 3 個以上結構相同的元素視為 violation
+- 使用 ESLint 規則輔助檢測（建議）
+
+**例外情況**
+唯一允許硬編碼的情況：
+1. **元素數量 ≤ 2** 且結構差異大
+2. **單次使用** 且不會再出現的特殊 UI
+3. **A/B 測試** 臨時代碼（需註明移除期限）
+
+**Linus 的評價**
+> "If you copy-paste code three times, you're not a programmer, you're a monkey with a keyboard."
+
+### 2.4 檔案搜尋政策 (File Search Policy)
 
 To ensure reliable, efficient, and reproducible file search behavior across all CLI-based operations, agents **MUST** strictly use the following tools:
 
-#### 2.3.1 `fd` – File Discovery
+#### 2.4.1 `fd` – File Discovery
 
 **Purpose:** Locate files and directories recursively with high performance and intuitive syntax.
 
@@ -256,7 +394,7 @@ fd -g "test_*.py" -X vim
 - `{/}`: Basename (filename only)
 - `{//}`: Parent directory
 
-#### 2.3.2 `rg` (ripgrep) – File Content Search
+#### 2.4.2 `rg` (ripgrep) – File Content Search
 
 **Purpose:** Perform high-speed, regex-based text searches across files with intelligent defaults.
 
@@ -360,7 +498,7 @@ rg --type-add 'web:*.{html,css,js}' -tweb "pattern"
 --colors=line:style:bold
 ```
 
-#### 2.3.3 Integration Patterns
+#### 2.4.3 Integration Patterns
 
 Agents performing file search **MUST** follow these chained patterns:
 
@@ -398,7 +536,7 @@ rg "TODO" -g "!node_modules/*" -g "!dist/*" -g "!.git/*"
 
 This ensures that file discovery and content scanning remain tightly controlled, fast, and reproducible across environments.
 
-#### 2.3.4 Enforcement
+#### 2.4.4 Enforcement
 
 All agents executing file discovery or content lookup tasks **MUST** adhere to the above conventions.
 
@@ -415,7 +553,7 @@ Direct invocation of `find`, `grep`, or any legacy search command is **prohibite
 - If `fd` is not available, **MUST** use `fdfind` as a direct replacement (all options and syntax are identical).
 - To check availability: `command -v fd || command -v fdfind`
 
-#### 2.3.5 Rationale
+#### 2.4.5 Rationale
 
 - **Performance:** `fd` and `rg` are implemented in Rust, offering significant performance gains:
   - `fd` is ~23x faster than `find -iregex` (parallelized directory traversal)
@@ -715,9 +853,11 @@ Check `.kiro/specs/` for active specifications. Use `/kiro:spec-status [feature-
 
 ---
 
-**文件版本**: 2.1 (新增 fdfind 支援)
-**最後更新**: 2025-10-31
+**文件版本**: 2.2 (合併 fdfind 支援與編碼規範)
+**最後更新**: 2025-11-02
 
 **更新記錄**:
+- v2.2 (2025-11-02): 合併編碼規範與 fdfind 支援
+- v2.1 (2025-11-02): 新增編碼規範（硬編碼消除原則）
 - v2.1 (2025-10-31): 新增 `fdfind` 命令支援，確保在 Debian/Ubuntu 系統上的相容性
 - v2.0 (2025-10-29): 重組優化版

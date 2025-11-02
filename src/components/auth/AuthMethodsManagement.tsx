@@ -170,7 +170,6 @@ export function AuthMethodsManagement() {
       toast.loading('正在設定密碼...')
 
       // 呼叫後端 API 設定密碼
-      // TODO: 需要確認後端 API 端點
       const response = await fetch('/api/v1/auth/set-password', {
         method: 'POST',
         headers: {
@@ -212,7 +211,6 @@ export function AuthMethodsManagement() {
       toast.loading('正在取消 Google 帳號連結...')
 
       // 呼叫後端 API 移除 OAuth 連結
-      // TODO: 需要確認後端 API 端點
       const response = await fetch('/api/v1/auth/oauth/unlink', {
         method: 'POST',
         headers: {

@@ -22,6 +22,7 @@ from app.core.webauthn import get_webauthn_config, is_webauthn_enabled
 from app.core.dependencies import get_current_user, get_db
 from app.core.security import create_access_token, create_refresh_token
 from app.services.webauthn_service import WebAuthnService
+from app.services.webauthn_challenge_service import get_challenge_service
 from app.services.user_service import UserService
 from app.schemas.webauthn import (
     NewUserRegistrationOptionsRequest,
@@ -76,22 +77,35 @@ def get_webauthn_service(db: Session = Depends(get_db)) -> WebAuthnService:
     return WebAuthnService(db)
 
 
-def store_challenge_in_session(request: Request, challenge: bytes):
-    """Store challenge in session (temporary implementation using cookies)."""
-    # TODO: Implement Redis storage for production
-    # For now, using session storage
-    if not hasattr(request, "session"):
-        request.session = {}
-    request.session["webauthn_challenge"] = challenge.hex()
+async def store_challenge(identifier: str, challenge: bytes, request: Request) -> bool:
+    """
+    Store challenge using Redis (with Session fallback).
+
+    Args:
+        identifier: User identifier (email or user_id)
+        challenge: WebAuthn challenge bytes
+        request: FastAPI Request object
+
+    Returns:
+        True if successfully stored
+    """
+    challenge_service = get_challenge_service()
+    return await challenge_service.store_challenge(identifier, challenge, request)
 
 
-def get_challenge_from_session(request: Request) -> Optional[bytes]:
-    """Get challenge from session."""
-    if hasattr(request, "session") and "webauthn_challenge" in request.session:
-        challenge_hex = request.session["webauthn_challenge"]
-        del request.session["webauthn_challenge"]  # Single-use
-        return bytes.fromhex(challenge_hex)
-    return None
+async def get_challenge(identifier: str, request: Request) -> Optional[bytes]:
+    """
+    Get and delete challenge (single-use) using Redis (with Session fallback).
+
+    Args:
+        identifier: User identifier (email or user_id)
+        request: FastAPI Request object
+
+    Returns:
+        Challenge bytes if found, None otherwise
+    """
+    challenge_service = get_challenge_service()
+    return await challenge_service.get_and_delete_challenge(identifier, request)
 
 
 # ==================== New User Registration Endpoints (Passwordless) ====================
@@ -190,8 +204,8 @@ async def generate_new_user_registration_options(
             name=body.name
         )
 
-        # Store challenge and user info in session
-        store_challenge_in_session(request, options.challenge)
+        # Store challenge in Redis/Session (using email as identifier)
+        await store_challenge(body.email, options.challenge, request)
         # Store email and name for verification step
         if not hasattr(request, "session"):
             request.session = {}
@@ -326,15 +340,7 @@ async def verify_new_user_registration(
     """
     check_webauthn_enabled()
 
-    # Get expected challenge from session
-    expected_challenge = get_challenge_from_session(request)
-    if not expected_challenge:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Challenge 已過期或不存在，請重新開始註冊流程"
-        )
-
-    # Get stored user info from session
+    # Get stored user info from session first (needed for challenge retrieval)
     if not hasattr(request, "session"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -343,6 +349,20 @@ async def verify_new_user_registration(
 
     stored_email = request.session.get("new_user_email")
     stored_name = request.session.get("new_user_name")
+
+    if not stored_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="會話資訊遺失，請重新開始註冊流程"
+        )
+
+    # Get expected challenge from Redis/Session (using email as identifier)
+    expected_challenge = await get_challenge(stored_email, request)
+    if not expected_challenge:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Challenge 已過期或不存在，請重新開始註冊流程"
+        )
 
     # Verify email and name match
     if stored_email != body.email or stored_name != body.name:
@@ -523,8 +543,8 @@ async def generate_registration_options(
             device_name=body.device_name
         )
 
-        # Store challenge in session
-        store_challenge_in_session(request, options.challenge)
+        # Store challenge in Redis/Session (using user_id as identifier)
+        await store_challenge(str(current_user.id), options.challenge, request)
 
         # Convert options to JSON then back to dict for Pydantic
         options_json = options_to_json(options)
@@ -569,8 +589,8 @@ async def verify_registration_response(
     """
     check_webauthn_enabled()
 
-    # Get expected challenge from session
-    expected_challenge = get_challenge_from_session(request)
+    # Get expected challenge from Redis/Session (using user_id as identifier)
+    expected_challenge = await get_challenge(str(current_user.id), request)
     if not expected_challenge:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -774,8 +794,21 @@ async def generate_authentication_options(
         # Generate authentication options
         options = service.generate_authentication_options(user=user)
 
-        # Store challenge in session
-        store_challenge_in_session(request, options.challenge)
+        # Store challenge in Redis/Session
+        # For email-guided login: use email as identifier
+        # For usernameless login: use a temporary session token
+        if body.email:
+            identifier = body.email
+        else:
+            # Generate a temporary session token for usernameless login
+            identifier = f"auth_session_{secrets.token_hex(16)}"
+
+        # Store identifier in session for verification step
+        if not hasattr(request, "session"):
+            request.session = {}
+        request.session["auth_identifier"] = identifier
+
+        await store_challenge(identifier, options.challenge, request)
 
         # Convert options to JSON then back to dict for Pydantic
         options_json = options_to_json(options)
@@ -814,13 +847,25 @@ async def verify_authentication_response(
     """
     check_webauthn_enabled()
 
-    # Get expected challenge from session
-    expected_challenge = get_challenge_from_session(request)
+    # Get auth identifier from session
+    if not hasattr(request, "session") or "auth_identifier" not in request.session:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="會話資訊遺失，請重新開始登入流程"
+        )
+
+    identifier = request.session["auth_identifier"]
+
+    # Get expected challenge from Redis/Session using identifier
+    expected_challenge = await get_challenge(identifier, request)
     if not expected_challenge:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Challenge 已過期或不存在，請重新開始登入流程"
         )
+
+    # Clean up session
+    del request.session["auth_identifier"]
 
     try:
         # Verify authentication response

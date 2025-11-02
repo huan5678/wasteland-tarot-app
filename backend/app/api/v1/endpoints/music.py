@@ -14,6 +14,7 @@ from supabase import Client
 from app.core.supabase import get_supabase_client
 from app.core.dependencies import get_current_user, get_optional_current_user
 from app.models.user import User
+from app.services.pattern_generator import PatternGenerator  # P2.1
 from app.schemas.music import (
     PresetCreate,
     PresetUpdate,
@@ -627,15 +628,10 @@ async def generate_rhythm(
                 }
             )
 
-        # TODO: 呼叫 AI Provider 生成 Pattern
-        # 目前使用 mock 資料
-        generated_pattern = Pattern(
-            kick=[True, False, False, False, True, False, False, False, True, False, False, False, True, False, False, False],
-            snare=[False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False],
-            hihat=[False, False, True, False, False, False, True, False, False, False, True, False, False, False, True, False],
-            openhat=[False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True],
-            clap=[False, False, False, False, True, False, False, False, False, False, False, False, True, False, False, False],
-        )
+        # P2.1: 使用 PatternGenerator 生成 Pattern
+        # 基於規則的智能生成器（分析 prompt 關鍵字）
+        generator = PatternGenerator()
+        generated_pattern = generator.generate(request.prompt)
 
         # 更新配額
         supabase.table("user_ai_quotas")\

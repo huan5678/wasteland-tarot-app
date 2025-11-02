@@ -6,7 +6,7 @@
 'use client'
 
 import React, { useState, useCallback, useEffect } from 'react'
-import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
+import { CardThumbnail } from '@/components/cards/CardThumbnail'
 import { CardDetailModal, DetailedTarotCard } from './CardDetailModal'
 import { cardsAPI } from '@/lib/api'
 import { enhanceCardBasic } from '@/hooks/useCardEnhancement'
@@ -128,12 +128,11 @@ export function CardDraw({
     // Fallback: 根據 spread type 返回預設數量
     if (spreadType === 'single' || spreadType === 'single_wasteland' || spreadType === 'single_wasteland_reading') return 1
     if (spreadType === 'three_card' || spreadType === 'vault_tec_spread') return 3
+    if (spreadType === 'raider_chaos' || spreadType === 'raider_chaos_spread') return 4
     if (spreadType === 'wasteland_survival' || spreadType === 'wasteland_survival_spread') return 5
-    if (spreadType === 'raider_chaos' || spreadType === 'raider_chaos_spread' || spreadType === 'custom_spread') return 4
     if (spreadType === 'ncr_strategic' || spreadType === 'ncr_strategic_spread') return 6
     if (spreadType === 'brotherhood_council' || spreadType === 'brotherhood_council_spread') return 7
     if (spreadType === 'celtic_cross') return 10
-    if (spreadType === 'horseshoe') return 7
 
     // 最後的 fallback
     return 1
@@ -258,7 +257,8 @@ export function CardDraw({
         aria-disabled={selectedPositions.includes(index)}
       >
         {drawnCards[index] ? (
-          <CardThumbnailFlippable
+          <CardThumbnail
+            flippable
             card={drawnCards[index]}
             isRevealed={true}
             position={drawnCards[index].position}
@@ -321,7 +321,8 @@ export function CardDraw({
                         }
                       }}
                     >
-                      <CardThumbnailFlippable
+                      <CardThumbnail
+                        flippable
                         card={card}
                         isRevealed={revealed}
                         position={card.position}
@@ -474,7 +475,8 @@ export function CardDraw({
                   }
                 }}
               >
-                <CardThumbnailFlippable
+                <CardThumbnail
+                  flippable
                   card={card}
                   isRevealed={revealed}
                   position={card.position}

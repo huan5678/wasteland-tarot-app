@@ -582,7 +582,30 @@ import type {
  * @returns Card with story and audio URLs
  */
 export async function getCardWithStory(id: string): Promise<WastelandCardWithStory> {
-  return apiRequest<WastelandCardWithStory>(`/api/v1/cards/${id}?include_story=true`)
+  const response = await apiRequest<any>(`/api/v1/cards/${id}?include_story=true`)
+
+  // 🔄 欄位映射：將後端巢狀結構轉換為前端扁平結構
+  return {
+    ...response,
+    // 映射 audio_urls (snake_case) → audioUrls (camelCase)
+    audioUrls: response.audio_urls || response.audioUrls,
+    // 映射 metadata.radiation_level → radiation_factor
+    radiation_factor: response.metadata?.radiation_level ?? response.radiation_factor ?? 0,
+    // 映射 visuals.image_url → image_url
+    image_url: response.visuals?.image_url ?? response.image_url ?? '',
+    // 映射 character_voices key 名稱
+    character_voices: response.character_voices ? {
+      pip_boy: response.character_voices.pip_boy_analysis ?? response.character_voices.pip_boy,
+      vault_dweller: response.character_voices.vault_dweller_perspective ?? response.character_voices.vault_dweller,
+      wasteland_trader: response.character_voices.wasteland_trader_wisdom ?? response.character_voices.wasteland_trader,
+      super_mutant: response.character_voices.super_mutant_simplicity ?? response.character_voices.super_mutant,
+      codsworth: response.character_voices.codsworth_analysis ?? response.character_voices.codsworth,
+    } : {},
+    // 映射其他巢狀欄位
+    fallout_reference: response.fallout_reference ?? response.fallout_easter_egg,
+    vault_reference: response.metadata?.vault_number ?? response.vault_reference,
+    threat_level: response.metadata?.threat_level ?? response.threat_level,
+  } as WastelandCardWithStory
 }
 
 /**
@@ -602,10 +625,10 @@ export async function generateStoryAudio(
     const response = await apiRequest<GenerateStoryAudioResponse>('/api/v1/audio/generate/story', {
       method: 'POST',
       body: JSON.stringify({
-        cardId,
-        characterKeys,
-        forceRegenerate,
-      } as GenerateStoryAudioRequest),
+        card_id: cardId,              // 使用蛇形命名符合後端 schema
+        character_keys: characterKeys, // 使用蛇形命名符合後端 schema
+        force_regenerate: forceRegenerate, // 使用蛇形命名符合後端 schema
+      }),
     })
     return response
   } catch (error: any) {
@@ -639,6 +662,34 @@ export async function getStoryAudioUrls(cardId: string): Promise<Record<string, 
     console.warn(`Failed to fetch story audio URLs for card ${cardId}:`, error.message)
     return {}
   }
+}
+
+// ==================== Analytics API ====================
+
+export const analyticsAPI = {
+  /**
+   * Get user analytics data including most drawn cards
+   */
+  getUserAnalytics: async (): Promise<{
+    user_analytics: {
+      id: string
+      user_id: string
+      most_drawn_cards: string[] // Array of card IDs ordered by frequency
+      favorited_cards: string[]
+      readings_count: number
+      shares_count: number
+      notes_count: number
+      exports_count: number
+      favorite_spread_type: string | null
+      favorite_character_voice: string | null
+      [key: string]: any
+    }
+    recent_events: any[]
+    patterns: any[]
+    recommendations: any[]
+  }> => {
+    return apiRequest('/api/v1/analytics/user')
+  },
 }
 
 export type { TarotCard, Reading, User, APIError }

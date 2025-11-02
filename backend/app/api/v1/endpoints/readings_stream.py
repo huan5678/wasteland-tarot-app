@@ -3,6 +3,7 @@ AI 驅動的塔羅解讀串流 API 端點
 提供 AI 生成解讀的即時串流
 """
 
+import json
 import logging
 from typing import Optional
 from fastapi import APIRouter, HTTPException, Depends
@@ -140,7 +141,8 @@ async def stream_card_interpretation(
                 position_meaning=request.position_meaning
             ):
                 # Format as SSE (Server-Sent Events)
-                yield f"data: {chunk}\n\n"
+                # Use JSON encoding to handle newlines in chunk
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
             # Send completion signal
             yield "data: [DONE]\n\n"
@@ -226,7 +228,8 @@ async def stream_multi_card_interpretation(
         )
 
     # Maintain order of cards as requested
-    card_map = {card.id: card for card in cards}
+    # Convert UUID to string for consistent key matching
+    card_map = {str(card.id): card for card in cards}
     ordered_cards = [card_map[card_id] for card_id in request.card_ids]
 
     async def generate_stream():
@@ -242,7 +245,8 @@ async def stream_multi_card_interpretation(
                 spread_type=request.spread_type
             ):
                 # Format as SSE
-                yield f"data: {chunk}\n\n"
+                # Use JSON encoding to handle newlines in chunk
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
 
             # Send completion signal
             yield "data: [DONE]\n\n"

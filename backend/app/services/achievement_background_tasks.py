@@ -43,18 +43,11 @@ class AchievementBackgroundTasks:
             此函式在背景執行，不會回傳結果給前端
             解鎖的成就會在下次使用者查詢時顯示
         """
-        # Create a new database session for background task
-        engine = create_async_engine(
-            settings.SQLALCHEMY_DATABASE_URI,
-            echo=False,
-            pool_pre_ping=True
-        )
-        async_session_maker = sessionmaker(
-            engine, class_=AsyncSession, expire_on_commit=False
-        )
+        # ✅ 重用已配置好的 session factory（含 PgBouncer 配置）
+        from app.db.session import AsyncSessionLocal
 
         try:
-            async with async_session_maker() as session:
+            async with AsyncSessionLocal() as session:
                 achievement_service = AchievementService(session)
 
                 # 執行成就檢查
@@ -146,13 +139,16 @@ class AchievementBackgroundTasks:
 
 
 # Convenience function for FastAPI BackgroundTasks
-def schedule_achievement_check(
+async def schedule_achievement_check(
     user_id: UUID,
     trigger_event: str,
     event_context: Optional[Dict[str, Any]] = None
 ) -> None:
     """
-    FastAPI BackgroundTasks 包裝函式（同步版本）
+    FastAPI BackgroundTasks 包裝函式（✅ async 版本）
+
+    ✅ 修復：改為 async 函數讓 FastAPI BackgroundTasks 正確執行
+    ❌ 問題：之前使用 asyncio.create_task() 會在 request context 結束後被取消
 
     Args:
         user_id: 使用者 ID
@@ -167,11 +163,9 @@ def schedule_achievement_check(
             event_context={...}
         )
     """
-    # 在背景執行異步任務
-    asyncio.create_task(
-        AchievementBackgroundTasks.check_achievements_in_background(
-            user_id=user_id,
-            trigger_event=trigger_event,
-            event_context=event_context
-        )
+    # ✅ 直接 await，讓 FastAPI BackgroundTasks 管理任務生命週期
+    await AchievementBackgroundTasks.check_achievements_in_background(
+        user_id=user_id,
+        trigger_event=trigger_event,
+        event_context=event_context
     )

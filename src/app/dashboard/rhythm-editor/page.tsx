@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { useAuthStore } from '@/lib/authStore';
 import { PixelIcon } from '@/components/ui/icons';
 import { RhythmGrid } from '@/components/music-player/RhythmGrid';
 import { RhythmEditorControls } from '@/components/music-player/RhythmEditorControls';
@@ -23,23 +23,19 @@ import { SavePresetDialog } from '@/components/music-player/SavePresetDialog';
 export default function RhythmEditorPage() {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const { user, isLoading } = useAuthStore();
 
   // ========== Route Protection ==========
   // 檢查使用者是否已登入，未登入則重導向至登入頁面
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/auth');
-      }
-    };
-    checkAuth();
-  }, [router, supabase]);
+    // 等待 authStore 載入完成
+    if (isLoading) return;
+
+    // 如果沒有使用者，重導向到登入頁面
+    if (!user) {
+      router.push('/auth');
+    }
+  }, [user, isLoading, router]);
 
   return (
     <div className="min-h-screen bg-wasteland-dark text-pip-boy-green">

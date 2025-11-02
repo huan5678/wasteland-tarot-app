@@ -16,9 +16,16 @@ interface OAuthCallbackResult {
   user?: {
     id: string
     email: string
-    name: string
+    name: string  // User model 只有 name，沒有 username
     oauth_provider: string
-    profile_picture_url?: string
+    profile_picture_url?: string  // Google OAuth 頭像
+    avatar_url?: string  // 使用者上傳的頭像（優先）
+    created_at?: string  // 註冊時間
+    total_readings?: number
+    karma_score?: number
+    experience_level?: string
+    faction_alignment?: string
+    favorite_card_suit?: string
   }
   error?: string
 }
@@ -139,9 +146,16 @@ export function useOAuth() {
         user: {
           id: data.user.id,
           email: data.user.email,
-          name: data.user.name,
+          name: data.user.name,  // User model 只有 name，沒有 username
           oauth_provider: data.user.oauth_provider,
-          profile_picture_url: data.user.profile_picture_url,
+          profile_picture_url: data.user.profile_picture_url,  // Google OAuth 頭像
+          avatar_url: data.user.avatar_url,  // 使用者上傳的頭像（優先）
+          created_at: data.user.created_at,  // 註冊時間
+          total_readings: data.user.total_readings,
+          karma_score: data.user.karma_score,
+          experience_level: data.user.experience_level,
+          faction_alignment: data.user.faction_alignment,
+          favorite_card_suit: data.user.favorite_card_suit,
         },
       }
     } catch (error) {

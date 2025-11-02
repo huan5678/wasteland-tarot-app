@@ -161,7 +161,7 @@ export interface WastelandCard {
   astrological_association?: string;
 
   // Character voice interpretations
-  character_voice_interpretations: Record<string, string>;
+  character_voices: Record<string, string>;
   pip_boy_interpretation?: string;
   super_mutant_interpretation?: string;
   ghoul_interpretation?: string;
@@ -384,6 +384,7 @@ export interface CompletedReading {
   faction_influence?: FactionAlignment;
   radiation_factor?: number;
   overall_interpretation?: string;
+  interpretation_audio_url?: string;  // TTS audio URL for AI interpretation
   summary_message?: string;
   prediction_confidence?: number;  // 0.0 to 1.0
   energy_reading?: Record<string, any>;  // JSONB

@@ -44,7 +44,7 @@ export function ReadingDetailModal({ id, onClose }: Props) {
   ] as const
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-wasteland-dark border-2 border-pip-boy-green max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="border-b border-pip-boy-green/30 p-4 flex-shrink-0">

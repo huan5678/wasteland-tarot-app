@@ -34,31 +34,31 @@ const CATEGORY_OPTIONS: CategoryOption[] = [
     description: '顯示所有成就'
   },
   {
-    value: AchievementCategory.READING,
+    value: 'READING',
     label: '閱讀',
     icon: 'book',
     description: '塔羅閱讀相關成就'
   },
   {
-    value: AchievementCategory.SOCIAL,
+    value: 'SOCIAL',
     label: '社交',
-    icon: 'users',
+    icon: 'group',
     description: '社群互動相關成就'
   },
   {
-    value: AchievementCategory.BINGO,
+    value: 'BINGO',
     label: 'Bingo',
     icon: 'grid',
     description: 'Bingo 遊戲相關成就'
   },
   {
-    value: AchievementCategory.KARMA,
+    value: 'KARMA',
     label: 'Karma',
     icon: 'zap',
     description: 'Karma 累積相關成就'
   },
   {
-    value: AchievementCategory.EXPLORATION,
+    value: 'EXPLORATION',
     label: '探索',
     icon: 'compass',
     description: '廢土探索相關成就'

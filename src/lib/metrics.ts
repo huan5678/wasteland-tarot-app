@@ -208,11 +208,16 @@ export function monitorMemoryUsage() {
   const memory = getMemoryInfo()
 
   if (memory) {
-    logPerf('memory:usage', memory.usagePercent, {
-      used: memory.usedJSHeapSize,
-      total: memory.totalJSHeapSize,
-      limit: memory.jsHeapSizeLimit
-    })
+    // Only log memory usage if it exceeds 75% (potential issue) or if detailed logging is enabled
+    const shouldLog = memory.usagePercent > 75 || process.env.NEXT_PUBLIC_ENABLE_PERF_LOGS === 'true'
+
+    if (shouldLog) {
+      logPerf('memory:usage', memory.usagePercent, {
+        used: memory.usedJSHeapSize,
+        total: memory.totalJSHeapSize,
+        limit: memory.jsHeapSizeLimit
+      })
+    }
 
     // Alert on high memory usage
     if (memory.usagePercent > 90) {
@@ -278,9 +283,22 @@ export function initPerformanceObserver() {
         const layoutShift = entry as any
         if (layoutShift.hadRecentInput) continue
 
-        logPerf('layout_shift', layoutShift.value * 1000, {
-          startTime: entry.startTime
-        })
+        // Only log significant layout shifts (value > 0.01) or if detailed logging is enabled
+        // This prevents console spam from minor layout adjustments
+        const isSignificant = layoutShift.value > 0.01
+        const shouldLog = isSignificant || process.env.NEXT_PUBLIC_ENABLE_PERF_LOGS === 'true'
+
+        if (shouldLog) {
+          logPerf('layout_shift', layoutShift.value * 1000, {
+            startTime: entry.startTime
+          })
+        }
+
+        // Warn on problematic layout shifts (CLS > 0.1 is "needs improvement")
+        if (layoutShift.value > 0.1) {
+          // eslint-disable-next-line no-console
+          console.warn('[Metrics] Significant layout shift:', layoutShift.value.toFixed(4), entry)
+        }
       }
     })
 
@@ -316,11 +334,20 @@ export function initMetrics() {
   initWebVitals()
   initPerformanceObserver()
 
-  // Monitor memory usage every 30 seconds
+  // Monitor memory usage at different intervals based on environment
   if (typeof window !== 'undefined') {
+    // Development: Monitor every 5 minutes (less frequent to reduce console noise)
+    // Production: Monitor every 30 seconds (more aggressive monitoring)
+    // Detailed logging: Monitor every 10 seconds if NEXT_PUBLIC_ENABLE_PERF_LOGS is enabled
+    const interval = process.env.NODE_ENV === 'production'
+      ? 30000
+      : process.env.NEXT_PUBLIC_ENABLE_PERF_LOGS === 'true'
+        ? 10000
+        : 300000
+
     setInterval(() => {
       monitorMemoryUsage()
-    }, 30000)
+    }, interval)
   }
 
   // eslint-disable-next-line no-console

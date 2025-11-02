@@ -38,9 +38,9 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
   // 分組成就：已解鎖 > 進行中 > 已領取
   const sortedAchievements = React.useMemo(() => {
     const statusOrder = {
-      [AchievementStatus.UNLOCKED]: 0,
-      [AchievementStatus.IN_PROGRESS]: 1,
-      [AchievementStatus.CLAIMED]: 2
+      'UNLOCKED': 0,
+      'IN_PROGRESS': 1,
+      'CLAIMED': 2
     }
 
     return [...achievements].sort((a, b) => {
@@ -48,14 +48,14 @@ export const AchievementGrid: React.FC<AchievementGridProps> = ({
       if (statusDiff !== 0) return statusDiff
 
       // 相同狀態下，依進度百分比排序（進行中）或稀有度排序（其他）
-      if (a.status === AchievementStatus.IN_PROGRESS) {
+      if (a.status === 'IN_PROGRESS') {
         return b.progress_percentage - a.progress_percentage
       }
 
       // 稀有度排序
-      const rarityOrder = { LEGENDARY: 0, EPIC: 1, RARE: 2, UNCOMMON: 3, COMMON: 4 }
-      const rarityA = rarityOrder[a.achievement.rarity as keyof typeof rarityOrder] ?? 4
-      const rarityB = rarityOrder[b.achievement.rarity as keyof typeof rarityOrder] ?? 4
+      const rarityOrder = { LEGENDARY: 0, EPIC: 1, RARE: 2, COMMON: 3 }
+      const rarityA = rarityOrder[a.achievement.rarity as keyof typeof rarityOrder] ?? 3
+      const rarityB = rarityOrder[b.achievement.rarity as keyof typeof rarityOrder] ?? 3
       return rarityA - rarityB
     })
   }, [achievements])

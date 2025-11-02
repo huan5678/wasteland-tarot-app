@@ -20,7 +20,7 @@ const mockCards = [
     upright_meaning: 'New beginnings, innocence, potential, fresh start in the wasteland',
     reversed_meaning: 'Recklessness, naivety, poor judgment, unpreparedness for the wasteland',
     fallout_reference: 'Represents the player character leaving Vault 111',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': 'New adventure detected! Your journey begins now, user.',
       'SUPER_MUTANT': 'TINY HUMAN LEAVE METAL CAVE. WASTELAND TEACH TINY HUMAN HARD LESSONS.',
       'GHOUL': 'Fresh meat stepping into the sun. Hope you got more luck than sense, smoothskin.',
@@ -41,7 +41,7 @@ const mockCards = [
     upright_meaning: 'Authority, structure, order, leadership, stability',
     reversed_meaning: 'Tyranny, oppression, abuse of power, rebellion against authority',
     fallout_reference: 'The Vault Overseer who maintains order in underground society',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': 'Authority figure detected. Compliance with vault regulations recommended.',
       'SUPER_MUTANT': 'BOSS HUMAN IN METAL CAVE. ALL TINY HUMANS FOLLOW BOSS RULES.',
       'GHOUL': 'The big shot calling the shots. Every vault needs its dictator.',
@@ -62,7 +62,7 @@ const mockCards = [
     upright_meaning: 'Soul searching, inner guidance, solitude, seeking truth',
     reversed_meaning: 'Isolation, loneliness, lost, withdrawal from others',
     fallout_reference: 'The Lone Wanderer from Fallout 3',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': 'Solitary exploration mode activated. Self-reliance parameters optimal.',
       'SUPER_MUTANT': 'TINY HUMAN WALK ALONE. VERY DANGEROUS. NEED STRONG FRIENDS.',
       'GHOUL': 'Another drifter hitting the road. The wasteland\'s got plenty of room for loners.',
@@ -83,7 +83,7 @@ const mockCards = [
     upright_meaning: 'New financial opportunities, material beginnings, prosperity',
     reversed_meaning: 'Financial loss, poverty, lack of resources, poor investments',
     fallout_reference: 'Bottle caps as the standard post-war currency',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': 'Currency detected. Value: significant. Trade opportunities available.',
       'SUPER_MUTANT': 'SHINY METAL DISCS. TINY HUMANS LOVE SHINY THINGS.',
       'GHOUL': 'The almighty cap. Makes the world go round, even after it stopped spinning.',
@@ -104,7 +104,7 @@ const mockCards = [
     upright_meaning: 'Survival, adaptability, persistence, resilience',
     reversed_meaning: 'Pest, annoyance, small problems growing, infestation',
     fallout_reference: 'Common mutated creatures found throughout the wasteland',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': 'Mutated insect detected. Threat level: minimal. Survival instinct: maximum.',
       'SUPER_MUTANT': 'NASTY BUG THINGS. HARD TO SQUISH. TINY HUMANS AFRAID OF BUGS.',
       'GHOUL': 'Roaches survived the bombs better than most. Gotta respect that.',
@@ -221,8 +221,8 @@ export const cardHandlers = [
     const position = body.position || 'upright'
     const question = body.question || 'General guidance'
 
-    const interpretation = card.character_voice_interpretations[characterVoice] ||
-                         card.character_voice_interpretations['PIP_BOY']
+    const interpretation = card.character_voices[characterVoice] ||
+                         card.character_voices['PIP_BOY']
 
     const meaning = position === 'upright' ? card.upright_meaning : card.reversed_meaning
 

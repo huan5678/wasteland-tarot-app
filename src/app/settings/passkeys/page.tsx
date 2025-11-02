@@ -6,10 +6,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { AuthLoading } from '@/components/auth/AuthLoading';
 import { PixelIcon } from '@/components/ui/icons';
 import { usePasskey } from '@/hooks/usePasskey';
-import { useAuthStore } from '@/lib/authStore';
 
 interface Credential {
   id: string;
@@ -20,8 +20,8 @@ interface Credential {
 }
 
 export default function PasskeysPage() {
-  const router = useRouter();
-  const { user } = useAuthStore();
+  // 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth();
   const {
     registerPasskey,
     listCredentials,
@@ -39,13 +39,6 @@ export default function PasskeysPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [loadingCredentials, setLoadingCredentials] = useState(true);
 
-  // 檢查登入狀態
-  useEffect(() => {
-    if (!user) {
-      router.push('/auth/login');
-    }
-  }, [user, router]);
-
   // 載入 Passkeys 列表
   const loadCredentials = async () => {
     setLoadingCredentials(true);
@@ -60,10 +53,10 @@ export default function PasskeysPage() {
   };
 
   useEffect(() => {
-    if (user) {
-      loadCredentials();
-    }
-  }, [user]);
+    // 簡潔的檢查
+    if (!isReady) return
+    loadCredentials();
+  }, [isReady]);
 
   // 新增 Passkey
   const handleAddPasskey = async () => {
@@ -139,8 +132,9 @@ export default function PasskeysPage() {
     });
   };
 
-  if (!user) {
-    return null; // 等待重導向
+  // 統一載入畫面
+  if (!isReady || loadingCredentials) {
+    return <AuthLoading isVerifying={!isReady} />;
   }
 
   return (
@@ -190,12 +184,7 @@ export default function PasskeysPage() {
         <div className="bg-wasteland-dark border-2 border-pip-boy-green p-6">
           <h2 className="text-xl text-pip-boy-green mb-4">你的 Passkeys</h2>
 
-          {loadingCredentials ? (
-            <div className="py-8 text-center">
-              <div className="inline-block w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-pip-boy-green text-sm">載入中...</p>
-            </div>
-          ) : credentials.length === 0 ? (
+          {credentials.length === 0 ? (
             <div className="py-8 text-center">
               <PixelIcon name="fingerprint" size={64} className="mx-auto text-pip-boy-green/30 mb-4" decorative />
               <p className="text-pip-boy-green/70 text-sm">
@@ -335,12 +324,12 @@ export default function PasskeysPage() {
 
         {/* 返回按鈕 */}
         <div className="mt-8 text-center">
-          <button
-            onClick={() => router.push('/profile')}
-            className="px-6 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm hover:bg-pip-boy-green/10 transition-colors"
+          <a
+            href="/profile"
+            className="inline-block px-6 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm hover:bg-pip-boy-green/10 transition-colors"
           >
             返回個人資料
-          </button>
+          </a>
         </div>
       </div>
     </div>
