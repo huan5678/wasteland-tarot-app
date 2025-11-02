@@ -269,7 +269,7 @@ export function CardRelationships({
                 className="w-full p-4 flex items-center justify-between hover:bg-pip-boy-green/10 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <PixelIcon iconName={synergyIconName} size={20} className={synergyColor} decorative />
+                  <PixelIcon name={synergyIconName} size={20} className={synergyColor} decorative />
                   <div className="text-left">
                     <div className="font-bold text-pip-boy-green capitalize">
                       {synergy.synergyType.replace('_', ' ')}
@@ -283,7 +283,7 @@ export function CardRelationships({
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <PixelIcon iconName="chevron-down" size={20} className="text-pip-boy-green/60" decorative />
+                  <PixelIcon name="chevron-down" size={20} className="text-pip-boy-green/60" decorative />
                 </motion.div>
               </button>
 
@@ -306,7 +306,7 @@ export function CardRelationships({
                           <ul className="space-y-1">
                             {synergy.conditions.map((condition, idx) => (
                               <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
-                                <PixelIcon iconName="target" size={12} className="mt-0.5 flex-shrink-0" decorative />
+                                <PixelIcon name="target" size={12} className="mt-0.5 flex-shrink-0" decorative />
                                 <span>{condition}</span>
                               </li>
                             ))}
@@ -320,7 +320,7 @@ export function CardRelationships({
                           <ul className="space-y-1">
                             {synergy.effects.map((effect, idx) => (
                               <li key={idx} className="text-pip-boy-green/70 text-xs flex items-start gap-2">
-                                <PixelIcon iconName="bulb" size={12} className="mt-0.5 flex-shrink-0 text-yellow-400" decorative />
+                                <PixelIcon name="bulb" size={12} className="mt-0.5 flex-shrink-0 text-yellow-400" decorative />
                                 <span>{effect}</span>
                               </li>
                             ))}
@@ -365,12 +365,12 @@ export function CardRelationships({
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <PixelIcon iconName={suitConfig.iconName} size={16} className={suitConfig.color} decorative />
+                    <PixelIcon name={suitConfig.iconName} size={16} className={suitConfig.color} decorative />
                     <span className={cn("font-bold text-sm", suitConfig.color)}>
                       {connection.name}
                     </span>
                   </div>
-                  <PixelIcon iconName="arrow-right" size={16} className={suitConfig.color} decorative />
+                  <PixelIcon name="arrow-right" size={16} className={suitConfig.color} decorative />
                 </div>
 
                 <p className="text-pip-boy-green/80 text-xs mb-2">
@@ -531,7 +531,7 @@ export function CardRelationships({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <PixelIcon iconName={section.iconName} size={16} decorative />
+              <PixelIcon name={section.iconName} size={16} decorative />
               <span>{section.label}</span>
             </motion.button>
           )

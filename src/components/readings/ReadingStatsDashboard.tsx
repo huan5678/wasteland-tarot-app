@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react'
 import { useReadingsStore, ReadingStatistics } from '@/lib/readingsStore'
 import { PixelIcon } from '@/components/ui/icons'
+import { toDisplay } from '@/lib/spreadMapping'
 
 export function ReadingStatsDashboard() {
   const { getReadingsByPeriod, readings, categories } = useReadingsStore()
@@ -68,25 +69,9 @@ export function ReadingStatsDashboard() {
 
   // Chart data for popular spreads
   const spreadChartData = useMemo(() => {
-    const spreadNameMap: Record<string, string> = {
-      'single_wasteland': '單張廢土牌',
-      'vault_tec_spread': 'Vault-Tec 牌陣',
-      'wasteland_survival': '廢土生存',
-      'wasteland_survival_spread': '廢土生存牌陣',
-      'brotherhood_council': '兄弟會議會',
-      'brotherhood_council_spread': '兄弟會議會牌陣',
-      'custom_spread': '自訂牌陣',
-      'raider_chaos': '掠奪者混亂',
-      'raider_chaos_spread': '掠奪者混亂牌陣',
-      'ncr_strategic': 'NCR 戰略',
-      'ncr_strategic_spread': 'NCR 戰略牌陣',
-      'celtic_cross': '凱爾特十字',
-      'horseshoe': '馬蹄鐵',
-    }
-
     const maxCount = Math.max(...Object.values(stats.readings_by_spread), 1)
     return Object.entries(stats.readings_by_spread).map(([spread, count]) => ({
-      name: spreadNameMap[spread] || spread,
+      name: toDisplay(spread),  // Use centralized spread name mapping
       count,
       percentage: maxCount > 0 ? (count / maxCount) * 100 : 0
     })).sort((a, b) => b.count - a.count)

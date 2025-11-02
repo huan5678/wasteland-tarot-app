@@ -58,7 +58,7 @@ export function PipBoyCard({
     <div
       className={cn(
         // 基礎樣式
-        'border-2 border-pip-boy-green',
+        'border-2 border-pip-boy-green rounded-sm',
         'bg-black/80 backdrop-blur-sm',
         'text-pip-boy-green',
         'transition-all duration-300',

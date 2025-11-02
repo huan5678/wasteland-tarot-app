@@ -22,6 +22,10 @@ export function ReadingHistory({ onSelect }: Props) {
   const [readingToDelete, setReadingToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(5)
+
   // Fetch spread templates on mount
   useEffect(() => {
     fetchAll()
@@ -198,6 +202,19 @@ export function ReadingHistory({ onSelect }: Props) {
       })
   }, [readings, filter, sortBy, search])
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filtered.length / itemsPerPage)
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filtered.slice(startIndex, endIndex)
+  }, [filtered, currentPage, itemsPerPage])
+
+  // Reset to page 1 when filter/search/sort changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter, search, sortBy])
+
   const formatDate = (d: string) => new Date(d).toLocaleString()
 
   // 打開刪除確認對話框
@@ -246,10 +263,12 @@ export function ReadingHistory({ onSelect }: Props) {
           <option value="date">日期</option>
           <option value="question">問題</option>
         </select>
-        <div className="flex items-center text-xs text-pip-boy-green/70">顯示 <span className="numeric tabular-nums mx-1">{filtered.length}</span> 筆</div>
+        <div className="flex items-center text-xs text-pip-boy-green/70">
+          共 <span className="numeric tabular-nums mx-1">{filtered.length}</span> 筆
+        </div>
       </div>
       <div className="space-y-3">
-        {filtered.map(r => (
+        {paginatedData.map(r => (
           <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={()=>{ router.push(`/readings/${r.id}`); import('@/lib/actionTracker').then(m=>m.track('reading:view_detail',{id:r.id})) }}>
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
@@ -269,15 +288,157 @@ export function ReadingHistory({ onSelect }: Props) {
             <p className="mt-2 text-pip-boy-green/80 text-sm italic">
               "{r.question}"
             </p>
+            {/* AI 解讀標示 */}
+            {r.ai_interpretation_requested && (
+              <div className="mt-2 flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                  <PixelIcon name="cpu" sizePreset="xs" variant="primary" decorative />
+                  <span className="font-bold uppercase tracking-wider">AI 已解讀</span>
+                </div>
+                {(r as any).interpretation_audio_url && (
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                    <PixelIcon name="volume-up" sizePreset="xs" variant="primary" decorative />
+                    <span className="font-bold uppercase tracking-wider">語音朗讀</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ))}
-        {filtered.length === 0 && (
+        {paginatedData.length === 0 && filtered.length === 0 && (
           <div className="text-center py-12 border-2 border-pip-boy-green/30">
             < PixelIcon name="contacts" className="w-10 h-10 mx-auto mb-3 opacity-50" />
             <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filtered.length > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-pip-boy-green/30">
+          {/* Items per page selector */}
+          <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
+            <span>每頁顯示</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => {
+                setItemsPerPage(Number(e.target.value))
+                setCurrentPage(1)
+              }}
+              className="px-2 py-1 bg-black border border-pip-boy-green/50 text-pip-boy-green text-sm"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={20}>20</option>
+              <option value={50}>50</option>
+            </select>
+            <span>筆</span>
+          </div>
+
+          {/* Page navigation */}
+          <div className="flex items-center gap-2">
+            {/* Previous button */}
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className={`px-3 py-1 border transition-colors flex items-center gap-1 ${
+                currentPage === 1
+                  ? 'border-pip-boy-green/20 text-pip-boy-green/20 cursor-not-allowed'
+                  : 'border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10'
+              }`}
+              title="上一頁"
+            >
+              <PixelIcon name="arrow-left-s" size={16} decorative />
+              <span className="text-xs">上一頁</span>
+            </button>
+
+            {/* Page numbers */}
+            <div className="flex items-center gap-1">
+              {(() => {
+                const pages = []
+                const maxVisible = 5
+                let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                let endPage = Math.min(totalPages, startPage + maxVisible - 1)
+
+                if (endPage - startPage < maxVisible - 1) {
+                  startPage = Math.max(1, endPage - maxVisible + 1)
+                }
+
+                // First page
+                if (startPage > 1) {
+                  pages.push(
+                    <button
+                      key={1}
+                      onClick={() => setCurrentPage(1)}
+                      className="px-3 py-1 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-xs"
+                    >
+                      1
+                    </button>
+                  )
+                  if (startPage > 2) {
+                    pages.push(<span key="ellipsis-start" className="text-pip-boy-green/50 px-1">...</span>)
+                  }
+                }
+
+                // Middle pages
+                for (let i = startPage; i <= endPage; i++) {
+                  pages.push(
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i)}
+                      className={`px-3 py-1 border transition-colors text-xs ${
+                        currentPage === i
+                          ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green font-bold'
+                          : 'border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10'
+                      }`}
+                    >
+                      {i}
+                    </button>
+                  )
+                }
+
+                // Last page
+                if (endPage < totalPages) {
+                  if (endPage < totalPages - 1) {
+                    pages.push(<span key="ellipsis-end" className="text-pip-boy-green/50 px-1">...</span>)
+                  }
+                  pages.push(
+                    <button
+                      key={totalPages}
+                      onClick={() => setCurrentPage(totalPages)}
+                      className="px-3 py-1 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-xs"
+                    >
+                      {totalPages}
+                    </button>
+                  )
+                }
+
+                return pages
+              })()}
+            </div>
+
+            {/* Next button */}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className={`px-3 py-1 border transition-colors flex items-center gap-1 ${
+                currentPage === totalPages
+                  ? 'border-pip-boy-green/20 text-pip-boy-green/20 cursor-not-allowed'
+                  : 'border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10'
+              }`}
+              title="下一頁"
+            >
+              <span className="text-xs">下一頁</span>
+              <PixelIcon name="arrow-right-s" size={16} decorative />
+            </button>
+          </div>
+
+          {/* Page info */}
+          <div className="text-xs text-pip-boy-green/70">
+            第 <span className="numeric tabular-nums">{currentPage}</span> / <span className="numeric tabular-nums">{totalPages}</span> 頁
+          </div>
+        </div>
+      )}
 
       {/* 刪除確認對話框 */}
       <ConfirmDialog

@@ -49,7 +49,7 @@ def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta]
 def create_refresh_token(data: Dict[str, Any]) -> str:
     """Create a JWT refresh token (longer expiry)"""
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=7)  # 7 days for refresh token
+    expire = datetime.utcnow() + timedelta(days=settings.refresh_token_expire_days)
     to_encode.update({
         "exp": expire,
         "iat": get_current_timestamp(),
@@ -111,7 +111,7 @@ def get_access_token_cookie_settings() -> Dict[str, Any]:
         "httponly": True,
         "secure": settings.environment == "production",  # HTTPS only in production
         "samesite": "lax",  # CSRF protection
-        "max_age": settings.access_token_expire_minutes * 60,  # 8 hours in seconds
+        "max_age": settings.access_token_expire_minutes * 60,  # 7 days in seconds (10080 minutes * 60)
         "path": "/",  # CRITICAL: Ensure cookie is sent for all paths
     }
 
@@ -121,7 +121,7 @@ def get_access_token_cookie_settings() -> Dict[str, Any]:
 def get_refresh_token_cookie_settings() -> Dict[str, Any]:
     """
     Get cookie settings for refresh token
-    Longer expiry (7 days)
+    Longer expiry (30 days)
 
     Note: Do NOT set 'domain' for localhost - browsers handle it automatically
     Setting Domain=localhost can cause cookies to be rejected in modern browsers
@@ -131,7 +131,7 @@ def get_refresh_token_cookie_settings() -> Dict[str, Any]:
         "httponly": True,
         "secure": settings.environment == "production",
         "samesite": "lax",
-        "max_age": 7 * 24 * 60 * 60,  # 7 days in seconds
+        "max_age": settings.refresh_token_expire_days * 24 * 60 * 60,  # 30 days in seconds
         "path": "/",  # CRITICAL: Ensure cookie is sent for all paths
     }
 

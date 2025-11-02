@@ -1,4 +1,60 @@
-# AvatarUpload 元件使用指南
+# Profile Components
+
+個人檔案頁面相關元件集合。
+
+---
+
+## TitleSelector
+
+個人稱號設定元件，遵循 Fallout/Wasteland 設計風格。
+
+### 功能特點
+- 顯示當前稱號
+- 列出所有已解鎖稱號
+- 允許選擇或取消稱號
+- 即時更新顯示
+- 完整的錯誤處理和成功提示
+
+### 使用方式
+```tsx
+import { TitleSelector } from '@/components/profile/TitleSelector'
+
+<TitleSelector />
+```
+
+### 相關 Store
+- `useTitleStore` (`@/lib/stores/titleStore`) - 管理稱號狀態和 API 呼叫
+
+### API Endpoints
+- `GET /api/v1/users/me/titles` - 獲取使用者的稱號列表
+- `PUT /api/v1/users/me/title` - 設定使用者的當前稱號
+
+### 設計規範
+- 遵循 Pip-Boy 綠色主題 (#00ff88)
+- 使用 PixelIcon 圖示系統
+- 自動繼承 Cubic 11 字體
+- 響應式布局
+- 無障礙支援（ARIA labels）
+
+### Profile 頁面整合
+
+在 Profile 頁面中顯示當前稱號：
+```tsx
+import { useTitleStore } from '@/lib/stores/titleStore'
+
+const currentTitle = useTitleStore(s => s.currentTitle)
+
+// 在使用者名稱下方顯示
+{currentTitle && (
+  <span className="block text-base font-normal text-pip-boy-green/80 mt-1">
+    [{currentTitle}]
+  </span>
+)}
+```
+
+---
+
+## AvatarUpload 元件使用指南
 
 ## 快速開始
 

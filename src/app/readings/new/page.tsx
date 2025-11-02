@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { CardDraw } from '@/components/tarot/CardDraw'
-import { CardThumbnailFlippable } from '@/components/cards/CardThumbnailFlippable'
+import { CardThumbnail } from '@/components/cards/CardThumbnail'
 import { PixelIcon } from '@/components/ui/icons'
 import { readingsAPI } from '@/lib/api'
 import { SpreadSelector } from '@/components/readings/SpreadSelector'
@@ -10,9 +10,10 @@ import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview'
 import { toCanonical } from '@/lib/spreadMapping'
 import { spreadPositionMeanings } from '@/lib/spreadLayouts'
 import { SpreadInteractiveDraw } from '@/components/readings/SpreadInteractiveDraw'
-import { useAuthStore } from '@/lib/authStore'
-import { useRouter } from 'next/navigation'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { AuthLoading } from '@/components/auth/AuthLoading'
 import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 import { useAnalytics, useReadingTracking } from '@/hooks/useAnalytics'
 import { useSessionStore } from '@/lib/sessionStore'
 import { useAutoSave, useSessionChangeTracker } from '@/hooks/useAutoSave'
@@ -37,8 +38,8 @@ interface TarotCardWithPosition {
 }
 
 export default function NewReadingPage() {
-  const router = useRouter()
-  const user = useAuthStore(s => s.user)
+  // 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth()
   const [step, setStep] = useState<'setup' | 'drawing' | 'results'>('setup')
   const [question, setQuestion] = useState('')
   const [spreadType, setSpreadType] = useState<string>('single_wasteland_reading')
@@ -47,6 +48,7 @@ export default function NewReadingPage() {
   const [isGeneratingInterpretation, setIsGeneratingInterpretation] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [readingId, setReadingId] = useState<string>()
+  const [hasAutoSaved, setHasAutoSaved] = useState(false) // 追蹤是否已自動儲存
 
   // 從每個類別隨機選一個問題
   const [randomQuestions] = useState(() => {
@@ -104,7 +106,8 @@ export default function NewReadingPage() {
   // Initialize or resume session on mount
   useEffect(() => {
     const initializeSession = async () => {
-      if (!user?.id) return
+      // 簡潔的檢查
+      if (!isReady) return
 
       // Check if there's an active session to resume
       if (activeSession) {
@@ -202,7 +205,7 @@ export default function NewReadingPage() {
     }
 
     initializeSession()
-  }, [user, activeSession])
+  }, [isReady, user, activeSession])
 
   // Create session when question is submitted
   const createNewSession = async () => {
@@ -360,17 +363,26 @@ export default function NewReadingPage() {
     }
   }
 
+  // 自動儲存：當解讀完成後自動保存占卜記錄
+  useEffect(() => {
+    const autoSaveReading = async () => {
+      // 檢查條件：解讀已完成、有卡牌、有解讀內容、還沒保存過
+      if (!isGeneratingInterpretation && drawnCards.length > 0 && interpretation && !hasAutoSaved && activeSession) {
+        console.log('[AutoSave] 條件滿足，開始自動保存占卜記錄')
+        setHasAutoSaved(true) // 立即設置，防止重複保存
+        await handleSaveReading()
+      }
+    }
+
+    autoSaveReading()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGeneratingInterpretation])
+
   const handleSaveReading = async () => {
     console.log('[handleSaveReading] Called')
     console.log('[handleSaveReading] user:', user)
     console.log('[handleSaveReading] activeSession:', activeSession)
     console.log('[handleSaveReading] completeSession function:', completeSession)
-
-    if (!user) {
-      console.log('[handleSaveReading] No user, redirecting to login')
-      router.push('/auth/login')
-      return
-    }
 
     // Must have an active session to complete
     if (!activeSession) {
@@ -478,12 +490,11 @@ export default function NewReadingPage() {
       // CRITICAL FIX: Refresh readings store so new reading appears immediately
       console.log('[handleSaveReading] Refreshing readings store...')
       const { useReadingsStore } = await import('@/lib/readingsStore')
-      await useReadingsStore.getState().fetchUserReadings(user.id, true) // force refresh
+      await useReadingsStore.getState().fetchUserReadings(user!.id, true) // force refresh
       console.log('[handleSaveReading] Readings refreshed successfully')
 
-      // Show success message and redirect
-      toast.success('占卜已保存', { description: '你的占卜結果已成功儲存至 Vault' })
-      router.push('/dashboard')
+      // 自動保存完成（不跳轉，由用戶選擇是否查看詳情）
+      console.log('[handleSaveReading] 占卜記錄已自動保存，reading_id:', result.reading_id)
     } catch (error) {
       console.error('Failed to save reading:', error)
       const errorMessage = error instanceof Error ? error.message : '保存失敗'
@@ -502,7 +513,16 @@ export default function NewReadingPage() {
     setSpreadType('single_wasteland_reading')
     setDrawnCards([])
     setInterpretation('')
+    setHasAutoSaved(false) // 重置自動保存狀態
+    setReadingId(undefined) // 清空 reading ID
     readingStartTime.current = Date.now()
+  }
+
+  // 查看詳情：跳轉到占卜詳情頁
+  const handleViewDetail = () => {
+    if (readingId) {
+      window.location.href = `/readings/${readingId}`
+    }
   }
 
   // Handle card click to show detail modal
@@ -517,6 +537,11 @@ export default function NewReadingPage() {
   const handleCloseCardModal = () => {
     setIsCardModalOpen(false)
     setSelectedCardForDetail(null)
+  }
+
+  // 統一載入畫面
+  if (!isReady) {
+    return <AuthLoading isVerifying={true} />
   }
 
   return (
@@ -680,7 +705,8 @@ export default function NewReadingPage() {
                       className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
                       onClick={() => handleCardClick(card)}
                     >
-                      <CardThumbnailFlippable
+                      <CardThumbnail
+                        flippable
                         card={card}
                         isRevealed={true}
                         position={card.position}
@@ -718,20 +744,66 @@ export default function NewReadingPage() {
 
             {/* Action Buttons */}
             {!isGeneratingInterpretation && (
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={handleSaveReading}
-                  disabled={isSaving}
-                  className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                >
-                  <PixelIcon name="save" size={16} className="mr-2" decorative />{isSaving ? '保存中...' : '儲存至 Vault'}
-                </button>
-                <button
-                  onClick={handleNewReading}
-                  className="flex-1 py-3 border-2 border-pip-boy-green text-pip-boy-green font-bold text-lg hover:bg-pip-boy-green/10 transition-colors flex items-center justify-center"
-                >
-                  <PixelIcon name="reload" size={16} className="mr-2" decorative />新占卜
-                </button>
+              <div className="space-y-4">
+                {/* 自動儲存狀態提示 */}
+                {isSaving && !hasAutoSaved && (
+                  <div className="flex items-center justify-center gap-2 text-pip-boy-green/80 text-sm">
+                    <div className="w-4 h-4 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin"></div>
+                    <span>正在儲存占卜記錄...</span>
+                  </div>
+                )}
+
+                {hasAutoSaved && readingId && (
+                  <div className="flex items-center justify-center gap-2 text-pip-boy-green/80 text-sm">
+                    <PixelIcon name="checkbox-circle" size={16} decorative />
+                    <span>占卜記錄已自動儲存至 Vault</span>
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-4">
+                  {/* 查看詳情按鈕（自動保存完成後顯示） */}
+                  {hasAutoSaved && readingId && (
+                    <button
+                      onClick={handleViewDetail}
+                      className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark font-bold text-lg hover:bg-pip-boy-green/80 transition-colors flex items-center justify-center"
+                    >
+                      <PixelIcon name="eye" size={16} className="mr-2" decorative />查看詳情
+                    </button>
+                  )}
+
+                  {/* 新占卜按鈕 */}
+                  <button
+                    onClick={handleNewReading}
+                    disabled={isSaving || isGeneratingInterpretation}
+                    className={cn(
+                      "flex-1 py-3 border-2 font-bold text-lg transition-colors flex items-center justify-center",
+                      isSaving || isGeneratingInterpretation
+                        ? "border-pip-boy-green/30 text-pip-boy-green/30 cursor-not-allowed"
+                        : "border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10"
+                    )}
+                  >
+                    {isSaving ? (
+                      <>
+                        <PixelIcon name="loader" size={16} className="mr-2 animate-spin" decorative />
+                        儲存中...
+                      </>
+                    ) : (
+                      <>
+                        <PixelIcon name="reload" size={16} className="mr-2" decorative />
+                        新占卜
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* 說明文字 */}
+                <p className="text-center text-pip-boy-green/60 text-xs">
+                  {isSaving
+                    ? '正在自動儲存占卜記錄，請稍候...'
+                    : hasAutoSaved && readingId
+                    ? '占卜記錄已保存，點擊「查看詳情」可查看完整解讀和語音朗讀'
+                    : '占卜解讀完成後將自動儲存至 Vault'}
+                </p>
               </div>
             )}
           </div>

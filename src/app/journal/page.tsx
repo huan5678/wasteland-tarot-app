@@ -6,7 +6,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { AuthLoading } from '@/components/auth/AuthLoading'
 import { useJournalStore } from '@/stores/journalStore'
 import { JournalList } from '@/components/journal/JournalList'
 import { JournalEditor } from '@/components/journal/JournalEditor'
@@ -24,7 +25,8 @@ const PAGE_SIZE = 20
 // ============================================================================
 
 export default function JournalPage() {
-  const router = useRouter()
+  // 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth()
 
   // ========== State ==========
   const [currentPage, setCurrentPage] = useState(1)
@@ -48,9 +50,11 @@ export default function JournalPage() {
   // ========== Effects ==========
 
   useEffect(() => {
+    // 簡潔的檢查
+    if (!isReady) return
     const skip = (currentPage - 1) * PAGE_SIZE
     fetchJournals(skip, PAGE_SIZE)
-  }, [currentPage, fetchJournals])
+  }, [isReady, currentPage, fetchJournals])
 
   // ========== Handlers ==========
 
@@ -123,6 +127,11 @@ export default function JournalPage() {
   }
 
   // ========== Render ==========
+
+  // 統一載入畫面
+  if (!isReady || isLoading) {
+    return <AuthLoading isVerifying={!isReady} />
+  }
 
   return (
     <div className="min-h-screen bg-wasteland-dark py-8 px-4">

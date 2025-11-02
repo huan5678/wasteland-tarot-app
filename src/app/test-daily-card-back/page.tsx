@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react'
 import { DailyCardBackProvider, useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider'
-import { TarotCardWithDailyBack } from '@/components/tarot/TarotCardWithDailyBack'
+import { TarotCard } from '@/components/tarot/TarotCard'
 import { PipBoyButton, PipBoyCard } from '@/components/ui/pipboy'
 import { PixelIcon } from '@/components/ui/icons'
 import { CARD_BACKS, getCardBackPath } from '@/config/cardBackConfig'
@@ -33,6 +33,9 @@ const mockCard = {
 function TestPageContent() {
   const { cardBackPath, isLoading, refreshCardBack } = useDailyCardBackContext()
   const [showInfo, setShowInfo] = useState(false)
+
+  // 計算顯示用的卡背 URL（與原 TarotCardWithDailyBack 相同邏輯）
+  const displayCardBackUrl = isLoading ? '/assets/cards/card-backs/01.png' : cardBackPath
 
   // 取得儲存的資料
   const savedData = getDailyCardBackData()
@@ -128,12 +131,13 @@ function TestPageContent() {
                 未翻開（每日卡背）
               </h3>
               <div className="flex justify-center">
-                <TarotCardWithDailyBack
+                <TarotCard
                   card={mockCard}
                   isRevealed={false}
                   position="upright"
                   size="medium"
                   flipStyle="kokonut"
+                  cardBackUrl={displayCardBackUrl}
                 />
               </div>
             </PipBoyCard>
@@ -146,12 +150,13 @@ function TestPageContent() {
                 已翻開
               </h3>
               <div className="flex justify-center">
-                <TarotCardWithDailyBack
+                <TarotCard
                   card={mockCard}
                   isRevealed={true}
                   position="upright"
                   size="medium"
                   flipStyle="kokonut"
+                  cardBackUrl={displayCardBackUrl}
                 />
               </div>
             </PipBoyCard>
@@ -164,7 +169,7 @@ function TestPageContent() {
                 自訂卡背
               </h3>
               <div className="flex justify-center">
-                <TarotCardWithDailyBack
+                <TarotCard
                   card={mockCard}
                   isRevealed={false}
                   position="upright"

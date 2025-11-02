@@ -463,9 +463,19 @@ async def get_achievement_summary(
                 'completion_percentage': cat_summary['completion_percentage']
             }
 
+        # ✅ 移除 progress_details 以避免序列化錯誤
+        # progress_details 包含 SQLAlchemy 物件，無法序列化
+        # 前端只需要統計數據，不需要詳細進度物件
         return {
             'user_id': str(current_user.id),
-            'overall': overall_summary,
+            'overall': {
+                'user_id': overall_summary['user_id'],
+                'total_achievements': overall_summary['total_achievements'],
+                'unlocked_count': overall_summary['unlocked_count'],
+                'claimed_count': overall_summary['claimed_count'],
+                'in_progress_count': overall_summary['in_progress_count'],
+                'completion_percentage': overall_summary['completion_percentage'],
+            },
             'by_category': categories_summary
         }
 

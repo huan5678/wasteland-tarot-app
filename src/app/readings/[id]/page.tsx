@@ -23,7 +23,7 @@ import { useReadingsStore } from '@/lib/readingsStore'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Switch } from '@/components/ui/switch'
 import { ShareButton } from '@/components/share/ShareButton'
-import { CardDetailModal } from '@/components/cards/CardDetailModal'
+import { CardDetailModal } from '@/components/tarot/CardDetailModal'
 import type { WastelandCard } from '@/types/database'
 import { useAuthStore } from '@/lib/authStore'
 import { useMetadataStore } from '@/stores/metadataStore'
@@ -1085,7 +1085,7 @@ export default function ReadingDetailPage() {
         {/* 卡片詳情 Modal */}
         {selectedCardForModal && (
           <CardDetailModal
-            card={selectedCardForModal}
+            card={selectedCardForModal as any}
             isOpen={isCardModalOpen}
             onClose={() => {
               setIsCardModalOpen(false)
@@ -1108,6 +1108,13 @@ export default function ReadingDetailPage() {
                 }
               })()
             }
+            enableAudio={true}
+            showQuickActions={true}
+            showBookmark={!!user}
+            showShare={true}
+            showPersonalNotes={!!user}
+            isGuestMode={!user}
+            factionInfluence={reading?.faction_influence}
           />
         )}
       </div>

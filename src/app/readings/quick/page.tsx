@@ -18,6 +18,7 @@ import { enhancedWastelandCards } from '@/data/enhancedCards'
 import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
 import { QuickReadingStorage } from '@/lib/quickReadingStorage'
 import { CarouselContainer } from '@/components/readings/CarouselContainer'
+import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider'
 import dynamic from 'next/dynamic'
 
 // Dynamic import CardDetailModal to reduce initial bundle size
@@ -26,9 +27,9 @@ const CardDetailModal = dynamic(
   { ssr: false }
 )
 
-// Dynamic import TarotCardWithDailyBack to reduce initial bundle size
-const TarotCardWithDailyBack = dynamic(
-  () => import('@/components/tarot/TarotCardWithDailyBack').then((mod) => ({ default: mod.TarotCardWithDailyBack })),
+// Dynamic import TarotCard to reduce initial bundle size
+const TarotCard = dynamic(
+  () => import('@/components/tarot/TarotCard').then((mod) => ({ default: mod.TarotCard })),
   { ssr: false }
 )
 
@@ -37,6 +38,10 @@ const storage = new QuickReadingStorage()
 
 export default function QuickReadingPage() {
   const router = useRouter()
+
+  // 取得每日隨機卡背
+  const { cardBackPath, isLoading: isCardBackLoading } = useDailyCardBackContext()
+  const displayCardBackUrl = isCardBackLoading ? '/assets/cards/card-backs/01.png' : cardBackPath
 
   // 狀態管理
   const [cardPool, setCardPool] = useState<DetailedTarotCard[]>([])
@@ -302,12 +307,13 @@ export default function QuickReadingPage() {
               isDisabled={false}
             >
               {(card, index, isActive) => (
-                <TarotCardWithDailyBack
+                <TarotCard
                   card={card}
                   isRevealed={card.id.toString() === selectedCardId}
                   position="upright"
                   size="large"
                   flipStyle="kokonut"
+                  cardBackUrl={displayCardBackUrl}
                   onClick={() => {
                     if (!selectedCardId) {
                       // 卡背狀態，點擊翻牌
@@ -332,12 +338,13 @@ export default function QuickReadingPage() {
           ) : (
             /* 已選卡時僅顯示單張卡片 */
             <div className="flex justify-center py-8">
-              <TarotCardWithDailyBack
+              <TarotCard
                 card={selectedCard!}
                 isRevealed={true}
                 position="upright"
                 size="large"
                 flipStyle="kokonut"
+                cardBackUrl={displayCardBackUrl}
                 onClick={() => handleCardClick(selectedCard!)}
                 isSelectable={false}
                 isSelected={true}

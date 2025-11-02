@@ -48,6 +48,7 @@ export default function StoryAudioPlayer({
   // Refs
   const containerRef = useRef<HTMLDivElement>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
 
   // Playback state
   const [currentTime, setCurrentTime] = useState(0)
@@ -55,9 +56,11 @@ export default function StoryAudioPlayer({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isFallbackMode, setIsFallbackMode] = useState(useFallback)
+  const [isSpeaking, setIsSpeaking] = useState(false) // For Web Speech API
+  const [isPausingRef] = useState({ current: false }) // Track if we're pausing (to ignore pause errors)
 
   // Wavesurfer hook
-  const { wavesurfer, isReady, isPlaying, currentTime: wsCurrentTime } = useWavesurfer({
+  const { wavesurfer, isReady, isPlaying: wsIsPlaying, currentTime: wsCurrentTime } = useWavesurfer({
     container: containerRef,
     url: isFallbackMode ? '' : audioUrl,
     height: 60,
@@ -73,6 +76,9 @@ export default function StoryAudioPlayer({
     hideScrollbar: true,
   })
 
+  // Computed playing state: use isSpeaking in fallback mode, wsIsPlaying otherwise
+  const isPlaying = isFallbackMode ? isSpeaking : wsIsPlaying
+
   /**
    * Format seconds to MM:SS
    */
@@ -81,6 +87,49 @@ export default function StoryAudioPlayer({
     const mins = Math.floor(seconds / 60)
     const secs = Math.floor(seconds % 60)
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+
+  /**
+   * Estimate speech duration based on text length
+   * Chinese: ~175 characters/minute at rate=1.0
+   */
+  const estimateDuration = (text: string, rate: number = 1.0): number => {
+    const charCount = text.length
+    const secondsPerChar = 0.34 // ~175 chars/min = 0.34s/char
+    return (charCount * secondsPerChar) / rate
+  }
+
+  /**
+   * Start progress tracking for Web Speech API
+   */
+  const startProgressTracking = (estimatedDuration: number) => {
+    setCurrentTime(0)
+    setDuration(estimatedDuration)
+
+    // Update progress every 100ms
+    progressIntervalRef.current = setInterval(() => {
+      setCurrentTime((prev) => {
+        const next = prev + 0.1
+        if (next >= estimatedDuration) {
+          if (progressIntervalRef.current) {
+            clearInterval(progressIntervalRef.current)
+            progressIntervalRef.current = null
+          }
+          return estimatedDuration
+        }
+        return next
+      })
+    }, 100)
+  }
+
+  /**
+   * Stop progress tracking
+   */
+  const stopProgressTracking = () => {
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current)
+      progressIntervalRef.current = null
+    }
   }
 
   /**
@@ -103,27 +152,53 @@ export default function StoryAudioPlayer({
         }
 
         if (isPlaying) {
+          // Pause
+          isPausingRef.current = true
           pauseSpeech()
-          setIsPlaying(false)
+          stopProgressTracking()
+          setIsSpeaking(false)
+          // Reset pause flag after a short delay
+          setTimeout(() => { isPausingRef.current = false }, 100)
         } else {
           if (!utteranceRef.current) {
             // Create new utterance
+            const estimatedDuration = estimateDuration(storyText)
+
             const utterance = speak(storyText, { volume }, {
-              onStart: () => setIsPlaying(true),
+              onStart: () => {
+                setIsSpeaking(true)
+                startProgressTracking(estimatedDuration)
+              },
               onEnd: () => {
-                setIsPlaying(false)
+                setIsSpeaking(false)
+                stopProgressTracking()
                 setCurrentTime(0)
               },
               onError: (error) => {
+                // Ignore errors caused by pause operation (known browser bug)
+                if (isPausingRef.current) {
+                  console.warn('Ignoring pause-related error:', error)
+                  return
+                }
                 console.error('Web Speech API error:', error)
                 setError('瀏覽器朗讀失敗')
-                setIsPlaying(false)
+                setIsSpeaking(false)
+                stopProgressTracking()
+              },
+              onPause: () => {
+                stopProgressTracking()
+              },
+              onResume: () => {
+                startProgressTracking(estimatedDuration - currentTime)
               }
             })
             utteranceRef.current = utterance
           } else {
+            // Resume
+            const remainingDuration = duration - currentTime
             resumeSpeech()
-            setIsPlaying(true)
+            setIsSpeaking(true)
+            startProgressTracking(remainingDuration)
           }
         }
       } else {
@@ -189,14 +264,15 @@ export default function StoryAudioPlayer({
     }
   }, [wavesurfer, storyText, isFallbackMode])
 
-  // Cleanup: Stop speech when component unmounts or fallback mode changes
+  // Cleanup: Stop speech and progress tracking when component unmounts
   useEffect(() => {
     return () => {
-      if (isFallbackMode && isPlaying) {
+      if (isFallbackMode && isSpeaking) {
         stopSpeech()
       }
+      stopProgressTracking()
     }
-  }, [isFallbackMode, isPlaying])
+  }, [isFallbackMode, isSpeaking])
 
   return (
     <div className="w-full">
@@ -236,10 +312,20 @@ export default function StoryAudioPlayer({
               className="relative h-[60px] rounded-lg overflow-hidden"
             />
           ) : (
-            /* Fallback mode: Simple progress bar */
-            <div className="relative h-20 bg-zinc-900/30 rounded-lg flex items-center justify-center">
-              <div className="text-xs text-pip-boy-green/70">
-                瀏覽器朗讀模式
+            /* Fallback mode: Progress bar */
+            <div className="relative h-[60px] bg-zinc-900/30 rounded-lg overflow-hidden">
+              {/* Progress fill */}
+              <div
+                className="absolute inset-0 bg-pip-boy-green/20 transition-all duration-100"
+                style={{
+                  width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%'
+                }}
+              />
+              {/* Center text */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-xs text-pip-boy-green/70 font-mono">
+                  瀏覽器朗讀模式
+                </div>
               </div>
             </div>
           )}

@@ -35,7 +35,7 @@ export interface ReadingCard {
   meaning_reversed?: string
   keywords?: string[]
   fallout_reference?: string
-  character_voice_interpretations?: {
+  character_voices?: {
     [voice: string]: string
   }
   radiation_factor?: number
@@ -742,10 +742,10 @@ export function ReadingCardDetail({
       exit="exit"
       className="space-y-6"
     >
-      {card.character_voice_interpretations && (
+      {card.character_voices && (
         <div>
           <CharacterVoiceSelector
-            voices={card.character_voice_interpretations}
+            voices={card.character_voices}
             selectedVoice={selectedVoice}
             onVoiceChange={setSelectedVoice}
             enableAudio={enableAudio}
@@ -765,9 +765,9 @@ export function ReadingCardDetail({
                 </h4>
               </div>
 
-              {enableAudio && audioSupported && card.character_voice_interpretations?.[selectedVoice] && (
+              {enableAudio && audioSupported && card.character_voices?.[selectedVoice] && (
                 <motion.button
-                  onClick={() => handleSpeakText(card.character_voice_interpretations![selectedVoice])}
+                  onClick={() => handleSpeakText(card.character_voices![selectedVoice])}
                   disabled={isSpeaking}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -795,7 +795,7 @@ export function ReadingCardDetail({
             </div>
 
             <p className="text-pip-boy-green/90 text-sm leading-relaxed">
-              {card.character_voice_interpretations[selectedVoice] || '無可用解讀'}
+              {card.character_voices[selectedVoice] || '無可用解讀'}
             </p>
           </motion.div>
         </div>

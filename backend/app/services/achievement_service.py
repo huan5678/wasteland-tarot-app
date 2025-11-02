@@ -350,13 +350,13 @@ class AchievementService:
         if not achievement:
             raise ValueError(f"找不到成就: {achievement_code}")
 
-        # 獲取使用者進度
+        # 獲取使用者進度（使用 FOR UPDATE 鎖定該行，防止 Race Condition）
         query = select(UserAchievementProgress).where(
             and_(
                 UserAchievementProgress.user_id == user_id,
                 UserAchievementProgress.achievement_id == achievement.id
             )
-        )
+        ).with_for_update()
         result = await self.db.execute(query)
         progress = result.scalar_one_or_none()
 
@@ -377,11 +377,11 @@ class AchievementService:
         if 'karma_points' in rewards:
             karma_points = rewards['karma_points']
             try:
-                await self.karma_service.add_karma(
-                    user_id=user_id,
-                    change_amount=karma_points,
+                await self.karma_service.apply_karma_change(
+                    user_id=str(user_id),
                     reason=KarmaChangeReason.COMMUNITY_CONTRIBUTION,
                     reason_description=f"完成成就「{achievement.name_zh_tw}」",
+                    context={"achievement_code": achievement.code, "reward_karma": karma_points},
                     triggered_by_action=f"achievement_claim_{achievement.code}"
                 )
                 distributed_rewards['karma_points'] = karma_points
@@ -429,20 +429,26 @@ class AchievementService:
         Args:
             user_id: 使用者 ID
             title: 稱號名稱
+
+        Description:
+            - 解鎖新稱號並添加到 unlocked_titles 列表
+            - 如果使用者尚無稱號，自動設為當前稱號
         """
-        # 更新 UserProfile 的稱號
+        from app.models.user import UserProfile
+
         query = select(UserProfile).where(UserProfile.user_id == user_id)
         result = await self.db.execute(query)
         profile = result.scalar_one_or_none()
 
         if not profile:
-            # 建立 UserProfile
+            # 建立 UserProfile（如果不存在）
             profile = UserProfile(
                 user_id=user_id,
                 current_title=title,
                 unlocked_titles=[title]
             )
             self.db.add(profile)
+            logger.info(f"Created new UserProfile with title '{title}' for user {user_id}")
         else:
             # 更新現有 Profile
             if not profile.unlocked_titles:
@@ -450,12 +456,14 @@ class AchievementService:
 
             if title not in profile.unlocked_titles:
                 profile.unlocked_titles.append(title)
+                logger.info(f"Added title '{title}' to user {user_id}'s unlocked titles")
 
-            # 設定為當前稱號（使用者可以稍後更改）
+            # 如果使用者尚無當前稱號，設定為新解鎖的稱號
             if not profile.current_title:
                 profile.current_title = title
+                logger.info(f"Set current title to '{title}' for user {user_id}")
 
-        # Note: commit happens in claim_reward
+        await self.db.commit()
 
     # ===== Batch Operations =====
 

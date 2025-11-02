@@ -24,7 +24,7 @@ const mockCard: WastelandCard = {
   symbolism: 'Represents the journey of self-discovery in a post-apocalyptic world',
   element: 'Air',
   astrological_association: 'Uranus',
-  character_voice_interpretations: {
+  character_voices: {
     pip_boy: 'Pip-Boy says: Adventure awaits, Vault Dweller!',
     super_mutant: 'Me smash new things!',
   },

@@ -82,9 +82,9 @@ export function CardShare({
 
     if (shareOptions.includeCharacterVoice &&
         shareOptions.selectedVoice &&
-        card.character_voice_interpretations?.[shareOptions.selectedVoice]) {
+        card.character_voices?.[shareOptions.selectedVoice]) {
       const voiceName = shareOptions.selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-      text += `\n\n🎭 ${voiceName}'s Perspective:\n${card.character_voice_interpretations[shareOptions.selectedVoice]}`
+      text += `\n\n🎭 ${voiceName}'s Perspective:\n${card.character_voices[shareOptions.selectedVoice]}`
     }
 
     if (shareOptions.customMessage) {
@@ -356,7 +356,7 @@ export function CardShare({
             ))}
           </div>
 
-          {shareOptions.includeCharacterVoice && card.character_voice_interpretations && (
+          {shareOptions.includeCharacterVoice && card.character_voices && (
             <div className="mt-3">
               <label className="block text-pip-boy-green/80 text-sm mb-2">Character Voice:</label>
               <select
@@ -364,7 +364,7 @@ export function CardShare({
                 onChange={(e) => setShareOptions(prev => ({ ...prev, selectedVoice: e.target.value }))}
                 className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded"
               >
-                {Object.keys(card.character_voice_interpretations).map(voice => (
+                {Object.keys(card.character_voices).map(voice => (
                   <option key={voice} value={voice}>
                     {voice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
                   </option>

@@ -20,6 +20,7 @@ from app.models.reading_enhanced import (
     SpreadTemplate as SpreadTemplateModel
 )
 from app.models.wasteland_card import WastelandCard as WastelandCardModel
+from app.models.audio_file import AudioType
 from app.core.faction_voice_mapping import filter_character_voices_by_faction
 from app.schemas.readings import (
     ReadingSession,
@@ -470,11 +471,11 @@ async def get_readings(
                     else:
                         spread_template_data = SpreadTemplate(
                             id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                            name="custom_spread",
+                            name="unknown_spread",
                             display_name="未知牌陣",
                             description="找不到牌陣模板",
-                            spread_type="custom_spread",
-                            card_count=0,
+                            spread_type="single_wasteland",
+                            card_count=1,
                             positions=[],
                             difficulty_level="beginner"
                         )
@@ -497,6 +498,11 @@ async def get_readings(
                     "summary_message": reading.summary_message,
                     "prediction_confidence": reading.prediction_confidence,
                     "energy_reading": reading.energy_reading,
+                    # AI Interpretation Tracking
+                    "ai_interpretation_requested": reading.ai_interpretation_requested,
+                    "ai_interpretation_at": reading.ai_interpretation_at,
+                    "ai_interpretation_provider": reading.ai_interpretation_provider,
+                    "interpretation_audio_url": reading.interpretation_audio_url,
                     "session_duration": reading.session_duration,
                     "start_time": reading.start_time,
                     "end_time": reading.end_time,
@@ -657,11 +663,11 @@ async def get_reading(
         if not spread_template_data:
             spread_template_data = SpreadTemplate(
                 id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                name="custom_spread",
+                name="unknown_spread",
                 display_name="Unknown Spread",
                 description="Spread template not found",
-                spread_type="custom_spread",
-                card_count=0,
+                spread_type="single_wasteland",
+                card_count=1,
                 positions=[],
                 difficulty_level="beginner"
             )
@@ -687,6 +693,7 @@ async def get_reading(
             "ai_interpretation_requested": reading.ai_interpretation_requested,
             "ai_interpretation_at": reading.ai_interpretation_at,
             "ai_interpretation_provider": reading.ai_interpretation_provider,
+            "interpretation_audio_url": reading.interpretation_audio_url,
             "session_duration": reading.session_duration,
             "start_time": reading.start_time,
             "end_time": reading.end_time,
@@ -709,6 +716,117 @@ async def get_reading(
     except Exception as e:
         logger.error(f"Error retrieving reading {reading_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to retrieve reading")
+
+
+async def generate_interpretation_audio_background(
+    reading_id: str,
+    interpretation_text: str,
+    character_key: str
+):
+    """
+    Background task to generate TTS audio for AI interpretation
+
+    Args:
+        reading_id: Reading ID to update
+        interpretation_text: AI interpretation text
+        character_key: Character voice key (e.g., 'pip_boy')
+    """
+    # Import inside function to avoid circular dependencies
+    from app.db.session import get_db
+    from app.core.dependencies import get_supabase_client
+    from app.services.tts_service import get_tts_service
+    from app.services.audio_storage_service import get_audio_storage_service
+
+    try:
+        logger.info(f"[TTS] Generating audio for reading {reading_id}")
+
+        # Get new database session for background task
+        async for db in get_db():
+            # Get Supabase client
+            supabase = get_supabase_client()
+
+            # Get services
+            tts_service = get_tts_service()
+            storage_service = get_audio_storage_service(supabase)
+
+            # Compute text hash
+            text_hash = tts_service.compute_text_hash(interpretation_text, character_key)
+
+            # Get character ID
+            character_id = await storage_service.get_character_id_by_key(db, character_key)
+            if not character_id:
+                logger.error(f"[TTS] Invalid character_key: {character_key}")
+                return
+
+            # Check if audio already exists (by text_hash)
+            audio_file = await storage_service.get_audio_by_text_hash(db, text_hash, character_id)
+
+            if audio_file:
+                # Audio already exists, use existing URL
+                logger.info(f"[TTS] Using existing audio: {audio_file.storage_url}")
+                audio_url = audio_file.storage_url
+            else:
+                # Generate new audio
+                logger.info(f"[TTS] Synthesizing new audio (text_length={len(interpretation_text)})")
+
+                # Synthesize speech
+                result = tts_service.synthesize_speech(
+                    text=interpretation_text,
+                    character_key=character_key,
+                    language_code="zh-TW"
+                )
+
+                # Generate storage path
+                storage_path = storage_service.generate_storage_path(
+                    audio_type=AudioType.AI_RESPONSE,
+                    identifier=text_hash[:8],
+                    character_key=character_key
+                )
+
+                # Upload to Supabase
+                audio_url = await storage_service.upload_audio(
+                    audio_content=result["audio_content"],
+                    storage_path=storage_path
+                )
+
+                # Save metadata to database
+                await storage_service.save_audio_metadata(
+                    db=db,
+                    card_id=None,
+                    character_id=character_id,
+                    storage_path=storage_path,
+                    storage_url=audio_url,
+                    file_size=result["file_size"],
+                    duration_seconds=result["duration"],
+                    text_length=result["text_length"],
+                    text_hash=text_hash,
+                    language_code="zh-TW",
+                    voice_name=result["voice_name"],
+                    ssml_params=result["ssml_params"],
+                    audio_type=AudioType.AI_RESPONSE
+                )
+
+                logger.info(f"[TTS] Audio generated and uploaded: {audio_url}")
+
+            # Update reading with audio URL
+            import uuid as uuid_module
+            reading_uuid = uuid_module.UUID(reading_id) if isinstance(reading_id, str) else reading_id
+            query = select(ReadingSessionModel).where(ReadingSessionModel.id == reading_uuid)
+            result_query = await db.execute(query)
+            reading = result_query.scalar_one_or_none()
+
+            if reading:
+                reading.interpretation_audio_url = audio_url
+                await db.commit()
+                logger.info(f"[TTS] Updated reading {reading_id} with audio URL: {audio_url}")
+            else:
+                logger.error(f"[TTS] Reading {reading_id} not found during audio update")
+
+            # Break after first (and only) iteration
+            break
+
+    except Exception as e:
+        logger.error(f"[TTS] Failed to generate audio for reading {reading_id}: {e}", exc_info=True)
 
 
 @router.patch(
@@ -744,6 +862,7 @@ async def get_reading(
     }
 )
 async def update_reading(
+    background_tasks: BackgroundTasks,
     reading_id: str = Path(..., description="占卜會話 ID"),
     update_data: ReadingUpdate = Body(..., description="要更新的欄位"),
     db: AsyncSession = Depends(get_db),
@@ -802,6 +921,22 @@ async def update_reading(
         await db.commit()
         await db.refresh(reading)
 
+        # Generate TTS audio for AI interpretation (background task)
+        if (is_updating_ai_interpretation and
+            update_data.overall_interpretation is not None and
+            len(update_data.overall_interpretation) > 0):
+            # Extract character_key from character_voice_used
+            character_key = reading.character_voice_used
+            if character_key:
+                # Add background task to generate audio
+                background_tasks.add_task(
+                    generate_interpretation_audio_background,
+                    reading_id=reading_id,
+                    interpretation_text=update_data.overall_interpretation,
+                    character_key=character_key
+                )
+                logger.info(f"[TTS] Queued audio generation for reading {reading_id}")
+
         # Fetch full reading with relationships to return complete ReadingSession
         # (Reuse the logic from get_reading endpoint)
 
@@ -851,11 +986,11 @@ async def update_reading(
         if not spread_template_data:
             spread_template_data = SpreadTemplate(
                 id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                name="custom_spread",
+                name="unknown_spread",
                 display_name="Unknown Spread",
                 description="Spread template not found",
-                spread_type="custom_spread",
-                card_count=0,
+                spread_type="single_wasteland",
+                card_count=1,
                 positions=[],
                 difficulty_level="beginner"
             )
@@ -881,6 +1016,7 @@ async def update_reading(
             "ai_interpretation_requested": reading.ai_interpretation_requested,
             "ai_interpretation_at": reading.ai_interpretation_at,
             "ai_interpretation_provider": reading.ai_interpretation_provider,
+            "interpretation_audio_url": reading.interpretation_audio_url,
             "session_duration": reading.session_duration,
             "start_time": reading.start_time,
             "end_time": reading.end_time,
@@ -1097,30 +1233,186 @@ async def get_personal_stats(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ) -> ReadingStats:
-    """Get personal reading statistics."""
+    """Get personal reading statistics with real data calculation."""
     try:
-        # In a real implementation, calculate these from actual data
-        # This is a placeholder with mock data
+        from app.schemas.cards import CharacterVoice, KarmaAlignment
+        from datetime import timezone
+
+        now = datetime.now(timezone.utc)
+
+        # 1. Total readings count
+        total_query = select(func.count()).select_from(ReadingSessionModel).where(
+            ReadingSessionModel.user_id == current_user.id
+        )
+        total_result = await db.execute(total_query)
+        total_readings = total_result.scalar() or 0
+
+        # 2. Readings this month
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_query = select(func.count()).select_from(ReadingSessionModel).where(
+            and_(
+                ReadingSessionModel.user_id == current_user.id,
+                ReadingSessionModel.created_at >= month_start
+            )
+        )
+        month_result = await db.execute(month_query)
+        readings_this_month = month_result.scalar() or 0
+
+        # 3. Readings this week
+        week_start = now - timedelta(days=now.weekday())  # Monday of current week
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        week_query = select(func.count()).select_from(ReadingSessionModel).where(
+            and_(
+                ReadingSessionModel.user_id == current_user.id,
+                ReadingSessionModel.created_at >= week_start
+            )
+        )
+        week_result = await db.execute(week_query)
+        readings_this_week = week_result.scalar() or 0
+
+        # 4. Average satisfaction rating
+        avg_query = select(func.avg(ReadingSessionModel.user_satisfaction)).where(
+            and_(
+                ReadingSessionModel.user_id == current_user.id,
+                ReadingSessionModel.user_satisfaction.isnot(None)
+            )
+        )
+        avg_result = await db.execute(avg_query)
+        average_satisfaction = float(avg_result.scalar() or 0.0)
+
+        # 5. Favorite character voice (most used)
+        voice_query = select(
+            ReadingSessionModel.character_voice_used,
+            func.count().label('count')
+        ).where(
+            ReadingSessionModel.user_id == current_user.id
+        ).group_by(
+            ReadingSessionModel.character_voice_used
+        ).order_by(
+            desc('count')
+        ).limit(1)
+
+        voice_result = await db.execute(voice_query)
+        voice_row = voice_result.first()
+        favorite_character_voice = CharacterVoice(voice_row[0]) if voice_row else CharacterVoice.PIP_BOY
+
+        # 6. Favorite spread type (most used)
+        spread_query = select(
+            SpreadTemplateModel.name,
+            func.count().label('count')
+        ).select_from(ReadingSessionModel).join(
+            SpreadTemplateModel,
+            ReadingSessionModel.spread_template_id == SpreadTemplateModel.id
+        ).where(
+            ReadingSessionModel.user_id == current_user.id
+        ).group_by(
+            SpreadTemplateModel.name
+        ).order_by(
+            desc('count')
+        ).limit(1)
+
+        spread_result = await db.execute(spread_query)
+        spread_row = spread_result.first()
+        favorite_spread = spread_row[0] if spread_row else "unknown"
+
+        # 7. Total cards drawn (count all card positions)
+        cards_query = select(func.count()).select_from(ReadingCardPositionModel).join(
+            ReadingSessionModel,
+            ReadingCardPositionModel.completed_reading_id == ReadingSessionModel.id
+        ).where(
+            ReadingSessionModel.user_id == current_user.id
+        )
+        cards_result = await db.execute(cards_query)
+        total_cards_drawn = cards_result.scalar() or 0
+
+        # 8. Karma distribution
+        karma_query = select(
+            ReadingSessionModel.karma_context,
+            func.count().label('count')
+        ).where(
+            ReadingSessionModel.user_id == current_user.id
+        ).group_by(
+            ReadingSessionModel.karma_context
+        )
+
+        karma_result = await db.execute(karma_query)
+        karma_rows = karma_result.all()
+
+        # Initialize karma distribution with all possible values
+        karma_distribution = {
+            KarmaAlignment.GOOD: 0,
+            KarmaAlignment.NEUTRAL: 0,
+            KarmaAlignment.EVIL: 0
+        }
+
+        for row in karma_rows:
+            if row[0]:  # Check if karma_context is not None
+                try:
+                    karma_distribution[KarmaAlignment(row[0])] = row[1]
+                except (ValueError, KeyError):
+                    pass  # Skip invalid karma values
+
+        # 9. Recent readings count (last 7 days)
+        seven_days_ago = now - timedelta(days=7)
+        recent_query = select(func.count()).select_from(ReadingSessionModel).where(
+            and_(
+                ReadingSessionModel.user_id == current_user.id,
+                ReadingSessionModel.created_at >= seven_days_ago
+            )
+        )
+        recent_result = await db.execute(recent_query)
+        recent_readings_count = recent_result.scalar() or 0
+
+        # 10. Consecutive days (count unique dates with readings in descending order)
+        dates_query = select(
+            func.date(ReadingSessionModel.created_at).label('reading_date')
+        ).where(
+            ReadingSessionModel.user_id == current_user.id
+        ).group_by(
+            func.date(ReadingSessionModel.created_at)
+        ).order_by(
+            desc('reading_date')
+        )
+
+        dates_result = await db.execute(dates_query)
+        reading_dates = [row[0] for row in dates_result.all()]
+
+        # Calculate consecutive days from today backwards
+        consecutive_days = 0
+        if reading_dates:
+            current_date = now.date()
+            for reading_date in reading_dates:
+                # Convert datetime to date if needed
+                if hasattr(reading_date, 'date'):
+                    reading_date = reading_date.date()
+
+                # Check if this date is consecutive
+                if reading_date == current_date:
+                    consecutive_days += 1
+                    current_date = current_date - timedelta(days=1)
+                elif reading_date == current_date - timedelta(days=1):
+                    consecutive_days += 1
+                    current_date = reading_date - timedelta(days=1)
+                else:
+                    break  # Break on first non-consecutive day
+
         return ReadingStats(
-            total_readings=47,
-            readings_this_month=12,
-            readings_this_week=3,
-            average_satisfaction=4.2,
-            favorite_character_voice=CharacterVoice.PIP_BOY,
-            favorite_spread="vault_tec_spread",
-            total_cards_drawn=156,
-            karma_distribution={
-                KarmaAlignment.GOOD: 20,
-                KarmaAlignment.NEUTRAL: 18,
-                KarmaAlignment.EVIL: 9
-            },
-            recent_readings_count=7,
-            consecutive_days=5
+            total_readings=total_readings,
+            readings_this_month=readings_this_month,
+            readings_this_week=readings_this_week,
+            average_satisfaction=round(average_satisfaction, 1),
+            favorite_character_voice=favorite_character_voice,
+            favorite_spread=favorite_spread,
+            total_cards_drawn=total_cards_drawn,
+            karma_distribution=karma_distribution,
+            recent_readings_count=recent_readings_count,
+            consecutive_days=consecutive_days
         )
 
     except Exception as e:
         logger.error(f"Error retrieving reading stats: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve reading statistics")
+        logger.exception(e)  # Log full traceback
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve reading statistics: {str(e)}")
 
 
 @router.get(

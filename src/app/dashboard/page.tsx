@@ -198,7 +198,7 @@ export default function DashboardPage() {
   // 計算最近解鎖的成就（最多3個）
   const recentAchievements = useMemo(() => {
     return userProgress
-      .filter(p => p.status === AchievementStatus.UNLOCKED || p.status === AchievementStatus.CLAIMED)
+      .filter(p => p.status === 'UNLOCKED' || p.status === 'CLAIMED')
       .filter(p => p.unlocked_at)
       .sort((a, b) => new Date(b.unlocked_at!).getTime() - new Date(a.unlocked_at!).getTime())
       .slice(0, 3)
@@ -449,7 +449,7 @@ export default function DashboardPage() {
                           {progress.unlocked_at && new Date(progress.unlocked_at).toLocaleDateString('zh-TW')}
                         </div>
                       </div>
-                      {progress.status === AchievementStatus.UNLOCKED && (
+                      {progress.status === 'UNLOCKED' && (
                         <div className="flex-shrink-0">
                           <span className="text-[10px] text-pip-boy-green border border-pip-boy-green/50 px-2 py-0.5 rounded-sm">
                             待領取

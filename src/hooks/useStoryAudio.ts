@@ -55,8 +55,15 @@ export function useStoryAudio({
     setShouldUseFallback(false)
 
     try {
+      // Default character voices for story narration
+      // 使用預設的角色語音：Pip-Boy（數據分析官）和避難所居民（天真探險家）
+      const defaultCharacters = ['pip_boy', 'vault_dweller']
+
       // Call API to generate story audio
-      const response: GenerateStoryAudioResponse = await generateStoryAudio(cardId, [])
+      const response: GenerateStoryAudioResponse = await generateStoryAudio(
+        cardId,
+        defaultCharacters
+      )
 
       if (response.audioUrls && Object.keys(response.audioUrls).length > 0) {
         setAudioUrls(response.audioUrls)

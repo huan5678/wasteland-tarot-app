@@ -2,59 +2,35 @@
 
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useAuthStore } from '@/lib/authStore'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { AuthLoading } from '@/components/auth/AuthLoading'
 import { useReadingsStore } from '@/lib/readingsStore'
 import { PixelIcon } from '@/components/ui/icons'
 import { ReadingHistory } from '@/components/readings/ReadingHistory'
 import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard'
 
 export default function ReadingsPage() {
-  const user = useAuthStore(s => s.user)
+  // ✅ 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth()
   const isLoading = useReadingsStore(s => s.isLoading)
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history')
 
   // CRITICAL FIX: Always fetch readings when page mounts OR when navigating back
   // This ensures we see newly created readings immediately
   useEffect(() => {
+    // ✅ 等待認證就緒後才載入資料
+    if (!isReady) return
+
     const fetch = async () => {
-      if (!user?.id) return
-      console.log('[ReadingsPage] Fetching readings for user:', user.id)
-      await useReadingsStore.getState().fetchUserReadings(user.id, true) // force = true
+      console.log('[ReadingsPage] Fetching readings for user:', user!.id)
+      await useReadingsStore.getState().fetchUserReadings(user!.id, true) // force = true
     }
     fetch()
-  }, [user])
+  }, [isReady, user])
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <PixelIcon name="lock" size={64} className="mb-4 mx-auto text-pip-boy-green" decorative />
-          <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
-            ACCESS DENIED
-          </h1>
-          <p className="text-pip-boy-green/70 mb-6">
-            你必須登入才能查看你的占卜記錄
-          </p>
-          <Link
-            href="/auth/login"
-            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
-          >
-登入 Pip-Boy
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-pip-boy-green">載入占卜記錄中...</p>
-        </div>
-      </div>
-    )
+  // ✅ 統一載入畫面（認證驗證 + 資料載入）
+  if (!isReady || isLoading) {
+    return <AuthLoading isVerifying={!isReady} />
   }
 
   const tabs = [

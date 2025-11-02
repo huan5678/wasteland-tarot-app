@@ -17,8 +17,13 @@ from datetime import datetime
 from app.db.database import get_db
 from app.core.dependencies import get_current_user
 from app.core.supabase import get_supabase_client
-from app.models.user import User
+from app.models.user import User, UserProfile
 from app.models.wasteland_card import FactionAlignment
+from app.schemas.user import (
+    UserTitlesResponse,
+    UpdateTitleRequest,
+    UpdateTitleResponse
+)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -457,4 +462,156 @@ async def upload_avatar(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="頭像上傳時發生錯誤"
+        )
+
+
+# ==================== 稱號管理 API ====================
+
+@router.get("/me/titles", response_model=UserTitlesResponse)
+async def get_user_titles(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    取得當前使用者的所有已解鎖稱號
+
+    需求對應：
+    - 回傳使用者當前使用的稱號
+    - 回傳使用者已解鎖的所有稱號列表
+
+    Args:
+        current_user: 從 JWT token 中提取的當前用戶
+        db: 資料庫 session
+
+    Returns:
+        UserTitlesResponse: 包含當前稱號和已解鎖稱號列表
+
+    Raises:
+        HTTPException: 500 - 資料庫查詢失敗
+    """
+    try:
+        # 查詢用戶的 Profile
+        result = await db.execute(
+            select(UserProfile).where(UserProfile.user_id == current_user.id)
+        )
+        profile = result.scalar_one_or_none()
+
+        # 如果沒有 Profile，回傳空資料
+        if not profile:
+            logger.info(f"No profile found for user {current_user.id}, returning empty titles")
+            return UserTitlesResponse(
+                current_title=None,
+                unlocked_titles=[]
+            )
+
+        # 確保 unlocked_titles 是 list 類型
+        unlocked_titles = profile.unlocked_titles if profile.unlocked_titles else []
+
+        logger.info(f"Retrieved titles for user {current_user.id}: {len(unlocked_titles)} unlocked")
+
+        return UserTitlesResponse(
+            current_title=profile.current_title,
+            unlocked_titles=unlocked_titles
+        )
+
+    except Exception as e:
+        logger.error(f"Error retrieving user titles: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="取得稱號資料時發生錯誤"
+        )
+
+
+@router.put("/me/title", response_model=UpdateTitleResponse)
+async def update_user_title(
+    request: UpdateTitleRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    設定或取消當前稱號
+
+    需求對應：
+    - 允許使用者設定已解鎖的稱號為當前稱號
+    - 允許使用者取消當前稱號（設為 null）
+    - 驗證：只能設定已解鎖的稱號
+
+    Args:
+        request: 更新稱號請求（包含 title 欄位）
+        current_user: 從 JWT token 中提取的當前用戶
+        db: 資料庫 session
+
+    Returns:
+        UpdateTitleResponse: 包含更新結果、新的當前稱號和訊息
+
+    Raises:
+        HTTPException:
+            - 400: 稱號未解鎖或無效
+            - 404: 用戶 Profile 不存在
+            - 500: 資料庫更新失敗
+    """
+    try:
+        # 查詢用戶的 Profile
+        result = await db.execute(
+            select(UserProfile).where(UserProfile.user_id == current_user.id)
+        )
+        profile = result.scalar_one_or_none()
+
+        # 如果沒有 Profile，先創建一個
+        if not profile:
+            profile = UserProfile(
+                user_id=current_user.id,
+                current_title=None,
+                unlocked_titles=[]
+            )
+            db.add(profile)
+            logger.info(f"Created new profile for user {current_user.id}")
+
+        # 確保 unlocked_titles 是 list 類型
+        if not profile.unlocked_titles:
+            profile.unlocked_titles = []
+
+        # 如果 request.title 是 None，表示取消稱號
+        if request.title is None:
+            profile.current_title = None
+            await db.commit()
+            await db.refresh(profile)
+
+            logger.info(f"User {current_user.id} removed current title")
+
+            return UpdateTitleResponse(
+                success=True,
+                current_title=None,
+                message="已取消當前稱號"
+            )
+
+        # 驗證稱號是否已解鎖
+        if request.title not in profile.unlocked_titles:
+            logger.warning(f"User {current_user.id} attempted to set un-unlocked title: {request.title}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"稱號 '{request.title}' 尚未解鎖，無法設定"
+            )
+
+        # 設定新的當前稱號
+        profile.current_title = request.title
+        await db.commit()
+        await db.refresh(profile)
+
+        logger.info(f"User {current_user.id} set current title to: {request.title}")
+
+        return UpdateTitleResponse(
+            success=True,
+            current_title=profile.current_title,
+            message=f"已成功設定稱號為「{request.title}」"
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating user title: {str(e)}", exc_info=True)
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="更新稱號時發生錯誤"
         )

@@ -19,7 +19,7 @@ export function useCardEnhancement(card: any | null | undefined) {
   const enhancedCard = useMemo((): DetailedTarotCard | null => {
     if (!card) return null
 
-    // 將 interpretations 轉換為 character_voice_interpretations 格式
+    // 將 interpretations 轉換為 character_voices 格式
     const characterVoiceInterpretations: Record<string, string> = {}
 
     if (interpretations && interpretations.length > 0) {
@@ -81,7 +81,7 @@ export function useCardEnhancement(card: any | null | undefined) {
       updated_at: card.updated_at,
 
       // ✅ 角色解讀資料（從 API 載入）
-      character_voice_interpretations: characterVoiceInterpretations,
+      character_voices: characterVoiceInterpretations,
     }
 
     return enhanced
@@ -150,6 +150,6 @@ export function enhanceCardBasic(card: any): DetailedTarotCard {
     updated_at: card.updated_at,
 
     // 空的角色解讀（需要使用 useCardEnhancement 來載入）
-    character_voice_interpretations: card.character_voice_interpretations || {},
+    character_voices: card.character_voices || {},
   }
 }

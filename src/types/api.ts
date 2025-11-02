@@ -215,6 +215,7 @@ export const ReadingSessionSchema = z.object({
   ai_interpretation_requested: z.boolean().optional().nullable(),
   ai_interpretation_at: z.string().optional().nullable(),
   ai_interpretation_provider: z.string().optional().nullable(),
+  interpretation_audio_url: z.string().optional().nullable(),
 
   // Session metadata
   session_duration: z.number().optional().nullable(),

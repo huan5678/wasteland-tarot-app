@@ -190,7 +190,7 @@ export function useCardInterpretations(cardId: string | undefined) {
  * Hook: 組合角色和解讀資料（用於 Reading Detail 頁面）
  *
  * 這個 Hook 整合了角色列表和特定卡牌的解讀，
- * 並將解讀資料轉換為舊格式的 character_voice_interpretations
+ * 並將解讀資料轉換為舊格式的 character_voices
  */
 export function useCharacterVoicesWithInterpretations(cardId: string | undefined) {
   const { characters, isLoading: isLoadingCharacters, error: charactersError } = useCharacters()
