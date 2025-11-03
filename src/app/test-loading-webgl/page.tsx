@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 /**
  * Test page for WebGL-integrated AsciiDonutLoading component
- */
+ */import { Button } from "@/components/ui/button";
 export default function TestLoadingWebGLPage() {
   const [mode, setMode] = useState<'webgl' | 'cpu' | 'fallback'>('webgl');
 
@@ -22,87 +22,87 @@ export default function TestLoadingWebGLPage() {
             Rendering Mode:
           </h2>
           <div className="flex gap-4">
-            <button
-              onClick={() => setMode('webgl')}
-              className={`flex-1 px-4 py-3 border rounded transition-all ${
-                mode === 'webgl'
-                  ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
-                  : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
-              }`}
-            >
+            <Button size="default" variant="default"
+            onClick={() => setMode('webgl')}
+            className="{expression}">
+
+
+
+
+
               <div className="font-semibold mb-1">🚀 WebGL V2</div>
               <div className="text-xs opacity-80">
                 60 FPS + Random rotation controller
               </div>
-            </button>
+            </Button>
 
-            <button
-              onClick={() => setMode('cpu')}
-              className={`flex-1 px-4 py-3 border rounded transition-all ${
-                mode === 'cpu'
-                  ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
-                  : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
-              }`}
-            >
+            <Button size="default" variant="default"
+            onClick={() => setMode('cpu')}
+            className="{expression}">
+
+
+
+
+
               <div className="font-semibold mb-1">💻 CPU Renderer</div>
               <div className="text-xs opacity-80">
                 24 FPS + Linear rotation
               </div>
-            </button>
+            </Button>
 
-            <button
-              onClick={() => setMode('fallback')}
-              className={`flex-1 px-4 py-3 border rounded transition-all ${
-                mode === 'fallback'
-                  ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
-                  : 'border-green-500 bg-green-950/20 hover:bg-green-900/40 text-green-400'
-              }`}
-            >
+            <Button size="default" variant="default"
+            onClick={() => setMode('fallback')}
+            className="{expression}">
+
+
+
+
+
               <div className="font-semibold mb-1">📊 Static Fallback</div>
               <div className="text-xs opacity-80">
                 No animation (accessibility mode)
               </div>
-            </button>
+            </Button>
           </div>
 
           {/* Current mode info */}
           <div className="mt-4 p-3 border border-green-700/50 rounded bg-black/30 text-sm text-green-300">
             <span className="text-cyan-400 font-semibold">Current Mode:</span>{' '}
-            {mode === 'webgl' && (
-              <>
+            {mode === 'webgl' &&
+            <>
                 WebGL V2 with smooth random rotation animations (3-5s
                 transitions, 30-135° changes)
               </>
-            )}
-            {mode === 'cpu' && (
-              <>CPU renderer with linear rotation (24 FPS target)</>
-            )}
-            {mode === 'fallback' && (
-              <>Static pre-rendered ASCII donut (accessibility mode)</>
-            )}
+            }
+            {mode === 'cpu' &&
+            <>CPU renderer with linear rotation (24 FPS target)</>
+            }
+            {mode === 'fallback' &&
+            <>Static pre-rendered ASCII donut (accessibility mode)</>
+            }
           </div>
         </div>
 
         {/* Component Test */}
         <div className="border-2 border-green-500 rounded overflow-hidden">
-          {mode === 'webgl' && (
-            <AsciiDonutLoading
-              useWebGL={true}
-              message="TESTING WEBGL V2 RENDERER..."
-            />
-          )}
-          {mode === 'cpu' && (
-            <AsciiDonutLoading
-              useWebGL={false}
-              message="TESTING CPU RENDERER..."
-            />
-          )}
-          {mode === 'fallback' && (
-            <AsciiDonutLoading
-              forceFallback={true}
-              message="TESTING STATIC FALLBACK..."
-            />
-          )}
+          {mode === 'webgl' &&
+          <AsciiDonutLoading
+            useWebGL={true}
+            message="TESTING WEBGL V2 RENDERER..." />
+
+          }
+          {mode === 'cpu' &&
+          <AsciiDonutLoading
+            useWebGL={false}
+            message="TESTING CPU RENDERER..." />
+
+          }
+          {mode === 'fallback' &&
+          <AsciiDonutLoading
+            forceFallback={true}
+            message="TESTING STATIC FALLBACK..." />
+
+          }
         </div>
 
         {/* Info */}
@@ -130,6 +130,6 @@ export default function TestLoadingWebGLPage() {
           </ul>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

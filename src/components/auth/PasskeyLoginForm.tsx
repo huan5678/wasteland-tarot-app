@@ -15,24 +15,24 @@ import {
   isWebAuthnSupported,
   isConditionalUISupported,
   convertCredentialRequestOptions,
-  convertAuthenticationResponse,
-} from '@/lib/webauthn/utils';
+  convertAuthenticationResponse } from
+'@/lib/webauthn/utils';
 import {
   getAuthenticationOptions,
-  verifyAuthentication,
-} from '@/lib/webauthn/api';
+  verifyAuthentication } from
+'@/lib/webauthn/api';
 
 // ============================================================================
 // Types
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 interface PasskeyLoginFormProps {
   /** 是否顯示 email 輸入欄位（Email-guided 登入） */
   showEmailField?: boolean;
   /** 是否啟用 Conditional UI (autofill) */
   enableConditionalUI?: boolean;
   /** 成功登入後的回調 */
-  onSuccess?: (result: { user: any; access_token: string }) => void;
+  onSuccess?: (result: {user: any;access_token: string;}) => void;
 }
 
 interface FormData {
@@ -50,7 +50,7 @@ interface FormErrors {
 export function PasskeyLoginForm({
   showEmailField = false,
   enableConditionalUI = true,
-  onSuccess,
+  onSuccess
 }: PasskeyLoginFormProps) {
   const router = useRouter();
   const { setUser, setToken } = useAuthStore();
@@ -68,7 +68,7 @@ export function PasskeyLoginForm({
     setIsSupported(isWebAuthnSupported());
 
     if (enableConditionalUI && isWebAuthnSupported()) {
-      isConditionalUISupported().then(supported => {
+      isConditionalUISupported().then((supported) => {
         setSupportsConditionalUI(supported);
       });
     }
@@ -94,7 +94,7 @@ export function PasskeyLoginForm({
         // 啟動 Conditional UI
         const credential = await navigator.credentials.get({
           publicKey: publicKeyOptions,
-          mediation: 'conditional',
+          mediation: 'conditional'
         });
 
         if (credential && credential.type === 'public-key') {
@@ -146,7 +146,7 @@ export function PasskeyLoginForm({
 
       // 顯示成功訊息
       toast.success('Pip-Boy 生物辨識驗證成功！', {
-        description: `歡迎回來，${result.user.name || 'Vault Dweller'}！`,
+        description: `歡迎回來，${result.user.name || 'Vault Dweller'}！`
       });
 
       // 呼叫 onSuccess 回調
@@ -193,7 +193,7 @@ export function PasskeyLoginForm({
 
       // Step 3: 呼叫瀏覽器 WebAuthn API
       const credential = await navigator.credentials.get({
-        publicKey: publicKeyOptions,
+        publicKey: publicKeyOptions
       });
 
       if (!credential || credential.type !== 'public-key') {
@@ -236,13 +236,13 @@ export function PasskeyLoginForm({
   // ========== 輸入變更處理 ==========
 
   const handleInputChange = (field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
+  e: React.ChangeEvent<HTMLInputElement>) =>
+  {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
     // 清除該欄位的錯誤
     if (errors[field as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -257,8 +257,8 @@ export function PasskeyLoginForm({
             sizePreset="xl"
             variant="error"
             animation="wiggle"
-            decorative
-          />
+            decorative />
+
           <h3 className="text-xl text-red-400">Pip-Boy 相容性問題</h3>
           <p className="text-pip-boy-green/70 text-sm">
             你的終端機不支援 Vault-Tec 生物辨識系統 (Passkey/WebAuthn)
@@ -273,8 +273,8 @@ export function PasskeyLoginForm({
             </ul>
           </div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // ========== 主要 UI ==========
@@ -293,70 +293,70 @@ export function PasskeyLoginForm({
         </div>
 
         {/* 載入狀態 */}
-        {isLoading && (
-          <div className="mb-4 p-3 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm">
+        {isLoading &&
+        <div className="mb-4 p-3 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm">
             <div className="flex items-center gap-2">
               <div
-                data-testid="pip-boy-loading-spinner"
-                className="w-4 h-4 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin"
-              />
+              data-testid="pip-boy-loading-spinner"
+              className="w-4 h-4 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin" />
+
               生物辨識驗證中...
             </div>
           </div>
-        )}
+        }
 
         {/* Email 輸入欄位（Email-guided 登入） */}
-        {showEmailField && (
-          <div className="mb-4">
+        {showEmailField &&
+        <div className="mb-4">
             <label
-              htmlFor="email"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+            htmlFor="email"
+            className="block text-pip-boy-green text-sm mb-2">
+
               Email 信箱（選填）
             </label>
             <input
-              id="email"
-              type="email"
-              autoComplete={supportsConditionalUI ? 'email webauthn' : 'email'}
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
-              placeholder="輸入 Email 或留空使用快速登入..."
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              disabled={isLoading}
-            />
-            {errors.email && (
-              <p className="mt-1 text-red-400 text-xs flex items-center">
+            id="email"
+            type="email"
+            autoComplete={supportsConditionalUI ? 'email webauthn' : 'email'}
+            className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+            placeholder="輸入 Email 或留空使用快速登入..."
+            value={formData.email}
+            onChange={handleInputChange('email')}
+            disabled={isLoading} />
+
+            {errors.email &&
+          <p className="mt-1 text-red-400 text-xs flex items-center">
                 <PixelIcon
-                  name="alert-triangle"
-                  sizePreset="xs"
-                  variant="error"
-                  className="mr-1"
-                  decorative
-                />
+              name="alert-triangle"
+              sizePreset="xs"
+              variant="error"
+              className="mr-1"
+              decorative />
+
                 {errors.email}
               </p>
-            )}
+          }
             <p className="mt-1 text-pip-boy-green/50 text-xs">
               💡 提示：留空 Email 將自動選擇你的 Pip-Boy
             </p>
           </div>
-        )}
+        }
 
         {/* 登入按鈕 */}
-        <button
-          type="submit"
-          disabled={isLoading}
-          className="w-full py-3 bg-black border-2 border-amber-500 text-amber-500 font-bold text-sm hover:bg-amber-500/10 focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-        >
+        <Button size="icon" variant="outline"
+        type="submit"
+        disabled={isLoading}
+        className="w-full py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2">
+
           <PixelIcon
             name="shield"
             sizePreset="sm"
             variant="warning"
             animation={isLoading ? 'pulse' : undefined}
-            aria-label="生物辨識"
-          />
+            aria-label="生物辨識" />
+
           {isLoading ? '生物辨識掃描中...' : '使用 Passkey 登入'}
-        </button>
+        </Button>
 
         {/* 說明文字 */}
         <div className="mt-4 p-3 border border-amber-500/30 bg-amber-500/5 text-amber-500/80 text-xs space-y-2">
@@ -366,16 +366,16 @@ export function PasskeyLoginForm({
               使用你的 Touch ID、Face ID、Windows Hello 或安全鑰匙進行快速登入
             </span>
           </p>
-          {supportsConditionalUI && showEmailField && (
-            <p className="flex items-start gap-2">
+          {supportsConditionalUI && showEmailField &&
+          <p className="flex items-start gap-2">
               <PixelIcon name="zap" sizePreset="xs" variant="warning" className="mt-0.5" decorative />
               <span>
                 你的瀏覽器支援自動填入 - 點擊 Email 欄位即可快速選擇
               </span>
             </p>
-          )}
+          }
         </div>
       </form>
-    </div>
-  );
+    </div>);
+
 }

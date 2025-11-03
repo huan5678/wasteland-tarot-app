@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { useTextToSpeech } from '@/hooks/audio/useTextToSpeech';
+import { useTextToSpeech } from '@/hooks/audio/useTextToSpeech';import { Button } from "@/components/ui/button";
 
 interface SpeechControlsProps {
   text: string;
@@ -27,8 +27,8 @@ export function SpeechControls({ text, onPlayStateChange }: SpeechControlsProps)
         <p className="speech-controls__error">
           您的瀏覽器不支援語音播放功能
         </p>
-      </div>
-    );
+      </div>);
+
   }
 
   const handlePlay = () => {
@@ -41,32 +41,32 @@ export function SpeechControls({ text, onPlayStateChange }: SpeechControlsProps)
 
   return (
     <div className="speech-controls" role="group" aria-label="語音播放控制">
-      {!isSpeaking ? (
-        <button
-          onClick={handlePlay}
-          className="speech-controls__btn speech-controls__btn--play"
-          aria-label="播放語音"
-        >
+      {!isSpeaking ?
+      <Button size="default" variant="default"
+      onClick={handlePlay}
+      className="speech-controls__btn"
+      aria-label="播放語音">
+
           ▶️ 播放
-        </button>
-      ) : (
-        <>
-          <button
-            onClick={isPaused ? resume : pause}
-            className="speech-controls__btn speech-controls__btn--pause"
-            aria-label={isPaused ? '繼續播放' : '暫停播放'}
-          >
+        </Button> :
+
+      <>
+          <Button size="icon" variant="default"
+        onClick={isPaused ? resume : pause}
+        className="speech-controls__btn"
+        aria-label={isPaused ? '繼續播放' : '暫停播放'}>
+
             {isPaused ? '▶️ 繼續' : '⏸️ 暫停'}
-          </button>
-          <button
-            onClick={stop}
-            className="speech-controls__btn speech-controls__btn--stop"
-            aria-label="停止播放"
-          >
+          </Button>
+          <Button size="default" variant="default"
+        onClick={stop}
+        className="speech-controls__btn"
+        aria-label="停止播放">
+
             ⏹️ 停止
-          </button>
+          </Button>
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

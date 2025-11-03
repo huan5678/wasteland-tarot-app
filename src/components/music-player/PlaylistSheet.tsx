@@ -14,8 +14,8 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
+  SheetTitle } from
+'@/components/ui/sheet';
 import { useMusicPlayer } from '@/hooks/useMusicPlayer';
 import { usePlaylistStore } from '@/stores/playlistStore';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
@@ -28,7 +28,7 @@ import type { Playlist } from '@/lib/audio/playlistTypes';
 // ============================================================================
 // Types
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 export interface PlaylistSheetProps {
   /** Sheet 是否開啟（外部控制） */
   open?: boolean;
@@ -66,7 +66,7 @@ type SheetMode = 'list' | 'create' | 'edit';
 export function PlaylistSheet({
   open: controlledOpen,
   onOpenChange,
-  className,
+  className
 }: PlaylistSheetProps) {
   // ========== Hooks ==========
   const { isSheetOpen, openSheet, closeSheet } = useMusicPlayer();
@@ -105,7 +105,7 @@ export function PlaylistSheet({
     enabled: isOpen,
     autoFocus: true,
     restoreFocus: true,
-    onEscape: () => handleOpenChange(false),
+    onEscape: () => handleOpenChange(false)
   });
 
   // ========== Computed Values ==========
@@ -121,7 +121,7 @@ export function PlaylistSheet({
 
     const query = deferredSearchQuery.toLowerCase();
     return playlists.filter((playlist) =>
-      playlist.name.toLowerCase().includes(query)
+    playlist.name.toLowerCase().includes(query)
     );
   }, [playlists, deferredSearchQuery]);
 
@@ -214,8 +214,8 @@ export function PlaylistSheet({
         aria-label="播放清單"
         aria-live="polite"
         aria-atomic="false"
-        data-testid="playlist-sheet"
-      >
+        data-testid="playlist-sheet">
+
         {/* Header - 標題列 */}
         <SheetHeader className="border-b-2 border-pip-boy-green pb-4 flex-shrink-0">
           <SheetTitle className="text-pip-boy-green text-xl">
@@ -225,107 +225,107 @@ export function PlaylistSheet({
           </SheetTitle>
 
           {/* Search Bar (List mode only) */}
-          {mode === 'list' && playlists.length > 0 && (
-            <div className="relative mt-4">
+          {mode === 'list' && playlists.length > 0 &&
+          <div className="relative mt-4">
               <PixelIcon name="search" sizePreset="xs" className="absolute left-3 top-1/2 -translate-y-1/2 text-pip-boy-green/50" decorative />
               <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜尋播放清單..."
-                className={cn(
-                  'w-full pl-10 pr-10 py-2 rounded',
-                  'bg-black border-2 border-pip-boy-green/30',
-                  'text-pip-boy-green text-sm placeholder:text-pip-boy-green/30',
-                  'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/30',
-                  'transition-all duration-200'
-                )}
-                aria-label="搜尋播放清單"
-                data-testid="search-playlists-input"
-              />
-              {searchQuery && (
-                <button
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-pip-boy-green/50 hover:text-pip-boy-green"
-                  aria-label="清除搜尋"
-                >
-                  <PixelIcon name="close" sizePreset="xs" decorative />
-                </button>
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="搜尋播放清單..."
+              className={cn(
+                'w-full pl-10 pr-10 py-2 rounded',
+                'bg-black border-2 border-pip-boy-green/30',
+                'text-pip-boy-green text-sm placeholder:text-pip-boy-green/30',
+                'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/30',
+                'transition-all duration-200'
               )}
+              aria-label="搜尋播放清單"
+              data-testid="search-playlists-input" />
+
+              {searchQuery &&
+            <Button size="icon" variant="link"
+            onClick={handleClearSearch}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+            aria-label="清除搜尋">
+
+                  <PixelIcon name="close" sizePreset="xs" decorative />
+                </Button>
+            }
             </div>
-          )}
+          }
         </SheetHeader>
 
         {/* Content Area - 可滾動區域 */}
         <div className="flex-1 overflow-y-auto py-6 px-6 relative z-0 min-h-0">
           {/* List Mode */}
-          {mode === 'list' && (
-            <>
-              {filteredPlaylists.length > 0 ? (
-                <PlaylistList
-                  onPlayPlaylist={handlePlayPlaylist}
-                  onEditPlaylist={handleEditPlaylist}
-                  onDeletePlaylist={handleDeletePlaylist}
-                />
-              ) : playlists.length === 0 ? (
-                // Empty State (No playlists)
-                <div className="flex flex-col items-center justify-center h-full text-center text-pip-boy-green/50">
+          {mode === 'list' &&
+          <>
+              {filteredPlaylists.length > 0 ?
+            <PlaylistList
+              onPlayPlaylist={handlePlayPlaylist}
+              onEditPlaylist={handleEditPlaylist}
+              onDeletePlaylist={handleDeletePlaylist} /> :
+
+            playlists.length === 0 ?
+            // Empty State (No playlists)
+            <div className="flex flex-col items-center justify-center h-full text-center text-pip-boy-green/50">
                   <p className="text-sm">尚無播放清單</p>
                   <p className="text-xs mt-2">點擊下方按鈕建立第一個播放清單</p>
-                </div>
-              ) : (
-                // Empty State (No search results)
-                <div className="flex flex-col items-center justify-center h-full text-center text-pip-boy-green/50">
+                </div> :
+
+            // Empty State (No search results)
+            <div className="flex flex-col items-center justify-center h-full text-center text-pip-boy-green/50">
                   <p className="text-sm mb-2">找不到符合的播放清單</p>
                   <p className="text-xs">請嘗試其他搜尋關鍵字</p>
                 </div>
-              )}
+            }
             </>
-          )}
+          }
 
           {/* Create Mode */}
-          {mode === 'create' && (
-            <PlaylistEditor
-              mode="create"
-              onSave={handleSavePlaylist}
-              onCancel={handleCancelEdit}
-            />
-          )}
+          {mode === 'create' &&
+          <PlaylistEditor
+            mode="create"
+            onSave={handleSavePlaylist}
+            onCancel={handleCancelEdit} />
+
+          }
 
           {/* Edit Mode */}
-          {mode === 'edit' && editingPlaylistId && (
-            <PlaylistEditor
-              mode="edit"
-              playlistId={editingPlaylistId}
-              onSave={handleSavePlaylist}
-              onCancel={handleCancelEdit}
-            />
-          )}
+          {mode === 'edit' && editingPlaylistId &&
+          <PlaylistEditor
+            mode="edit"
+            playlistId={editingPlaylistId}
+            onSave={handleSavePlaylist}
+            onCancel={handleCancelEdit} />
+
+          }
         </div>
 
         {/* Fixed Bottom Button (List mode only) */}
-        {mode === 'list' && (
-          <div className="border-t-2 border-pip-boy-green pt-4 px-6 pb-6 flex-shrink-0">
-            <button
-              onClick={handleCreateNew}
-              className={cn(
-                'w-full flex items-center justify-center gap-2 px-4 py-3 rounded',
-                'bg-pip-boy-green text-black font-semibold text-sm',
-                'hover:bg-pip-boy-green/80 transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',
-                'shadow-[0_0_15px_rgba(0,255,136,0.3)]'
-              )}
-              aria-label="新增播放清單"
-              data-testid="create-playlist-button"
-            >
+        {mode === 'list' &&
+        <div className="border-t-2 border-pip-boy-green pt-4 px-6 pb-6 flex-shrink-0">
+            <Button size="default" variant="default"
+          onClick={handleCreateNew}
+          className="{expression}"
+
+
+
+
+
+
+          aria-label="新增播放清單"
+          data-testid="create-playlist-button">
+
               <PixelIcon name="add" sizePreset="sm" decorative />
               新增播放清單
-            </button>
+            </Button>
           </div>
-        )}
+        }
       </SheetContent>
-    </Sheet>
-  );
+    </Sheet>);
+
 }
 
 PlaylistSheet.displayName = 'PlaylistSheet';

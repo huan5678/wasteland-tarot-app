@@ -1,94 +1,94 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useRequireAuth } from '@/hooks/useRequireAuth'
-import { AuthLoading } from '@/components/auth/AuthLoading'
-import { useAuthStore } from '@/lib/authStore'
-import { useAudioStore } from '@/lib/audio/audioStore'
-import { useAchievementStore } from '@/lib/stores/achievementStore'
-import { PixelIcon } from '@/components/ui/icons'
-import { profileAPI, analyticsAPI, readingsAPI, cardsAPI } from '@/lib/api/services'
-import { useFactions } from '@/hooks/useCharacterVoices'
-import { AvatarUpload } from '@/components/profile/AvatarUpload'
-import { TitleSelector } from '@/components/profile/TitleSelector'
-import { useTitleStore } from '@/lib/stores/titleStore'
-import { toast } from 'sonner'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { OverviewTab } from '@/components/profile/tabs/OverviewTab'
-import { AchievementsTab } from '@/components/profile/tabs/AchievementsTab'
-import { SettingsTab } from '@/components/profile/tabs/SettingsTab'
-import { AccountTab } from '@/components/profile/tabs/AccountTab'
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { AuthLoading } from '@/components/auth/AuthLoading';
+import { useAuthStore } from '@/lib/authStore';
+import { useAudioStore } from '@/lib/audio/audioStore';
+import { useAchievementStore } from '@/lib/stores/achievementStore';
+import { PixelIcon } from '@/components/ui/icons';
+import { profileAPI, analyticsAPI, readingsAPI, cardsAPI } from '@/lib/api/services';
+import { useFactions } from '@/hooks/useCharacterVoices';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
+import { TitleSelector } from '@/components/profile/TitleSelector';
+import { useTitleStore } from '@/lib/stores/titleStore';
+import { toast } from 'sonner';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { OverviewTab } from '@/components/profile/tabs/OverviewTab';
+import { AchievementsTab } from '@/components/profile/tabs/AchievementsTab';
+import { SettingsTab } from '@/components/profile/tabs/SettingsTab';
+import { AccountTab } from '@/components/profile/tabs/AccountTab';import { Button } from "@/components/ui/button";
 
 interface UserProfile {
-  username: string
-  email: string
-  joinDate: string
-  karmaLevel: string
-  totalReadings: number
-  favoriteCard: string
-  favoriteCardName: string  // 新增：最常抽到的卡片名稱
-  monthlyReadings: number    // 新增：本月占卜次數
-  favoritedCount: number     // 新增：收藏數量
-  faction: string
-  pipBoyModel: string
+  username: string;
+  email: string;
+  joinDate: string;
+  karmaLevel: string;
+  totalReadings: number;
+  favoriteCard: string;
+  favoriteCardName: string; // 新增：最常抽到的卡片名稱
+  monthlyReadings: number; // 新增：本月占卜次數
+  favoritedCount: number; // 新增：收藏數量
+  faction: string;
+  pipBoyModel: string;
   notificationPreferences: {
-    dailyReadings: boolean
-    weeklyInsights: boolean
-    systemUpdates: boolean
-  }
+    dailyReadings: boolean;
+    weeklyInsights: boolean;
+    systemUpdates: boolean;
+  };
 }
 
 // Tab 配置
 const PROFILE_TABS = [
-  { value: 'overview', label: '總覽', icon: 'home' },
-  { value: 'achievements', label: '成就', icon: 'trophy' },
-  { value: 'settings', label: '設定', icon: 'settings' },
-  { value: 'account', label: '帳戶', icon: 'user' },
-] as const
+{ value: 'overview', label: '總覽', icon: 'home' },
+{ value: 'achievements', label: '成就', icon: 'trophy' },
+{ value: 'settings', label: '設定', icon: 'settings' },
+{ value: 'account', label: '帳戶', icon: 'user' }] as
+const;
 
 export default function ProfilePage() {
-  const user = useAuthStore(s => s.user)
-  const logout = useAuthStore(s => s.logout)
-  const isOAuthUser = useAuthStore(s => s.isOAuthUser)
-  const oauthProvider = useAuthStore(s => s.oauthProvider)
-  const profilePicture = useAuthStore(s => s.profilePicture)
-  const updateAvatarUrl = useAuthStore(s => s.updateAvatarUrl)
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const isOAuthUser = useAuthStore((s) => s.isOAuthUser);
+  const oauthProvider = useAuthStore((s) => s.oauthProvider);
+  const profilePicture = useAuthStore((s) => s.profilePicture);
+  const updateAvatarUrl = useAuthStore((s) => s.updateAvatarUrl);
 
   // 音效系統狀態
-  const sfxVolume = useAudioStore(s => s.volumes.sfx)
-  const sfxMuted = useAudioStore(s => s.muted.sfx)
-  const setVolume = useAudioStore(s => s.setVolume)
-  const toggleMute = useAudioStore(s => s.toggleMute)
+  const sfxVolume = useAudioStore((s) => s.volumes.sfx);
+  const sfxMuted = useAudioStore((s) => s.muted.sfx);
+  const setVolume = useAudioStore((s) => s.setVolume);
+  const toggleMute = useAudioStore((s) => s.toggleMute);
 
   // 成就系統狀態
-  const { summary, userProgress, fetchSummary, fetchUserProgress } = useAchievementStore()
+  const { summary, userProgress, fetchSummary, fetchUserProgress } = useAchievementStore();
 
   // ✅ 使用 API 載入陣營資料
-  const { factions, isLoading: isLoadingFactions } = useFactions()
+  const { factions, isLoading: isLoadingFactions } = useFactions();
 
-  const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isEditing, setIsEditing] = useState(false)
-  const [editForm, setEditForm] = useState<Partial<UserProfile>>({})
-  const [isSaving, setIsSaving] = useState(false)
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
   // ✅ 輔助函式：根據 faction key 取得顯示名稱
   const getFactionLabel = (factionKey: string): string => {
-    if (!factions || factions.length === 0) return factionKey
-    const faction = factions.find(f => f.key === factionKey)
-    return faction?.name || factionKey
-  }
+    if (!factions || factions.length === 0) return factionKey;
+    const faction = factions.find((f) => f.key === factionKey);
+    return faction?.name || factionKey;
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
       // 確保認證狀態已初始化且用戶存在
       if (!useAuthStore.getState().isInitialized || !user?.id) {
-        console.log('[Profile] ⏳ 等待認證初始化...')
-        return
+        console.log('[Profile] ⏳ 等待認證初始化...');
+        return;
       }
 
-      console.log('[Profile] 📊 開始載入 Profile 資料...')
+      console.log('[Profile] 📊 開始載入 Profile 資料...');
       console.log('[Profile] 👤 User 資料:', {
         id: user.id,
         name: user.name,
@@ -96,62 +96,62 @@ export default function ProfilePage() {
         total_readings: user.total_readings,
         experience_level: user.experience_level,
         faction_alignment: user.faction_alignment
-      })
-      setIsLoading(true)
+      });
+      setIsLoading(true);
 
       try {
         // ✅ 使用新的統計 API（後端計算所有數據）
-        let favoriteCardName = '無'
-        let monthlyReadings = 0
-        let favoritedCount = 0
-        let totalReadingsCount = 0
+        let favoriteCardName = '無';
+        let monthlyReadings = 0;
+        let favoritedCount = 0;
+        let totalReadingsCount = 0;
 
         try {
           // 載入 analytics 數據（收藏卡片資料）
-          const analytics = await analyticsAPI.getUserAnalytics()
-          console.log('[Profile] 📈 Analytics 資料:', analytics)
-          const mostDrawnCards = analytics.user_analytics.most_drawn_cards || []
-          favoritedCount = (analytics.user_analytics.favorited_cards || []).length
+          const analytics = await analyticsAPI.getUserAnalytics();
+          console.log('[Profile] 📈 Analytics 資料:', analytics);
+          const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
+          favoritedCount = (analytics.user_analytics.favorited_cards || []).length;
 
           // 取得最常抽到的卡片名稱
           if (mostDrawnCards.length > 0) {
             try {
-              const mostDrawnCardId = mostDrawnCards[0]
-              const card = await cardsAPI.getById(mostDrawnCardId)
-              favoriteCardName = card.name
+              const mostDrawnCardId = mostDrawnCards[0];
+              const card = await cardsAPI.getById(mostDrawnCardId);
+              favoriteCardName = card.name;
             } catch (err) {
-              console.warn('Failed to load favorite card:', err)
+              console.warn('Failed to load favorite card:', err);
             }
           }
 
           // ✅ 使用後端統計 API（總數與本月由後端計算）
           try {
-            const stats = await readingsAPI.getPersonalStats()
-            console.log('[Profile] 📊 Reading 統計資料 (後端):', stats)
+            const stats = await readingsAPI.getPersonalStats();
+            console.log('[Profile] 📊 Reading 統計資料 (後端):', stats);
 
-            totalReadingsCount = stats.total_readings
-            monthlyReadings = stats.readings_this_month
+            totalReadingsCount = stats.total_readings;
+            monthlyReadings = stats.readings_this_month;
 
-            console.log('[Profile] ✅ 總占卜次數:', totalReadingsCount)
-            console.log('[Profile] ✅ 本月占卜次數:', monthlyReadings)
+            console.log('[Profile] ✅ 總占卜次數:', totalReadingsCount);
+            console.log('[Profile] ✅ 本月占卜次數:', monthlyReadings);
           } catch (err) {
-            console.warn('Failed to load reading stats:', err)
+            console.warn('Failed to load reading stats:', err);
           }
         } catch (err) {
-          console.warn('Failed to load analytics:', err)
+          console.warn('Failed to load analytics:', err);
         }
 
         // Construct profile from user data and analytics
         const userProfile: UserProfile = {
-          username: user.name || 'Vault Dweller',  // User model 只有 name，沒有 username
+          username: user.name || 'Vault Dweller', // User model 只有 name，沒有 username
           email: user.email || 'dweller@vault-tec.com',
           joinDate: user.created_at || new Date().toISOString(),
           karmaLevel: user.experience_level || '新手流浪者',
-          totalReadings: totalReadingsCount,  // ✅ 使用實際 API 計算的數量
+          totalReadings: totalReadingsCount, // ✅ 使用實際 API 計算的數量
           favoriteCard: user.favorite_card_suit || '未知',
-          favoriteCardName,     // 最常抽到的卡片名稱
-          monthlyReadings,      // 本月占卜次數
-          favoritedCount,       // 收藏數量
+          favoriteCardName, // 最常抽到的卡片名稱
+          monthlyReadings, // 本月占卜次數
+          favoritedCount, // 收藏數量
           faction: user.faction_alignment || 'independent',
           pipBoyModel: '3000 Mark IV',
           notificationPreferences: {
@@ -159,16 +159,16 @@ export default function ProfilePage() {
             weeklyInsights: false,
             systemUpdates: true
           }
-        }
+        };
 
-        console.log('[Profile] ✅ 最終 Profile 資料:', userProfile)
-        setProfile(userProfile)
-        setEditForm(userProfile)
+        console.log('[Profile] ✅ 最終 Profile 資料:', userProfile);
+        setProfile(userProfile);
+        setEditForm(userProfile);
       } catch (error) {
-        console.error('Failed to load profile:', error)
+        console.error('Failed to load profile:', error);
         // Fallback to basic user data
         const fallbackProfile: UserProfile = {
-          username: user.name || 'Vault Dweller',  // User model 只有 name，沒有 username
+          username: user.name || 'Vault Dweller', // User model 只有 name，沒有 username
           email: user.email || '',
           joinDate: user.created_at || new Date().toISOString(),
           karmaLevel: user.experience_level || '新手居民',
@@ -184,106 +184,106 @@ export default function ProfilePage() {
             weeklyInsights: false,
             systemUpdates: true
           }
-        }
-        setProfile(fallbackProfile)
-        setEditForm(fallbackProfile)
+        };
+        setProfile(fallbackProfile);
+        setEditForm(fallbackProfile);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
     if (user) {
-      loadProfile()
+      loadProfile();
       // 載入成就資料
-      console.log('[Profile] 🏆 開始載入成就資料...')
+      console.log('[Profile] 🏆 開始載入成就資料...');
       fetchSummary().then((result) => {
-        console.log('[Profile] 🏆 成就摘要載入完成:', result)
+        console.log('[Profile] 🏆 成就摘要載入完成:', result);
       }).catch((err) => {
-        console.error('[Profile] ❌ 成就摘要載入失敗:', err)
-      })
+        console.error('[Profile] ❌ 成就摘要載入失敗:', err);
+      });
       fetchUserProgress().then((result) => {
-        console.log('[Profile] 🏆 用戶成就進度載入完成，數量:', result?.length || 0)
+        console.log('[Profile] 🏆 用戶成就進度載入完成，數量:', result?.length || 0);
       }).catch((err) => {
-        console.error('[Profile] ❌ 用戶成就進度載入失敗:', err)
-      })
+        console.error('[Profile] ❌ 用戶成就進度載入失敗:', err);
+      });
     }
-  }, [user])
+  }, [user]);
 
   const handleEdit = () => {
-    setIsEditing(true)
-  }
+    setIsEditing(true);
+  };
 
   const handleCancel = () => {
-    setIsEditing(false)
-    setEditForm(profile || {})
-  }
+    setIsEditing(false);
+    setEditForm(profile || {});
+  };
 
   const handleSave = async () => {
-    if (!profile) return
+    if (!profile) return;
 
-    setIsSaving(true)
+    setIsSaving(true);
 
     try {
       // 調用後端 API 更新 profile
       const response = await profileAPI.updateProfile({
-        faction_alignment: editForm.faction,
+        faction_alignment: editForm.faction
         // 未來可擴展其他欄位
         // display_name: editForm.username,
         // bio: editForm.bio,
         // wasteland_location: editForm.location,
-      })
+      });
 
       // 更新成功後更新本地狀態
-      const updatedProfile = { ...profile, ...editForm }
-      setProfile(updatedProfile)
-      setEditForm(updatedProfile)
-      setIsEditing(false)
+      const updatedProfile = { ...profile, ...editForm };
+      setProfile(updatedProfile);
+      setEditForm(updatedProfile);
+      setIsEditing(false);
 
-      console.log('Profile updated successfully:', response.message)
+      console.log('Profile updated successfully:', response.message);
       toast.success('檔案更新成功', {
         description: '你的個人資料已成功儲存',
-        duration: 3000,
-      })
+        duration: 3000
+      });
     } catch (error) {
-      console.error('Failed to save profile:', error)
+      console.error('Failed to save profile:', error);
       toast.error('儲存失敗', {
         description: error instanceof Error ? error.message : '請稍後再試',
-        duration: 4000,
-      })
+        duration: 4000
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const handleInputChange = (field: keyof UserProfile, value: any) => {
-    setEditForm(prev => ({ ...prev, [field]: value }))
-  }
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleNotificationChange = (field: keyof UserProfile['notificationPreferences']) => {
-    setEditForm(prev => ({
+    setEditForm((prev) => ({
       ...prev,
       notificationPreferences: {
         ...prev.notificationPreferences,
         [field]: !prev.notificationPreferences?.[field]
       }
-    }))
-  }
+    }));
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-TW', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    })
-  }
+    });
+  };
 
   const getDaysInService = () => {
-    if (!profile?.joinDate) return 0
-    const joinDate = new Date(profile.joinDate)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - joinDate.getTime())
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  }
+    if (!profile?.joinDate) return 0;
+    const joinDate = new Date(profile.joinDate);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - joinDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
 
   if (!user) {
@@ -299,13 +299,13 @@ export default function ProfilePage() {
           </p>
           <Link
             href="/auth/login"
-            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
-          >
+            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors">
+
 登入 Pip-Boy
           </Link>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   if (isLoading || !profile) {
@@ -315,8 +315,8 @@ export default function ProfilePage() {
           <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-pip-boy-green">載入居民檔案中...</p>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -333,30 +333,30 @@ export default function ProfilePage() {
                 個人資料管理系統 - ID: {profile.username}
               </p>
             </div>
-            {!isEditing && (
-              <button
-                onClick={handleEdit}
-                className="px-4 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors"
-              >
+            {!isEditing &&
+            <Button size="default" variant="outline"
+            onClick={handleEdit}
+            className="px-4 py-2 border transition-colors">
+
                 <PixelIcon name="edit" size={16} className="mr-2 inline" aria-label="編輯檔案" />編輯檔案
-              </button>
-            )}
+              </Button>
+            }
           </div>
         </div>
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="overview" className="w-full">
           <TabsList className="w-full mb-6 grid grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0">
-            {PROFILE_TABS.map((tab) => (
-              <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className=""
-              >
+            {PROFILE_TABS.map((tab) =>
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="">
+
                 <PixelIcon name={tab.icon} size={18} className="mr-2" decorative />
                 {tab.label}
               </TabsTrigger>
-            ))}
+            )}
           </TabsList>
 
           {/* Tab 1: Overview */}
@@ -367,16 +367,16 @@ export default function ProfilePage() {
               isOAuthUser={isOAuthUser}
               profilePicture={profilePicture}
               updateAvatarUrl={updateAvatarUrl}
-              getDaysInService={getDaysInService}
-            />
+              getDaysInService={getDaysInService} />
+
           </TabsContent>
 
           {/* Tab 2: Achievements */}
           <TabsContent value="achievements" className="space-y-6">
             <AchievementsTab
               summary={summary}
-              userProgress={userProgress}
-            />
+              userProgress={userProgress} />
+
           </TabsContent>
 
           {/* Tab 3: Settings */}
@@ -398,8 +398,8 @@ export default function ProfilePage() {
               setVolume={setVolume}
               toggleMute={toggleMute}
               formatDate={formatDate}
-              getFactionLabel={getFactionLabel}
-            />
+              getFactionLabel={getFactionLabel} />
+
           </TabsContent>
 
           {/* Tab 4: Account */}
@@ -408,11 +408,11 @@ export default function ProfilePage() {
               user={user}
               profile={profile}
               isOAuthUser={isOAuthUser}
-              logout={logout}
-            />
+              logout={logout} />
+
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  )
+    </div>);
+
 }

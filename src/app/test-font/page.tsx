@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { DynamicHeroTitle } from '@/components/hero/DynamicHeroTitle';
+import { DynamicHeroTitle } from '@/components/hero/DynamicHeroTitle';import { Button } from "@/components/ui/button";
 
 export default function FontTestPage() {
   const [useNewFont, setUseNewFont] = useState(true);
@@ -10,7 +10,7 @@ export default function FontTestPage() {
     zh: '廢土塔羅牌占卜系統 - Wasteland Tarot',
     en: 'The quick brown fox jumps over the lazy dog',
     numbers: '0123456789',
-    special: '!@#$%^&*()_+-=[]{}|;:,.<>?',
+    special: '!@#$%^&*()_+-=[]{}|;:,.<>?'
   };
 
   return (
@@ -19,16 +19,16 @@ export default function FontTestPage() {
       <div className="fixed top-4 right-4 z-50 bg-black/80 border border-pip-boy-green p-4 rounded backdrop-blur">
         <div className="flex items-center gap-3">
           <span className="text-pip-boy-green text-sm">字體切換:</span>
-          <button
-            onClick={() => setUseNewFont(!useNewFont)}
-            className={`px-4 py-2 border ${
-              useNewFont
-                ? 'bg-pip-boy-green text-black border-pip-boy-green'
-                : 'bg-transparent text-pip-boy-green border-pip-boy-green'
-            } hover:bg-pip-boy-green/20 transition-colors`}
-          >
+          <Button size="icon" variant="default"
+          onClick={() => setUseNewFont(!useNewFont)}
+          className="{expression}">
+
+
+
+
+
             {useNewFont ? 'Cubic 11 (新)' : 'Noto Sans TC (舊)'}
-          </button>
+          </Button>
         </div>
         <div className="mt-2 text-xs text-pip-boy-green/70">
           當前字體: {useNewFont ? 'Cubic 11' : 'Noto Sans TC'}
@@ -56,8 +56,8 @@ export default function FontTestPage() {
               autoPlay={true}
               typingSpeed={60}
               deletingSpeed={20}
-              waitBeforeDelete={4000}
-            />
+              waitBeforeDelete={4000} />
+
             <p className="text-xs text-pip-boy-green/50 text-center mt-6">
               💡 提示: 切換上方字體按鈕可看到此區塊使用 Cubic 11 或 Noto Sans TC 的效果差異
             </p>
@@ -282,18 +282,18 @@ export default function FontTestPage() {
             <div>
               <span className="text-sm text-pip-boy-green/70 block mb-3">按鈕尺寸測試</span>
               <div className="flex flex-wrap gap-4">
-                <button className="px-6 py-3 bg-pip-boy-green text-black font-bold hover:bg-pip-boy-green/80 transition-colors text-lg">
+                <Button size="lg" variant="link" className="px-6 py-3 font-bold transition-colors">
                   Large Button
-                </button>
-                <button className="px-5 py-2 bg-pip-boy-green text-black font-bold hover:bg-pip-boy-green/80 transition-colors text-base">
+                </Button>
+                <Button size="lg" variant="link" className="px-5 py-2 font-bold transition-colors">
                   Medium Button
-                </button>
-                <button className="px-4 py-2 bg-pip-boy-green text-black font-bold hover:bg-pip-boy-green/80 transition-colors text-sm">
+                </Button>
+                <Button size="sm" variant="link" className="px-4 py-2 font-bold transition-colors">
                   Small Button
-                </button>
-                <button className="px-3 py-1 bg-pip-boy-green text-black font-bold hover:bg-pip-boy-green/80 transition-colors text-xs">
+                </Button>
+                <Button size="xs" variant="link" className="px-3 py-1 font-bold transition-colors">
                   Extra Small
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -303,18 +303,18 @@ export default function FontTestPage() {
                 <input
                   type="text"
                   placeholder="輸入你的名字 (text-base)"
-                  className="w-full px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-base placeholder:text-pip-boy-green/50"
-                />
+                  className="w-full px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-base placeholder:text-pip-boy-green/50" />
+
                 <input
                   type="email"
                   placeholder="your@email.com (text-sm)"
-                  className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm placeholder:text-pip-boy-green/50"
-                />
+                  className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm placeholder:text-pip-boy-green/50" />
+
                 <textarea
                   placeholder="輸入你的問題... (text-base)"
                   rows={3}
-                  className="w-full px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-base placeholder:text-pip-boy-green/50"
-                />
+                  className="w-full px-4 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-base placeholder:text-pip-boy-green/50" />
+
               </div>
             </div>
           </div>
@@ -458,6 +458,6 @@ export default function FontTestPage() {
           </div>
         </section>
       </div>
-    </div>
-  );
+    </div>);
+
 }

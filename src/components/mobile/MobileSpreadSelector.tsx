@@ -1,56 +1,56 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { animated, useSpring, useTransition } from '@react-spring/web'
-import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
-import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance'
-import { MobileCard, MobileGrid, MobileBottomSheet } from '@/components/layout/ResponsiveContainer'
-import { PixelIcon } from '@/components/ui/icons'
+import React, { useState, useEffect, useMemo } from 'react';
+import { animated, useSpring, useTransition } from '@react-spring/web';
+import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures';
+import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance';
+import { MobileCard, MobileGrid, MobileBottomSheet } from '@/components/layout/ResponsiveContainer';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 interface SpreadConfig {
-  id: string
-  name: string
-  description: string
-  cardCount: number
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
-  category: 'love' | 'career' | 'spiritual' | 'general' | 'daily'
-  duration: string
-  icon: React.ReactNode
-  preview: string[]
-  positions: { id: string; label: string; meaning: string }[]
-  isPopular?: boolean
-  isNew?: boolean
-  isFavorite?: boolean
+  id: string;
+  name: string;
+  description: string;
+  cardCount: number;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  category: 'love' | 'career' | 'spiritual' | 'general' | 'daily';
+  duration: string;
+  icon: React.ReactNode;
+  preview: string[];
+  positions: {id: string;label: string;meaning: string;}[];
+  isPopular?: boolean;
+  isNew?: boolean;
+  isFavorite?: boolean;
 }
 
 interface MobileSpreadSelectorProps {
-  spreads: SpreadConfig[]
-  selectedSpread?: string
-  onSpreadSelect: (spreadId: string) => void
-  onStartReading: (spreadId: string) => void
-  className?: string
+  spreads: SpreadConfig[];
+  selectedSpread?: string;
+  onSpreadSelect: (spreadId: string) => void;
+  onStartReading: (spreadId: string) => void;
+  className?: string;
 }
 
 const spreadCategories = [
-  { id: 'all', label: '全部', icon: <PixelIcon iconName="star" size={16} decorative /> },
-  { id: 'daily', label: '每日', icon: <PixelIcon iconName="calendar" size={16} decorative /> },
-  { id: 'love', label: '愛情', icon: <PixelIcon iconName="heart" size={16} decorative /> },
-  { id: 'career', label: '事業', icon: <PixelIcon iconName="coin" size={16} decorative /> },
-  { id: 'spiritual', label: '靈性', icon: <PixelIcon iconName="zap" size={16} decorative /> },
-  { id: 'general', label: '綜合', icon: <PixelIcon iconName="users" size={16} decorative /> }
-]
+{ id: 'all', label: '全部', icon: <PixelIcon iconName="star" size={16} decorative /> },
+{ id: 'daily', label: '每日', icon: <PixelIcon iconName="calendar" size={16} decorative /> },
+{ id: 'love', label: '愛情', icon: <PixelIcon iconName="heart" size={16} decorative /> },
+{ id: 'career', label: '事業', icon: <PixelIcon iconName="coin" size={16} decorative /> },
+{ id: 'spiritual', label: '靈性', icon: <PixelIcon iconName="zap" size={16} decorative /> },
+{ id: 'general', label: '綜合', icon: <PixelIcon iconName="users" size={16} decorative /> }];
+
 
 const difficultyColors = {
   beginner: 'text-green-400 bg-green-400/20',
   intermediate: 'text-yellow-400 bg-yellow-400/20',
   advanced: 'text-red-400 bg-red-400/20'
-}
+};
 
 const difficultyLabels = {
   beginner: '初級',
   intermediate: '中級',
   advanced: '高級'
-}
+};
 
 export function MobileSpreadSelector({
   spreads,
@@ -59,61 +59,61 @@ export function MobileSpreadSelector({
   onStartReading,
   className = ''
 }: MobileSpreadSelectorProps) {
-  const [selectedCategory, setSelectedCategory] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<'name' | 'difficulty' | 'popularity' | 'duration'>('popularity')
-  const [showFilters, setShowFilters] = useState(false)
-  const [showSpreadDetails, setShowSpreadDetails] = useState(false)
-  const [selectedSpreadDetails, setSelectedSpreadDetails] = useState<SpreadConfig | null>(null)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'difficulty' | 'popularity' | 'duration'>('popularity');
+  const [showFilters, setShowFilters] = useState(false);
+  const [showSpreadDetails, setShowSpreadDetails] = useState(false);
+  const [selectedSpreadDetails, setSelectedSpreadDetails] = useState<SpreadConfig | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { isTouchDevice, screenSize } = useAdvancedDeviceCapabilities()
-  const { isLowPerformanceDevice } = useMobilePerformance()
-  const { qualityLevel, settings } = useAdaptiveQuality()
+  const { isTouchDevice, screenSize } = useAdvancedDeviceCapabilities();
+  const { isLowPerformanceDevice } = useMobilePerformance();
+  const { qualityLevel, settings } = useAdaptiveQuality();
 
   // Filter and sort spreads
   const filteredSpreads = useMemo(() => {
-    let filtered = spreads
+    let filtered = spreads;
 
     // Filter by category
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(spread => spread.category === selectedCategory)
+      filtered = filtered.filter((spread) => spread.category === selectedCategory);
     }
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(spread =>
-        spread.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        spread.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      filtered = filtered.filter((spread) =>
+      spread.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      spread.description.toLowerCase().includes(searchQuery.toLowerCase())
+      );
     }
 
     // Sort spreads
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case 'name':
-          return a.name.localeCompare(b.name, 'zh')
+          return a.name.localeCompare(b.name, 'zh');
         case 'difficulty':
-          const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 }
-          return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty]
+          const difficultyOrder = { beginner: 0, intermediate: 1, advanced: 2 };
+          return difficultyOrder[a.difficulty] - difficultyOrder[b.difficulty];
         case 'popularity':
-          return (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0)
+          return (b.isPopular ? 1 : 0) - (a.isPopular ? 1 : 0);
         case 'duration':
-          return a.cardCount - b.cardCount
+          return a.cardCount - b.cardCount;
         default:
-          return 0
+          return 0;
       }
-    })
+    });
 
-    return sorted
-  }, [spreads, selectedCategory, searchQuery, sortBy])
+    return sorted;
+  }, [spreads, selectedCategory, searchQuery, sortBy]);
 
   // Animation springs
   const searchSpring = useSpring({
     opacity: searchQuery ? 1 : 0.7,
     transform: searchQuery ? 'scale(1)' : 'scale(0.98)',
     config: { tension: 300, friction: 25 }
-  })
+  });
 
   const spreadTransitions = useTransition(filteredSpreads, {
     from: { opacity: 0, transform: 'translateY(20px) scale(0.95)' },
@@ -121,33 +121,33 @@ export function MobileSpreadSelector({
     leave: { opacity: 0, transform: 'translateY(-20px) scale(0.95)' },
     config: { tension: 200, friction: 25 },
     trail: isLowPerformanceDevice ? 0 : 50
-  })
+  });
 
   const categoryTransitions = useTransition(spreadCategories, {
     from: { opacity: 0, transform: 'scale(0.8)' },
     enter: { opacity: 1, transform: 'scale(1)' },
     config: { tension: 400, friction: 30 }
-  })
+  });
 
   // Gesture handlers for spread cards
   const { bind, touchHandlers } = useAdvancedGestures(
     {
       onTap: (event) => {
+
         // Handle spread selection on tap
-      },
-      onLongPress: (event) => {
+      }, onLongPress: (event) => {
+
         // Show spread details on long press
-      },
-      onSwipe: (direction, event) => {
+      }, onSwipe: (direction, event) => {
         if (direction === 'up') {
-          setShowFilters(true)
+          setShowFilters(true);
         } else if (direction === 'left' || direction === 'right') {
           // Navigate between categories
-          const currentIndex = spreadCategories.findIndex(cat => cat.id === selectedCategory)
-          const nextIndex = direction === 'right'
-            ? Math.min(currentIndex + 1, spreadCategories.length - 1)
-            : Math.max(currentIndex - 1, 0)
-          setSelectedCategory(spreadCategories[nextIndex].id)
+          const currentIndex = spreadCategories.findIndex((cat) => cat.id === selectedCategory);
+          const nextIndex = direction === 'right' ?
+          Math.min(currentIndex + 1, spreadCategories.length - 1) :
+          Math.max(currentIndex - 1, 0);
+          setSelectedCategory(spreadCategories[nextIndex].id);
         }
       }
     },
@@ -156,30 +156,30 @@ export function MobileSpreadSelector({
       enableDoubleTap: false,
       swipeThreshold: 50
     }
-  )
+  );
 
   const handleSpreadSelect = (spread: SpreadConfig) => {
-    onSpreadSelect(spread.id)
-    setSelectedSpreadDetails(spread)
-    setShowSpreadDetails(true)
-  }
+    onSpreadSelect(spread.id);
+    setSelectedSpreadDetails(spread);
+    setShowSpreadDetails(true);
+  };
 
   const handleStartReading = (spread: SpreadConfig) => {
-    onStartReading(spread.id)
-    setShowSpreadDetails(false)
-  }
+    onStartReading(spread.id);
+    setShowSpreadDetails(false);
+  };
 
-  const SpreadCard = ({ spread }: { spread: SpreadConfig }) => (
-    <MobileCard
-      variant="elevated"
-      touchTarget
-      onClick={() => handleSpreadSelect(spread)}
-      className={`
+  const SpreadCard = ({ spread }: {spread: SpreadConfig;}) =>
+  <MobileCard
+    variant="elevated"
+    touchTarget
+    onClick={() => handleSpreadSelect(spread)}
+    className={`
         transition-all duration-200 hover:scale-105 active:scale-95
         ${selectedSpread === spread.id ? 'ring-2 ring-pip-boy-green' : ''}
         ${viewMode === 'list' ? 'flex flex-row items-center' : ''}
-      `}
-    >
+      `}>
+
       <div className={`${viewMode === 'list' ? 'flex items-center space-x-4 w-full' : ''}`}>
         {/* Spread Icon & Badges */}
         <div className={`
@@ -193,19 +193,19 @@ export function MobileSpreadSelector({
 
           {/* Badges */}
           <div className="absolute -top-1 -right-1 flex gap-1">
-            {spread.isNew && (
-              <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+            {spread.isNew &&
+          <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
                 新
               </div>
-            )}
-            {spread.isPopular && (
-              <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+          }
+            {spread.isPopular &&
+          <div className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                 熱門
               </div>
-            )}
-            {spread.isFavorite && (
-              <PixelIcon iconName="star" size={16} className="text-yellow-400" decorative />
-            )}
+          }
+            {spread.isFavorite &&
+          <PixelIcon iconName="star" size={16} className="text-yellow-400" decorative />
+          }
           </div>
         </div>
 
@@ -234,35 +234,35 @@ export function MobileSpreadSelector({
 
           {/* Action Buttons */}
           <div className="flex gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                handleStartReading(spread)
-              }}
-              className="flex items-center gap-2 px-3 py-2 bg-pip-boy-green text-wasteland-dark
-                       rounded-lg text-sm font-bold hover:bg-pip-boy-green/90
-                       transition-colors active:scale-95"
-            >
+            <Button size="sm" variant="link"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleStartReading(spread);
+          }}
+          className="flex items-center gap-2 px-3 py-2 font-bold transition-colors">
+
+
+
               <PixelIcon iconName="play" size={16} decorative />
               開始占卜
-            </button>
+            </Button>
 
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                setSelectedSpreadDetails(spread)
-                setShowSpreadDetails(true)
-              }}
-              className="p-2 border border-pip-boy-green/50 text-pip-boy-green
-                       rounded-lg hover:bg-pip-boy-green/10 transition-colors"
-            >
+            <Button size="icon" variant="outline"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedSpreadDetails(spread);
+            setShowSpreadDetails(true);
+          }}
+          className="p-2 border transition-colors">
+
+
               <PixelIcon iconName="info" size={16} aria-label="查看牌陣詳情" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
-    </MobileCard>
-  )
+    </MobileCard>;
+
 
   return (
     <div className={`mobile-spread-selector ${className}`} {...bind()}>
@@ -280,39 +280,42 @@ export function MobileSpreadSelector({
             className="w-full pl-10 pr-12 py-3 bg-black/60 border border-pip-boy-green/30
                      text-pip-boy-green placeholder-pip-boy-green/50 rounded-lg
                      focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
-                    "
-          />
-          <button
-            onClick={() => setShowFilters(true)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2
-                     text-pip-boy-green/60 hover:text-pip-boy-green transition-colors"
-            aria-label="開啟篩選選項"
-          >
+                    " />
+
+
+
+
+          <Button size="icon" variant="link"
+          onClick={() => setShowFilters(true)}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2\n transition-colors"
+
+          aria-label="開啟篩選選項">
+
             <PixelIcon iconName="filter" size={20} />
-          </button>
+          </Button>
         </div>
       </animated.div>
 
       {/* Category Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {categoryTransitions((style, category) => (
-          <animated.button
-            key={category.id}
-            style={style}
-            onClick={() => setSelectedCategory(category.id)}
-            className={`
+        {categoryTransitions((style, category) =>
+        <animated.button
+          key={category.id}
+          style={style}
+          onClick={() => setSelectedCategory(category.id)}
+          className={`
               flex items-center gap-2 px-4 py-2 rounded-full text-sm
               whitespace-nowrap transition-all duration-200 min-w-fit
-              ${selectedCategory === category.id
-                ? 'bg-pip-boy-green text-wasteland-dark'
-                : 'bg-pip-boy-green/20 text-pip-boy-green hover:bg-pip-boy-green/30'
-              }
-            `}
-          >
+              ${selectedCategory === category.id ?
+          'bg-pip-boy-green text-wasteland-dark' :
+          'bg-pip-boy-green/20 text-pip-boy-green hover:bg-pip-boy-green/30'}
+            `
+          }>
+
             {category.icon}
             {category.label}
           </animated.button>
-        ))}
+        )}
       </div>
 
       {/* View Mode Toggle */}
@@ -326,8 +329,9 @@ export function MobileSpreadSelector({
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             className="bg-black/60 border border-pip-boy-green/30 text-pip-boy-green
-                     text-sm rounded-lg px-3 py-1 focus:outline-none"
-          >
+                     text-sm rounded-lg px-3 py-1 focus:outline-none">
+
+
             <option value="popularity">熱門度</option>
             <option value="name">名稱</option>
             <option value="difficulty">難度</option>
@@ -335,81 +339,81 @@ export function MobileSpreadSelector({
           </select>
 
           <div className="flex border border-pip-boy-green/30 rounded-lg overflow-hidden">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-pip-boy-green text-wasteland-dark'
-                  : 'text-pip-boy-green hover:bg-pip-boy-green/20'
-              }`}
-            >
+            <Button size="icon" variant="default"
+            onClick={() => setViewMode('grid')}
+            className="{expression}">
+
+
+
+
+
               <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
                 <div className="bg-current rounded-sm"></div>
                 <div className="bg-current rounded-sm"></div>
                 <div className="bg-current rounded-sm"></div>
                 <div className="bg-current rounded-sm"></div>
               </div>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-pip-boy-green text-wasteland-dark'
-                  : 'text-pip-boy-green hover:bg-pip-boy-green/20'
-              }`}
-            >
+            </Button>
+            <Button size="icon" variant="default"
+            onClick={() => setViewMode('list')}
+            className="{expression}">
+
+
+
+
+
               <div className="w-4 h-4 flex flex-col justify-between">
                 <div className="h-0.5 bg-current rounded-full"></div>
                 <div className="h-0.5 bg-current rounded-full"></div>
                 <div className="h-0.5 bg-current rounded-full"></div>
               </div>
-            </button>
+            </Button>
           </div>
         </div>
       </div>
 
       {/* Spreads Grid/List */}
       <div className={`
-        ${viewMode === 'grid'
-          ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'
-          : 'space-y-4'
-        }
-      `}>
-        {spreadTransitions((style, spread) => (
-          <animated.div key={spread.id} style={style}>
+        ${viewMode === 'grid' ?
+      'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' :
+      'space-y-4'}
+      `
+      }>
+        {spreadTransitions((style, spread) =>
+        <animated.div key={spread.id} style={style}>
             <SpreadCard spread={spread} />
           </animated.div>
-        ))}
+        )}
       </div>
 
       {/* Empty State */}
-      {filteredSpreads.length === 0 && (
-        <div className="text-center py-12">
+      {filteredSpreads.length === 0 &&
+      <div className="text-center py-12">
           <div className="flex justify-center mb-4">
             <PixelIcon iconName="search" size={64} className="text-pip-boy-green/30" decorative />
           </div>
           <p className="text-pip-boy-green/60">
             沒有找到符合條件的牌陣
           </p>
-          <button
-            onClick={() => {
-              setSearchQuery('')
-              setSelectedCategory('all')
-            }}
-            className="mt-4 px-4 py-2 border border-pip-boy-green/50 text-pip-boy-green
-                     rounded-lg hover:bg-pip-boy-green/10 transition-colors"
-          >
+          <Button size="default" variant="outline"
+        onClick={() => {
+          setSearchQuery('');
+          setSelectedCategory('all');
+        }}
+        className="mt-4 px-4 py-2 border transition-colors">
+
+
             重置篩選
-          </button>
+          </Button>
         </div>
-      )}
+      }
 
       {/* Filters Bottom Sheet */}
       <MobileBottomSheet
         isOpen={showFilters}
         onClose={() => setShowFilters(false)}
-        snapPoints={['40%', '80%']}
-      >
+        snapPoints={['40%', '80%']}>
+
         <div className="p-6">
           <h3 className="text-pip-boy-green text-lg font-bold mb-6">篩選選項</h3>
 
@@ -418,15 +422,15 @@ export function MobileSpreadSelector({
             <div>
               <h4 className="text-pip-boy-green font-bold mb-3">難度</h4>
               <div className="flex gap-2">
-                {Object.entries(difficultyLabels).map(([key, label]) => (
-                  <button
-                    key={key}
-                    className={`px-3 py-2 rounded-lg text-sm transition-colors
-                      ${difficultyColors[key as keyof typeof difficultyColors]}`}
-                  >
+                {Object.entries(difficultyLabels).map(([key, label]) =>
+                <Button size="icon" variant="default"
+                key={key}
+                className="{expression}">
+
+
                     {label}
-                  </button>
-                ))}
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -434,45 +438,45 @@ export function MobileSpreadSelector({
             <div>
               <h4 className="text-pip-boy-green font-bold mb-3">牌數</h4>
               <div className="flex gap-2">
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
+                <Button size="sm" variant="link" className="px-3 py-2">
                   1 張
-                </button>
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
+                </Button>
+                <Button size="sm" variant="link" className="px-3 py-2">
                   3 張
-                </button>
-                <button className="px-3 py-2 bg-pip-boy-green/20 text-pip-boy-green rounded-lg text-sm">
+                </Button>
+                <Button size="sm" variant="link" className="px-3 py-2">
                   5+ 張
-                </button>
+                </Button>
               </div>
             </div>
           </div>
 
           <div className="mt-8 flex gap-4">
-            <button
-              onClick={() => setShowFilters(false)}
-              className="flex-1 py-3 border border-pip-boy-green/50 text-pip-boy-green
-                       rounded-lg hover:bg-pip-boy-green/10 transition-colors"
-            >
+            <Button size="default" variant="outline"
+            onClick={() => setShowFilters(false)}
+            className="flex-1 py-3 border transition-colors">
+
+
               取消
-            </button>
-            <button
-              onClick={() => setShowFilters(false)}
-              className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
-                       rounded-lg font-bold hover:bg-pip-boy-green/90 transition-colors"
-            >
+            </Button>
+            <Button size="default" variant="link"
+            onClick={() => setShowFilters(false)}
+            className="flex-1 py-3 font-bold transition-colors">
+
+
               套用篩選
-            </button>
+            </Button>
           </div>
         </div>
       </MobileBottomSheet>
 
       {/* Spread Details Bottom Sheet */}
-      {selectedSpreadDetails && (
-        <MobileBottomSheet
-          isOpen={showSpreadDetails}
-          onClose={() => setShowSpreadDetails(false)}
-          snapPoints={['60%', '90%']}
-        >
+      {selectedSpreadDetails &&
+      <MobileBottomSheet
+        isOpen={showSpreadDetails}
+        onClose={() => setShowSpreadDetails(false)}
+        snapPoints={['60%', '90%']}>
+
           <div className="p-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
@@ -495,12 +499,12 @@ export function MobileSpreadSelector({
               </div>
 
               <div className="flex gap-2">
-                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg" aria-label="加入書籤">
+                <Button size="icon" variant="link" className="p-2" aria-label="加入書籤">
                   <PixelIcon iconName="bookmark" size={20} />
-                </button>
-                <button className="p-2 text-pip-boy-green hover:bg-pip-boy-green/10 rounded-lg" aria-label="分享牌陣">
+                </Button>
+                <Button size="icon" variant="link" className="p-2" aria-label="分享牌陣">
                   <PixelIcon iconName="share" size={20} />
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -512,10 +516,11 @@ export function MobileSpreadSelector({
             <div className="mb-8">
               <h4 className="text-pip-boy-green font-bold mb-4">牌位說明</h4>
               <div className="space-y-3">
-                {selectedSpreadDetails.positions.map((position, index) => (
-                  <div key={position.id} className="flex items-start gap-3 p-3 bg-pip-boy-green/5 rounded-lg">
+                {selectedSpreadDetails.positions.map((position, index) =>
+              <div key={position.id} className="flex items-start gap-3 p-3 bg-pip-boy-green/5 rounded-lg">
                     <div className="w-8 h-8 bg-pip-boy-green/20 rounded-full flex items-center justify-center
                                  text-pip-boy-green text-sm font-bold">
+
                       {index + 1}
                     </div>
                     <div>
@@ -523,42 +528,42 @@ export function MobileSpreadSelector({
                       <p className="text-pip-boy-green/70 text-sm mt-1">{position.meaning}</p>
                     </div>
                   </div>
-                ))}
+              )}
               </div>
             </div>
 
             <div className="flex gap-4">
-              <button
-                onClick={() => setShowSpreadDetails(false)}
-                className="flex-1 py-3 border border-pip-boy-green/50 text-pip-boy-green
-                         rounded-lg hover:bg-pip-boy-green/10 transition-colors"
-              >
+              <Button size="default" variant="outline"
+            onClick={() => setShowSpreadDetails(false)}
+            className="flex-1 py-3 border transition-colors">
+
+
                 關閉
-              </button>
-              <button
-                onClick={() => handleStartReading(selectedSpreadDetails)}
-                className="flex-1 py-3 bg-pip-boy-green text-wasteland-dark
-                         rounded-lg font-bold hover:bg-pip-boy-green/90
-                         transition-colors flex items-center justify-center gap-2"
-              >
+              </Button>
+              <Button size="default" variant="link"
+            onClick={() => handleStartReading(selectedSpreadDetails)}
+            className="flex-1 py-3 font-bold transition-colors flex items-center justify-center gap-2">
+
+
+
                 <PixelIcon iconName="play" size={20} decorative />
                 開始占卜
-              </button>
+              </Button>
             </div>
           </div>
         </MobileBottomSheet>
-      )}
+      }
 
       {/* Loading State */}
-      {isLowPerformanceDevice && (
-        <div className="fixed bottom-4 right-4 z-50">
+      {isLowPerformanceDevice &&
+      <div className="fixed bottom-4 right-4 z-50">
           <div className="bg-black/90 border border-pip-boy-green/30 rounded-lg p-3">
             <p className="text-pip-boy-green/70 text-xs">
               低效能模式已啟用
             </p>
           </div>
         </div>
-      )}
-    </div>
-  )
+      }
+    </div>);
+
 }

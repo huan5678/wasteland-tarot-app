@@ -2,27 +2,27 @@
  * IncompleteSessionsList - Display and manage resumable sessions
  */
 
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useSessionStore } from '@/lib/sessionStore'
-import { PixelIcon } from '@/components/ui/icons'
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSessionStore } from '@/lib/sessionStore';
+import { PixelIcon } from '@/components/ui/icons';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import type { SessionMetadata } from '@/types/session'
+  DialogTitle } from
+'@/components/ui/dialog';
+import type { SessionMetadata } from '@/types/session';import { Button } from "@/components/ui/button";
 
 export function IncompleteSessionsList() {
-  const router = useRouter()
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [sessionToDelete, setSessionToDelete] = useState<SessionMetadata | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sessionToDelete, setSessionToDelete] = useState<SessionMetadata | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const {
     incompleteSessions,
@@ -30,74 +30,74 @@ export function IncompleteSessionsList() {
     isLoading,
     loadIncompleteSessions,
     resumeSession,
-    deleteSession,
-  } = useSessionStore()
+    deleteSession
+  } = useSessionStore();
 
   useEffect(() => {
-    loadIncompleteSessions()
-  }, [loadIncompleteSessions])
+    loadIncompleteSessions();
+  }, [loadIncompleteSessions]);
 
   const handleResume = async (id: string) => {
     try {
-      await resumeSession(id)
-      router.push('/readings/new')
+      await resumeSession(id);
+      router.push('/readings/new');
     } catch (error) {
-      console.error('恢復會話失敗:', error)
+      console.error('恢復會話失敗:', error);
     }
-  }
+  };
 
   const handleDeleteClick = (session: SessionMetadata, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setSessionToDelete(session)
-    setDeleteDialogOpen(true)
-  }
+    e.stopPropagation();
+    setSessionToDelete(session);
+    setDeleteDialogOpen(true);
+  };
 
   const handleConfirmDelete = async () => {
-    if (!sessionToDelete) return
+    if (!sessionToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      await deleteSession(sessionToDelete.id)
-      setDeleteDialogOpen(false)
-      setSessionToDelete(null)
+      await deleteSession(sessionToDelete.id);
+      setDeleteDialogOpen(false);
+      setSessionToDelete(null);
     } catch (error) {
-      console.error('刪除會話失敗:', error)
+      console.error('刪除會話失敗:', error);
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const handleCancelDelete = () => {
-    setDeleteDialogOpen(false)
-    setSessionToDelete(null)
-  }
+    setDeleteDialogOpen(false);
+    setSessionToDelete(null);
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMins / 60)
-    const diffDays = Math.floor(diffHours / 24)
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
 
     if (diffDays > 0) {
-      return `${diffDays} 天前`
+      return `${diffDays} 天前`;
     } else if (diffHours > 0) {
-      return `${diffHours} 小時前`
+      return `${diffHours} 小時前`;
     } else if (diffMins > 0) {
-      return `${diffMins} 分鐘前`
+      return `${diffMins} 分鐘前`;
     } else {
-      return '剛剛'
+      return '剛剛';
     }
-  }
+  };
 
   if (isLoading) {
     return (
       <div className="text-center py-8">
         <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
         <p className="text-pip-boy-green">載入會話...</p>
-      </div>
-    )
+      </div>);
+
   }
 
   if (incompleteSessions.length === 0) {
@@ -110,8 +110,8 @@ export function IncompleteSessionsList() {
         <p className="text-pip-boy-green/50 text-sm mt-2">
           開始新的占卜，系統會自動為你儲存進度
         </p>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -124,15 +124,15 @@ export function IncompleteSessionsList() {
         </div>
 
         <div className="space-y-3">
-          {incompleteSessions.map((session) => (
-            <SessionCard
-              key={session.id}
-              session={session}
-              onResume={() => handleResume(session.id)}
-              onDelete={(e) => handleDeleteClick(session, e)}
-              formatDate={formatDate}
-            />
-          ))}
+          {incompleteSessions.map((session) =>
+          <SessionCard
+            key={session.id}
+            session={session}
+            onResume={() => handleResume(session.id)}
+            onDelete={(e) => handleDeleteClick(session, e)}
+            formatDate={formatDate} />
+
+          )}
         </div>
       </div>
 
@@ -146,8 +146,8 @@ export function IncompleteSessionsList() {
                 sizePreset="lg"
                 variant="warning"
                 animation="pulse"
-                decorative
-              />
+                decorative />
+
               <DialogTitle className="text-xl font-bold text-pip-boy-green uppercase tracking-wider">
                 ⚠️ 警告：刪除會話
               </DialogTitle>
@@ -157,8 +157,8 @@ export function IncompleteSessionsList() {
             </DialogDescription>
           </DialogHeader>
 
-          {sessionToDelete && (
-            <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-4 my-4 space-y-2">
+          {sessionToDelete &&
+          <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-4 my-4 space-y-2">
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-pip-boy-green/70">牌陣類型：</span>
                 <span className="text-pip-boy-green font-semibold">{sessionToDelete.spread_type}</span>
@@ -172,54 +172,54 @@ export function IncompleteSessionsList() {
                 <span>建立於 {new Date(sessionToDelete.created_at).toLocaleString('zh-TW')}</span>
               </div>
             </div>
-          )}
+          }
 
           <DialogFooter className="gap-3">
-            <button
-              onClick={handleCancelDelete}
-              disabled={isDeleting}
-              className="flex-1 px-4 py-3 border-2 border-pip-boy-green/50 bg-transparent text-pip-boy-green hover:bg-pip-boy-green/10 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 uppercase text-sm font-bold tracking-wider"
-            >
+            <Button size="sm" variant="outline"
+            onClick={handleCancelDelete}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 uppercase font-bold tracking-wider">
+
               <span className="flex items-center justify-center gap-2">
                 <PixelIcon name="close" sizePreset="xs" variant="default" decorative />
                 取消
               </span>
-            </button>
-            <button
-              onClick={handleConfirmDelete}
-              disabled={isDeleting}
-              className="flex-1 px-4 py-3 border-2 border-red-500 bg-red-500/20 text-red-400 hover:bg-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 uppercase text-sm font-bold tracking-wider"
-            >
-              {isDeleting ? (
-                <span className="flex items-center justify-center gap-2">
+            </Button>
+            <Button size="icon" variant="outline"
+            onClick={handleConfirmDelete}
+            disabled={isDeleting}
+            className="flex-1 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 uppercase font-bold tracking-wider">
+
+              {isDeleting ?
+              <span className="flex items-center justify-center gap-2">
                   <PixelIcon name="loader" sizePreset="xs" animation="spin" variant="error" decorative />
                   刪除中...
-                </span>
-              ) : (
-                <span className="flex items-center justify-center gap-2">
+                </span> :
+
+              <span className="flex items-center justify-center gap-2">
                   <PixelIcon name="trash" sizePreset="xs" variant="error" decorative />
                   確認刪除
                 </span>
-              )}
-            </button>
+              }
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
-  )
+    </>);
+
 }
 
 function SessionCard({
   session,
   onResume,
   onDelete,
-  formatDate,
-}: {
-  session: SessionMetadata
-  onResume: () => void
-  onDelete: (e: React.MouseEvent) => void
-  formatDate: (date: string) => string
-}) {
+  formatDate
+
+
+
+
+
+}: {session: SessionMetadata;onResume: () => void;onDelete: (e: React.MouseEvent) => void;formatDate: (date: string) => string;}) {
   return (
     <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200 p-4 group">
       <div className="flex items-start justify-between gap-4">
@@ -244,24 +244,24 @@ function SessionCard({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={onResume}
-            className="flex items-center gap-1.5 px-3 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm"
-            title="恢復會話"
-          >
+          <Button size="sm" variant="outline"
+          onClick={onResume}
+          className="flex items-center gap-1.5 px-3 py-2 border transition-colors"
+          title="恢復會話">
+
             <PixelIcon name="play" sizePreset="xs" variant="success" decorative />
             <span>恢復</span>
-          </button>
+          </Button>
 
-          <button
-            onClick={onDelete}
-            className="p-2 border border-red-400 text-red-400 hover:bg-red-400/10 transition-colors"
-            title="刪除會話"
-          >
+          <Button size="icon" variant="outline"
+          onClick={onDelete}
+          className="p-2 border transition-colors"
+          title="刪除會話">
+
             <PixelIcon name="trash" sizePreset="xs" variant="error" decorative />
-          </button>
+          </Button>
         </div>
       </div>
-    </div>
-  )
+    </div>);
+
 }

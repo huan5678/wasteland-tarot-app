@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { StreamingInterpretation, MultiCardStreamingInterpretation } from '@/components/readings/StreamingInterpretation';
+import { StreamingInterpretation, MultiCardStreamingInterpretation } from '@/components/readings/StreamingInterpretation';import { Button } from "@/components/ui/button";
 
 export default function TestStreamingPage() {
   const [singleCardEnabled, setSingleCardEnabled] = useState(false);
@@ -52,8 +52,8 @@ export default function TestStreamingPage() {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
-                placeholder="Ask the wasteland..."
-              />
+                placeholder="Ask the wasteland..." />
+
             </div>
 
             {/* Character Voice */}
@@ -64,8 +64,8 @@ export default function TestStreamingPage() {
               <select
                 value={characterVoice}
                 onChange={(e) => setCharacterVoice(e.target.value)}
-                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
-              >
+                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500">
+
                 <option value="pip_boy">Pip-Boy 3000</option>
                 <option value="vault_dweller">Vault Dweller</option>
                 <option value="super_mutant">Super Mutant</option>
@@ -82,8 +82,8 @@ export default function TestStreamingPage() {
               <select
                 value={karmaAlignment}
                 onChange={(e) => setKarmaAlignment(e.target.value)}
-                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500"
-              >
+                className="w-full bg-gray-900/50 border border-amber-600/30 rounded px-4 py-2 text-gray-200 text-sm focus:outline-none focus:border-amber-500">
+
                 <option value="good">Good</option>
                 <option value="neutral">Neutral</option>
                 <option value="evil">Evil</option>
@@ -101,8 +101,8 @@ export default function TestStreamingPage() {
                 max="100"
                 value={streamSpeed}
                 onChange={(e) => setStreamSpeed(Number(e.target.value))}
-                className="w-full"
-              />
+                className="w-full" />
+
             </div>
           </div>
         </div>
@@ -113,39 +113,39 @@ export default function TestStreamingPage() {
             <h2 className="text-2xl font-bold text-amber-400">
               Single Card Interpretation
             </h2>
-            <button
-              onClick={() => setSingleCardEnabled(!singleCardEnabled)}
-              className={`px-4 py-2 rounded text-sm transition-colors ${
-                singleCardEnabled
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
-            >
+            <Button size="icon" variant="default"
+            onClick={() => setSingleCardEnabled(!singleCardEnabled)}
+            className="{expression}">
+
+
+
+
+
               {singleCardEnabled ? 'Stop' : 'Start Streaming'}
-            </button>
+            </Button>
           </div>
 
           <div className="bg-gray-900/50 border border-amber-600/20 rounded p-4 min-h-[200px]">
-            {singleCardEnabled ? (
-              <StreamingInterpretation
-                cardId={demoCardId}
-                question={question}
-                characterVoice={characterVoice}
-                karmaAlignment={karmaAlignment}
-                enabled={singleCardEnabled}
-                charsPerSecond={streamSpeed}
-                onComplete={(text) => {
-                  console.log('Single card complete:', text);
-                }}
-                onError={(error) => {
-                  console.error('Single card error:', error);
-                }}
-              />
-            ) : (
-              <div className="text-gray-500 text-sm">
+            {singleCardEnabled ?
+            <StreamingInterpretation
+              cardId={demoCardId}
+              question={question}
+              characterVoice={characterVoice}
+              karmaAlignment={karmaAlignment}
+              enabled={singleCardEnabled}
+              charsPerSecond={streamSpeed}
+              onComplete={(text) => {
+                console.log('Single card complete:', text);
+              }}
+              onError={(error) => {
+                console.error('Single card error:', error);
+              }} /> :
+
+
+            <div className="text-gray-500 text-sm">
                 Click "Start Streaming" to test single card interpretation
               </div>
-            )}
+            }
           </div>
         </div>
 
@@ -155,40 +155,40 @@ export default function TestStreamingPage() {
             <h2 className="text-2xl font-bold text-amber-400">
               Multi-Card Spread Interpretation
             </h2>
-            <button
-              onClick={() => setMultiCardEnabled(!multiCardEnabled)}
-              className={`px-4 py-2 rounded text-sm transition-colors ${
-                multiCardEnabled
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
-              }`}
-            >
+            <Button size="icon" variant="default"
+            onClick={() => setMultiCardEnabled(!multiCardEnabled)}
+            className="{expression}">
+
+
+
+
+
               {multiCardEnabled ? 'Stop' : 'Start Streaming'}
-            </button>
+            </Button>
           </div>
 
           <div className="bg-gray-900/50 border border-amber-600/20 rounded p-4 min-h-[300px]">
-            {multiCardEnabled ? (
-              <MultiCardStreamingInterpretation
-                cardIds={demoCardIds}
-                question={question}
-                characterVoice={characterVoice}
-                karmaAlignment={karmaAlignment}
-                spreadType="three_card"
-                enabled={multiCardEnabled}
-                charsPerSecond={streamSpeed}
-                onComplete={(text) => {
-                  console.log('Multi-card complete:', text);
-                }}
-                onError={(error) => {
-                  console.error('Multi-card error:', error);
-                }}
-              />
-            ) : (
-              <div className="text-gray-500 text-sm">
+            {multiCardEnabled ?
+            <MultiCardStreamingInterpretation
+              cardIds={demoCardIds}
+              question={question}
+              characterVoice={characterVoice}
+              karmaAlignment={karmaAlignment}
+              spreadType="three_card"
+              enabled={multiCardEnabled}
+              charsPerSecond={streamSpeed}
+              onComplete={(text) => {
+                console.log('Multi-card complete:', text);
+              }}
+              onError={(error) => {
+                console.error('Multi-card error:', error);
+              }} /> :
+
+
+            <div className="text-gray-500 text-sm">
                 Click "Start Streaming" to test multi-card spread interpretation
               </div>
-            )}
+            }
           </div>
         </div>
 
@@ -232,6 +232,6 @@ export default function TestStreamingPage() {
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

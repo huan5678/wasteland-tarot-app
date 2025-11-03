@@ -18,13 +18,13 @@ import {
   getIconsByCategory,
   getIconCount,
   getAllCategories,
-  getIconCountByCategory,
-} from '@/components/ui/icons/iconMetadata';
+  getIconCountByCategory } from
+'@/components/ui/icons/iconMetadata';
 import { IconCategory, type IconSize } from '@/types/icons';
 
 /**
  * 圖示預覽頁面元件
- */
+ */import { Button } from "@/components/ui/button";
 export default function IconPreviewPage() {
   // ========== State 管理 ==========
   const [searchQuery, setSearchQuery] = useState('');
@@ -136,8 +136,8 @@ export default function IconPreviewPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by name, tags, or description..."
-            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:border-pip-boy-amber"
-          />
+            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:border-pip-boy-amber" />
+
         </div>
 
         {/* Category Filter */}
@@ -149,15 +149,15 @@ export default function IconPreviewPage() {
             id="category"
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value as IconCategory | 'all')}
-            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green focus:outline-none focus:border-pip-boy-amber"
-          >
+            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green focus:outline-none focus:border-pip-boy-amber">
+
             <option value="all">All Categories ({statistics.total})</option>
-            {statistics.categories.map((category) => (
-              <option key={category} value={category}>
+            {statistics.categories.map((category) =>
+            <option key={category} value={category}>
                 {category.charAt(0).toUpperCase() + category.slice(1)} (
                 {statistics.counts[category]})
               </option>
-            ))}
+            )}
           </select>
         </div>
 
@@ -170,8 +170,8 @@ export default function IconPreviewPage() {
             id="size"
             value={selectedSize}
             onChange={(e) => setSelectedSize(Number(e.target.value) as IconSize)}
-            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green focus:outline-none focus:border-pip-boy-amber"
-          >
+            className="w-full px-4 py-2 bg-wasteland-dark border border-pip-boy-green text-pip-boy-green focus:outline-none focus:border-pip-boy-amber">
+
             <option value={24}>24px</option>
             <option value={32}>32px</option>
             <option value={48}>48px (Default)</option>
@@ -185,67 +185,67 @@ export default function IconPreviewPage() {
       <div className="mb-8">
         <label className="block text-sm mb-2 text-pip-boy-amber">Icon Color</label>
         <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => setSelectedColor('text-pip-boy-green')}
-            className={`px-4 py-2 border ${
-              selectedColor === 'text-pip-boy-green'
-                ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green'
-                : 'bg-wasteland-dark text-pip-boy-green border-pip-boy-green hover:bg-pip-boy-green/10'
-            }`}
-          >
+          <Button size="default" variant="default"
+          onClick={() => setSelectedColor('text-pip-boy-green')}
+          className="{expression}">
+
+
+
+
+
             Pip-Boy Green
-          </button>
-          <button
-            onClick={() => setSelectedColor('text-pip-boy-amber')}
-            className={`px-4 py-2 border ${
-              selectedColor === 'text-pip-boy-amber'
-                ? 'bg-pip-boy-amber text-wasteland-dark border-pip-boy-amber'
-                : 'bg-wasteland-dark text-pip-boy-amber border-pip-boy-amber hover:bg-pip-boy-amber/10'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setSelectedColor('text-pip-boy-amber')}
+          className="{expression}">
+
+
+
+
+
             Pip-Boy Amber
-          </button>
-          <button
-            onClick={() => setSelectedColor('text-white')}
-            className={`px-4 py-2 border ${
-              selectedColor === 'text-white'
-                ? 'bg-white text-wasteland-dark border-white'
-                : 'bg-wasteland-dark text-white border-white hover:bg-white/10'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setSelectedColor('text-white')}
+          className="{expression}">
+
+
+
+
+
             White
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Icon Grid */}
-      {filteredIcons.length > 0 ? (
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-4">
-          {filteredIcons.map((icon) => (
-            <div
-              key={icon.name}
-              onClick={() => handleCopyIconCode(icon.name)}
-              onKeyDown={(e) => handleKeyDown(e, icon.name)}
-              tabIndex={0}
-              role="button"
-              aria-label={`Copy code for ${icon.name} icon`}
-              className={`
+      {filteredIcons.length > 0 ?
+      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-4">
+          {filteredIcons.map((icon) =>
+        <div
+          key={icon.name}
+          onClick={() => handleCopyIconCode(icon.name)}
+          onKeyDown={(e) => handleKeyDown(e, icon.name)}
+          tabIndex={0}
+          role="button"
+          aria-label={`Copy code for ${icon.name} icon`}
+          className={`
                 relative flex flex-col items-center justify-center p-4 border border-pip-boy-green/30
                 bg-wasteland-dark hover:bg-pip-boy-green/10 hover:border-pip-boy-amber
                 cursor-pointer transition-all duration-200
                 hover:scale-110 hover:shadow-lg hover:shadow-pip-boy-green/20
                 focus:outline-none focus:ring-2 focus:ring-pip-boy-amber
                 ${copiedIcon === icon.name ? 'bg-pip-boy-green/20 border-pip-boy-amber' : ''}
-              `}
-            >
+              `}>
+
               {/* Icon */}
               <div className="mb-2 transition-transform duration-200 hover:scale-125">
                 <PixelIcon
-                  name={icon.name}
-                  size={selectedSize}
-                  className={selectedColor}
-                  decorative
-                />
+              name={icon.name}
+              size={selectedSize}
+              className={selectedColor}
+              decorative />
+
               </div>
 
               {/* Icon Name */}
@@ -254,32 +254,32 @@ export default function IconPreviewPage() {
               </div>
 
               {/* Copied Indicator */}
-              {copiedIcon === icon.name && (
-                <div className="absolute top-0 right-0 m-1 text-xs bg-pip-boy-amber text-wasteland-dark px-2 py-1">
+              {copiedIcon === icon.name &&
+          <div className="absolute top-0 right-0 m-1 text-xs bg-pip-boy-amber text-wasteland-dark px-2 py-1">
                   ✓
                 </div>
-              )}
+          }
             </div>
-          ))}
-        </div>
-      ) : (
-        /* Empty State */
-        <div className="text-center py-16 border border-pip-boy-green/30 bg-pip-boy-green/5">
+        )}
+        </div> : (
+
+      /* Empty State */
+      <div className="text-center py-16 border border-pip-boy-green/30 bg-pip-boy-green/5">
           <div className="text-6xl mb-4 text-pip-boy-green/30">[ ]</div>
           <p className="text-xl text-pip-boy-amber mb-2">No icons found</p>
           <p className="text-sm text-pip-boy-green/60">
             Try adjusting your search query or category filter
           </p>
-        </div>
-      )}
+        </div>)
+      }
 
       {/* Copy Notification */}
-      {copiedIcon && (
-        <div className="fixed bottom-8 right-8 px-6 py-4 bg-pip-boy-green text-wasteland-dark border-2 border-pip-boy-green shadow-lg animate-pulse">
+      {copiedIcon &&
+      <div className="fixed bottom-8 right-8 px-6 py-4 bg-pip-boy-green text-wasteland-dark border-2 border-pip-boy-green shadow-lg animate-pulse">
           <p className="font-bold">✓ Code Copied!</p>
           <p className="text-sm">&lt;PixelIcon name=&quot;{copiedIcon}&quot; /&gt;</p>
         </div>
-      )}
+      }
 
       {/* Footer */}
       <footer className="mt-16 pt-8 border-t border-pip-boy-green/30 text-center text-sm text-pip-boy-green/60">
@@ -289,8 +289,8 @@ export default function IconPreviewPage() {
             href="https://pixelarticons.com/"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-pip-boy-amber hover:underline"
-          >
+            className="text-pip-boy-amber hover:underline">
+
             pixelarticons
           </a>
         </p>
@@ -298,6 +298,6 @@ export default function IconPreviewPage() {
           Click any icon to copy its usage code to clipboard
         </p>
       </footer>
-    </div>
-  );
+    </div>);
+
 }

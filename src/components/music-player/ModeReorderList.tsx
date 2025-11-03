@@ -18,15 +18,15 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-  DragOverlay,
-} from '@dnd-kit/core';
+  DragOverlay } from
+'@dnd-kit/core';
 import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
+  verticalListSortingStrategy } from
+'@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { cn } from '@/lib/utils';
@@ -36,12 +36,12 @@ import type { MusicMode } from '@/lib/audio/playlistTypes';
 // ============================================================================
 // Music Mode Metadata
 // ============================================================================
-
-const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; iconName: string }> = {
+import { Button } from "@/components/ui/button";
+const MUSIC_MODE_METADATA: Record<MusicMode, {label: string;iconName: string;}> = {
   synthwave: { label: 'Synthwave', iconName: 'music' },
   divination: { label: '占卜', iconName: 'sparkling-2' },
   lofi: { label: 'Lo-fi', iconName: 'headphone' },
-  ambient: { label: 'Ambient', iconName: 'disc' },
+  ambient: { label: 'Ambient', iconName: 'disc' }
 };
 
 // ============================================================================
@@ -83,12 +83,12 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
     setNodeRef,
     transform,
     transition,
-    isDragging: isItemDragging,
+    isDragging: isItemDragging
   } = useSortable({ id: mode, disabled });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition
   };
 
   const metadata = MUSIC_MODE_METADATA[mode];
@@ -105,26 +105,26 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
         !disabled && 'hover:border-pip-boy-green/60 hover:shadow-[0_0_10px_rgba(0,255,136,0.2)]',
         disabled && 'opacity-50 cursor-not-allowed'
       )}
-      data-testid={`sortable-mode-${mode}`}
-    >
+      data-testid={`sortable-mode-${mode}`}>
+
       {/* Drag Handle */}
-      <button
-        type="button"
-        {...attributes}
-        {...listeners}
-        disabled={disabled}
-        className={cn(
-          'p-1 rounded cursor-grab active:cursor-grabbing',
-          'text-pip-boy-green/50 hover:text-pip-boy-green hover:bg-pip-boy-green/10',
-          'focus:outline-none focus:ring-2 focus:ring-pip-boy-green',
-          'transition-all duration-200',
-          disabled && 'cursor-not-allowed opacity-30'
-        )}
-        aria-label={`拖曳 ${metadata.label}`}
-        data-testid={`drag-handle-${mode}`}
-      >
+      <Button size="icon" variant="default"
+      type="button"
+      {...attributes}
+      {...listeners}
+      disabled={disabled}
+      className="{expression}"
+
+
+
+
+
+
+      aria-label={`拖曳 ${metadata.label}`}
+      data-testid={`drag-handle-${mode}`}>
+
         <PixelIcon name="draggable" sizePreset="xs" decorative />
-      </button>
+      </Button>
 
       {/* Mode Icon */}
       <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
@@ -136,26 +136,26 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
       </div>
 
       {/* Remove Button */}
-      {onRemove && (
-        <button
-          type="button"
-          onClick={() => onRemove(index)}
-          disabled={disabled}
-          className={cn(
-            'p-1 rounded',
-            'text-red-500/50 hover:text-red-500 hover:bg-red-500/10',
-            'focus:outline-none focus:ring-2 focus:ring-red-500',
-            'transition-all duration-200',
-            disabled && 'cursor-not-allowed opacity-30'
-          )}
-          aria-label={`移除 ${metadata.label}`}
-          data-testid={`remove-mode-${mode}`}
-        >
+      {onRemove &&
+      <Button size="icon" variant="default"
+      type="button"
+      onClick={() => onRemove(index)}
+      disabled={disabled}
+      className="{expression}"
+
+
+
+
+
+
+      aria-label={`移除 ${metadata.label}`}
+      data-testid={`remove-mode-${mode}`}>
+
           <PixelIcon name="close" sizePreset="xs" variant="error" decorative />
-        </button>
-      )}
-    </div>
-  );
+        </Button>
+      }
+    </div>);
+
 }
 
 // ============================================================================
@@ -165,7 +165,7 @@ function SortableItem({ mode, index, onRemove, disabled, isDragging }: SortableI
 /**
  * DragOverlayItem - 拖曳時顯示的覆蓋層項目
  */
-function DragOverlayItem({ mode }: { mode: MusicMode }) {
+function DragOverlayItem({ mode }: {mode: MusicMode;}) {
   const metadata = MUSIC_MODE_METADATA[mode];
 
   return (
@@ -175,13 +175,13 @@ function DragOverlayItem({ mode }: { mode: MusicMode }) {
         'border-2 border-pip-boy-green bg-black/90',
         'shadow-[0_0_20px_rgba(0,255,136,0.5)]',
         'cursor-grabbing'
-      )}
-    >
+      )}>
+
       <PixelIcon name="draggable" sizePreset="xs" variant="primary" decorative />
       <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
       <div className="text-sm font-semibold text-pip-boy-green">{metadata.label}</div>
-    </div>
-  );
+    </div>);
+
 }
 
 // ============================================================================
@@ -212,7 +212,7 @@ export function ModeReorderList({
   onChange,
   onRemove,
   className,
-  disabled = false,
+  disabled = false
 }: ModeReorderListProps) {
   // ========== State ==========
   const [activeId, setActiveId] = useState<MusicMode | null>(null);
@@ -222,11 +222,11 @@ export function ModeReorderList({
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 需要移動 8px 才觸發拖曳
-      },
+        distance: 8 // 需要移動 8px 才觸發拖曳
+      }
     }),
     useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
+      coordinateGetter: sortableKeyboardCoordinates
     })
   );
 
@@ -263,7 +263,7 @@ export function ModeReorderList({
         oldIndex,
         newIndex,
         oldOrder: modes,
-        newOrder: newModes,
+        newOrder: newModes
       });
 
       onChange(newModes);
@@ -284,31 +284,31 @@ export function ModeReorderList({
   return (
     <div className={cn('space-y-2', className)} data-testid="mode-reorder-list">
       {/* Instructions */}
-      {modes.length > 1 && !disabled && (
-        <p className="text-xs text-pip-boy-green/50 mb-3">
+      {modes.length > 1 && !disabled &&
+      <p className="text-xs text-pip-boy-green/50 mb-3">
           拖曳左側手柄圖示以調整播放順序
         </p>
-      )}
+      }
 
       {/* DnD Context */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
         onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
+        onDragEnd={handleDragEnd}>
+
         <SortableContext items={modes} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
-            {modes.map((mode, index) => (
-              <SortableItem
-                key={mode}
-                mode={mode}
-                index={index}
-                onRemove={onRemove ? handleRemove : undefined}
-                disabled={disabled}
-                isDragging={activeId === mode}
-              />
-            ))}
+            {modes.map((mode, index) =>
+            <SortableItem
+              key={mode}
+              mode={mode}
+              index={index}
+              onRemove={onRemove ? handleRemove : undefined}
+              disabled={disabled}
+              isDragging={activeId === mode} />
+
+            )}
           </div>
         </SortableContext>
 
@@ -319,13 +319,13 @@ export function ModeReorderList({
       </DndContext>
 
       {/* Empty State */}
-      {modes.length === 0 && (
-        <div className="text-center py-8 text-pip-boy-green/50 text-sm">
+      {modes.length === 0 &&
+      <div className="text-center py-8 text-pip-boy-green/50 text-sm">
           尚未選擇任何音樂模式
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 ModeReorderList.displayName = 'ModeReorderList';

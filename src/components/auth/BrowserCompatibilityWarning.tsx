@@ -5,7 +5,7 @@
 
 'use client';
 
-import { PixelIcon } from '@/components/ui/icons';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 export interface BrowserCompatibilityWarningProps {
   /** 警告標題 */
@@ -29,7 +29,7 @@ export function BrowserCompatibilityWarning({
   message,
   fallbackAction,
   fallbackLabel = '使用傳統密碼登入',
-  showUpgradeHint = true,
+  showUpgradeHint = true
 }: BrowserCompatibilityWarningProps) {
   return (
     <div className="rounded-lg border-2 border-pip-boy-green/30 bg-pip-boy-dark/80 p-6 shadow-[0_0_20px_rgba(0,255,136,0.3)]">
@@ -40,8 +40,8 @@ export function BrowserCompatibilityWarning({
           variant="warning"
           sizePreset="lg"
           animation="pulse"
-          decorative
-        />
+          decorative />
+
         <h3 className="text-lg font-bold text-pip-boy-green">{title}</h3>
       </div>
 
@@ -51,8 +51,8 @@ export function BrowserCompatibilityWarning({
       </p>
 
       {/* 升級瀏覽器提示 */}
-      {showUpgradeHint && (
-        <div className="mb-6 space-y-2">
+      {showUpgradeHint &&
+      <div className="mb-6 space-y-2">
           <p className="text-xs font-semibold text-pip-boy-green">
             支援的 Pip-Boy 韌體版本：
           </p>
@@ -75,24 +75,24 @@ export function BrowserCompatibilityWarning({
             </li>
           </ul>
         </div>
-      )}
+      }
 
       {/* 降級操作按鈕 */}
-      {fallbackAction && (
-        <button
-          onClick={fallbackAction}
-          className="group flex w-full items-center justify-center gap-2 rounded-md border-2 border-pip-boy-green bg-pip-boy-dark px-4 py-3 text-sm font-bold text-pip-boy-green transition-all hover:bg-pip-boy-green/10 hover:shadow-[0_0_15px_rgba(0,255,136,0.5)]"
-          aria-label={fallbackLabel}
-        >
+      {fallbackAction &&
+      <Button size="icon" variant="outline"
+      onClick={fallbackAction}
+      className="group flex w-full items-center justify-center gap-2 px-4 py-3 font-bold transition-all"
+      aria-label={fallbackLabel}>
+
           <PixelIcon
-            name="arrow-right"
-            sizePreset="sm"
-            className="transition-transform group-hover:translate-x-1"
-            decorative
-          />
+          name="arrow-right"
+          sizePreset="sm"
+          className="transition-transform group-hover:translate-x-1"
+          decorative />
+
           {fallbackLabel}
-        </button>
-      )}
+        </Button>
+      }
 
       {/* 廢土風格裝飾 */}
       <div className="mt-6 flex items-center gap-2 border-t border-pip-boy-green/20 pt-4">
@@ -101,8 +101,8 @@ export function BrowserCompatibilityWarning({
           避難科技生物辨識系統需要最新的 Pip-Boy 韌體支援
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 /**
@@ -117,8 +117,8 @@ export function ConditionalUIUnsupportedWarning() {
           name="alert-circle"
           variant="warning"
           sizePreset="sm"
-          decorative
-        />
+          decorative />
+
         <div className="flex-1">
           <p className="text-xs text-yellow-500/90">
             [Pip-Boy 提示] 你的瀏覽器不支援「自動填入」功能。你仍可手動輸入
@@ -126,6 +126,6 @@ export function ConditionalUIUnsupportedWarning() {
           </p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
