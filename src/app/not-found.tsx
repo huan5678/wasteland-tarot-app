@@ -1,212 +1,218 @@
+'use client'
+
 /**
  * Global Not Found Page (404)
- * Fallout Pip-Boy styled error page with ASCII art and glitch effects
- *
- * Performance: Uses PixelIconLite (Server Component) - ~50 modules vs 3127 modules
+ * Fallout Pip-Boy styled error page
  */
 
 import Link from 'next/link'
-import { PixelIconLite as PixelIcon } from '@/components/ui/icons/PixelIconLite'
+import { PixelIcon } from '@/components/ui/icons'
+import { Ascii404 } from '@/components/ui/Ascii404'
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-wasteland-darker relative overflow-hidden flex items-center justify-center p-4">
-      {/* CRT 掃描線效果 */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-pip-boy-green/5 to-transparent animate-scanline" />
-        <div className="absolute inset-0 bg-pip-boy-green/5 animate-crt-flicker" />
-      </div>
-
-      {/* 主要內容區 */}
-      <div className="relative z-10 max-w-4xl w-full">
-        {/* Vault-Tec 終端機邊框 */}
-        <div className="border-4 border-pip-boy-green bg-wasteland-dark/95 shadow-2xl shadow-pip-boy-green/20">
-          {/* 終端機標題列 */}
-          <div className="bg-pip-boy-green/20 border-b-2 border-pip-boy-green px-4 md:px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
-              <PixelIcon
-                name="error-warning"
-                variant="warning"
-                sizePreset="sm"
-                animation="wiggle"
-                aria-label="錯誤"
-              />
-              <span className="text-pip-boy-green font-bold text-sm md:text-lg tracking-wider uppercase">
-                VAULT-TEC TERMINAL ERROR
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-radiation-orange animate-pulse" />
-              <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-warning-yellow" />
-              <div className="w-2 h-2 md:w-3 md:h-3 rounded-full bg-pip-boy-green" />
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#0a0a0a',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1rem',
+      fontFamily: 'monospace'
+    }}>
+      <div style={{
+        maxWidth: '64rem',
+        width: '100%'
+      }}>
+        {/* Vault-Tec Terminal Border */}
+        <div style={{
+          border: '4px solid #00ff88',
+          backgroundColor: 'rgba(10, 10, 10, 0.95)',
+          boxShadow: '0 25px 50px -12px rgba(0, 255, 136, 0.2)'
+        }}>
+          {/* Terminal Header */}
+          <div style={{
+            backgroundColor: 'rgba(0, 255, 136, 0.2)',
+            borderBottom: '2px solid #00ff88',
+            padding: '1rem 1.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.5rem'
+          }}>
+            <span style={{
+              color: '#00ff88',
+              fontWeight: 'bold',
+              fontSize: '1.125rem',
+              letterSpacing: '0.05em',
+              textTransform: 'uppercase'
+            }}>
+              ⚠ VAULT-TEC TERMINAL ERROR
+            </span>
+            <div style={{
+              display: 'flex',
+              gap: '0.5rem'
+            }}>
+              <div style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                borderRadius: '50%',
+                backgroundColor: '#ff8800'
+              }} />
+              <div style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                borderRadius: '50%',
+                backgroundColor: '#ffdd00'
+              }} />
+              <div style={{
+                width: '0.75rem',
+                height: '0.75rem',
+                borderRadius: '50%',
+                backgroundColor: '#00ff88'
+              }} />
             </div>
           </div>
 
-          {/* 錯誤內容區 */}
-          <div className="p-4 md:p-8 lg:p-12 space-y-6 md:space-y-8">
-            {/* ASCII Art 404 - 使用 Unicode block elements */}
-            <div className="relative overflow-hidden">
-              {/* 主要 ASCII Art */}
-              <pre
-                className="text-pip-boy-green font-mono text-xs sm:text-sm md:text-base lg:text-lg leading-tight select-none whitespace-pre overflow-x-auto"
-                style={{
-                  textShadow: `
-                    -1px 0 #ff0040,
-                    1px 0 #00ffff,
-                    0 0 8px currentColor,
-                    0 0 12px currentColor
-                  `,
-                }}
-                aria-label="404 Error"
-              >
-{`
-  ███████╗██████╗ ██████╗  ██████╗ ██████╗
-  ██╔════╝██╔══██╗██╔══██╗██╔═████╗██╔══██╗
-  █████╗  ██████╔╝██████╔╝██║██╔██║██████╔╝
-  ██╔══╝  ██╔══██╗██╔══██╗████╔╝██║██╔══██╗
-  ███████╗██║  ██║██║  ██║╚██████╔╝██║  ██║
-  ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
+          {/* Error Content */}
+          <div style={{
+            padding: '3rem 2rem',
+            textAlign: 'center'
+          }}>
+            {/* ASCII Art - SVG Component */}
+            <Ascii404 style={{ marginBottom: '2rem' }} />
 
-  ░░██╗░░██╗░░░░██████╗░░██╗░░██╗░░░░░░░░░
-  ░██╔╝░██╔╝░░░░██╔══██╗░██║░██╔╝░░░░░░░░░
-  ██╔╝░██╔╝░░░░░██║░░██║░████╔╝░░░░░░░░░░░
-  ███████║░░░░░░██║░░██║░╚██╔╝░░░░░░░░░░░░
-  ╚════██║░░░░░░██████╔╝░░██║░░░░░░░░░░░░░
-  ░░░░░╚═╝░░░░░░╚═════╝░░░╚═╝░░░░░░░░░░░░░
-`}
-              </pre>
+            {/* Error Title */}
+            <h1 style={{
+              fontSize: 'clamp(1.5rem, 4vw, 1.875rem)',
+              fontWeight: 'bold',
+              color: '#00ff88',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              marginBottom: '1rem'
+            }}>
+              PAGE NOT FOUND
+            </h1>
 
-              {/* Glitch 複製層 */}
-              <pre
-                className="absolute top-0 left-0 text-pip-boy-green/30 font-mono text-xs sm:text-sm md:text-base lg:text-lg leading-tight select-none whitespace-pre pointer-events-none animate-glitch-1"
-                style={{
-                  clipPath: 'polygon(0 0, 100% 0, 100% 45%, 0 45%)',
-                }}
-                aria-hidden="true"
-              >
-{`
-  ███████╗██████╗ ██████╗  ██████╗ ██████╗
-  ██╔════╝██╔══██╗██╔══██╗██╔═████╗██╔══██╗
-  █████╗  ██████╔╝██████╔╝██║██╔██║██████╔╝
-  ██╔══╝  ██╔══██╗██╔══██╗████╔╝██║██╔══██╗
-  ███████╗██║  ██║██║  ██║╚██████╔╝██║  ██║
-  ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝
+            <p style={{
+              fontSize: 'clamp(1rem, 3vw, 1.25rem)',
+              color: 'rgba(0, 255, 136, 0.8)',
+              marginBottom: '2rem'
+            }}>
+              We all get lost in the wasteland sometimes.
+            </p>
 
-  ░░██╗░░██╗░░░░██████╗░░██╗░░██╗░░░░░░░░░
-  ░██╔╝░██╔╝░░░░██╔══██╗░██║░██╔╝░░░░░░░░░
-  ██╔╝░██╔╝░░░░░██║░░██║░████╔╝░░░░░░░░░░░
-  ███████║░░░░░░██║░░██║░╚██╔╝░░░░░░░░░░░░
-  ╚════██║░░░░░░██████╔╝░░██║░░░░░░░░░░░░░
-  ░░░░░╚═╝░░░░░░╚═════╝░░░╚═╝░░░░░░░░░░░░░
-`}
-              </pre>
-            </div>
-
-            {/* 錯誤訊息 */}
-            <div className="text-center space-y-3">
-              <h1 className="text-xl md:text-3xl font-bold text-pip-boy-green uppercase tracking-wider animate-pulse">
-                PAGE NOT FOUND
-              </h1>
-              <p className="text-base md:text-xl text-pip-boy-green/80">
-                We all get lost in the wasteland sometimes.
-              </p>
-            </div>
-
-            {/* 終端機風格錯誤訊息 */}
-            <div className="bg-black/60 border-2 border-pip-boy-green/40 p-4 md:p-6 space-y-2 md:space-y-3 font-mono text-xs md:text-sm">
-              <div className="flex items-start gap-2 md:gap-3">
-                <span className="text-radiation-orange shrink-0">&gt; [ERROR]</span>
-                <span className="text-pip-boy-green/90">
-                  這個頁面已經被掠奪者洗劫一空了
-                </span>
+            {/* Terminal Messages */}
+            <div style={{
+              backgroundColor: 'rgba(0, 0, 0, 0.6)',
+              border: '2px solid rgba(0, 255, 136, 0.4)',
+              padding: '1.5rem',
+              marginBottom: '2rem',
+              textAlign: 'left',
+              fontSize: 'clamp(0.75rem, 2vw, 0.875rem)'
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+                marginBottom: '0.75rem'
+              }}>
+                <span style={{ color: '#ff8800', flexShrink: 0 }}>&gt; [ERROR]</span>
+                <span style={{ color: 'rgba(0, 255, 136, 0.9)' }}>這個頁面已經被掠奪者洗劫一空了</span>
               </div>
-              <div className="flex items-start gap-2 md:gap-3">
-                <span className="text-warning-yellow shrink-0">&gt; [WARN]</span>
-                <span className="text-pip-boy-green/90">
-                  檢測到 404 拉德輻射，建議立即撤離
-                </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+                marginBottom: '0.75rem'
+              }}>
+                <span style={{ color: '#ffdd00', flexShrink: 0 }}>&gt; [WARN]</span>
+                <span style={{ color: 'rgba(0, 255, 136, 0.9)' }}>檢測到 404 拉德輻射，建議立即撤離</span>
               </div>
-              <div className="flex items-start gap-2 md:gap-3">
-                <span className="text-pip-boy-green shrink-0">&gt; [INFO]</span>
-                <span className="text-pip-boy-green/90">
-                  Vault-Tec 提醒您：迷路不是您的錯，是廢土太危險
-                </span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem'
+              }}>
+                <span style={{ color: '#00ff88', flexShrink: 0 }}>&gt; [INFO]</span>
+                <span style={{ color: 'rgba(0, 255, 136, 0.9)' }}>Vault-Tec 提醒您：迷路不是您的錯，是廢土太危險</span>
               </div>
             </div>
 
-            {/* S.P.E.C.I.A.L. 統計 */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 text-center text-xs md:text-sm">
-              <div className="bg-black/40 border border-pip-boy-green/30 p-2 md:p-3">
-                <div className="text-[10px] md:text-xs text-pip-boy-green/60 uppercase mb-1">Luck</div>
-                <div className="text-xl md:text-2xl font-bold text-radiation-orange">0</div>
-              </div>
-              <div className="bg-black/40 border border-pip-boy-green/30 p-2 md:p-3">
-                <div className="text-[10px] md:text-xs text-pip-boy-green/60 uppercase mb-1">Karma</div>
-                <div className="text-xl md:text-2xl font-bold text-warning-yellow">-404</div>
-              </div>
-              <div className="bg-black/40 border border-pip-boy-green/30 p-2 md:p-3">
-                <div className="text-[10px] md:text-xs text-pip-boy-green/60 uppercase mb-1">Rads</div>
-                <div className="text-xl md:text-2xl font-bold text-radiation-orange animate-pulse">404</div>
-              </div>
-              <div className="bg-black/40 border border-pip-boy-green/30 p-2 md:p-3">
-                <div className="text-[10px] md:text-xs text-pip-boy-green/60 uppercase mb-1">HP</div>
-                <div className="text-xl md:text-2xl font-bold text-pip-boy-green">100%</div>
-              </div>
-            </div>
-
-            {/* 導航按鈕區 */}
-            <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-4">
+            {/* Navigation Buttons */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '1rem',
+              justifyContent: 'center'
+            }}>
               <Link
                 href="/"
-                className="group flex items-center justify-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 border-2 border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green hover:bg-pip-boy-green hover:text-wasteland-dark transition-all duration-200 font-bold uppercase tracking-wider text-sm md:text-base"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1.5rem',
+                  border: '2px solid #00ff88',
+                  backgroundColor: 'rgba(0, 255, 136, 0.1)',
+                  color: '#00ff88',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  fontSize: 'clamp(0.875rem, 2vw, 1rem)'
+                }}
               >
-                <PixelIcon
-                  name="home"
-                  sizePreset="sm"
-                  className="group-hover:scale-110 transition-transform"
-                  aria-label="首頁"
-                />
+                <PixelIcon name="home" sizePreset="sm" />
                 <span>返回避難所</span>
               </Link>
 
               <Link
                 href="/dashboard"
-                className="group flex items-center justify-center gap-2 md:gap-3 px-4 md:px-6 py-2 md:py-3 border-2 border-pip-boy-green bg-transparent text-pip-boy-green hover:bg-pip-boy-green/20 transition-all duration-200 font-bold uppercase tracking-wider text-sm md:text-base"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.75rem',
+                  padding: '0.75rem 1.5rem',
+                  border: '2px solid #00ff88',
+                  backgroundColor: 'transparent',
+                  color: '#00ff88',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  fontSize: 'clamp(0.875rem, 2vw, 1rem)'
+                }}
               >
-                <PixelIcon
-                  name="dashboard"
-                  sizePreset="sm"
-                  className="group-hover:scale-110 transition-transform"
-                  aria-label="儀表板"
-                />
+                <PixelIcon name="dashboard" sizePreset="sm" />
                 <span>前往儀表板</span>
               </Link>
             </div>
-
-            {/* 底部提示 */}
-            <div className="text-center text-[10px] md:text-xs text-pip-boy-green/50 pt-4 border-t border-pip-boy-green/20">
-              <p className="flex items-center justify-center gap-1 md:gap-2">
-                <PixelIcon
-                  name="information"
-                  sizePreset="xs"
-                  decorative
-                />
-                <span>Vault-Tec 公司提醒您：在廢土中保持警惕，隨時準備好 Rad-X</span>
-              </p>
-            </div>
           </div>
 
-          {/* 終端機底部狀態列 */}
-          <div className="bg-pip-boy-green/10 border-t-2 border-pip-boy-green px-4 md:px-6 py-2 flex flex-wrap items-center justify-between text-[10px] md:text-xs text-pip-boy-green/70 font-mono gap-2">
+          {/* Terminal Footer */}
+          <div style={{
+            backgroundColor: 'rgba(0, 255, 136, 0.1)',
+            borderTop: '2px solid #00ff88',
+            padding: '0.5rem 1.5rem',
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.5rem',
+            fontSize: 'clamp(0.625rem, 1.5vw, 0.75rem)',
+            color: 'rgba(0, 255, 136, 0.7)'
+          }}>
             <span>STATUS: ERROR</span>
             <span>CODE: 404</span>
             <span className="hidden sm:inline">TERMINAL: VAULT-404</span>
           </div>
         </div>
-
-        {/* 視覺裝飾 - 警告燈效 */}
-        <div className="absolute -top-4 -left-4 w-8 h-8 bg-radiation-orange rounded-full blur-xl animate-pulse opacity-50" />
-        <div className="absolute -bottom-4 -right-4 w-8 h-8 bg-pip-boy-green rounded-full blur-xl animate-pulse opacity-50" />
       </div>
     </div>
   )
