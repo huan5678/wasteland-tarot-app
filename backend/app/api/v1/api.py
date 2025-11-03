@@ -32,6 +32,8 @@ from app.api.v1.endpoints import (
     journal,
     karma,
     tasks,
+    levels,
+    quests,
 )
 from app.api import oauth, webauthn
 
@@ -202,6 +204,18 @@ api_router.include_router(
 api_router.include_router(
     karma.router,
     tags=["💫 Karma"]
+)
+
+# Level endpoints - 等級系統 (Phase 3 - Task 3.2)
+api_router.include_router(
+    levels.router,
+    tags=["⬆️ Levels"]
+)
+
+# Quest endpoints - 任務系統 (Phase 3 - Task 3.3)
+api_router.include_router(
+    quests.router,
+    tags=["🎯 Quests"]
 )
 
 # Tasks endpoints - 任務系統

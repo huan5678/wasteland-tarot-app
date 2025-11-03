@@ -19,6 +19,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import relationship
@@ -64,29 +65,81 @@ class KarmaLog(Base):
 
 class UserKarma(Base):
     """
-    用戶 Karma 總計表 - 儲存用戶的 Karma 彙總數據
+    Unified Karma System - Dual Score Architecture (Task 1.1)
+    
+    - alignment_karma: 0-100 scale for faction alignment and character behavior
+    - total_karma: Cumulative lifetime score for level progression (only increases)
+    - alignment_category: Auto-calculated category (generated column)
+    - current_level: Cached user level (calculated from total_karma)
     """
     __tablename__ = "user_karma"
 
-    user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
-    total_karma: int = Column(Integer, nullable=False, server_default="0", comment="總 Karma")
+    # Primary key
+    id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
+    user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    
+    # Dual Score System
+    alignment_karma: int = Column(
+        Integer, 
+        nullable=False, 
+        server_default="50",
+        comment="Alignment karma (0-100): affects faction affinity, character voice, AI tone"
+    )
+    total_karma: int = Column(
+        Integer, 
+        nullable=False, 
+        server_default="50",
+        comment="Total karma (cumulative): used for level calculation, never decreases"
+    )
+    
+    # Generated Column - Alignment Category
+    alignment_category: Optional[str] = Column(
+        String(20),
+        server_default=text("""
+            CASE 
+                WHEN alignment_karma >= 80 THEN 'very_good'
+                WHEN alignment_karma >= 60 THEN 'good'
+                WHEN alignment_karma >= 40 THEN 'neutral'
+                WHEN alignment_karma >= 20 THEN 'evil'
+                ELSE 'very_evil'
+            END
+        """),
+        comment="Auto-calculated alignment category (GENERATED column)"
+    )
+    
+    # Cached Level
     current_level: int = Column(Integer, nullable=False, server_default="1", comment="當前等級")
-    karma_to_next_level: int = Column(Integer, nullable=False, server_default="500", comment="到下一級所需 Karma")
-    rank: Optional[int] = Column(Integer, nullable=True, comment="全服排名")
-    last_karma_at: Optional[datetime] = Column(DateTime(timezone=True), nullable=True, comment="最後獲得 Karma 時間")
+    
+    # Timestamps
     created_at: datetime = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: datetime = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
     # Constraints
     __table_args__ = (
-        CheckConstraint("total_karma >= 0", name="ck_user_karma_nonnegative"),
-        CheckConstraint("current_level >= 1", name="ck_user_karma_min_level"),
-        Index("idx_user_karma_total", "total_karma", postgresql_ops={"total_karma": "DESC"}),
-        Index("idx_user_karma_level", "current_level", postgresql_ops={"current_level": "DESC"}),
+        CheckConstraint("alignment_karma >= 0 AND alignment_karma <= 100", name="check_alignment_karma_range"),
+        CheckConstraint("total_karma >= 0", name="check_total_karma_positive"),
+        CheckConstraint("current_level >= 1 AND current_level <= 100", name="check_current_level_range"),
+        Index("idx_user_karma_user_id", "user_id", unique=True),
+        Index("idx_user_karma_alignment_category", "alignment_category"),
+        Index("idx_user_karma_total_karma", "total_karma"),
+        Index("idx_user_karma_current_level", "current_level"),
     )
 
     # Relationships
     user = relationship("User", back_populates="karma")
+    
+    def get_alignment_category_python(self) -> str:
+        """Python-side alignment category calculation (for validation/testing)"""
+        if self.alignment_karma >= 80:
+            return "very_good"
+        elif self.alignment_karma >= 60:
+            return "good"
+        elif self.alignment_karma >= 40:
+            return "neutral"
+        elif self.alignment_karma >= 20:
+            return "evil"
+        else:
+            return "very_evil"
 
 
 # ========================================

@@ -17,9 +17,6 @@ from .user import (
     UserLoginHistory,
     TokenExtensionHistory,
 )
-from .user_karma import (
-    UserKarma,
-)
 from .reading_enhanced import (
     SpreadTemplate,
     InterpretationTemplate,
@@ -116,6 +113,7 @@ __all__ = [
     "UserPreferences",
     "UserLoginHistory",
     "TokenExtensionHistory",
+    "UserKarma",
     "UserKarma",
     # Enhanced Reading Models (Completed Readings)
     "SpreadTemplate",

@@ -4,8 +4,11 @@ Provides access to logs, metrics, and error aggregation
 """
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import PlainTextResponse
 from typing import Optional
 from datetime import datetime, timedelta
+
+from prometheus_client import generate_latest
 
 from app.core.logging_config import error_aggregator, get_logger
 from app.monitoring.performance import performance_monitor, generate_performance_report
@@ -28,7 +31,7 @@ async def health_check():
 @router.get("/metrics")
 async def get_metrics():
     """
-    Get current performance metrics
+    Get current performance metrics (JSON format)
     """
     try:
         summary = performance_monitor.get_performance_summary()
@@ -39,6 +42,24 @@ async def get_metrics():
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
+
+
+@router.get("/metrics/prometheus", response_class=PlainTextResponse)
+async def get_prometheus_metrics():
+    """
+    Export Prometheus metrics in Prometheus format
+
+    This endpoint exports all Prometheus metrics including TTS synthesis metrics,
+    performance metrics, and system metrics in Prometheus exposition format.
+
+    Returns:
+        Plain text response with Prometheus metrics format
+    """
+    try:
+        return generate_latest().decode('utf-8')
+    except Exception as e:
+        logger.error(f"Failed to generate Prometheus metrics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve Prometheus metrics")
 
 
 @router.get("/metrics/averages")

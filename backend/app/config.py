@@ -70,6 +70,30 @@ class Settings(BaseSettings):
     google_tts_voice_name: Optional[str] = Field("zh-TW-Standard-A", env="GOOGLE_TTS_VOICE_NAME")
     supabase_storage_bucket: str = Field("audio-files", env="SUPABASE_STORAGE_BUCKET")
 
+    # Chirp 3:HD Feature Flags
+    chirp3_enabled: bool = Field(
+        default=False,
+        env="CHIRP3_ENABLED",
+        description="Enable Chirp 3:HD globally"
+    )
+    chirp3_rollout_percentage: int = Field(
+        default=0,
+        ge=0,
+        le=100,
+        env="CHIRP3_ROLLOUT_PERCENTAGE",
+        description="Percentage of requests using Chirp 3:HD (0-100)"
+    )
+    chirp3_enabled_characters: str = Field(
+        default="",
+        env="CHIRP3_ENABLED_CHARACTERS",
+        description="Comma-separated list of characters to enable Chirp 3:HD for (empty = all characters)"
+    )
+    chirp3_fallback_to_wavenet: bool = Field(
+        default=True,
+        env="CHIRP3_FALLBACK_TO_WAVENET",
+        description="Fallback to WaveNet on Chirp 3:HD failure"
+    )
+
     # Logging
     log_level: str = Field("INFO", env="LOG_LEVEL")
     enable_json_logging: bool = Field(False, env="ENABLE_JSON_LOGGING")
@@ -124,6 +148,16 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+
+    @validator("chirp3_enabled_characters", pre=True)
+    def parse_chirp3_enabled_characters(cls, v):
+        """Parse comma-separated character list."""
+        if isinstance(v, str):
+            # Return as-is, parsing will be done in VoiceModelRouter
+            return v.strip()
+        elif isinstance(v, list):
+            return ",".join(str(i).strip() for i in v)
+        return v or ""
 
     @validator("database_url", pre=True)
     def validate_database_url(cls, v: str, values: dict) -> str:

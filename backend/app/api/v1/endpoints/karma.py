@@ -1,19 +1,19 @@
 """
-Gamification Karma API Endpoints
-/api/v1/karma/* - Karma summary, logs, and operations
+Unified Karma API Endpoints (v2) - Task 3.1
+/api/v1/karma/* - Karma summary, logs, history, and operations
+Uses UnifiedKarmaService for all karma operations
 """
 
 from typing import Optional
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
 from datetime import datetime, timedelta, timezone
 
 from app.core.dependencies import get_current_user
 from app.db.database import get_db
 from app.models.user import User
-from app.models.gamification import KarmaLog, UserKarma
+from app.services.unified_karma_service import UnifiedKarmaService
 from app.schemas.karma import (
     KarmaSummaryResponse,
     KarmaLogResponse,
@@ -57,52 +57,29 @@ async def get_karma_summary(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    獲取用戶 Karma 總覽
+    獲取用戶 Karma 總覽（使用 UnifiedKarmaService）
 
     Returns:
-        - total_karma: 總 Karma
+        - alignment_karma: 陣營 Karma (0-100)
+        - total_karma: 總累積 Karma
         - current_level: 當前等級
         - karma_to_next_level: 到下一級所需 Karma
+        - alignment_category: 陣營分類
         - rank: 全服排名（可選）
         - today_earned: 今日獲得 Karma
-        - level_title: 等級稱號
     """
-    # 獲取 UserKarma
-    result = await db.execute(
-        select(UserKarma).where(UserKarma.user_id == current_user.id)
-    )
-    user_karma = result.scalar_one_or_none()
-
-    if not user_karma:
-        # 未初始化，返回默認值
-        return KarmaSummaryResponse(
-            total_karma=0,
-            current_level=1,
-            karma_to_next_level=500,
-            rank=None,
-            today_earned=0,
-            level_title=get_level_title(1)
-        )
-
-    # 計算今日獲得 Karma
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-
-    result = await db.execute(
-        select(func.sum(KarmaLog.karma_amount))
-        .where(
-            KarmaLog.user_id == current_user.id,
-            KarmaLog.created_at >= today_start
-        )
-    )
-    today_earned = result.scalar() or 0
-
+    karma_service = UnifiedKarmaService(db)
+    summary = await karma_service.get_karma_summary(current_user.id)
+    
     return KarmaSummaryResponse(
-        total_karma=user_karma.total_karma,
-        current_level=user_karma.current_level,
-        karma_to_next_level=user_karma.karma_to_next_level,
-        rank=user_karma.rank,
-        today_earned=today_earned,
-        level_title=get_level_title(user_karma.current_level)
+        alignment_karma=summary["alignment_karma"],
+        total_karma=summary["total_karma"],
+        current_level=summary["current_level"],
+        karma_to_next_level=summary["karma_to_next_level"],
+        alignment_category=summary["alignment_category"],
+        rank=summary["rank"],
+        today_earned=summary["today_earned"],
+        level_title=get_level_title(summary["current_level"])
     )
 
 
@@ -114,7 +91,7 @@ async def get_karma_logs(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    獲取用戶 Karma 記錄（分頁）
+    獲取用戶 Karma 記錄（分頁）- total_karma 追蹤
 
     Args:
         page: 頁碼（從 1 開始）
@@ -124,26 +101,19 @@ async def get_karma_logs(
         logs: Karma 記錄列表
         pagination: 分頁資訊
     """
+    karma_service = UnifiedKarmaService(db)
     offset = (page - 1) * limit
-
-    # 獲取總數
+    
+    logs = await karma_service.get_karma_logs(current_user.id, limit=limit, offset=offset)
+    
+    # Count total for pagination
+    from sqlalchemy import select, func
+    from app.models.gamification import KarmaLog
     count_result = await db.execute(
-        select(func.count(KarmaLog.id))
-        .where(KarmaLog.user_id == current_user.id)
+        select(func.count(KarmaLog.id)).where(KarmaLog.user_id == current_user.id)
     )
     total = count_result.scalar() or 0
-
-    # 獲取記錄
-    result = await db.execute(
-        select(KarmaLog)
-        .where(KarmaLog.user_id == current_user.id)
-        .order_by(desc(KarmaLog.created_at))
-        .limit(limit)
-        .offset(offset)
-    )
-    logs = result.scalars().all()
-
-    # 轉換為 response model
+    
     log_responses = [
         KarmaLogResponse(
             id=str(log.id),
@@ -167,3 +137,37 @@ async def get_karma_logs(
             total_pages=total_pages
         )
     )
+
+
+@router.get("/history")
+async def get_karma_history(
+    page: int = Query(1, ge=1, description="頁碼"),
+    limit: int = Query(20, ge=1, le=100, description="每頁數量"),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    獲取用戶 Karma 歷史記錄（alignment_karma 變更審計）
+
+    Returns alignment karma change history
+    """
+    karma_service = UnifiedKarmaService(db)
+    offset = (page - 1) * limit
+    
+    history = await karma_service.get_karma_history(current_user.id, limit=limit, offset=offset)
+    
+    return {
+        "history": [
+            {
+                "id": str(h.id),
+                "change_amount": h.change_amount,
+                "new_karma_value": h.new_karma_value,
+                "reason": h.reason.value if hasattr(h.reason, 'value') else str(h.reason),
+                "changed_at": h.changed_at.isoformat(),
+                "context": h.context or {}
+            }
+            for h in history
+        ],
+        "page": page,
+        "limit": limit
+    }
