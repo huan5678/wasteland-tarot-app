@@ -525,3 +525,51 @@ class RateLimitExceededError(WastelandTarotException):
             error_code="RATE_LIMIT_EXCEEDED",
             details={"limit": limit, "period": period}
         )
+
+
+# Wishlist 例外
+
+class AlreadySubmittedTodayError(WastelandTarotException):
+    """當使用者今日已提交願望時拋出"""
+
+    def __init__(self, message: str = None):
+        super().__init__(
+            status_code=status.HTTP_409_CONFLICT,
+            message=message or "今日已提交願望，明日再來許願吧",
+            error_code="ALREADY_SUBMITTED_TODAY"
+        )
+
+
+class WishNotFoundError(WastelandTarotException):
+    """當願望找不到時拋出"""
+
+    def __init__(self, wish_id: str = None):
+        message = "願望未找到" if not wish_id else f"願望 {wish_id} 未找到"
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            message=message,
+            error_code="WISH_NOT_FOUND",
+            details={"wish_id": wish_id} if wish_id else {}
+        )
+
+
+class EditNotAllowedError(WastelandTarotException):
+    """當願望不允許編輯時拋出"""
+
+    def __init__(self, message: str = None):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            message=message or "願望不允許編輯（已有管理員回覆或已編輯過）",
+            error_code="EDIT_NOT_ALLOWED"
+        )
+
+
+class UnauthorizedError(WastelandTarotException):
+    """當使用者無權限操作資源時拋出"""
+
+    def __init__(self, message: str = None):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            message=message or "無權限執行此操作",
+            error_code="UNAUTHORIZED"
+        )

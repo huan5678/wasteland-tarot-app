@@ -43,27 +43,30 @@
   - _Requirements: 1.4, 5.2, 11.6_
   - **Completed**: ContentValidator class created at `backend/app/services/content_validator.py` with comprehensive Markdown stripping, character counting (plain text after Markdown removal), and validation methods. Custom exceptions defined. All 40 tests passing with 95% code coverage.
 
-- [ ] 2.1 實作時區處理工具
+- [x] 2.1 實作時區處理工具
   - 建立 `TimezoneUtil` 模組，提供 UTC+8 時區計算功能
   - 實作 `get_utc8_today_range()` 函式：取得當前 UTC+8 日期範圍，並轉換為 UTC 時間範圍（今日 00:00 ~ 明日 00:00）
   - 實作 `format_utc8_datetime()` 函式：將 UTC 時間格式化為 "YYYY-MM-DD HH:mm (UTC+8)" 格式
   - 測試時區邊界情況（UTC+8 的 23:59 與 00:00）
   - _Requirements: 9.1, 9.3, 9.4, 9.5_
+  - **Completed**: TimezoneUtil created at `backend/app/utils/timezone_util.py` with `get_utc8_today_range()` and `format_utc8_datetime()` functions. All 8 tests passing including boundary cases (23:59, 00:00).
 
-- [ ] 2.2 實作願望業務邏輯服務
+- [x] 2.2 實作願望業務邏輯服務
   - 建立 `WishlistService` 類別，整合所有願望相關業務邏輯
   - 實作取得使用者願望列表方法：查詢 `is_hidden = false` 的願望，按時間降序排列
   - 實作檢查每日限制方法：使用 `get_utc8_today_range()` 判斷使用者今日是否已提交願望
   - 實作建立願望方法：檢查每日限制、驗證內容、儲存至資料庫
   - 實作更新願望方法：檢查編輯權限（無管理員回覆、has_been_edited = false）、驗證內容、更新資料庫並設定 has_been_edited = true
   - _Requirements: 1.1, 1.5, 2.1, 2.2, 3.1, 3.2, 3.5_
+  - **Completed**: WishlistService user methods implemented at `backend/app/services/wishlist_service.py` including `get_user_wishes()`, `can_submit_today()`, `create_wish()`, and `update_wish()`. All 9 user method tests passing. Custom exceptions added to `exceptions.py`.
 
-- [ ] 2.3 實作管理員業務邏輯
+- [x] 2.3 實作管理員業務邏輯
   - 在 `WishlistService` 新增管理員專用方法
   - 實作取得管理員願望列表方法：支援篩選條件（已回覆/未回覆/已隱藏/未隱藏）、排序（最新/最舊）、分頁（預設每頁 50 筆）
   - 實作新增/編輯管理員回覆方法：驗證回覆內容、更新 admin_reply 與 admin_reply_timestamp 欄位
   - 實作切換隱藏狀態方法：更新 is_hidden 欄位與 updated_at 時間戳記
   - _Requirements: 4.1, 4.4, 4.5, 5.2, 5.5, 6.1, 6.3_
+  - **Completed**: WishlistService admin methods implemented including `get_admin_wishes()` (with filtering, sorting, pagination), `add_or_update_reply()`, and `toggle_hidden()`. All 3 admin method tests passing.
 
 - [ ] 3. 定義 Pydantic Schemas
   - 建立 `WishCreate` schema：content 欄位驗證（min_length=1, max_length=10000）
