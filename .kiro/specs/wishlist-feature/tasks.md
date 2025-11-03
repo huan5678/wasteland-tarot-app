@@ -8,7 +8,7 @@
 
 ## 第一階段：資料層建置
 
-- [ ] 1. 建立願望資料表與 Migration
+- [x] 1. 建立願望資料表與 Migration
   - 使用 Alembic 建立 `wishlist` 資料表的 migration 檔案
   - 定義所有必要欄位：id (UUID)、user_id (外鍵)、content (Text)、admin_reply (nullable Text)、時間戳記欄位、狀態欄位（has_been_edited、is_hidden）
   - 設定 `user_id` 外鍵關聯至 `users.id`，並啟用 CASCADE 刪除策略
