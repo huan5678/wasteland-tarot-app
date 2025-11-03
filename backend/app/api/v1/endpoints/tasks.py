@@ -8,7 +8,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, date
 from zoneinfo import ZoneInfo
 
 from app.core.dependencies import get_current_user
@@ -147,7 +147,7 @@ async def get_weekly_tasks(
     weekly_tasks = result.scalars().all()
 
     # 獲取當前週一日期
-    week_start = get_week_start()
+    week_start = get_week_start(date.today())
 
     # 獲取用戶任務進度（本週）
     result = await db.execute(
@@ -219,11 +219,10 @@ async def claim_daily_task_reward(
         404: 任務不存在
         400: 任務未完成或已領取
     """
-    service = GamificationTasksService()
+    service = GamificationTasksService(db_session=db)
 
     try:
         result = await service.claim_task_reward(
-            db=db,
             user_id=current_user.id,
             user_task_id=task_id,
             task_type="daily"
@@ -282,11 +281,10 @@ async def claim_weekly_task_reward(
         404: 任務不存在
         400: 任務未完成或已領取
     """
-    service = GamificationTasksService()
+    service = GamificationTasksService(db_session=db)
 
     try:
         result = await service.claim_task_reward(
-            db=db,
             user_id=current_user.id,
             user_task_id=task_id,
             task_type="weekly"
@@ -345,7 +343,7 @@ async def update_task_progress(
         此 API 為內部使用，應由其他服務調用
         未來應加入內部認證機制
     """
-    service = GamificationTasksService()
+    service = GamificationTasksService(db_session=db)
 
     try:
         user_id = UUID(request.user_id)
@@ -357,7 +355,6 @@ async def update_task_progress(
 
     try:
         result = await service.update_task_progress(
-            db=db,
             user_id=user_id,
             task_key=request.task_key,
             increment=request.increment

@@ -34,12 +34,11 @@ async def update_task_progress_background(
 
     try:
         async with AsyncSessionLocal() as session:
-            service = GamificationTasksService()
+            service = GamificationTasksService(db_session=session)
 
             for task_key in task_keys:
                 try:
                     result = await service.update_task_progress(
-                        db=session,
                         user_id=user_id,
                         task_key=task_key,
                         increment=increment

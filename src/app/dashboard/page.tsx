@@ -209,6 +209,54 @@ export default function DashboardPage() {
     }
   }, [user, isInitialized, fetchSummary, fetchLogs])
 
+  // 每日簽到 - 更新 daily_login 任務進度
+  useEffect(() => {
+    if (isInitialized && user) {
+      const performDailyCheckIn = async () => {
+        try {
+          const { api } = await import('@/lib/apiClient')
+          const { useTasksStore } = await import('@/stores/tasksStore')
+
+          interface DailyCheckInResponse {
+            success: boolean
+            is_first_check_in_today: boolean
+            login_date: string
+            message: string
+            task_updated: boolean
+            consecutive_days: number
+          }
+
+          const data = await api.post<DailyCheckInResponse>('/auth/daily-check-in')
+
+          if (data.success) {
+            if (data.is_first_check_in_today) {
+              console.log('✅ 每日簽到成功！daily_login 任務已更新')
+              console.log(`📊 簽到資訊:`, {
+                連續登入天數: data.consecutive_days,
+                簽到日期: data.login_date,
+                任務已更新: data.task_updated
+              })
+            } else {
+              console.log('ℹ️ 今日已簽到', {
+                連續登入天數: data.consecutive_days
+              })
+            }
+
+            // 無論是否第一次簽到，都重新載入每日任務以確保 UI 同步
+            useTasksStore.getState().fetchDailyTasks()
+          } else {
+            console.warn('⚠️ 每日簽到失敗:', data.message)
+          }
+        } catch (error) {
+          console.error('❌ Daily check-in error:', error)
+          // 失敗不影響使用者體驗，靜默處理
+        }
+      }
+
+      performDailyCheckIn()
+    }
+  }, [user, isInitialized])
+
   // 計算最近解鎖的成就（最多3個）
   const recentAchievements = useMemo(() => {
     return userProgress

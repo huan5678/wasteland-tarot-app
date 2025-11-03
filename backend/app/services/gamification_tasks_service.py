@@ -8,7 +8,7 @@ from datetime import date, datetime, timezone, timedelta
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 
 from app.models.gamification import (
     DailyTask,
@@ -87,17 +87,26 @@ async def update_task_progress(
             user_task = result.scalar_one_or_none()
 
             if not user_task:
-                # 建立新記錄
-                user_task = UserDailyTask(
-                    user_id=user_id,
-                    task_id=task.id,
-                    task_key=task_key,
-                    current_value=0,
-                    target_value=task.target_value,
-                    task_date=today
-                )
-                db_session.add(user_task)
-                await db_session.flush()
+                # 建立新記錄（處理 race condition）
+                try:
+                    user_task = UserDailyTask(
+                        user_id=user_id,
+                        task_id=task.id,
+                        task_key=task_key,
+                        current_value=0,
+                        target_value=task.target_value,
+                        task_date=today
+                    )
+                    db_session.add(user_task)
+                    await db_session.flush()
+                except IntegrityError:
+                    # 記錄被其他請求建立（race condition）
+                    # Rollback 並重新查詢
+                    await db_session.rollback()
+                    result = await db_session.execute(stmt)
+                    user_task = result.scalar_one_or_none()
+                    if not user_task:
+                        raise RuntimeError(f"Failed to create or fetch user task for {task_key}")
 
         else:
             # 每週任務
@@ -160,7 +169,7 @@ async def update_task_progress(
 async def claim_task_reward(
     db_session: AsyncSession,
     user_id: UUID,
-    task_id: UUID,
+    user_task_id: UUID,  # ✅ 改為 user_task_id (UserDailyTask.id 或 UserWeeklyTask.id)
     task_type: str  # "daily" or "weekly"
 ) -> Dict[str, Any]:
     """
@@ -169,7 +178,7 @@ async def claim_task_reward(
     Args:
         db_session: 資料庫會話
         user_id: 用戶 ID
-        task_id: 任務 ID
+        user_task_id: 用戶任務記錄 ID (UserDailyTask.id 或 UserWeeklyTask.id)
         task_type: 任務類型（daily/weekly）
 
     Returns:
@@ -189,45 +198,48 @@ async def claim_task_reward(
     try:
         # 根據任務類型查詢
         if task_type == "daily":
-            # 查詢每日任務
-            stmt = select(DailyTask).where(DailyTask.id == task_id)
+            # 直接查詢用戶任務記錄 (使用 user_task_id)
+            stmt = select(UserDailyTask).where(
+                UserDailyTask.id == user_task_id,
+                UserDailyTask.user_id == user_id
+            )
+            result = await db_session.execute(stmt)
+            user_task = result.scalar_one_or_none()
+
+            if not user_task:
+                raise ValueError("User task not found")
+
+            # 查詢任務定義
+            stmt = select(DailyTask).where(DailyTask.id == user_task.task_id)
             result = await db_session.execute(stmt)
             task = result.scalar_one_or_none()
 
             if not task:
-                raise ValueError("Task not found")
-
-            # 查詢用戶任務記錄
-            stmt = select(UserDailyTask).where(
-                UserDailyTask.user_id == user_id,
-                UserDailyTask.task_id == task_id,
-                UserDailyTask.task_date == today
-            )
-            result = await db_session.execute(stmt)
-            user_task = result.scalar_one_or_none()
+                raise ValueError("Task definition not found")
 
         else:  # weekly
-            # 查詢每週任務
-            week_start = get_week_start(today)
-            stmt = select(WeeklyTask).where(WeeklyTask.id == task_id)
-            result = await db_session.execute(stmt)
-            task = result.scalar_one_or_none()
-
-            if not task:
-                raise ValueError("Task not found")
-
-            # 查詢用戶任務記錄
+            # 直接查詢用戶任務記錄 (使用 user_task_id)
             stmt = select(UserWeeklyTask).where(
-                UserWeeklyTask.user_id == user_id,
-                UserWeeklyTask.task_id == task_id,
-                UserWeeklyTask.week_start == week_start
+                UserWeeklyTask.id == user_task_id,
+                UserWeeklyTask.user_id == user_id
             )
             result = await db_session.execute(stmt)
             user_task = result.scalar_one_or_none()
 
-        # 驗證任務狀態
-        if not user_task:
-            raise ValueError("Task not found")
+            if not user_task:
+                raise ValueError("User task not found")
+
+            # 查詢任務定義
+            stmt = select(WeeklyTask).where(WeeklyTask.id == user_task.task_id)
+            result = await db_session.execute(stmt)
+            task = result.scalar_one_or_none()
+
+            if not task:
+                raise ValueError("Task definition not found")
+
+        # 驗證任務狀態 (user_task 現在一定存在)
+        # if not user_task:  # ← 移除這個檢查，因為上面已經檢查了
+        #     raise ValueError("Task not found")
 
         if not user_task.is_completed:
             raise ValueError("TASK_NOT_COMPLETED: 任務尚未完成")
@@ -235,23 +247,23 @@ async def claim_task_reward(
         if user_task.is_claimed:
             raise ValueError("TASK_ALREADY_CLAIMED: 獎勵已領取")
 
-        # 開始事務
-        async with db_session.begin_nested():
-            # 標記為已領取
-            user_task.is_claimed = True
-            user_task.claimed_at = datetime.now(timezone.utc)
+        # 標記為已領取
+        user_task.is_claimed = True
+        user_task.claimed_at = datetime.now(timezone.utc)
 
-            # 授予 Karma 獎勵
-            karma_service = GamificationKarmaService(db_session)
-            karma_result = await karma_service.grant_karma(
-                user_id=user_id,
-                action_type="complete_task",
-                karma_amount=task.karma_reward,
-                description=f"完成任務：{task.name}",
-                metadata={"task_id": str(task_id), "task_key": task.task_key}
-            )
+        # Flush to ensure user_task changes are in the transaction
+        # (grant_karma will commit everything together)
+        await db_session.flush()
 
-        await db_session.commit()
+        # 授予 Karma 獎勵 (grant_karma 會內部 commit，連同 user_task 一起提交)
+        karma_service = GamificationKarmaService(db_session)
+        karma_result = await karma_service.grant_karma(
+            user_id=user_id,
+            action_type="complete_task",
+            karma_amount=task.karma_reward,
+            description=f"完成任務：{task.name}",
+            metadata={"task_id": str(task.id), "task_key": task.task_key}
+        )
 
         return {
             "success": True,
@@ -307,7 +319,7 @@ class GamificationTasksService:
     async def claim_task_reward(
         self,
         user_id: UUID,
-        task_id: UUID,
+        user_task_id: UUID,  # ✅ 改為 user_task_id
         task_type: str
     ) -> Dict[str, Any]:
         """
@@ -315,7 +327,7 @@ class GamificationTasksService:
 
         Args:
             user_id: 用戶 ID
-            task_id: 任務 ID
+            user_task_id: 用戶任務記錄 ID
             task_type: 任務類型
 
         Returns:
@@ -324,6 +336,6 @@ class GamificationTasksService:
         return await claim_task_reward(
             db_session=self.db,
             user_id=user_id,
-            task_id=task_id,
+            user_task_id=user_task_id,  # ✅ 使用正確的參數名
             task_type=task_type
         )

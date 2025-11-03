@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.database import get_db
+from app.models.user import User
+from app.core.dependencies import get_current_user
 from app.core.security import (
     verify_token,
     create_access_token,
@@ -29,6 +31,7 @@ from app.core.exceptions import (
 from app.services.user_service import UserService
 from app.services.achievement_service import AchievementService
 from app.services.achievement_background_tasks import schedule_achievement_check
+from app.services.tasks_background_tasks import schedule_task_progress_update
 from app.core.supabase import get_supabase_client
 from supabase import Client
 import logging
@@ -408,7 +411,7 @@ async def logout_user(
 
 
 @router.get("/me", response_model=MeResponse)
-async def get_current_user(
+async def get_me(
     access_token: Optional[str] = Cookie(None),
     db: AsyncSession = Depends(get_db)
 ):
@@ -813,6 +816,95 @@ class TrackLoginResponse(BaseModel):
     is_new_day: bool
     consecutive_days: int
     loyalty_check_triggered: bool
+
+
+class DailyCheckInResponse(BaseModel):
+    """每日簽到回應"""
+    success: bool
+    is_first_check_in_today: bool
+    login_date: str
+    message: str
+    task_updated: bool = False
+    consecutive_days: int = 0
+
+
+@router.post("/daily-check-in", response_model=DailyCheckInResponse)
+async def daily_check_in(
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    每日簽到 - 用於更新 daily_login 任務進度
+
+    此 endpoint 應該在前端 app 載入時自動調用（例如在 Dashboard 或 App root component）
+
+    功能：
+    - 檢查今天是否已簽到
+    - 如果是今天第一次訪問，更新 daily_login 任務進度
+    - 追蹤連續登入天數
+
+    與 /track-login 的區別：
+    - /track-login: 僅追蹤登入歷史，用於 token 延長計算
+    - /daily-check-in: 追蹤登入歷史 + 更新任務進度
+
+    Args:
+        current_user: 當前已認證的使用者
+        background_tasks: 背景任務處理器
+        db: 資料庫 session
+
+    Returns:
+        DailyCheckInResponse: 簽到結果
+    """
+    from app.services.token_extension_service import TokenExtensionService
+    from datetime import date
+
+    # 提取 user_id，避免在 except block 中訪問 current_user.id
+    user_id = getattr(current_user, 'id', None)
+
+    try:
+        if not user_id:
+            raise ValueError("Invalid user object: missing id attribute")
+
+        # 追蹤今日登入
+        token_service = TokenExtensionService(db)
+        login_result = await token_service.track_daily_login(user_id)
+
+        is_first_check_in_today = login_result.get('is_new_day', False)
+
+        # 每次簽到都更新 daily_login 任務進度
+        # update_task_progress 會自動處理重複更新（已完成的任務不會再增加）
+        background_tasks.add_task(
+            schedule_task_progress_update,
+            user_id=user_id,
+            task_keys=['daily_login'],
+            increment=1
+        )
+
+        if is_first_check_in_today:
+            logger.info(f"Daily check-in (first time today): Updated daily_login task for user {user_id}")
+        else:
+            logger.info(f"Daily check-in (already checked in): Ensured daily_login task is updated for user {user_id}")
+
+        return DailyCheckInResponse(
+            success=True,
+            is_first_check_in_today=is_first_check_in_today,
+            login_date=login_result.get('login_date', date.today().isoformat()),
+            message="每日簽到成功" if is_first_check_in_today else "今日已簽到",
+            task_updated=True,  # 每次簽到都會嘗試更新任務
+            consecutive_days=login_result.get('consecutive_days', 0)
+        )
+
+    except Exception as e:
+        logger.error(f"Daily check-in failed for user {user_id}: {str(e)}", exc_info=True)
+        return DailyCheckInResponse(
+            success=False,
+            is_first_check_in_today=False,
+            login_date=date.today().isoformat(),
+            message=f"簽到失敗：{str(e)}",
+            task_updated=False,
+            consecutive_days=0
+        )
 
 
 @router.post("/extend-token", response_model=ExtendTokenResponse)

@@ -1,9 +1,12 @@
 /**
  * Tasks Store - Zustand state management for Dashboard Gamification Tasks System
  * Handles daily/weekly tasks, progress tracking, reward claiming
+ *
+ * ✅ Refactored to use unified API Client (Task 3)
  */
 
 import { create } from 'zustand';
+import { api } from '@/lib/apiClient';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -109,55 +112,6 @@ interface TasksStore {
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get Supabase access token from localStorage
- */
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  const authData = localStorage.getItem('auth');
-  if (!authData) return null;
-
-  try {
-    const parsed = JSON.parse(authData);
-    return parsed.state?.session?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Make authenticated API request
- */
-async function makeAuthenticatedRequest(url: string, options: RequestInit = {}) {
-  const token = getAccessToken();
-
-  if (!token) {
-    throw new Error('未認證：請先登入');
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => null);
-    const errorMessage = errorData?.detail?.message || errorData?.message || `API 錯誤 (${response.status})`;
-    throw new Error(errorMessage);
-  }
-
-  return response.json();
-}
-
-// ============================================================================
 // Zustand Store
 // ============================================================================
 
@@ -176,13 +130,27 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
   // Actions
   // ========================================
 
+  /**
+   * Task 3.1: Fetch daily tasks using unified API Client
+   */
   fetchDailyTasks: async () => {
+    console.log('🔄 [TasksStore] fetchDailyTasks 開始執行...');
     set({ isLoading: true, error: null });
 
     try {
-      const data = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/tasks/daily`
-      );
+      const data = await api.get<DailyTasksData>('/tasks/daily');
+
+      console.log('✅ [TasksStore] fetchDailyTasks 成功取得資料:', {
+        tasks_count: data.tasks.length,
+        completed_count: data.completed_count,
+        total_count: data.total_count,
+        tasks: data.tasks.map(t => ({
+          name: t.name,
+          progress: `${t.current_value}/${t.target_value}`,
+          completed: t.is_completed,
+          claimed: t.is_claimed
+        }))
+      });
 
       set({
         dailyTasks: data,
@@ -190,21 +158,24 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入每日任務失敗';
+
       set({
         error: errorMessage,
         isLoading: false,
       });
+
       console.error('[TasksStore] fetchDailyTasks error:', error);
     }
   },
 
+  /**
+   * Task 3.2: Fetch weekly tasks using unified API Client
+   */
   fetchWeeklyTasks: async () => {
     set({ isLoading: true, error: null });
 
     try {
-      const data = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/tasks/weekly`
-      );
+      const data = await api.get<WeeklyTasksData>('/tasks/weekly');
 
       set({
         weeklyTasks: data,
@@ -212,14 +183,19 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入每週任務失敗';
+
       set({
         error: errorMessage,
         isLoading: false,
       });
+
       console.error('[TasksStore] fetchWeeklyTasks error:', error);
     }
   },
 
+  /**
+   * Task 3.3: Claim daily task reward using unified API Client
+   */
   claimDailyTaskReward: async (taskId: string) => {
     // Set claiming state for this specific task
     set((state) => ({
@@ -228,12 +204,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     }));
 
     try {
-      const data: ClaimRewardResponse = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/tasks/daily/${taskId}/claim`,
-        {
-          method: 'POST',
-        }
-      );
+      const data = await api.post<ClaimRewardResponse>(`/tasks/daily/${taskId}/claim`);
 
       // Refresh daily tasks after claiming
       await get().fetchDailyTasks();
@@ -249,6 +220,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '領取獎勵失敗';
+
+      // Clear claiming state and set error
       set((state) => {
         const newClaimingState = { ...state.isClaimingDaily };
         delete newClaimingState[taskId];
@@ -257,11 +230,15 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
           isClaimingDaily: newClaimingState,
         };
       });
+
       console.error('[TasksStore] claimDailyTaskReward error:', error);
       return false;
     }
   },
 
+  /**
+   * Task 3.4: Claim weekly task reward using unified API Client
+   */
   claimWeeklyTaskReward: async (taskId: string) => {
     // Set claiming state for this specific task
     set((state) => ({
@@ -270,12 +247,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
     }));
 
     try {
-      const data: ClaimRewardResponse = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/tasks/weekly/${taskId}/claim`,
-        {
-          method: 'POST',
-        }
-      );
+      const data = await api.post<ClaimRewardResponse>(`/tasks/weekly/${taskId}/claim`);
 
       // Refresh weekly tasks after claiming
       await get().fetchWeeklyTasks();
@@ -291,6 +263,8 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '領取獎勵失敗';
+
+      // Clear claiming state and set error
       set((state) => {
         const newClaimingState = { ...state.isClaimingWeekly };
         delete newClaimingState[taskId];
@@ -299,6 +273,7 @@ export const useTasksStore = create<TasksStore>((set, get) => ({
           isClaimingWeekly: newClaimingState,
         };
       });
+
       console.error('[TasksStore] claimWeeklyTaskReward error:', error);
       return false;
     }
