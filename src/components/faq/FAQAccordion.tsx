@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 /**
  * FAQ Item Data Structure
  * FAQ 項目資料結構
- */
+ */import { Button } from "@/components/ui/button";
 export interface FAQItem {
   id: string;
   question: string;
@@ -43,7 +43,7 @@ function FAQAccordionItem({
   item,
   isExpanded,
   onToggle,
-  index,
+  index
 }: FAQAccordionItemProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | undefined>(0);
@@ -68,22 +68,22 @@ function FAQAccordionItem({
   return (
     <div className="border-b-2 border-green-900 last:border-b-0">
       {/* Question Header */}
-      <button
-        type="button"
-        onClick={onToggle}
-        onKeyDown={handleKeyDown}
-        aria-expanded={isExpanded}
-        aria-controls={`faq-answer-${item.id}`}
-        className="flex w-full items-start gap-3 px-4 py-4 text-left transition-colors hover:bg-green-950/30 focus:bg-green-950/30 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-black"
-      >
+      <Button size="default" variant="outline"
+      type="button"
+      onClick={onToggle}
+      onKeyDown={handleKeyDown}
+      aria-expanded={isExpanded}
+      aria-controls={`faq-answer-${item.id}`}
+      className="flex w-full items-start gap-3 px-4 py-4 transition-colors">
+
         {/* Expand/Collapse Icon */}
         <span
           className="mt-1 flex-shrink-0 text-green-600 transition-transform duration-200"
           aria-hidden="true"
           style={{
-            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-          }}
-        >
+            transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)'
+          }}>
+
           ▶
         </span>
 
@@ -93,13 +93,13 @@ function FAQAccordionItem({
             <span className="text-green-700">Q{index + 1}:</span>{' '}
             {item.question}
           </span>
-          {item.category && (
-            <span className="ml-2 rounded bg-green-950/50 px-2 py-0.5 text-xs text-green-700 border border-green-900">
+          {item.category &&
+          <span className="ml-2 rounded bg-green-950/50 px-2 py-0.5 text-xs text-green-700 border border-green-900">
               {item.category}
             </span>
-          )}
+          }
         </div>
-      </button>
+      </Button>
 
       {/* Answer Content (Collapsible) */}
       <div
@@ -108,8 +108,8 @@ function FAQAccordionItem({
         role="region"
         aria-labelledby={`faq-question-${item.id}`}
         className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ height }}
-      >
+        style={{ height }}>
+
         <div className="px-4 pb-4 pl-11">
           <div className="rounded border-l-2 border-green-800 bg-green-950/20 p-4">
             <p className="text-sm leading-relaxed text-green-400">
@@ -119,8 +119,8 @@ function FAQAccordionItem({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }
 
 /**
@@ -156,7 +156,7 @@ function FAQAccordionItem({
 export default function FAQAccordion({
   items,
   defaultExpandedIndex = 0,
-  className = '',
+  className = ''
 }: FAQAccordionProps) {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(
     defaultExpandedIndex
@@ -168,13 +168,13 @@ export default function FAQAccordion({
    * If clicking a different item, expand it
    */
   const handleToggle = (index: number) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
+    setExpandedIndex((prev) => prev === index ? null : index);
   };
 
   return (
     <div
-      className={`border-2 border-green-800 bg-black/80 ${className}`}
-    >
+      className={`border-2 border-green-800 bg-black/80 ${className}`}>
+
       {/* Accordion Header */}
       <div className="border-b-2 border-green-800 bg-green-950/50 px-4 py-3">
         <h3 className="text-lg font-bold text-green-400">
@@ -193,15 +193,15 @@ export default function FAQAccordion({
 
       {/* FAQ Items */}
       <div>
-        {items.map((item, index) => (
-          <FAQAccordionItem
-            key={item.id}
-            item={item}
-            index={index}
-            isExpanded={expandedIndex === index}
-            onToggle={() => handleToggle(index)}
-          />
-        ))}
+        {items.map((item, index) =>
+        <FAQAccordionItem
+          key={item.id}
+          item={item}
+          index={index}
+          isExpanded={expandedIndex === index}
+          onToggle={() => handleToggle(index)} />
+
+        )}
       </div>
 
       {/* Footer */}
@@ -210,12 +210,12 @@ export default function FAQAccordion({
           <span aria-hidden="true">&gt;</span> 找不到您的問題？
           <a
             href="/contact"
-            className="ml-2 underline decoration-dotted hover:text-green-500"
-          >
+            className="ml-2 underline decoration-dotted hover:text-green-500">
+
             聯絡我們
           </a>
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 }

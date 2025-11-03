@@ -13,7 +13,7 @@ import { VOICES } from '@/data/voices';
 import { PixelIcon } from '@/components/ui/icons';
 
 // 預設測試文字
-const DEFAULT_TEST_TEXTS: Record<CharacterVoice, string> = {
+import { Button } from "@/components/ui/button";const DEFAULT_TEST_TEXTS: Record<CharacterVoice, string> = {
   pip_boy: '系統初始化完成。歡迎使用廢土塔羅系統。正在分析卡牌數據。',
   vault_dweller: '哇！外面的世界真是太令人興奮了！我從來沒見過這樣的景色！',
   wasteland_trader: '這個解讀值一百瓶蓋，不二價。要不要順便看看我這裡的其他商品？',
@@ -27,7 +27,7 @@ const DEFAULT_TEST_TEXTS: Record<CharacterVoice, string> = {
   legion_centurion: '軍團的榮耀高於一切！服從命令！這張牌告訴你什麼是真正的力量！',
   minuteman: '人民的安全是我們的責任。這張牌提醒我們要保護弱小。',
   railroad_agent: '保持低調，不要引起懷疑。這張牌告訴我們要謹慎行事。',
-  institute_scientist: '科學研究顯示，這個結果十分有趣。讓我用理性分析這張牌。',
+  institute_scientist: '科學研究顯示，這個結果十分有趣。讓我用理性分析這張牌。'
 };
 
 export default function TestTTSPage() {
@@ -74,7 +74,7 @@ export default function TestTTSPage() {
       setSystemVoiceInfo({
         name: systemVoice.name,
         lang: systemVoice.lang,
-        localService: systemVoice.localService,
+        localService: systemVoice.localService
       });
     } else {
       setSystemVoiceInfo(null);
@@ -106,7 +106,7 @@ export default function TestTTSPage() {
         console.error('TTS Error:', error);
         setIsPlaying(false);
         setCurrentPlayingVoice(null);
-      },
+      }
     });
   };
 
@@ -143,7 +143,7 @@ export default function TestTTSPage() {
           },
           onError: () => {
             resolve();
-          },
+          }
         });
       });
 
@@ -165,8 +165,8 @@ export default function TestTTSPage() {
           <PixelIcon name="loader" animation="spin" sizePreset="md" decorative />
           <span>正在初始化語音系統...</span>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -198,8 +198,10 @@ export default function TestTTSPage() {
                 onChange={(e) => setSelectedVoice(e.target.value as CharacterVoice)}
                 className="w-full px-3 py-2 bg-black/70 border border-pip-boy-green/50
                            rounded text-pip-boy-green hover:border-pip-boy-green
-                           focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50"
-              >
+                           focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50">
+
+
+
                 <optgroup label="通用角色">
                   <option value="pip_boy">Pip-Boy</option>
                   <option value="vault_dweller">避難所居民</option>
@@ -226,8 +228,8 @@ export default function TestTTSPage() {
             </div>
 
             {/* 角色資訊卡 */}
-            {voiceInfo && (
-              <div className="border border-pip-boy-green/30 rounded-lg p-4 bg-black/50 space-y-3">
+            {voiceInfo &&
+            <div className="border border-pip-boy-green/30 rounded-lg p-4 bg-black/50 space-y-3">
                 <div className="flex items-center gap-2">
                   <PixelIcon name="info" sizePreset="sm" variant="primary" decorative />
                   <h3 className="font-bold">{voiceInfo.label}</h3>
@@ -266,8 +268,8 @@ export default function TestTTSPage() {
                 </div>
 
                 {/* 系統語音資訊 */}
-                {systemVoiceInfo && (
-                  <div className="pt-2 border-t border-pip-boy-green/20">
+                {systemVoiceInfo &&
+              <div className="pt-2 border-t border-pip-boy-green/20">
                     <div className="flex items-center gap-1 mb-1">
                       <PixelIcon name="settings" sizePreset="xs" variant="muted" decorative />
                       <span className="text-xs text-pip-boy-green/60">系統語音：</span>
@@ -280,49 +282,49 @@ export default function TestTTSPage() {
                       </div>
                     </div>
                   </div>
-                )}
+              }
               </div>
-            )}
+            }
 
             {/* 控制按鈕 */}
             <div className="space-y-2">
-              <button
-                onClick={() => handlePlay(selectedVoice)}
-                disabled={!customText && !DEFAULT_TEST_TEXTS[selectedVoice]}
-                className="w-full px-4 py-3 bg-pip-boy-green/10 border border-pip-boy-green/50
-                           rounded text-pip-boy-green hover:bg-pip-boy-green/20
-                           hover:border-pip-boy-green disabled:opacity-50
-                           disabled:cursor-not-allowed transition-all
-                           flex items-center justify-center gap-2 font-medium"
-              >
+              <Button size="icon" variant="outline"
+              onClick={() => handlePlay(selectedVoice)}
+              disabled={!customText && !DEFAULT_TEST_TEXTS[selectedVoice]}
+              className="w-full px-4 py-3 border rounded disabled:opacity-50\n disabled:cursor-not-allowed transition-all\n flex items-center justify-center gap-2 font-medium">
+
+
+
+
+
                 <PixelIcon
                   name={isPlaying && currentPlayingVoice === selectedVoice ? 'stop' : 'play'}
                   sizePreset="sm"
                   variant="primary"
                   animation={
-                    isPlaying && currentPlayingVoice === selectedVoice ? 'pulse' : undefined
+                  isPlaying && currentPlayingVoice === selectedVoice ? 'pulse' : undefined
                   }
-                  decorative
-                />
-                {isPlaying && currentPlayingVoice === selectedVoice ? '停止播放' : '播放測試'}
-              </button>
+                  decorative />
 
-              <button
-                onClick={handleTestAll}
-                className="w-full px-4 py-2 bg-radiation-orange/10 border border-radiation-orange/50
-                           rounded text-radiation-orange hover:bg-radiation-orange/20
-                           hover:border-radiation-orange transition-all
-                           flex items-center justify-center gap-2 text-sm"
-              >
+                {isPlaying && currentPlayingVoice === selectedVoice ? '停止播放' : '播放測試'}
+              </Button>
+
+              <Button size="icon" variant="outline"
+              onClick={handleTestAll}
+              className="w-full px-4 py-2 border rounded transition-all\n flex items-center justify-center gap-2">
+
+
+
+
                 <PixelIcon
                   name="list"
                   sizePreset="xs"
                   variant="secondary"
                   animation={isPlaying ? 'pulse' : undefined}
-                  decorative
-                />
+                  decorative />
+
                 {isPlaying ? '停止全部測試' : '測試所有角色'}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -334,13 +336,13 @@ export default function TestTTSPage() {
                 <label htmlFor="custom-text" className="text-sm font-medium">
                   測試文字
                 </label>
-                <button
-                  onClick={() => setCustomText(DEFAULT_TEST_TEXTS[selectedVoice])}
-                  className="text-xs text-pip-boy-green/60 hover:text-pip-boy-green
-                             transition-colors"
-                >
+                <Button size="xs" variant="link"
+                onClick={() => setCustomText(DEFAULT_TEST_TEXTS[selectedVoice])}
+                className="transition-colors">
+
+
                   重置為預設
-                </button>
+                </Button>
               </div>
               <textarea
                 id="custom-text"
@@ -351,8 +353,11 @@ export default function TestTTSPage() {
                 className="w-full px-3 py-2 bg-black/70 border border-pip-boy-green/50
                            rounded text-pip-boy-green placeholder-pip-boy-green/30
                            hover:border-pip-boy-green focus:outline-none
-                           focus:ring-2 focus:ring-pip-boy-green/50 resize-none"
-              />
+                           focus:ring-2 focus:ring-pip-boy-green/50 resize-none" />
+
+
+
+
               <div className="text-xs text-pip-boy-green/50 mt-2">
                 字數: {customText.length}
               </div>
@@ -365,33 +370,33 @@ export default function TestTTSPage() {
                 <h3 className="font-bold">所有角色快速測試</h3>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                {VOICES.map((voice) => (
-                  <button
-                    key={voice.value}
-                    onClick={() => handlePlay(voice.value, DEFAULT_TEST_TEXTS[voice.value])}
-                    disabled={isPlaying && currentPlayingVoice !== voice.value}
-                    className={`
-                      px-3 py-2 border rounded text-sm transition-all
-                      ${
-                        currentPlayingVoice === voice.value
-                          ? 'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green'
-                          : 'bg-black/50 border-pip-boy-green/30 text-pip-boy-green/70 hover:bg-pip-boy-green/10 hover:border-pip-boy-green/50'
-                      }
-                      disabled:opacity-30 disabled:cursor-not-allowed
-                    `}
-                  >
+                {VOICES.map((voice) =>
+                <Button size="icon" variant="default"
+                key={voice.value}
+                onClick={() => handlePlay(voice.value, DEFAULT_TEST_TEXTS[voice.value])}
+                disabled={isPlaying && currentPlayingVoice !== voice.value}
+                className="{expression}">
+
+
+
+
+
+
+
+
+
                     <div className="flex items-center gap-2">
                       <PixelIcon
-                        name={currentPlayingVoice === voice.value ? 'stop' : 'play'}
-                        sizePreset="xs"
-                        variant={currentPlayingVoice === voice.value ? 'primary' : 'muted'}
-                        animation={currentPlayingVoice === voice.value ? 'pulse' : undefined}
-                        decorative
-                      />
+                      name={currentPlayingVoice === voice.value ? 'stop' : 'play'}
+                      sizePreset="xs"
+                      variant={currentPlayingVoice === voice.value ? 'primary' : 'muted'}
+                      animation={currentPlayingVoice === voice.value ? 'pulse' : undefined}
+                      decorative />
+
                       <span className="truncate">{voice.label}</span>
                     </div>
-                  </button>
-                ))}
+                  </Button>
+                )}
               </div>
             </div>
 
@@ -414,8 +419,8 @@ export default function TestTTSPage() {
         </div>
 
         {/* 底部狀態列 */}
-        {isPlaying && (
-          <div className="fixed bottom-0 left-0 right-0 bg-pip-boy-green/10 border-t border-pip-boy-green/30 p-4">
+        {isPlaying &&
+        <div className="fixed bottom-0 left-0 right-0 bg-pip-boy-green/10 border-t border-pip-boy-green/30 p-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <PixelIcon name="voice" animation="pulse" sizePreset="md" variant="primary" decorative />
@@ -429,19 +434,19 @@ export default function TestTTSPage() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={handleStop}
-                className="px-4 py-2 bg-red-500/20 border border-red-500/50 rounded
-                           text-red-400 hover:bg-red-500/30 hover:border-red-500
-                           transition-all flex items-center gap-2"
-              >
+              <Button size="default" variant="outline"
+            onClick={handleStop}
+            className="px-4 py-2 border rounded\n transition-all flex items-center gap-2">
+
+
+
                 <PixelIcon name="stop" sizePreset="xs" decorative />
                 停止
-              </button>
+              </Button>
             </div>
           </div>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 }

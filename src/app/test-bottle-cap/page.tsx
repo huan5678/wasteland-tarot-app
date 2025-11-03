@@ -8,7 +8,7 @@
 
 import React, { useState } from 'react';
 import { AsciiBottleCapLoading } from '@/components/loading/AsciiBottleCapLoading';
-import { PixelIcon } from '@/components/ui/icons';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 export default function TestBottleCapPage() {
   const [showLoading, setShowLoading] = useState(true);
@@ -43,8 +43,8 @@ export default function TestBottleCapPage() {
                   type="checkbox"
                   checked={showLoading}
                   onChange={(e) => setShowLoading(e.target.checked)}
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <span>Show Loading Animation</span>
               </label>
             </div>
@@ -57,8 +57,8 @@ export default function TestBottleCapPage() {
                 value={customMessage}
                 onChange={(e) => setCustomMessage(e.target.value)}
                 className="w-full bg-black border border-pip-boy-green/50 text-pip-boy-green px-3 py-2 rounded focus:outline-none focus:border-pip-boy-green"
-                placeholder="Enter custom message..."
-              />
+                placeholder="Enter custom message..." />
+
             </div>
 
             {/* Crimp Count */}
@@ -73,8 +73,8 @@ export default function TestBottleCapPage() {
                 step="3"
                 value={crimpCount}
                 onChange={(e) => setCrimpCount(parseInt(e.target.value))}
-                className="w-full"
-              />
+                className="w-full" />
+
               <div className="flex justify-between text-xs text-pip-boy-green/50 mt-1">
                 <span>12 (少)</span>
                 <span>24 (標準)</span>
@@ -89,8 +89,8 @@ export default function TestBottleCapPage() {
                   type="checkbox"
                   checked={forceFallback}
                   onChange={(e) => setForceFallback(e.target.checked)}
-                  className="w-4 h-4"
-                />
+                  className="w-4 h-4" />
+
                 <span>Force Static Fallback Mode</span>
               </label>
             </div>
@@ -100,20 +100,20 @@ export default function TestBottleCapPage() {
               <label className="block mb-2">Preset Messages:</label>
               <div className="flex flex-wrap gap-2">
                 {[
-                  'COLLECTING BOTTLE CAPS...',
-                  'OPENING NUKA-COLA...',
-                  'SEARCHING FOR STAR CAPS...',
-                  'SUNSET SARSAPARILLA LOADING...',
-                  'ATOMIC WRANGLER CASINO',
-                ].map((msg) => (
-                  <button
-                    key={msg}
-                    onClick={() => setCustomMessage(msg)}
-                    className="px-3 py-1 border border-pip-boy-green/50 rounded hover:bg-pip-boy-green/10 transition-colors text-sm"
-                  >
+                'COLLECTING BOTTLE CAPS...',
+                'OPENING NUKA-COLA...',
+                'SEARCHING FOR STAR CAPS...',
+                'SUNSET SARSAPARILLA LOADING...',
+                'ATOMIC WRANGLER CASINO'].
+                map((msg) =>
+                <Button size="sm" variant="outline"
+                key={msg}
+                onClick={() => setCustomMessage(msg)}
+                className="px-3 py-1 border rounded transition-colors">
+
                     {msg.substring(0, 20)}...
-                  </button>
-                ))}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -174,15 +174,15 @@ export default function TestBottleCapPage() {
       </div>
 
       {/* Loading Animation Overlay */}
-      {showLoading && (
-        <AsciiBottleCapLoading
-          message={customMessage}
-          config={{
-            crimpCount: crimpCount,
-          }}
-          forceFallback={forceFallback}
-        />
-      )}
-    </div>
-  );
+      {showLoading &&
+      <AsciiBottleCapLoading
+        message={customMessage}
+        config={{
+          crimpCount: crimpCount
+        }}
+        forceFallback={forceFallback} />
+
+      }
+    </div>);
+
 }

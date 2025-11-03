@@ -1,97 +1,97 @@
-'use client'
-import React, { useState, useCallback } from 'react'
-import { useReadingsStore, ReadingCategory } from '@/lib/readingsStore'
-import { PixelIcon } from '@/components/ui/icons'
+'use client';
+import React, { useState, useCallback } from 'react';
+import { useReadingsStore, ReadingCategory } from '@/lib/readingsStore';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 interface Props {
-  onClose?: () => void
-  selectedReadingId?: string // For assigning category to specific reading
-  onCategoryAssigned?: (categoryId: string | null) => void
+  onClose?: () => void;
+  selectedReadingId?: string; // For assigning category to specific reading
+  onCategoryAssigned?: (categoryId: string | null) => void;
 }
 
 const COLOR_PRESETS = [
-  { name: '綠色', value: '#10B981' },
-  { name: '藍色', value: '#3B82F6' },
-  { name: '紫色', value: '#8B5CF6' },
-  { name: '橙色', value: '#F59E0B' },
-  { name: '紅色', value: '#EF4444' },
-  { name: '粉色', value: '#EC4899' },
-  { name: '青色', value: '#06B6D4' },
-  { name: '灰色', value: '#6B7280' },
-  { name: '黃色', value: '#EAB308' },
-  { name: '靛色', value: '#6366F1' },
-]
+{ name: '綠色', value: '#10B981' },
+{ name: '藍色', value: '#3B82F6' },
+{ name: '紫色', value: '#8B5CF6' },
+{ name: '橙色', value: '#F59E0B' },
+{ name: '紅色', value: '#EF4444' },
+{ name: '粉色', value: '#EC4899' },
+{ name: '青色', value: '#06B6D4' },
+{ name: '灰色', value: '#6B7280' },
+{ name: '黃色', value: '#EAB308' },
+{ name: '靛色', value: '#6366F1' }];
+
 
 const EMOJI_PRESETS = [
-  '🌱', '💕', '💼', '✨', '🌟', '🎯', '🔮', '🌙', '☀️', '🌈',
-  '🦋', '🌸', '🍀', '💎', '🔥', '💧', '🌪️', '⚡', '🌺', '🌿'
-]
+'🌱', '💕', '💼', '✨', '🌟', '🎯', '🔮', '🌙', '☀️', '🌈',
+'🦋', '🌸', '🍀', '💎', '🔥', '💧', '🌪️', '⚡', '🌺', '🌿'];
+
 
 export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned }: Props) {
-  const { categories, createCategory, updateCategory, deleteCategory, assignCategory, getReadingsByCategory } = useReadingsStore()
-  const [editingCategory, setEditingCategory] = useState<ReadingCategory | null>(null)
-  const [isCreating, setIsCreating] = useState(false)
-  const [formData, setFormData] = useState<Partial<ReadingCategory>>({})
-  const [showColorPicker, setShowColorPicker] = useState(false)
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
+  const { categories, createCategory, updateCategory, deleteCategory, assignCategory, getReadingsByCategory } = useReadingsStore();
+  const [editingCategory, setEditingCategory] = useState<ReadingCategory | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
+  const [formData, setFormData] = useState<Partial<ReadingCategory>>({});
+  const [showColorPicker, setShowColorPicker] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   const resetForm = () => {
-    setFormData({})
-    setEditingCategory(null)
-    setIsCreating(false)
-    setShowColorPicker(false)
-    setShowEmojiPicker(false)
-  }
+    setFormData({});
+    setEditingCategory(null);
+    setIsCreating(false);
+    setShowColorPicker(false);
+    setShowEmojiPicker(false);
+  };
 
   const handleSave = useCallback(() => {
-    if (!formData.name?.trim()) return
+    if (!formData.name?.trim()) return;
 
     const categoryData = {
       name: formData.name.trim(),
       color: formData.color || '#6B7280',
       description: formData.description?.trim() || '',
       icon: formData.icon || '📁'
-    }
+    };
 
     if (editingCategory) {
-      updateCategory(editingCategory.id, categoryData)
+      updateCategory(editingCategory.id, categoryData);
     } else {
-      createCategory(categoryData)
+      createCategory(categoryData);
     }
 
-    resetForm()
-  }, [formData, editingCategory, createCategory, updateCategory])
+    resetForm();
+  }, [formData, editingCategory, createCategory, updateCategory]);
 
   const handleDelete = useCallback((category: ReadingCategory) => {
-    const readingsInCategory = getReadingsByCategory(category.id)
-    const confirmMessage = readingsInCategory.length > 0
-      ? `確定要刪除類別 "${category.name}"？這將影響 ${readingsInCategory.length} 個占卜記錄。`
-      : `確定要刪除類別 "${category.name}"？`
+    const readingsInCategory = getReadingsByCategory(category.id);
+    const confirmMessage = readingsInCategory.length > 0 ?
+    `確定要刪除類別 "${category.name}"？這將影響 ${readingsInCategory.length} 個占卜記錄。` :
+    `確定要刪除類別 "${category.name}"？`;
 
     if (window.confirm(confirmMessage)) {
-      deleteCategory(category.id)
+      deleteCategory(category.id);
     }
-  }, [deleteCategory, getReadingsByCategory])
+  }, [deleteCategory, getReadingsByCategory]);
 
   const handleCategorySelect = useCallback((categoryId: string | null) => {
     if (selectedReadingId && onCategoryAssigned) {
-      assignCategory(selectedReadingId, categoryId)
-      onCategoryAssigned(categoryId)
-      onClose?.()
+      assignCategory(selectedReadingId, categoryId);
+      onCategoryAssigned(categoryId);
+      onClose?.();
     }
-  }, [selectedReadingId, assignCategory, onCategoryAssigned, onClose])
+  }, [selectedReadingId, assignCategory, onCategoryAssigned, onClose]);
 
   const startEdit = (category: ReadingCategory) => {
-    setEditingCategory(category)
-    setFormData(category)
-    setIsCreating(false)
-  }
+    setEditingCategory(category);
+    setFormData(category);
+    setIsCreating(false);
+  };
 
   const startCreate = () => {
-    setIsCreating(true)
-    setFormData({ name: '', color: '#10B981', icon: '📁', description: '' })
-    setEditingCategory(null)
-  }
+    setIsCreating(true);
+    setFormData({ name: '', color: '#10B981', icon: '📁', description: '' });
+    setEditingCategory(null);
+  };
 
   return (
     <div className="space-y-4">
@@ -101,30 +101,30 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
           {selectedReadingId ? '選擇類別' : '類別管理'}
         </h3>
         <div className="flex items-center gap-2">
-          {!selectedReadingId && (
-            <button
-              onClick={startCreate}
-              className="px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green text-sm
-                       hover:border-pip-boy-green/60 flex items-center gap-2"
-            >
-              < PixelIcon name="plus" className="w-4 h-4" />
+          {!selectedReadingId &&
+          <Button size="sm" variant="outline"
+          onClick={startCreate}
+          className="px-3 py-1 border flex items-center gap-2">
+
+
+              <PixelIcon name="plus" className="w-4 h-4" />
               新增類別
-            </button>
-          )}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-pip-boy-green/70 hover:text-pip-boy-green"
-            >
-              < PixelIcon name="x" className="w-5 h-5" />
-            </button>
-          )}
+            </Button>
+          }
+          {onClose &&
+          <Button size="icon" variant="link"
+          onClick={onClose}>
+
+
+              <PixelIcon name="x" className="w-5 h-5" />
+            </Button>
+          }
         </div>
       </div>
 
       {/* Category Creation/Edit Form */}
-      {(isCreating || editingCategory) && (
-        <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
+      {(isCreating || editingCategory) &&
+      <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 space-y-4">
           <h4 className="font-bold text-pip-boy-green">
             {editingCategory ? '編輯類別' : '新增類別'}
           </h4>
@@ -134,14 +134,15 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
             <div className="space-y-1">
               <label className="block text-pip-boy-green text-sm">類別名稱 *</label>
               <input
-                type="text"
-                value={formData.name || ''}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="輸入類別名稱"
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
+              type="text"
+              value={formData.name || ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="輸入類別名稱"
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
                          focus:border-pip-boy-green focus:outline-none"
-                maxLength={50}
-              />
+
+              maxLength={50} />
+
             </div>
 
             {/* Icon */}
@@ -149,35 +150,35 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               <label className="block text-pip-boy-green text-sm">圖示</label>
               <div className="flex items-center gap-2">
                 <div
-                  className="w-10 h-10 border border-pip-boy-green/30 bg-black flex items-center justify-center text-lg cursor-pointer hover:border-pip-boy-green/60"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                >
+                className="w-10 h-10 border border-pip-boy-green/30 bg-black flex items-center justify-center text-lg cursor-pointer hover:border-pip-boy-green/60"
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+
                   {formData.icon || '📁'}
                 </div>
-                <button
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60"
-                >
+                <Button size="xs" variant="outline"
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="px-2 py-1 border">
+
                   選擇
-                </button>
+                </Button>
               </div>
 
-              {showEmojiPicker && (
-                <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-10 gap-1 max-w-xs">
-                  {EMOJI_PRESETS.map(emoji => (
-                    <button
-                      key={emoji}
-                      onClick={() => {
-                        setFormData(prev => ({ ...prev, icon: emoji }))
-                        setShowEmojiPicker(false)
-                      }}
-                      className="w-8 h-8 text-lg hover:bg-pip-boy-green/20 flex items-center justify-center"
-                    >
+              {showEmojiPicker &&
+            <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-10 gap-1 max-w-xs">
+                  {EMOJI_PRESETS.map((emoji) =>
+              <Button size="icon" variant="link"
+              key={emoji}
+              onClick={() => {
+                setFormData((prev) => ({ ...prev, icon: emoji }));
+                setShowEmojiPicker(false);
+              }}
+              className="w-8 h-8 flex items-center justify-center">
+
                       {emoji}
-                    </button>
-                  ))}
-                </div>
+                    </Button>
               )}
+                </div>
+            }
             </div>
           </div>
 
@@ -186,55 +187,56 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
             <label className="block text-pip-boy-green text-sm">顏色</label>
             <div className="flex items-center gap-2">
               <div
-                className="w-10 h-6 border border-pip-boy-green/30 cursor-pointer"
-                style={{ backgroundColor: formData.color || '#6B7280' }}
-                onClick={() => setShowColorPicker(!showColorPicker)}
-              />
-              <button
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                className="px-2 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60 flex items-center gap-1"
-              >
-                < PixelIcon name="palette" className="w-3 h-3" />
+              className="w-10 h-6 border border-pip-boy-green/30 cursor-pointer"
+              style={{ backgroundColor: formData.color || '#6B7280' }}
+              onClick={() => setShowColorPicker(!showColorPicker)} />
+
+              <Button size="xs" variant="outline"
+            onClick={() => setShowColorPicker(!showColorPicker)}
+            className="px-2 py-1 border flex items-center gap-1">
+
+                <PixelIcon name="palette" className="w-3 h-3" />
                 選擇顏色
-              </button>
+              </Button>
             </div>
 
-            {showColorPicker && (
-              <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-5 gap-2 max-w-xs">
-                {COLOR_PRESETS.map(color => (
-                  <button
-                    key={color.value}
-                    onClick={() => {
-                      setFormData(prev => ({ ...prev, color: color.value }))
-                      setShowColorPicker(false)
-                    }}
-                    className="w-8 h-8 border border-pip-boy-green/30 hover:border-pip-boy-green flex items-center justify-center"
-                    style={{ backgroundColor: color.value }}
-                    title={color.name}
-                  />
-                ))}
-                <input
-                  type="color"
-                  value={formData.color || '#6B7280'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
-                  className="w-8 h-8 border border-pip-boy-green/30 cursor-pointer"
-                />
-              </div>
+            {showColorPicker &&
+          <div className="absolute z-20 mt-1 p-3 bg-wasteland-dark border-2 border-pip-boy-green grid grid-cols-5 gap-2 max-w-xs">
+                {COLOR_PRESETS.map((color) =>
+            <Button size="icon" variant="outline"
+            key={color.value}
+            onClick={() => {
+              setFormData((prev) => ({ ...prev, color: color.value }));
+              setShowColorPicker(false);
+            }}
+            className="w-8 h-8 border flex items-center justify-center"
+            style={{ backgroundColor: color.value }}
+            title={color.name} />
+
             )}
+                <input
+              type="color"
+              value={formData.color || '#6B7280'}
+              onChange={(e) => setFormData((prev) => ({ ...prev, color: e.target.value }))}
+              className="w-8 h-8 border border-pip-boy-green/30 cursor-pointer" />
+
+              </div>
+          }
           </div>
 
           {/* Description */}
           <div className="space-y-1">
             <label className="block text-pip-boy-green text-sm">描述</label>
             <textarea
-              value={formData.description || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              placeholder="類別用途說明（選填）"
-              rows={2}
-              maxLength={200}
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
-                       focus:border-pip-boy-green focus:outline-none resize-none"
-            />
+            value={formData.description || ''}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+            placeholder="類別用途說明（選填）"
+            rows={2}
+            maxLength={200}
+            className="w-full px-3 py-2 bg-black border border-pip-boy-green/30 text-pip-boy-green text-sm
+                       focus:border-pip-boy-green focus:outline-none resize-none" />
+
+
             <div className="text-xs text-pip-boy-green/60">
               <span className="numeric tabular-nums">{(formData.description || '').length}</span>/<span className="numeric tabular-nums">200</span>
             </div>
@@ -242,38 +244,38 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
           {/* Form Actions */}
           <div className="flex justify-end gap-2">
-            <button
-              onClick={resetForm}
-              className="px-3 py-2 border border-pip-boy-green/30 text-pip-boy-green/70 text-sm
-                       hover:border-pip-boy-green/60 flex items-center gap-2"
-            >
-              < PixelIcon name="x" className="w-4 h-4" />
+            <Button size="sm" variant="outline"
+          onClick={resetForm}
+          className="px-3 py-2 border flex items-center gap-2">
+
+
+              <PixelIcon name="x" className="w-4 h-4" />
               取消
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={!formData.name?.trim()}
-              className="px-3 py-2 border border-pip-boy-green bg-pip-boy-green/10 text-pip-boy-green text-sm
-                       hover:bg-pip-boy-green/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              < PixelIcon name="save" className="w-4 h-4" />
+            </Button>
+            <Button size="sm" variant="outline"
+          onClick={handleSave}
+          disabled={!formData.name?.trim()}
+          className="px-3 py-2 border disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+
+
+              <PixelIcon name="save" className="w-4 h-4" />
               保存
-            </button>
+            </Button>
           </div>
         </div>
-      )}
+      }
 
       {/* Category List */}
       <div className="space-y-2">
         {/* None/Remove Category Option for Reading Assignment */}
-        {selectedReadingId && (
-          <div
-            onClick={() => handleCategorySelect(null)}
-            className="border border-pip-boy-green/30 p-3 cursor-pointer hover:border-pip-boy-green/60 hover:bg-pip-boy-green/5 transition-colors"
-          >
+        {selectedReadingId &&
+        <div
+          onClick={() => handleCategorySelect(null)}
+          className="border border-pip-boy-green/30 p-3 cursor-pointer hover:border-pip-boy-green/60 hover:bg-pip-boy-green/5 transition-colors">
+
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 border border-pip-boy-green/30 flex items-center justify-center text-pip-boy-green/60">
-                < PixelIcon name="x" className="w-4 h-4" />
+                <PixelIcon name="x" className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-pip-boy-green/70 text-sm">無類別</div>
@@ -281,27 +283,27 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
               </div>
             </div>
           </div>
-        )}
+        }
 
-        {categories.map(category => {
-          const readingsInCategory = selectedReadingId ? [] : getReadingsByCategory(category.id)
+        {categories.map((category) => {
+          const readingsInCategory = selectedReadingId ? [] : getReadingsByCategory(category.id);
 
           return (
             <div
               key={category.id}
               onClick={() => selectedReadingId && handleCategorySelect(category.id)}
               className={`border border-pip-boy-green/30 p-3 transition-colors
-                ${selectedReadingId
-                  ? 'cursor-pointer hover:border-pip-boy-green/60 hover:bg-pip-boy-green/5'
-                  : ''
-                }`}
-            >
+                ${selectedReadingId ?
+              'cursor-pointer hover:border-pip-boy-green/60 hover:bg-pip-boy-green/5' :
+              ''}`
+              }>
+
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-1">
                   <div
                     className="w-8 h-8 border border-pip-boy-green/30 flex items-center justify-center text-lg"
-                    style={{ backgroundColor: `${category.color}20`, borderColor: `${category.color}80` }}
-                  >
+                    style={{ backgroundColor: `${category.color}20`, borderColor: `${category.color}80` }}>
+
                     {category.icon}
                   </div>
                   <div className="flex-1">
@@ -311,64 +313,64 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
                     <div className="text-xs text-pip-boy-green/70">
                       {category.description}
                     </div>
-                    {!selectedReadingId && (
-                      <div className="text-xs text-pip-boy-green/50 mt-1">
+                    {!selectedReadingId &&
+                    <div className="text-xs text-pip-boy-green/50 mt-1">
                         {readingsInCategory.length} 個占卜記錄
                       </div>
-                    )}
+                    }
                   </div>
                 </div>
 
                 {/* Category Actions (only when not selecting) */}
-                {!selectedReadingId && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => startEdit(category)}
-                      className="p-1 text-pip-boy-green/60 hover:text-pip-boy-green"
-                      title="編輯類別"
-                    >
-                      < PixelIcon name="edit-2" className="w-4 h-4" />
-                    </button>
+                {!selectedReadingId &&
+                <div className="flex items-center gap-1">
+                    <Button size="icon" variant="link"
+                  onClick={() => startEdit(category)}
+                  className="p-1"
+                  title="編輯類別">
+
+                      <PixelIcon name="edit-2" className="w-4 h-4" />
+                    </Button>
                     {/* Don't allow deleting default categories */}
-                    {!['personal', 'relationship', 'career', 'spiritual', 'daily'].includes(category.id) && (
-                      <button
-                        onClick={() => handleDelete(category)}
-                        className="p-1 text-pip-boy-green/60 hover:text-red-400"
-                        title="刪除類別"
-                      >
-                        < PixelIcon name="trash-2" className="w-4 h-4" />
-                      </button>
-                    )}
+                    {!['personal', 'relationship', 'career', 'spiritual', 'daily'].includes(category.id) &&
+                  <Button size="icon" variant="link"
+                  onClick={() => handleDelete(category)}
+                  className="p-1"
+                  title="刪除類別">
+
+                        <PixelIcon name="trash-2" className="w-4 h-4" />
+                      </Button>
+                  }
                   </div>
-                )}
+                }
               </div>
-            </div>
-          )
+            </div>);
+
         })}
 
-        {categories.length === 0 && (
-          <div className="text-center py-8 border-2 border-pip-boy-green/30">
-            < PixelIcon name="hash" className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
+        {categories.length === 0 &&
+        <div className="text-center py-8 border-2 border-pip-boy-green/30">
+            <PixelIcon name="hash" className="w-8 h-8 mx-auto mb-2 text-pip-boy-green/40" />
             <div className="text-sm text-pip-boy-green/70">尚無類別</div>
-            <button
-              onClick={startCreate}
-              className="mt-2 px-3 py-1 border border-pip-boy-green/30 text-pip-boy-green/70 text-xs hover:border-pip-boy-green/60"
-            >
+            <Button size="xs" variant="outline"
+          onClick={startCreate}
+          className="mt-2 px-3 py-1 border">
+
               建立第一個類別
-            </button>
+            </Button>
           </div>
-        )}
+        }
       </div>
 
       {/* Help Text */}
-      {!selectedReadingId && (
-        <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-start gap-2">
-          < PixelIcon name="info" className="w-4 h-4 text-pip-boy-green/60 mt-0.5" />
+      {!selectedReadingId &&
+      <div className="border border-pip-boy-green/30 bg-pip-boy-green/5 p-3 flex items-start gap-2">
+          <PixelIcon name="info" className="w-4 h-4 text-pip-boy-green/60 mt-0.5" />
           <div className="text-pip-boy-green/70 text-xs">
             類別可以幫助你整理不同主題的占卜記錄。預設類別無法刪除，但可以編輯名稱和描述。
           </div>
         </div>
-      )}
-    </div>
-  )
+      }
+    </div>);
+
 }

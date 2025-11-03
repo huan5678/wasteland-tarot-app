@@ -25,7 +25,7 @@ import { ModeReorderList } from './ModeReorderList';
 
 /**
  * 表單資料型別
- */
+ */import { Button } from "@/components/ui/button";
 export interface PlaylistFormData {
   name: string;
   modes: MusicMode[];
@@ -48,11 +48,11 @@ export interface PlaylistEditorProps {
 // Music Mode Metadata
 // ============================================================================
 
-const MUSIC_MODE_METADATA: Record<MusicMode, { label: string; iconName: string; description: string }> = {
+const MUSIC_MODE_METADATA: Record<MusicMode, {label: string;iconName: string;description: string;}> = {
   synthwave: { label: 'Synthwave', iconName: 'music', description: '80 年代電子合成器風格' },
   divination: { label: '占卜', iconName: 'sparkling-2', description: '神秘氛圍音樂' },
   lofi: { label: 'Lo-fi', iconName: 'headphone', description: 'Lo-fi 節奏音樂' },
-  ambient: { label: 'Ambient', iconName: 'disc', description: '環境氛圍音樂' },
+  ambient: { label: 'Ambient', iconName: 'disc', description: '環境氛圍音樂' }
 };
 
 // ============================================================================
@@ -83,7 +83,7 @@ export function PlaylistEditor({
   playlistId,
   onSave,
   onCancel,
-  className,
+  className
 }: PlaylistEditorProps) {
   // ========== Hooks ==========
   const createPlaylist = usePlaylistStore((state) => state.createPlaylist);
@@ -101,12 +101,12 @@ export function PlaylistEditor({
     handleSubmit,
     formState: { errors },
     setValue,
-    reset,
+    reset
   } = useForm<PlaylistFormData>({
     defaultValues: {
       name: '',
-      modes: [],
-    },
+      modes: []
+    }
   });
 
   // ========== Effects ==========
@@ -197,7 +197,7 @@ export function PlaylistEditor({
       logger.info('[PlaylistEditor] Submitting form', {
         mode,
         name: data.name,
-        modesCount: selectedModes.length,
+        modesCount: selectedModes.length
       });
 
       // 建立或更新播放清單
@@ -210,7 +210,7 @@ export function PlaylistEditor({
       } else if (mode === 'edit' && playlistId) {
         updatePlaylist(playlistId, {
           name: data.name.trim(),
-          modes: selectedModes,
+          modes: selectedModes
         });
         const updatedPlaylist = getPlaylistById(playlistId);
         if (updatedPlaylist) {
@@ -244,11 +244,11 @@ export function PlaylistEditor({
     <div className={cn('space-y-6', className)} data-testid="playlist-editor">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Error Alert */}
-        {error && (
-          <Alert className="border-red-500 bg-red-500/10">
+        {error &&
+        <Alert className="border-red-500 bg-red-500/10">
             <AlertDescription className="text-red-500 text-sm">{error}</AlertDescription>
           </Alert>
-        )}
+        }
 
         {/* Playlist Name Input */}
         <div className="space-y-2">
@@ -261,7 +261,7 @@ export function PlaylistEditor({
             {...register('name', {
               required: '請輸入播放清單名稱',
               minLength: { value: 1, message: '名稱至少 1 個字元' },
-              maxLength: { value: 50, message: '名稱最多 50 個字元' },
+              maxLength: { value: 50, message: '名稱最多 50 個字元' }
             })}
             className={cn(
               'w-full px-4 py-2 rounded',
@@ -273,13 +273,13 @@ export function PlaylistEditor({
             )}
             placeholder="輸入播放清單名稱..."
             disabled={isSubmitting}
-            data-testid="playlist-name-input"
-          />
-          {errors.name && (
-            <p className="text-xs text-red-500" role="alert">
+            data-testid="playlist-name-input" />
+
+          {errors.name &&
+          <p className="text-xs text-red-500" role="alert">
               {errors.name.message}
             </p>
-          )}
+          }
         </div>
 
         {/* Music Mode Selector */}
@@ -305,20 +305,20 @@ export function PlaylistEditor({
                   className={cn(
                     'flex items-center gap-3 p-3 rounded cursor-pointer',
                     'border-2 transition-all duration-200',
-                    isSelected
-                      ? 'border-pip-boy-green bg-pip-boy-green/10'
-                      : 'border-pip-boy-green/30 hover:border-pip-boy-green/60',
+                    isSelected ?
+                    'border-pip-boy-green bg-pip-boy-green/10' :
+                    'border-pip-boy-green/30 hover:border-pip-boy-green/60',
                     isSubmitting && 'opacity-50 cursor-not-allowed'
                   )}
-                  data-testid={`mode-checkbox-${mode}`}
-                >
+                  data-testid={`mode-checkbox-${mode}`}>
+
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={() => handleToggleMode(mode)}
                     disabled={isSubmitting}
-                    className="sr-only"
-                  />
+                    className="sr-only" />
+
                   <PixelIcon name={metadata.iconName} sizePreset="md" variant="primary" decorative />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-pip-boy-green">
@@ -326,74 +326,74 @@ export function PlaylistEditor({
                     </div>
                     <div className="text-xs text-pip-boy-green/50">{metadata.description}</div>
                   </div>
-                  {isSelected && (
-                    <div className="w-5 h-5 rounded-full border-2 border-pip-boy-green bg-pip-boy-green/20 flex items-center justify-center">
+                  {isSelected &&
+                  <div className="w-5 h-5 rounded-full border-2 border-pip-boy-green bg-pip-boy-green/20 flex items-center justify-center">
                       <div className="w-2 h-2 rounded-full bg-pip-boy-green" />
                     </div>
-                  )}
-                </label>
-              );
+                  }
+                </label>);
+
             })}
           </div>
 
-          {selectedModes.length === 0 && (
-            <p className="text-xs text-pip-boy-green/50">請至少選擇 1 個音樂模式</p>
-          )}
+          {selectedModes.length === 0 &&
+          <p className="text-xs text-pip-boy-green/50">請至少選擇 1 個音樂模式</p>
+          }
         </div>
 
         {/* Mode Reorder List */}
-        {selectedModes.length > 1 && (
-          <div className="space-y-2">
+        {selectedModes.length > 1 &&
+        <div className="space-y-2">
             <label className="block text-sm font-medium text-pip-boy-green">
               拖曳調整播放順序
             </label>
             <ModeReorderList
-              modes={selectedModes}
-              onChange={handleReorderModes}
-              disabled={isSubmitting}
-            />
+            modes={selectedModes}
+            onChange={handleReorderModes}
+            disabled={isSubmitting} />
+
           </div>
-        )}
+        }
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t-2 border-pip-boy-green/30">
-          <button
-            type="submit"
-            disabled={isSubmitting || selectedModes.length === 0}
-            className={cn(
-              'flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded',
-              'bg-pip-boy-green text-black font-semibold',
-              'hover:bg-pip-boy-green/80 transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-            data-testid="save-playlist-button"
-          >
+          <Button size="icon" variant="default"
+          type="submit"
+          disabled={isSubmitting || selectedModes.length === 0}
+          className="{expression}"
+
+
+
+
+
+
+          data-testid="save-playlist-button">
+
             <PixelIcon name="save" sizePreset="xs" decorative />
             {isSubmitting ? '儲存中...' : mode === 'create' ? '建立' : '儲存'}
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={isSubmitting}
-            className={cn(
-              'flex items-center justify-center gap-2 px-4 py-2 rounded',
-              'border-2 border-pip-boy-green/30 text-pip-boy-green',
-              'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
-              'transition-all duration-200',
-              'focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-black',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-            data-testid="cancel-button"
-          >
+          <Button size="default" variant="default"
+          type="button"
+          onClick={handleCancel}
+          disabled={isSubmitting}
+          className="{expression}"
+
+
+
+
+
+
+
+          data-testid="cancel-button">
+
             <PixelIcon name="close" sizePreset="xs" decorative />
             取消
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
-  );
+    </div>);
+
 }
 
 PlaylistEditor.displayName = 'PlaylistEditor';

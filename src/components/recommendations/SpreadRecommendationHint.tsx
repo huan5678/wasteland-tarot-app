@@ -3,15 +3,15 @@
  * Shows intelligent spread recommendations based on question analysis
  */
 
-import React from 'react'
-import { PixelIcon } from '@/components/ui/icons'
-import { useSpreadRecommendation } from '@/hooks/useRecommendations'
+import React from 'react';
+import { PixelIcon } from '@/components/ui/icons';
+import { useSpreadRecommendation } from '@/hooks/useRecommendations';import { Button } from "@/components/ui/button";
 
 interface SpreadRecommendationHintProps {
-  question: string
-  currentSpread: string
-  onSpreadChange: (spreadType: string) => void
-  className?: string
+  question: string;
+  currentSpread: string;
+  onSpreadChange: (spreadType: string) => void;
+  className?: string;
 }
 
 export function SpreadRecommendationHint({
@@ -20,23 +20,23 @@ export function SpreadRecommendationHint({
   onSpreadChange,
   className = ''
 }: SpreadRecommendationHintProps) {
-  const { recommendation, loading } = useSpreadRecommendation(question)
+  const { recommendation, loading } = useSpreadRecommendation(question);
 
   // Don't show if loading, no recommendation, or already using recommended spread
   if (loading || !recommendation || recommendation.spread_type === currentSpread) {
-    return null
+    return null;
   }
 
   // Confidence-based styling
-  const confidenceColor = recommendation.confidence > 0.8
-    ? 'border-emerald-500/50 bg-emerald-950/20'
-    : recommendation.confidence > 0.6
-    ? 'border-pip-boy-green/50 bg-pip-boy-green/10'
-    : 'border-yellow-500/50 bg-yellow-950/20'
+  const confidenceColor = recommendation.confidence > 0.8 ?
+  'border-emerald-500/50 bg-emerald-950/20' :
+  recommendation.confidence > 0.6 ?
+  'border-pip-boy-green/50 bg-pip-boy-green/10' :
+  'border-yellow-500/50 bg-yellow-950/20';
 
-  const confidenceIcon = recommendation.confidence > 0.8
-    ? <PixelIcon name="sparkles" size={16} className="text-emerald-500" decorative />
-    : <PixelIcon name="bulb" size={16} className="text-pip-boy-green" decorative />
+  const confidenceIcon = recommendation.confidence > 0.8 ?
+  <PixelIcon name="sparkles" size={16} className="text-emerald-500" decorative /> :
+  <PixelIcon name="bulb" size={16} className="text-pip-boy-green" decorative />;
 
   return (
     <div
@@ -45,8 +45,8 @@ export function SpreadRecommendationHint({
         ${confidenceColor}
         animate-in fade-in-50 slide-in-from-top-2
         ${className}
-      `}
-    >
+      `}>
+
       <div className="flex items-start gap-3">
         <div className="mt-0.5">
           {confidenceIcon}
@@ -61,29 +61,31 @@ export function SpreadRecommendationHint({
             {recommendation.reason}
           </p>
 
-          <button
-            onClick={() => onSpreadChange(recommendation.spread_type)}
-            className="
-              text-xs px-3 py-1.5 rounded
-              bg-pip-boy-green/20 hover:bg-pip-boy-green/30
-              border border-pip-boy-green/40
-              text-pip-boy-green
-              transition-colors
-             
-            "
-          >
+          <Button size="xs" variant="outline"
+          onClick={() => onSpreadChange(recommendation.spread_type)}
+          className="px-3 py-1.5 rounded\n border transition-colors\n">
+
+
+
+
+
+
+
+
             切換至 {getSpreadName(recommendation.spread_type)}
-          </button>
+          </Button>
 
           <span className="
             ml-2 text-xs text-wasteland-tan/60
           ">
+
+
             信心度: {Math.round(recommendation.confidence * 100)}%
           </span>
         </div>
       </div>
-    </div>
-  )
+    </div>);
+
 }
 
 function getSpreadName(spreadType: string): string {
@@ -94,6 +96,6 @@ function getSpreadName(spreadType: string): string {
     'horseshoe': '馬蹄形',
     'relationship_spread': '關係牌陣',
     'year_ahead': '年度展望'
-  }
-  return names[spreadType] || spreadType
+  };
+  return names[spreadType] || spreadType;
 }

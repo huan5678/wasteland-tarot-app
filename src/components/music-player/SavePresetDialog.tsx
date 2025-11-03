@@ -14,7 +14,7 @@ import { useRhythmEditorStore } from '@/lib/stores/rhythmEditorStore';
 
 /**
  * SavePresetDialog 組件屬性
- */
+ */import { Button } from "@/components/ui/button";
 export interface SavePresetDialogProps {
   isOpen: boolean;
   onClose: () => void;
@@ -45,13 +45,13 @@ export interface SavePresetDialogProps {
 export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
   isOpen,
   onClose,
-  onSaveSuccess,
+  onSaveSuccess
 }) => {
   const { savePreset, isLoading, error, clearError } = useRhythmEditorStore((state) => ({
     savePreset: state.savePreset,
     isLoading: state.isLoading,
     error: state.error,
-    clearError: state.clearError,
+    clearError: state.clearError
   }));
 
   const [name, setName] = useState('');
@@ -122,45 +122,45 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
       role="dialog"
       aria-labelledby="save-preset-dialog-title"
       aria-modal="true"
-      onClick={handleClose}
-    >
+      onClick={handleClose}>
+
       <div
         className="bg-gray-900 border-2 border-pip-boy-green rounded-lg p-6 max-w-md w-full shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
+        onClick={(e) => e.stopPropagation()}>
+
         {/* 標題 */}
         <div className="flex items-center justify-between mb-6">
           <h2
             id="save-preset-dialog-title"
-            className="text-xl text-pip-boy-green font-bold"
-          >
+            className="text-xl text-pip-boy-green font-bold">
+
             儲存節奏
           </h2>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="text-pip-boy-green hover:text-pip-boy-green/70 transition-colors"
-            aria-label="關閉"
-          >
+          <Button size="icon" variant="link"
+          type="button"
+          onClick={handleClose}
+          className="transition-colors"
+          aria-label="關閉">
+
             <PixelIcon name="close" sizePreset="sm" aria-label="關閉" />
-          </button>
+          </Button>
         </div>
 
         {/* 成功訊息 */}
-        {successMessage && (
-          <div className="mb-4 p-3 bg-pip-boy-green/20 border border-pip-boy-green rounded-lg flex items-center gap-2">
+        {successMessage &&
+        <div className="mb-4 p-3 bg-pip-boy-green/20 border border-pip-boy-green rounded-lg flex items-center gap-2">
             <PixelIcon name="checkbox-circle" variant="success" sizePreset="sm" decorative />
             <span className="text-sm text-pip-boy-green">{successMessage}</span>
           </div>
-        )}
+        }
 
         {/* 錯誤訊息 */}
-        {(validationError || error) && (
-          <div className="mb-4 p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
+        {(validationError || error) &&
+        <div className="mb-4 p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
             <PixelIcon name="error-warning" variant="error" sizePreset="sm" decorative />
             <span className="text-sm text-red-400">{validationError || error}</span>
           </div>
-        )}
+        }
 
         {/* 表單內容 */}
         <div className="space-y-4">
@@ -184,8 +184,8 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                 'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/50',
                 'transition-colors'
               )}
-              disabled={isLoading || !!successMessage}
-            />
+              disabled={isLoading || !!successMessage} />
+
             <div className="mt-1 text-xs text-pip-boy-green/60 text-right">
               {name.length} / 50
             </div>
@@ -210,8 +210,8 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                 'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/50',
                 'transition-colors'
               )}
-              disabled={isLoading || !!successMessage}
-            />
+              disabled={isLoading || !!successMessage} />
+
             <div className="mt-1 text-xs text-pip-boy-green/60 text-right">
               {description.length} / 200
             </div>
@@ -234,8 +234,8 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
                   'after:content-[""] after:absolute after:inset-0',
                   'after:bg-[url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M9%2016.17L4.83%2012l-1.42%201.41L9%2019%2021%207l-1.41-1.41z%22%2F%3E%3C%2Fsvg%3E")] after:bg-center after:bg-no-repeat after:bg-contain',
                   'after:opacity-0 checked:after:opacity-100'
-                )}
-              />
+                )} />
+
               <div className="flex-1">
                 <div className="text-sm text-pip-boy-green font-medium">
                   公開分享
@@ -250,46 +250,46 @@ export const SavePresetDialog: React.FC<SavePresetDialogProps> = ({
 
         {/* 按鈕 */}
         <div className="flex gap-3 mt-6">
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={isLoading || !!successMessage}
-            className={cn(
-              'flex-1 px-4 py-2 rounded-lg border-2',
-              'bg-gray-800 border-gray-600 text-gray-300',
-              'hover:border-pip-boy-green/70 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-              'disabled:opacity-50 disabled:cursor-not-allowed'
-            )}
-          >
+          <Button size="default" variant="default"
+          type="button"
+          onClick={handleClose}
+          disabled={isLoading || !!successMessage}
+          className="{expression}">
+
+
+
+
+
+
+
             取消
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={isLoading || !!successMessage}
-            className={cn(
-              'flex-1 px-4 py-2 rounded-lg border-2',
-              'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green',
-              'hover:bg-pip-boy-green/30 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'flex items-center justify-center gap-2'
-            )}
-          >
-            {isLoading ? (
-              <>
+          </Button>
+          <Button size="icon" variant="default"
+          type="button"
+          onClick={handleSave}
+          disabled={isLoading || !!successMessage}
+          className="{expression}">
+
+
+
+
+
+
+
+
+            {isLoading ?
+            <>
                 <PixelIcon name="loader-4" animation="spin" sizePreset="sm" decorative />
                 <span>儲存中...</span>
-              </>
-            ) : (
-              '儲存'
-            )}
-          </button>
+              </> :
+
+            '儲存'
+            }
+          </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 SavePresetDialog.displayName = 'SavePresetDialog';

@@ -12,28 +12,28 @@
  * - 錯誤處理和重試選項
  */
 
-'use client'
+'use client';
 
-import React from 'react'
+import React from 'react';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { PixelIcon } from '@/components/ui/icons'
-import { cn } from '@/lib/utils'
-import { toast } from 'sonner'
+  DialogTitle } from
+'@/components/ui/dialog';
+import { PixelIcon } from '@/components/ui/icons';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';import { Button } from "@/components/ui/button";
 
 interface PasskeyUpgradeModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSetupPasskey: () => Promise<void>
-  onSkip: () => void
-  isLoading?: boolean
-  error?: string | null
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSetupPasskey: () => Promise<void>;
+  onSkip: () => void;
+  isLoading?: boolean;
+  error?: string | null;
 }
 
 export function PasskeyUpgradeModal({
@@ -42,27 +42,27 @@ export function PasskeyUpgradeModal({
   onSetupPasskey,
   onSkip,
   isLoading = false,
-  error = null,
+  error = null
 }: PasskeyUpgradeModalProps) {
   const handleSetupClick = async () => {
     try {
-      await onSetupPasskey()
+      await onSetupPasskey();
 
       // 顯示成功訊息（Sonner toast）
       toast.success('Passkey 設定完成！', {
         description: '下次您可以使用生物辨識快速登入',
-        duration: 3000,
-      })
+        duration: 3000
+      });
     } catch (err) {
       // 錯誤已在 Hook 中處理
-      console.error('Passkey setup failed:', err)
+      console.error('Passkey setup failed:', err);
     }
-  }
+  };
 
   const handleSkipClick = () => {
-    onSkip()
-    onOpenChange(false)
-  }
+    onSkip();
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -78,8 +78,8 @@ export function PasskeyUpgradeModal({
           'before:absolute before:inset-0 before:pointer-events-none',
           'before:bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,136,0.03)_2px,rgba(0,255,136,0.03)_4px)]',
           'before:animate-[scanline_8s_linear_infinite]'
-        )}
-      >
+        )}>
+
         {/* 標題區塊 */}
         <DialogHeader className="space-y-3">
           <div className="flex items-center gap-3">
@@ -89,8 +89,8 @@ export function PasskeyUpgradeModal({
                 name="fingerprint"
                 sizePreset="lg"
                 variant="primary"
-                aria-hidden="true"
-              />
+                aria-hidden="true" />
+
             </div>
 
             {/* 標題 */}
@@ -106,86 +106,86 @@ export function PasskeyUpgradeModal({
         </DialogHeader>
 
         {/* 錯誤訊息區塊 */}
-        {error && (
-          <div
-            className={cn(
-              'flex items-start gap-2 p-3 rounded-md',
-              'bg-red-900/20 border border-red-500/30',
-              'text-red-400'
-            )}
-            role="alert"
-          >
+        {error &&
+        <div
+          className={cn(
+            'flex items-start gap-2 p-3 rounded-md',
+            'bg-red-900/20 border border-red-500/30',
+            'text-red-400'
+          )}
+          role="alert">
+
             <PixelIcon
-              name="alert-triangle"
-              sizePreset="sm"
-              variant="error"
-              animation="wiggle"
-              aria-hidden="true"
-            />
+            name="alert-triangle"
+            sizePreset="sm"
+            variant="error"
+            animation="wiggle"
+            aria-hidden="true" />
+
             <p className="text-sm">{error}</p>
           </div>
-        )}
+        }
 
         {/* 按鈕區塊 */}
         <DialogFooter className="flex-col sm:flex-col gap-3">
           {/* 主要 CTA：立即設定 Passkey */}
-          <button
-            onClick={handleSetupClick}
-            disabled={isLoading}
-            className={cn(
-              // Radiation Orange CTA
-              'w-full px-6 py-3 rounded-md',
-              'bg-[#ff8800] hover:bg-[#ff8800]/90',
-              'text-black font-bold text-base',
-              'transition-all duration-200',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              // Pip-Boy 風格邊框
-              'border-2 border-[#ff8800]/50',
-              // 陰影效果
-              'shadow-[0_0_10px_rgba(255,136,0,0.3)]',
-              'hover:shadow-[0_0_20px_rgba(255,136,0,0.5)]',
-              // 載入狀態
-              isLoading && 'cursor-wait'
-            )}
-          >
-            {isLoading ? (
-              <span className="flex items-center justify-center gap-2">
+          <Button size="icon" variant="default"
+          onClick={handleSetupClick}
+          disabled={isLoading}
+          className="{expression}">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            {isLoading ?
+            <span className="flex items-center justify-center gap-2">
                 <PixelIcon
-                  name="loader"
-                  sizePreset="sm"
-                  animation="spin"
-                  decorative
-                />
+                name="loader"
+                sizePreset="sm"
+                animation="spin"
+                decorative />
+
                 <span>正在掃描生物特徵...</span>
-              </span>
-            ) : (
-              <span className="flex items-center justify-center gap-2">
+              </span> :
+
+            <span className="flex items-center justify-center gap-2">
                 <PixelIcon
-                  name="check"
-                  sizePreset="sm"
-                  decorative
-                />
+                name="check"
+                sizePreset="sm"
+                decorative />
+
                 <span>立即設定 Passkey</span>
               </span>
-            )}
-          </button>
+            }
+          </Button>
 
           {/* 次要選項：稍後再說 */}
-          <button
-            onClick={handleSkipClick}
-            disabled={isLoading}
-            className={cn(
-              'w-full px-4 py-2 rounded-md',
-              'text-[#00ff88]/70 hover:text-[#00ff88]',
-              'text-sm',
-              'transition-colors duration-200',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              // 無背景，純文字連結風格
-              'hover:underline'
-            )}
-          >
+          <Button size="default" variant="default"
+          onClick={handleSkipClick}
+          disabled={isLoading}
+          className="{expression}">
+
+
+
+
+
+
+
+
+
             稍後再說
-          </button>
+          </Button>
 
           {/* 底部提示 */}
           <p className="text-xs text-[#00ff88]/50 text-center mt-2">
@@ -193,6 +193,6 @@ export function PasskeyUpgradeModal({
           </p>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  )
+    </Dialog>);
+
 }

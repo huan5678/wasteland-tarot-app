@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * Token Extension Analytics Dashboard
@@ -9,65 +9,65 @@
  * - 歷史記錄列表
  */
 
-import { useEffect, useState } from 'react'
-import { PixelIcon } from '@/components/ui/icons'
+import { useEffect, useState } from 'react';
+import { PixelIcon } from '@/components/ui/icons';
 import {
   getTokenExtensionStats,
   getTokenExtensionHistory,
   type TokenExtensionStats,
-  type TokenExtensionHistory,
-} from '@/lib/api/token-extension-analytics'
+  type TokenExtensionHistory } from
+'@/lib/api/token-extension-analytics';import { Button } from "@/components/ui/button";
 
 export default function TokenAnalyticsPage() {
-  const [stats, setStats] = useState<TokenExtensionStats | null>(null)
-  const [history, setHistory] = useState<TokenExtensionHistory | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [filterType, setFilterType] = useState<'all' | 'activity' | 'loyalty'>('all')
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d')
+  const [stats, setStats] = useState<TokenExtensionStats | null>(null);
+  const [history, setHistory] = useState<TokenExtensionHistory | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [filterType, setFilterType] = useState<'all' | 'activity' | 'loyalty'>('all');
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
 
   // 載入資料
   useEffect(() => {
-    loadData()
-  }, [timeRange, filterType])
+    loadData();
+  }, [timeRange, filterType]);
 
   async function loadData() {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // 計算日期範圍
-      const endDate = new Date()
-      const startDate = new Date()
+      const endDate = new Date();
+      const startDate = new Date();
       if (timeRange === '7d') {
-        startDate.setDate(endDate.getDate() - 7)
+        startDate.setDate(endDate.getDate() - 7);
       } else if (timeRange === '30d') {
-        startDate.setDate(endDate.getDate() - 30)
+        startDate.setDate(endDate.getDate() - 30);
       } else if (timeRange === '90d') {
-        startDate.setDate(endDate.getDate() - 90)
+        startDate.setDate(endDate.getDate() - 90);
       }
 
-      const startDateStr = startDate.toISOString()
-      const endDateStr = endDate.toISOString()
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
 
       // 載入統計和歷史
       const [statsData, historyData] = await Promise.all([
-        getTokenExtensionStats(startDateStr, endDateStr),
-        getTokenExtensionHistory(
-          filterType === 'all' ? undefined : filterType,
-          startDateStr,
-          endDateStr,
-          100
-        ),
-      ])
+      getTokenExtensionStats(startDateStr, endDateStr),
+      getTokenExtensionHistory(
+        filterType === 'all' ? undefined : filterType,
+        startDateStr,
+        endDateStr,
+        100
+      )]
+      );
 
-      setStats(statsData)
-      setHistory(historyData)
+      setStats(statsData);
+      setHistory(historyData);
     } catch (err: any) {
-      console.error('載入 Token Analytics 失敗:', err)
-      setError(err.message || '載入失敗')
+      console.error('載入 Token Analytics 失敗:', err);
+      setError(err.message || '載入失敗');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -82,13 +82,13 @@ export default function TokenAnalyticsPage() {
               sizePreset="xl"
               variant="primary"
               animation="spin"
-              decorative
-            />
+              decorative />
+
             <p className="mt-4 text-pip-boy-green">載入中...</p>
           </div>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   // 錯誤狀態
@@ -102,23 +102,23 @@ export default function TokenAnalyticsPage() {
               sizePreset="xl"
               variant="error"
               animation="wiggle"
-              decorative
-            />
+              decorative />
+
             <p className="mt-4 text-red-500">錯誤：{error}</p>
-            <button
-              onClick={loadData}
-              className="mt-4 px-4 py-2 bg-pip-boy-green text-wasteland-darker font-bold hover:bg-pip-boy-green-bright"
-            >
+            <Button size="default" variant="link"
+            onClick={loadData}
+            className="mt-4 px-4 py-2 font-bold">
+
               重新載入
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   if (!stats || !history) {
-    return null
+    return null;
   }
 
   return (
@@ -140,70 +140,70 @@ export default function TokenAnalyticsPage() {
       <div className="mb-6 flex flex-wrap gap-4">
         {/* 時間範圍選擇 */}
         <div className="flex gap-2">
-          <button
-            onClick={() => setTimeRange('7d')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              timeRange === '7d'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          <Button size="default" variant="default"
+          onClick={() => setTimeRange('7d')}
+          className="{expression}">
+
+
+
+
+
             7 天
-          </button>
-          <button
-            onClick={() => setTimeRange('30d')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              timeRange === '30d'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setTimeRange('30d')}
+          className="{expression}">
+
+
+
+
+
             30 天
-          </button>
-          <button
-            onClick={() => setTimeRange('90d')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              timeRange === '90d'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setTimeRange('90d')}
+          className="{expression}">
+
+
+
+
+
             90 天
-          </button>
+          </Button>
         </div>
 
         {/* 延長類型篩選 */}
         <div className="flex gap-2">
-          <button
-            onClick={() => setFilterType('all')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              filterType === 'all'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          <Button size="default" variant="default"
+          onClick={() => setFilterType('all')}
+          className="{expression}">
+
+
+
+
+
             全部
-          </button>
-          <button
-            onClick={() => setFilterType('activity')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              filterType === 'activity'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setFilterType('activity')}
+          className="{expression}">
+
+
+
+
+
             活躍度
-          </button>
-          <button
-            onClick={() => setFilterType('loyalty')}
-            className={`px-4 py-2 border-2 font-bold text-sm ${
-              filterType === 'loyalty'
-                ? 'border-pip-boy-green bg-pip-boy-green text-wasteland-darker'
-                : 'border-pip-boy-green/50 bg-wasteland-dark text-pip-boy-green hover:border-pip-boy-green'
-            }`}
-          >
+          </Button>
+          <Button size="default" variant="default"
+          onClick={() => setFilterType('loyalty')}
+          className="{expression}">
+
+
+
+
+
             忠誠度
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -259,9 +259,9 @@ export default function TokenAnalyticsPage() {
             {stats.success_rate}%
           </p>
           <p className="mt-2 text-xs text-pip-boy-green/50">
-            {stats.total_extensions > 0
-              ? `${Math.round((stats.success_rate / 100) * stats.total_extensions)}/${stats.total_extensions} 次成功`
-              : '尚無資料'}
+            {stats.total_extensions > 0 ?
+            `${Math.round(stats.success_rate / 100 * stats.total_extensions)}/${stats.total_extensions} 次成功` :
+            '尚無資料'}
           </p>
         </div>
       </div>
@@ -273,31 +273,31 @@ export default function TokenAnalyticsPage() {
           每日統計趨勢
         </h2>
 
-        {stats.daily_stats.length === 0 ? (
-          <p className="text-pip-boy-green/50 text-center py-8">尚無統計資料</p>
-        ) : (
-          <div className="overflow-x-auto">
+        {stats.daily_stats.length === 0 ?
+        <p className="text-pip-boy-green/50 text-center py-8">尚無統計資料</p> :
+
+        <div className="overflow-x-auto">
             <div className="min-w-[600px]">
               {/* 簡易圖表（使用 CSS 條形圖） */}
               <div className="space-y-2">
                 {stats.daily_stats.map((day) => {
-                  const maxTotal = Math.max(...stats.daily_stats.map((d) => d.total))
-                  const barWidth = maxTotal > 0 ? (day.total / maxTotal) * 100 : 0
+                const maxTotal = Math.max(...stats.daily_stats.map((d) => d.total));
+                const barWidth = maxTotal > 0 ? day.total / maxTotal * 100 : 0;
 
-                  return (
-                    <div key={day.date} className="flex items-center gap-4">
+                return (
+                  <div key={day.date} className="flex items-center gap-4">
                       <div className="w-24 text-xs text-pip-boy-green/70 font-mono">
                         {new Date(day.date).toLocaleDateString('zh-TW', {
-                          month: '2-digit',
-                          day: '2-digit',
-                        })}
+                        month: '2-digit',
+                        day: '2-digit'
+                      })}
                       </div>
                       <div className="flex-1">
                         <div className="relative h-8 bg-wasteland-darker border border-pip-boy-green/30">
                           <div
-                            className="absolute inset-y-0 left-0 bg-pip-boy-green/30 border-r-2 border-pip-boy-green transition-all duration-300"
-                            style={{ width: `${barWidth}%` }}
-                          />
+                          className="absolute inset-y-0 left-0 bg-pip-boy-green/30 border-r-2 border-pip-boy-green transition-all duration-300"
+                          style={{ width: `${barWidth}%` }} />
+
                           <div className="absolute inset-0 flex items-center px-2 text-xs text-pip-boy-green font-mono">
                             <span>
                               總計: {day.total} ({day.activity}活 / {day.loyalty}忠) ⏱{' '}
@@ -306,13 +306,13 @@ export default function TokenAnalyticsPage() {
                           </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
+                    </div>);
+
+              })}
               </div>
             </div>
           </div>
-        )}
+        }
       </div>
 
       {/* 歷史記錄列表 */}
@@ -322,10 +322,10 @@ export default function TokenAnalyticsPage() {
           歷史記錄 ({history.total_count} 筆)
         </h2>
 
-        {history.extensions.length === 0 ? (
-          <p className="text-pip-boy-green/50 text-center py-8">尚無歷史記錄</p>
-        ) : (
-          <div className="overflow-x-auto">
+        {history.extensions.length === 0 ?
+        <p className="text-pip-boy-green/50 text-center py-8">尚無歷史記錄</p> :
+
+        <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 border-pip-boy-green/50">
@@ -347,22 +347,22 @@ export default function TokenAnalyticsPage() {
                 </tr>
               </thead>
               <tbody>
-                {history.extensions.map((ext, index) => (
-                  <tr
-                    key={ext.id || index}
-                    className="border-b border-pip-boy-green/20 hover:bg-pip-boy-green/10"
-                  >
+                {history.extensions.map((ext, index) =>
+              <tr
+                key={ext.id || index}
+                className="border-b border-pip-boy-green/20 hover:bg-pip-boy-green/10">
+
                     <td className="py-2 px-4 text-pip-boy-green/80 font-mono text-xs">
                       {ext.readable_time}
                     </td>
                     <td className="py-2 px-4 text-pip-boy-green/80">
                       <span
-                        className={`px-2 py-1 text-xs border ${
-                          ext.event_data.extension_type === 'activity'
-                            ? 'border-blue-500 bg-blue-500/20 text-blue-300'
-                            : 'border-yellow-500 bg-yellow-500/20 text-yellow-300'
-                        }`}
-                      >
+                    className={`px-2 py-1 text-xs border ${
+                    ext.event_data.extension_type === 'activity' ?
+                    'border-blue-500 bg-blue-500/20 text-blue-300' :
+                    'border-yellow-500 bg-yellow-500/20 text-yellow-300'}`
+                    }>
+
                         {ext.type_text}
                       </span>
                     </td>
@@ -370,33 +370,33 @@ export default function TokenAnalyticsPage() {
                       {ext.event_data.extension_minutes} 分鐘
                     </td>
                     <td className="py-2 px-4">
-                      {ext.event_data.success ? (
-                        <span className="flex items-center gap-1 text-green-400">
+                      {ext.event_data.success ?
+                  <span className="flex items-center gap-1 text-green-400">
                           <PixelIcon name="check" sizePreset="xs" variant="success" decorative />
                           {ext.success_text}
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-red-400">
+                        </span> :
+
+                  <span className="flex items-center gap-1 text-red-400">
                           <PixelIcon name="close" sizePreset="xs" variant="error" decorative />
                           {ext.success_text}
                         </span>
-                      )}
+                  }
                     </td>
                     <td className="py-2 px-4 text-pip-boy-green/60 text-xs">
                       {ext.event_data.reason || '-'}
                     </td>
                   </tr>
-                ))}
+              )}
               </tbody>
             </table>
           </div>
-        )}
+        }
       </div>
 
       {/* 最後更新時間 */}
       <div className="mt-4 text-center text-pip-boy-green/50 text-xs">
         <p>最後更新: {new Date().toLocaleString('zh-TW')}</p>
       </div>
-    </div>
-  )
+    </div>);
+
 }

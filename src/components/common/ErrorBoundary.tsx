@@ -1,40 +1,40 @@
-'use client'
+'use client';
 
-import React, { Component, ReactNode } from 'react'
-import { PixelIcon } from '@/components/ui/icons'
+import React, { Component, ReactNode } from 'react';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
+  hasError: boolean;
+  error?: Error;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error }
+    return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error('Pip-Boy System Error:', error, errorInfo)
+    console.error('Pip-Boy System Error:', error, errorInfo);
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: undefined })
-  }
+    this.setState({ hasError: false, error: undefined });
+  };
 
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback
+        return this.props.fallback;
       }
 
       return (
@@ -51,8 +51,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 Pip-Boy 遇到了未預期的錯誤。請嘗試重新啟動系統。
               </p>
 
-              {this.state.error && (
-                <details className="mb-4 text-left">
+              {this.state.error &&
+              <details className="mb-4 text-left">
                   <summary className="text-red-300 text-xs cursor-pointer mb-2">
                     錯誤詳情 (開發用)
                   </summary>
@@ -60,30 +60,30 @@ export class ErrorBoundary extends Component<Props, State> {
                     {this.state.error.message}
                   </pre>
                 </details>
-              )}
+              }
 
               <div className="space-y-3">
-                <button
-                  onClick={this.handleReset}
-                  className="w-full py-2 bg-red-500 text-white font-bold text-sm hover:bg-red-600 transition-colors flex items-center justify-center"
-                >
+                <Button size="sm" variant="link"
+                onClick={this.handleReset}
+                className="w-full py-2 font-bold transition-colors flex items-center justify-center">
+
                   <PixelIcon name="reload" sizePreset="xs" className="mr-2 inline" decorative />
                   重新啟動 Pip-Boy
-                </button>
+                </Button>
 
-                <button
-                  onClick={() => window.location.href = '/dashboard'}
-                  className="w-full py-2 border border-red-400 text-red-400 font-bold text-sm hover:bg-red-900/30 transition-colors"
-                >
+                <Button size="sm" variant="outline"
+                onClick={() => window.location.href = '/dashboard'}
+                className="w-full py-2 border font-bold transition-colors">
+
                   返回主控台
-                </button>
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )
+        </div>);
+
     }
 
-    return this.props.children
+    return this.props.children;
   }
 }

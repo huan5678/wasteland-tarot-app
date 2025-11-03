@@ -14,7 +14,7 @@ import { motion } from 'motion/react';
 
 /**
  * VolumeControl Props
- */
+ */import { Button } from "@/components/ui/button";
 export interface VolumeControlProps {
   className?: string;
 }
@@ -35,7 +35,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
     console.log('[VolumeControl] Component mounted with state:', {
       volume,
       isMuted,
-      displayVolume: isMuted ? 0 : volume,
+      displayVolume: isMuted ? 0 : volume
     });
   }, []);
 
@@ -44,7 +44,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
     console.log('[VolumeControl] State changed:', {
       volume,
       isMuted,
-      displayVolume: isMuted ? 0 : volume,
+      displayVolume: isMuted ? 0 : volume
     });
   }, [volume, isMuted]);
 
@@ -57,7 +57,7 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
       console.log('[VolumeControl] handleVolumeChange called:', {
         sliderValue: value[0],
         newVolume,
-        isMuted,
+        isMuted
       });
 
       // 如果用戶調整音量且音量大於 0，自動解除靜音
@@ -79,24 +79,24 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
   // ========== Compute Volume Icon ==========
   const displayVolume = isMuted ? 0 : volume;
   const volumeIconName =
-    displayVolume === 0 ? 'volume-x' : displayVolume < 0.5 ? 'volume-1' : 'volume';
+  displayVolume === 0 ? 'volume-x' : displayVolume < 0.5 ? 'volume-1' : 'volume';
 
   // ========== Render ==========
   return (
     <div className={`flex items-center gap-4 ${className || ''}`} role="group" aria-label="音量控制">
       {/* Mute Button */}
-      <button
-        onClick={handleToggleMute}
-        className={`flex items-center justify-center w-10 h-10 rounded border-2 transition-all focus:outline-none focus:ring-2 focus:ring-pip-boy-green focus:ring-offset-2 focus:ring-offset-wasteland-darker ${
-          isMuted
-            ? 'bg-pip-boy-green/5 border-pip-boy-green/30 text-pip-boy-green/50'
-            : 'bg-pip-boy-green/10 border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green hover:text-black'
-        }`}
-        aria-label={isMuted ? '取消靜音' : '靜音'}
-        aria-pressed={isMuted}
-      >
+      <Button size="icon" variant="default"
+      onClick={handleToggleMute}
+      className="{expression}"
+
+
+
+
+      aria-label={isMuted ? '取消靜音' : '靜音'}
+      aria-pressed={isMuted}>
+
         <PixelIcon name={volumeIconName} sizePreset="sm" aria-label={isMuted ? '取消靜音' : '靜音'} />
-      </button>
+      </Button>
 
       {/* Volume Slider */}
       <div className="flex-1 relative">
@@ -109,22 +109,22 @@ export const VolumeControl = React.memo(function VolumeControl({ className }: Vo
           aria-label="音量"
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-valuenow={Math.round(displayVolume * 100)}
-        />
+          aria-valuenow={Math.round(displayVolume * 100)} />
+
 
         {/* Visual Feedback Animation */}
-        {!isMuted && volume > 0 && (
-          <motion.div
-            className="absolute -top-6 right-0 px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded text-xs text-pip-boy-green"
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            aria-hidden="true"
-          >
+        {!isMuted && volume > 0 &&
+        <motion.div
+          className="absolute -top-6 right-0 px-2 py-1 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded text-xs text-pip-boy-green"
+          initial={{ opacity: 0, y: 5 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
+          aria-hidden="true">
+
             {Math.round(volume * 100)}%
           </motion.div>
-        )}
+        }
       </div>
-    </div>
-  );
+    </div>);
+
 });

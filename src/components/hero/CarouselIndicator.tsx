@@ -10,7 +10,7 @@ import React from 'react';
 
 /**
  * 元件 Props
- */
+ */import { Button } from "@/components/ui/button";
 export interface CarouselIndicatorProps {
   /** 文案總數 */
   totalCount: number;
@@ -29,7 +29,7 @@ export function CarouselIndicator({
   totalCount,
   currentIndex,
   onDotClick,
-  visible,
+  visible
 }: CarouselIndicatorProps) {
   // 不顯示時返回 null
   if (!visible || totalCount <= 1) {
@@ -50,40 +50,40 @@ export function CarouselIndicator({
     <div
       role="tablist"
       aria-label={`文案輪播指示器，共 ${totalCount} 組`}
-      className="flex justify-center gap-3 mt-8"
-    >
+      className="flex justify-center gap-3 mt-8">
+
       {Array.from({ length: totalCount }, (_, index) => {
         const isActive = index === currentIndex;
 
         return (
-          <button
-            key={index}
-            role="tab"
-            aria-label={`第 ${index + 1} 組文案，共 ${totalCount} 組`}
-            aria-current={isActive ? 'true' : undefined}
-            aria-selected={isActive}
-            tabIndex={0}
-            onClick={() => onDotClick(index)}
-            onKeyDown={(e) => handleKeyDown(e, index)}
-            className={`
-              w-3 h-3 transition-all duration-200
-              border border-pip-boy-green
-              focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2
-              focus:ring-offset-black
-              hover:scale-125
-              ${
-                isActive
-                  ? 'bg-pip-boy-green scale-110'
-                  : 'bg-transparent hover:bg-pip-boy-green/30'
-              }
-            `}
-            style={{
-              // 使用方形符合終端機風格
-              borderRadius: '2px',
-            }}
-          />
-        );
+          <Button size="icon" variant="default"
+          key={index}
+          role="tab"
+          aria-label={`第 ${index + 1} 組文案，共 ${totalCount} 組`}
+          aria-current={isActive ? 'true' : undefined}
+          aria-selected={isActive}
+          tabIndex={0}
+          onClick={() => onDotClick(index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className="{expression}"
+
+
+
+
+
+
+
+
+
+
+
+          style={{
+            // 使用方形符合終端機風格
+            borderRadius: '2px'
+          }} />);
+
+
       })}
-    </div>
-  );
+    </div>);
+
 }

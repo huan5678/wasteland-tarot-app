@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { useAudioStore } from '@/lib/audio/audioStore';
-import type { AudioType } from '@/lib/audio/types';
+import type { AudioType } from '@/lib/audio/types';import { Button } from "@/components/ui/button";
 
 interface AudioControlsProps {
   type: AudioType;
@@ -35,13 +35,13 @@ export function AudioControls({ type, label }: AudioControlsProps) {
         {label}
       </label>
       <div className="audio-control__slider">
-        <button
-          onClick={toggleMute}
-          className="audio-control__mute-btn"
-          aria-label={`${isMuted ? 'Unmute' : 'Mute'} ${label}`}
-        >
+        <Button size="icon" variant="default"
+        onClick={toggleMute}
+        className="audio-control__mute-btn"
+        aria-label={`${isMuted ? 'Unmute' : 'Mute'} ${label}`}>
+
           {isMuted ? '🔇' : '🔊'}
-        </button>
+        </Button>
         <input
           type="range"
           min="0"
@@ -54,12 +54,12 @@ export function AudioControls({ type, label }: AudioControlsProps) {
           aria-valuemin={0}
           aria-valuemax={1}
           aria-valuenow={currentVolume}
-          className="audio-control__range"
-        />
+          className="audio-control__range" />
+
         <span className="audio-control__value">
           {Math.round(currentVolume * 100)}%
         </span>
       </div>
-    </div>
-  );
+    </div>);
+
 }

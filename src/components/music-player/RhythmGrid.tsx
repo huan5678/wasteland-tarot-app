@@ -13,13 +13,13 @@ import { useRhythmEditorStore, type TrackType } from '@/lib/stores/rhythmEditorS
 
 /**
  * 軌道標籤映射
- */
+ */import { Button } from "@/components/ui/button";
 const TRACK_LABELS: Record<TrackType, string> = {
   kick: 'Kick',
   snare: 'Snare',
   hihat: 'HiHat',
   openhat: 'OpenHat',
-  clap: 'Clap',
+  clap: 'Clap'
 };
 
 /**
@@ -38,26 +38,26 @@ const StepButton: React.FC<StepButtonProps> = ({
   step,
   isActive,
   isPlayhead,
-  onClick,
+  onClick
 }) => {
   return (
-    <button
-      type="button"
-      className={cn(
-        'w-full aspect-square rounded border transition-all duration-150',
-        'hover:border-pip-boy-green/70 focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-        // 啟用狀態：Pip-Boy 綠色填滿
-        isActive
-          ? 'bg-pip-boy-green border-pip-boy-green shadow-sm'
-          : 'bg-gray-800 border-gray-600',
-        // 播放頭高亮（脈衝動畫）
-        isPlayhead && 'ring-2 ring-pip-boy-green/80 animate-pulse'
-      )}
-      onClick={() => onClick(track, step)}
-      aria-label={`${TRACK_LABELS[track]} 步驟 ${step + 1}${isActive ? ' (啟用)' : ' (停用)'}`}
-      aria-pressed={isActive}
-    />
-  );
+    <Button size="icon" variant="default"
+    type="button"
+    className="{expression}"
+
+
+
+
+
+
+
+
+
+    onClick={() => onClick(track, step)}
+    aria-label={`${TRACK_LABELS[track]} 步驟 ${step + 1}${isActive ? ' (啟用)' : ' (停用)'}`}
+    aria-pressed={isActive} />);
+
+
 };
 
 /**
@@ -76,7 +76,7 @@ const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
   pattern,
   currentStep,
   isPlaying,
-  onToggleStep,
+  onToggleStep
 }) => {
   return (
     <div className="flex items-center gap-2 sm:gap-3">
@@ -96,22 +96,22 @@ const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
           return (
             <React.Fragment key={step}>
               {/* 每 4 步驟顯示視覺分隔線 */}
-              {showDivider && (
-                <div className="w-px bg-pip-boy-green/30 -mx-0.5" aria-hidden="true" />
-              )}
+              {showDivider &&
+              <div className="w-px bg-pip-boy-green/30 -mx-0.5" aria-hidden="true" />
+              }
               <StepButton
                 track={track}
                 step={step}
                 isActive={isActive}
                 isPlayhead={isPlayhead}
-                onClick={onToggleStep}
-              />
-            </React.Fragment>
-          );
+                onClick={onToggleStep} />
+
+            </React.Fragment>);
+
         })}
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 /**
@@ -131,7 +131,7 @@ export const RhythmGrid: React.FC = () => {
       pattern: state.pattern,
       currentStep: state.currentStep,
       isPlaying: state.isPlaying,
-      toggleStep: state.toggleStep,
+      toggleStep: state.toggleStep
     })
   );
 
@@ -145,8 +145,8 @@ export const RhythmGrid: React.FC = () => {
     <div
       className="w-full"
       role="region"
-      aria-label="節奏編輯器網格"
-    >
+      aria-label="節奏編輯器網格">
+
       {/* 步驟標籤（顯示 1-16） */}
       <div className="flex items-center gap-2 sm:gap-3 mb-3">
         <div className="w-16 sm:w-20" aria-hidden="true" />
@@ -155,14 +155,14 @@ export const RhythmGrid: React.FC = () => {
             const showDivider = i % 4 === 0 && i !== 0;
             return (
               <React.Fragment key={i}>
-                {showDivider && (
-                  <div className="w-px -mx-0.5" aria-hidden="true" />
-                )}
+                {showDivider &&
+                <div className="w-px -mx-0.5" aria-hidden="true" />
+                }
                 <div className="text-center text-xs text-pip-boy-green/60 font-mono">
                   {i + 1}
                 </div>
-              </React.Fragment>
-            );
+              </React.Fragment>);
+
           })}
         </div>
       </div>
@@ -174,37 +174,37 @@ export const RhythmGrid: React.FC = () => {
           'hidden sm:flex flex-col gap-2',
           // 手機：橫向捲動
           'sm:overflow-visible overflow-x-auto'
+        )}>
+
+        {tracks.map((track) =>
+        <InstrumentTrackRow
+          key={track}
+          track={track}
+          pattern={pattern[track]}
+          currentStep={currentStep}
+          isPlaying={isPlaying}
+          onToggleStep={toggleStep} />
+
         )}
-      >
-        {tracks.map((track) => (
+      </div>
+
+      {/* 手機版：橫向捲動容器 */}
+      <div className="sm:hidden overflow-x-auto pb-4">
+        <div className="min-w-[640px] flex flex-col gap-2">
+          {tracks.map((track) =>
           <InstrumentTrackRow
             key={track}
             track={track}
             pattern={pattern[track]}
             currentStep={currentStep}
             isPlaying={isPlaying}
-            onToggleStep={toggleStep}
-          />
-        ))}
-      </div>
+            onToggleStep={toggleStep} />
 
-      {/* 手機版：橫向捲動容器 */}
-      <div className="sm:hidden overflow-x-auto pb-4">
-        <div className="min-w-[640px] flex flex-col gap-2">
-          {tracks.map((track) => (
-            <InstrumentTrackRow
-              key={track}
-              track={track}
-              pattern={pattern[track]}
-              currentStep={currentStep}
-              isPlaying={isPlaying}
-              onToggleStep={toggleStep}
-            />
-          ))}
+          )}
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 RhythmGrid.displayName = 'RhythmGrid';

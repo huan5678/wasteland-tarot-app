@@ -15,7 +15,7 @@ import { useAudioStore } from '@/lib/audio/audioStore';
 
 /**
  * 循環模式類型
- */
+ */import { Button } from "@/components/ui/button";
 type RepeatMode = 'off' | 'all' | 'one';
 
 export interface RhythmPlaybackControlsProps {
@@ -66,7 +66,7 @@ export function RhythmPlaybackControls({ className }: RhythmPlaybackControlsProp
         audioContext: audioContextRef.current,
         patterns,
         tempo: 120,
-        loopCount: 4,
+        loopCount: 4
       });
 
       // 設定 Pattern 完成回呼（4 次循環後自動切歌）
@@ -149,9 +149,9 @@ export function RhythmPlaybackControls({ className }: RhythmPlaybackControlsProp
 
     if (shuffleEnabled && currentPlaylist && currentPlaylist.patterns.length > 1) {
       // 隨機播放：隨機選擇下一首（排除當前）
-      const availableIndexes = currentPlaylist.patterns
-        .map((_, i) => i)
-        .filter((i) => i !== currentPatternIndex);
+      const availableIndexes = currentPlaylist.patterns.
+      map((_, i) => i).
+      filter((i) => i !== currentPatternIndex);
       const randomIndex = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
 
       setCurrentPatternIndex(randomIndex);
@@ -180,9 +180,9 @@ export function RhythmPlaybackControls({ className }: RhythmPlaybackControlsProp
 
     if (shuffleEnabled && currentPlaylist && currentPlaylist.patterns.length > 1) {
       // 隨機播放：隨機選擇上一首（排除當前）
-      const availableIndexes = currentPlaylist.patterns
-        .map((_, i) => i)
-        .filter((i) => i !== currentPatternIndex);
+      const availableIndexes = currentPlaylist.patterns.
+      map((_, i) => i).
+      filter((i) => i !== currentPatternIndex);
       const randomIndex = availableIndexes[Math.floor(Math.random() * availableIndexes.length)];
 
       setCurrentPatternIndex(randomIndex);
@@ -262,158 +262,158 @@ export function RhythmPlaybackControls({ className }: RhythmPlaybackControlsProp
       <div
         className="flex items-center justify-center gap-4"
         role="group"
-        aria-label="播放控制"
-      >
+        aria-label="播放控制">
+
         {/* Previous Button */}
-        <button
-          onClick={handlePrevious}
-          disabled={!hasPlaylist}
-          className="
-            flex items-center justify-center w-10 h-10
-            text-pip-boy-green bg-pip-boy-green/10
-            border-2 border-pip-boy-green rounded-full
-            hover:bg-pip-boy-green hover:text-black
-            transition-all
-            focus:outline-none focus:ring-2 focus:ring-pip-boy-green
-            focus:ring-offset-2 focus:ring-offset-wasteland-darker
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-          aria-label="上一首"
-        >
+        <Button size="icon" variant="outline"
+        onClick={handlePrevious}
+        disabled={!hasPlaylist}
+        className="flex items-center justify-center w-10 h-10\n transition-all\n disabled:opacity-50 disabled:cursor-not-allowed\n"
+
+
+
+
+
+
+
+
+
+        aria-label="上一首">
+
           <PixelIcon name="skip-back" sizePreset="sm" aria-label="上一首" />
-        </button>
+        </Button>
 
         {/* Play/Pause Button */}
-        <button
-          onClick={handlePlayPause}
-          disabled={!hasPlaylist}
-          className="
-            flex items-center justify-center w-14 h-14
-            text-pip-boy-green bg-pip-boy-green/20
-            border-2 border-pip-boy-green rounded-full
-            hover:bg-pip-boy-green hover:text-black
-            transition-all
-            shadow-[0_0_10px_rgba(0,255,136,0.3)]
-            hover:shadow-[0_0_20px_rgba(0,255,136,0.5)]
-            focus:outline-none focus:ring-2 focus:ring-pip-boy-green
-            focus:ring-offset-2 focus:ring-offset-wasteland-darker
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-          aria-label={isPlaying ? '暫停' : '播放'}
-        >
-          {isPlaying ? (
-            <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" />
-          ) : (
-            <PixelIcon name="play" sizePreset="sm" aria-label="播放" />
-          )}
-        </button>
+        <Button size="icon" variant="outline"
+        onClick={handlePlayPause}
+        disabled={!hasPlaylist}
+        className="flex items-center justify-center w-14 h-14\n transition-all\n disabled:opacity-50 disabled:cursor-not-allowed\n"
+
+
+
+
+
+
+
+
+
+
+
+        aria-label={isPlaying ? '暫停' : '播放'}>
+
+          {isPlaying ?
+          <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" /> :
+
+          <PixelIcon name="play" sizePreset="sm" aria-label="播放" />
+          }
+        </Button>
 
         {/* Next Button */}
-        <button
-          onClick={handleNext}
-          disabled={!hasPlaylist}
-          className="
-            flex items-center justify-center w-10 h-10
-            text-pip-boy-green bg-pip-boy-green/10
-            border-2 border-pip-boy-green rounded-full
-            hover:bg-pip-boy-green hover:text-black
-            transition-all
-            focus:outline-none focus:ring-2 focus:ring-pip-boy-green
-            focus:ring-offset-2 focus:ring-offset-wasteland-darker
-            disabled:opacity-50 disabled:cursor-not-allowed
-          "
-          aria-label="下一首"
-        >
+        <Button size="icon" variant="outline"
+        onClick={handleNext}
+        disabled={!hasPlaylist}
+        className="flex items-center justify-center w-10 h-10\n transition-all\n disabled:opacity-50 disabled:cursor-not-allowed\n"
+
+
+
+
+
+
+
+
+
+        aria-label="下一首">
+
           <PixelIcon name="skip-forward" sizePreset="sm" aria-label="下一首" />
-        </button>
+        </Button>
       </div>
 
       {/* Secondary Controls: Shuffle & Repeat */}
       <div
         className="flex items-center justify-center gap-6"
         role="group"
-        aria-label="播放模式控制"
-      >
+        aria-label="播放模式控制">
+
         {/* Shuffle Button */}
-        <button
-          onClick={handleToggleShuffle}
-          disabled={!hasPlaylist}
-          className={`
-            flex items-center justify-center w-8 h-8 rounded
-            transition-all
-            focus:outline-none focus:ring-2 focus:ring-pip-boy-green
-            focus:ring-offset-2 focus:ring-offset-wasteland-darker
-            disabled:opacity-50 disabled:cursor-not-allowed
-            ${
-              shuffleEnabled
-                ? 'border-2 border-pip-boy-green bg-pip-boy-green/20'
-                : 'hover:text-pip-boy-green'
-            }
-          `}
-          aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
-          aria-pressed={shuffleEnabled}
-        >
+        <Button size="icon" variant="default"
+        onClick={handleToggleShuffle}
+        disabled={!hasPlaylist}
+        className="{expression}"
+
+
+
+
+
+
+
+
+
+
+
+        aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
+        aria-pressed={shuffleEnabled}>
+
           <PixelIcon
             name="shuffle"
             sizePreset="sm"
             variant={shuffleEnabled ? 'primary' : 'muted'}
-            aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
-          />
-        </button>
+            aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'} />
+
+        </Button>
 
         {/* Repeat Button */}
-        <button
-          onClick={handleCycleRepeatMode}
-          disabled={!hasPlaylist}
-          className={`
-            flex items-center justify-center w-8 h-8 rounded
-            transition-all
-            focus:outline-none focus:ring-2 focus:ring-pip-boy-green
-            focus:ring-offset-2 focus:ring-offset-wasteland-darker
-            disabled:opacity-50 disabled:cursor-not-allowed
-            ${
-              repeatMode !== 'off'
-                ? 'border-2 border-pip-boy-green bg-pip-boy-green/20'
-                : 'hover:text-pip-boy-green'
-            }
-          `}
-          aria-label={
-            repeatMode === 'off'
-              ? '不循環'
-              : repeatMode === 'one'
-              ? '單曲循環'
-              : '列表循環'
-          }
-          aria-pressed={repeatMode !== 'off'}
-        >
+        <Button size="icon" variant="default"
+        onClick={handleCycleRepeatMode}
+        disabled={!hasPlaylist}
+        className="{expression}"
+
+
+
+
+
+
+
+
+
+
+
+        aria-label={
+        repeatMode === 'off' ?
+        '不循環' :
+        repeatMode === 'one' ?
+        '單曲循環' :
+        '列表循環'
+        }
+        aria-pressed={repeatMode !== 'off'}>
+
           <PixelIcon
             name={repeatMode === 'one' ? 'repeat-1' : 'repeat'}
             sizePreset="sm"
             variant={repeatMode !== 'off' ? 'primary' : 'muted'}
             aria-label={
-              repeatMode === 'off'
-                ? '不循環'
-                : repeatMode === 'one'
-                ? '單曲循環'
-                : '列表循環'
-            }
-          />
-        </button>
+            repeatMode === 'off' ?
+            '不循環' :
+            repeatMode === 'one' ?
+            '單曲循環' :
+            '列表循環'
+            } />
+
+        </Button>
       </div>
 
       {/* 無播放清單提示 */}
-      {!hasPlaylist && (
-        <div className="text-center text-xs text-pip-boy-green/50">
+      {!hasPlaylist &&
+      <div className="text-center text-xs text-pip-boy-green/50">
           請先加入歌曲到播放清單
         </div>
-      )}
+      }
 
       {/* Keyboard Hints */}
-      {hasPlaylist && (
-        <div className="text-center text-xs text-pip-boy-green/50">
+      {hasPlaylist &&
+      <div className="text-center text-xs text-pip-boy-green/50">
           快捷鍵: 空白鍵 (播放/暫停) | ← → (上一首/下一首)
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }

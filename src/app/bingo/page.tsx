@@ -1,20 +1,20 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/lib/authStore'
-import { useBingoStore } from '@/lib/stores/bingoStore'
-import { motion } from 'motion/react'
-import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/lib/authStore';
+import { useBingoStore } from '@/lib/stores/bingoStore';
+import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 
 // Bingo components
-import BingoCardSetup from '@/components/bingo/BingoCardSetup'
-import BingoGrid from '@/components/bingo/BingoGrid'
-import DailyCheckin from '@/components/bingo/DailyCheckin'
-import LineIndicator from '@/components/bingo/LineIndicator'
-import RewardNotification from '@/components/bingo/RewardNotification'
-import BingoHistory from '@/components/bingo/BingoHistory'
-import NumberPickerModal from '@/components/bingo/NumberPickerModal'
-import { PixelIcon } from '@/components/ui/icons'
+import BingoCardSetup from '@/components/bingo/BingoCardSetup';
+import BingoGrid from '@/components/bingo/BingoGrid';
+import DailyCheckin from '@/components/bingo/DailyCheckin';
+import LineIndicator from '@/components/bingo/LineIndicator';
+import RewardNotification from '@/components/bingo/RewardNotification';
+import BingoHistory from '@/components/bingo/BingoHistory';
+import NumberPickerModal from '@/components/bingo/NumberPickerModal';
+import { PixelIcon } from '@/components/ui/icons';
 
 /**
  * 賓果遊戲主頁面
@@ -26,10 +26,10 @@ import { PixelIcon } from '@/components/ui/icons'
  * - Responsive 佈局
  *
  * 設計風格: Fallout/Wasteland
- */
+ */import { Button } from "@/components/ui/button";
 export default function BingoPage() {
-  const router = useRouter()
-  const { user, isInitialized } = useAuthStore()
+  const router = useRouter();
+  const { user, isInitialized } = useAuthStore();
   const {
     hasCard,
     userCard,
@@ -42,14 +42,14 @@ export default function BingoPage() {
     fetchBingoStatus,
     clearError,
     claimManualNumber,
-    reset,
-  } = useBingoStore()
+    reset
+  } = useBingoStore();
 
-  const [showRewardNotification, setShowRewardNotification] = useState(false)
-  const [prevHasReward, setPrevHasReward] = useState(false)
-  const [activeTab, setActiveTab] = useState<'game' | 'history'>('game')
-  const [showNumberPicker, setShowNumberPicker] = useState(false)
-  const [clickedNumber, setClickedNumber] = useState<number | null>(null)
+  const [showRewardNotification, setShowRewardNotification] = useState(false);
+  const [prevHasReward, setPrevHasReward] = useState(false);
+  const [activeTab, setActiveTab] = useState<'game' | 'history'>('game');
+  const [showNumberPicker, setShowNumberPicker] = useState(false);
+  const [clickedNumber, setClickedNumber] = useState<number | null>(null);
 
   // 認證檢查
   useEffect(() => {
@@ -61,49 +61,49 @@ export default function BingoPage() {
         to: '/auth/login',
         reason: 'User not authenticated',
         isInitialized
-      })
-      router.push('/auth/login')
+      });
+      router.push('/auth/login');
     }
-  }, [isInitialized, user, router])
+  }, [isInitialized, user, router]);
 
   // 載入賓果狀態
   useEffect(() => {
     if (user) {
-      fetchBingoStatus()
+      fetchBingoStatus();
     }
-  }, [user, fetchBingoStatus])
+  }, [user, fetchBingoStatus]);
 
   // 監控獎勵狀態變化，顯示通知
   useEffect(() => {
     if (hasReward && !prevHasReward) {
-      setShowRewardNotification(true)
+      setShowRewardNotification(true);
     }
-    setPrevHasReward(hasReward)
-  }, [hasReward, prevHasReward])
+    setPrevHasReward(hasReward);
+  }, [hasReward, prevHasReward]);
 
   // 處理 BingoGrid 號碼點擊 - 彈出選號 modal
   const handleNumberClick = (number: number) => {
-    setShowNumberPicker(true)
-  }
+    setShowNumberPicker(true);
+  };
 
   // 處理從 modal 選擇號碼
   const handleSelectNumber = async (number: number) => {
-    await claimManualNumber(number)
-    setShowNumberPicker(false)
-  }
+    await claimManualNumber(number);
+    setShowNumberPicker(false);
+  };
 
   // 計算已使用的號碼（已領取的號碼）
-  const usedNumbers = claimedNumbers
+  const usedNumbers = claimedNumbers;
 
   // 計算卡片上的所有號碼
-  const cardNumbersSet = userCard ? new Set(userCard.flat()) : new Set<number>()
+  const cardNumbersSet = userCard ? new Set(userCard.flat()) : new Set<number>();
 
   // 處理重建賓果卡
   const handleRebuildCard = () => {
     // 重置 store 狀態，回到設定介面
-    reset()
-    clearError()
-  }
+    reset();
+    clearError();
+  };
 
   // 等待認證初始化
   if (!isInitialized || !user) {
@@ -113,8 +113,8 @@ export default function BingoPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pip-boy-green mx-auto mb-4" />
           <p className="text-pip-boy-green">載入中...</p>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -135,12 +135,12 @@ export default function BingoPage() {
         {/* Main Content */}
         <div>
         {/* 全域錯誤訊息 */}
-        {error && (
+        {error &&
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-6 p-4 bg-rust-red/20 border-2 border-rust-red rounded-lg"
-          >
+            className="mb-6 p-4 bg-rust-red/20 border-2 border-rust-red rounded-lg">
+
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 text-radiation-orange font-bold mb-2">
@@ -150,104 +150,104 @@ export default function BingoPage() {
                 <p className="text-radiation-orange">{error}</p>
 
                 {/* 如果是資料庫狀態異常，提供重建選項 */}
-                {error.includes('資料庫狀態異常') && (
-                  <div className="mt-3 flex gap-2">
+                {error.includes('資料庫狀態異常') &&
+                <div className="mt-3 flex gap-2">
                     <motion.button
-                      onClick={handleRebuildCard}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-pip-boy-green text-black font-bold rounded hover:bg-pip-boy-green-bright transition-colors"
-                    >
+                    onClick={handleRebuildCard}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-4 py-2 bg-pip-boy-green text-black font-bold rounded hover:bg-pip-boy-green-bright transition-colors">
+
                       重新建立賓果卡
                     </motion.button>
                     <motion.button
-                      onClick={() => fetchBingoStatus()}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="px-4 py-2 bg-metal-gray text-white font-bold rounded hover:bg-metal-gray-light transition-colors border border-metal-gray-light"
-                    >
+                    onClick={() => fetchBingoStatus()}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="px-4 py-2 bg-metal-gray text-white font-bold rounded hover:bg-metal-gray-light transition-colors border border-metal-gray-light">
+
                       重新載入
                     </motion.button>
                   </div>
-                )}
+                }
               </div>
-              <button
-                onClick={clearError}
-                className="text-radiation-orange hover:text-radiation-orange-bright font-bold flex-shrink-0"
-              >
+              <Button size="icon" variant="link"
+              onClick={clearError}
+              className="font-bold flex-shrink-0">
+
                 <PixelIcon name="close" sizePreset="sm" decorative />
-              </button>
+              </Button>
             </div>
           </motion.div>
-        )}
+          }
 
         {/* 載入狀態 */}
-        {isLoading && !hasCard ? (
+        {isLoading && !hasCard ?
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-pip-boy-green mx-auto mb-4" />
             <p className="text-pip-boy-green">載入賓果狀態中...</p>
-          </div>
-        ) : !hasCard ? (
+          </div> :
+          !hasCard ? (
           /* 賓果卡設定介面 */
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
+            animate={{ opacity: 1, y: 0 }}>
+
             <BingoCardSetup />
-          </motion.div>
-        ) : (
+          </motion.div>) : (
+
           /* 賓果遊戲介面 */
           <>
             {/* Tab Navigation */}
             <div className="flex justify-center mb-6 gap-4">
-              <button
-                onClick={() => setActiveTab('game')}
-                className={`
-                  px-6 py-3 rounded-lg font-bold transition-all duration-200 flex items-center gap-2
-                  ${activeTab === 'game'
-                    ? 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
-                    : 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-lighter hover:border-pip-boy-green/50'
-                  }
-                `}
-              >
+              <Button size="default" variant="default"
+              onClick={() => setActiveTab('game')}
+              className="{expression}">
+
+
+
+
+
+
+
                 <PixelIcon name="grid" sizePreset="sm" decorative />
                 賓果遊戲
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`
-                  px-6 py-3 rounded-lg font-bold transition-all duration-200 flex items-center gap-2
-                  ${activeTab === 'history'
-                    ? 'bg-pip-boy-green border-2 border-pip-boy-green-bright text-black shadow-lg shadow-pip-boy-green/50'
-                    : 'bg-metal-gray border-2 border-metal-gray-light text-wasteland-lighter hover:border-pip-boy-green/50'
-                  }
-                `}
-              >
+              </Button>
+              <Button size="default" variant="default"
+              onClick={() => setActiveTab('history')}
+              className="{expression}">
+
+
+
+
+
+
+
                 <PixelIcon name="history" sizePreset="sm" decorative />
                 歷史記錄
-              </button>
+              </Button>
             </div>
 
             {/* Tab Content */}
-            {activeTab === 'game' ? (
-              <motion.div
-                key="game"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-8"
-              >
+            {activeTab === 'game' ?
+            <motion.div
+              key="game"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="space-y-8">
+
                 {/* 遊戲區塊 - Desktop 2 column, Mobile 1 column */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* 左側: 賓果卡 */}
                   <div>
                     {/* Debug 訊息：當 hasCard 為 true 但 userCard 為 null */}
-                    {hasCard && !userCard && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-4 bg-rust-red/20 border-2 border-rust-red rounded-lg text-radiation-orange"
-                      >
+                    {hasCard && !userCard &&
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-rust-red/20 border-2 border-rust-red rounded-lg text-radiation-orange">
+
                         <div className="space-y-2">
                           <p className="font-bold flex items-center gap-2">
                             <PixelIcon name="alert-triangle" sizePreset="sm" variant="warning" decorative />
@@ -260,25 +260,25 @@ export default function BingoPage() {
                             <p>isLoading: {String(isLoading)}</p>
                           </div>
                           <motion.button
-                            onClick={() => fetchBingoStatus()}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className="w-full mt-2 px-4 py-2 bg-pip-boy-green text-black font-bold rounded hover:bg-pip-boy-green-bright"
-                          >
+                        onClick={() => fetchBingoStatus()}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full mt-2 px-4 py-2 bg-pip-boy-green text-black font-bold rounded hover:bg-pip-boy-green-bright">
+
                             重新載入賓果卡
                           </motion.button>
                         </div>
                       </motion.div>
-                    )}
+                  }
 
                     {/* 正常顯示賓果卡 */}
-                    {userCard && (
-                      <BingoGrid
-                        card={userCard}
-                        claimedNumbers={claimedNumbers}
-                        highlightNumber={dailyNumber ?? undefined}
-                      />
-                    )}
+                    {userCard &&
+                  <BingoGrid
+                    card={userCard}
+                    claimedNumbers={claimedNumbers}
+                    highlightNumber={dailyNumber ?? undefined} />
+
+                  }
                   </div>
 
                   {/* 右側: 簽到 & 連線指示器 */}
@@ -289,12 +289,12 @@ export default function BingoPage() {
                 </div>
 
                 {/* 獎勵狀態提示 */}
-                {hasReward && (
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="p-6 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-lg text-center"
-                  >
+                {hasReward &&
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="p-6 bg-pip-boy-green/10 border-2 border-pip-boy-green rounded-lg text-center">
+
                     <p className="text-2xl font-bold text-pip-boy-green mb-2 flex items-center justify-center gap-2">
                       <PixelIcon name="trophy" sizePreset="md" variant="success" decorative />
                       本月已達成三連線！
@@ -303,42 +303,42 @@ export default function BingoPage() {
                       獎勵已發放，下個月可以繼續挑戰
                     </p>
                   </motion.div>
-                )}
-              </motion.div>
-            ) : (
-              /* 歷史記錄 Tab */
-              <motion.div
-                key="history"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-              >
+              }
+              </motion.div> : (
+
+            /* 歷史記錄 Tab */
+            <motion.div
+              key="history"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}>
+
                 <BingoHistory />
-              </motion.div>
-            )}
-          </>
-        )}
+              </motion.div>)
+            }
+          </>)
+          }
       </div>
 
       {/* 獎勵通知 Modal */}
       <RewardNotification
-        show={showRewardNotification}
-        onClose={() => setShowRewardNotification(false)}
-        rewardDetails={{
-          type: '廢土幣',
-          amount: 100,
-          description: '達成本月三連線獎勵',
-        }}
-      />
+          show={showRewardNotification}
+          onClose={() => setShowRewardNotification(false)}
+          rewardDetails={{
+            type: '廢土幣',
+            amount: 100,
+            description: '達成本月三連線獎勵'
+          }} />
+
 
       {/* 數字選擇 Modal */}
       <NumberPickerModal
-        isOpen={showNumberPicker}
-        onClose={() => setShowNumberPicker(false)}
-        onSelectNumber={handleSelectNumber}
-        usedNumbers={usedNumbers}
-        cardNumbers={cardNumbersSet}
-      />
+          isOpen={showNumberPicker}
+          onClose={() => setShowNumberPicker(false)}
+          onSelectNumber={handleSelectNumber}
+          usedNumbers={usedNumbers}
+          cardNumbers={cardNumbersSet} />
+
 
         {/* Footer */}
         <footer className="mt-12 md:mt-16">
@@ -352,6 +352,6 @@ export default function BingoPage() {
           </div>
         </footer>
       </div>
-    </div>
-  )
+    </div>);
+
 }

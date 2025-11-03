@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import { PixelIcon } from '@/components/ui/icons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Slider } from '@/components/ui/slider';
-import { useAudioStore } from '@/lib/audio/audioStore';
+import { useAudioStore } from '@/lib/audio/audioStore';import { Button } from "@/components/ui/button";
 
 export function VolumeControl() {
   const { volumes, muted, setVolume, toggleMute } = useAudioStore();
@@ -21,32 +21,32 @@ export function VolumeControl() {
   const isMuted = muted.sfx && muted.music && muted.voice;
 
   // 根據音量選擇圖示名稱
-  const volumeIconName = isMuted
-    ? 'volume-x'
-    : masterVolume < 50
-      ? 'volume-1'
-      : 'volume-2';
+  const volumeIconName = isMuted ?
+  'volume-x' :
+  masterVolume < 50 ?
+  'volume-1' :
+  'volume-2';
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <button
-          className="
-            relative p-2 rounded
-            text-pip-boy-green hover:text-pip-boy-bright
-            hover:bg-pip-boy-green/10
-            transition-all duration-200
-            border border-pip-boy-green/30 hover:border-pip-boy-green/60
-            shadow-[0_0_10px_rgba(0,255,136,0.3)]
-            hover:shadow-[0_0_15px_rgba(0,255,136,0.5)]
-          "
-          aria-label="音量控制"
-        >
+        <Button size="icon" variant="outline"
+        className="relative p-2 rounded\n transition-all duration-200\n border"
+
+
+
+
+
+
+
+
+        aria-label="音量控制">
+
           <PixelIcon name={volumeIconName as any} size={24} decorative />
-          {isMuted && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
-          )}
-        </button>
+          {isMuted &&
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+          }
+        </Button>
       </PopoverTrigger>
       <PopoverContent
         className="
@@ -54,9 +54,13 @@ export function VolumeControl() {
           bg-wasteland-darker border-2 border-pip-boy-green/50
           shadow-[0_0_20px_rgba(0,255,136,0.3)]
         "
+
+
+
+
         align="end"
-        sideOffset={8}
-      >
+        sideOffset={8}>
+
         <div className="space-y-4">
           {/* 標題 */}
           <div className="flex items-center justify-between pb-2 border-b border-pip-boy-green/30">
@@ -74,22 +78,22 @@ export function VolumeControl() {
               <label className="text-sm text-pip-boy-green uppercase">
                 主音量
               </label>
-              <button
-                onClick={() => {
-                  toggleMute('sfx');
-                  toggleMute('music');
-                  toggleMute('voice');
-                }}
-                className="
-                  px-3 py-1 text-xs uppercase
-                  border border-pip-boy-green/50 rounded
-                  text-pip-boy-green hover:text-wasteland-darker
-                  hover:bg-pip-boy-green
-                  transition-all duration-200
-                "
-              >
+              <Button size="icon" variant="outline"
+              onClick={() => {
+                toggleMute('sfx');
+                toggleMute('music');
+                toggleMute('voice');
+              }}
+              className="px-3 py-1 uppercase\n border rounded\n transition-all duration-200\n">
+
+
+
+
+
+
+
                 {isMuted ? '取消靜音' : '靜音'}
-              </button>
+              </Button>
             </div>
             <div className="text-xs text-pip-boy-green/70 text-right">
               {isMuted ? 'MUTED' : `${masterVolume}%`}
@@ -103,17 +107,17 @@ export function VolumeControl() {
                 音效 (SFX)
               </label>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => toggleMute('sfx')}
-                  className="text-pip-boy-green hover:text-pip-boy-bright transition-colors"
-                  aria-label="切換音效靜音"
-                >
-                  {muted.sfx ? (
-                    <PixelIcon name="volume-x" size={16} decorative />
-                  ) : (
-                    <PixelIcon name="volume-2" size={16} decorative />
-                  )}
-                </button>
+                <Button size="icon" variant="link"
+                onClick={() => toggleMute('sfx')}
+                className="transition-colors"
+                aria-label="切換音效靜音">
+
+                  {muted.sfx ?
+                  <PixelIcon name="volume-x" size={16} decorative /> :
+
+                  <PixelIcon name="volume-2" size={16} decorative />
+                  }
+                </Button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.sfx ? 'OFF' : `${Math.round(volumes.sfx * 100)}%`}
                 </span>
@@ -125,8 +129,8 @@ export function VolumeControl() {
               max={100}
               step={1}
               disabled={muted.sfx}
-              className="pip-boy-slider"
-            />
+              className="pip-boy-slider" />
+
           </div>
 
           {/* 音樂音量 */}
@@ -136,17 +140,17 @@ export function VolumeControl() {
                 音樂 (MUSIC)
               </label>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => toggleMute('music')}
-                  className="text-pip-boy-green hover:text-pip-boy-bright transition-colors"
-                  aria-label="切換音樂靜音"
-                >
-                  {muted.music ? (
-                    <PixelIcon name="volume-x" size={16} decorative />
-                  ) : (
-                    <PixelIcon name="volume-2" size={16} decorative />
-                  )}
-                </button>
+                <Button size="icon" variant="link"
+                onClick={() => toggleMute('music')}
+                className="transition-colors"
+                aria-label="切換音樂靜音">
+
+                  {muted.music ?
+                  <PixelIcon name="volume-x" size={16} decorative /> :
+
+                  <PixelIcon name="volume-2" size={16} decorative />
+                  }
+                </Button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.music ? 'OFF' : `${Math.round(volumes.music * 100)}%`}
                 </span>
@@ -158,8 +162,8 @@ export function VolumeControl() {
               max={100}
               step={1}
               disabled={muted.music}
-              className="pip-boy-slider"
-            />
+              className="pip-boy-slider" />
+
           </div>
 
           {/* 語音音量 */}
@@ -169,17 +173,17 @@ export function VolumeControl() {
                 語音 (VOICE)
               </label>
               <div className="flex items-center gap-2">
-                <button
-                  onClick={() => toggleMute('voice')}
-                  className="text-pip-boy-green hover:text-pip-boy-bright transition-colors"
-                  aria-label="切換語音靜音"
-                >
-                  {muted.voice ? (
-                    <PixelIcon name="volume-x" size={16} decorative />
-                  ) : (
-                    <PixelIcon name="volume-2" size={16} decorative />
-                  )}
-                </button>
+                <Button size="icon" variant="link"
+                onClick={() => toggleMute('voice')}
+                className="transition-colors"
+                aria-label="切換語音靜音">
+
+                  {muted.voice ?
+                  <PixelIcon name="volume-x" size={16} decorative /> :
+
+                  <PixelIcon name="volume-2" size={16} decorative />
+                  }
+                </Button>
                 <span className="text-xs text-pip-boy-green/70 w-10 text-right">
                   {muted.voice ? 'OFF' : `${Math.round(volumes.voice * 100)}%`}
                 </span>
@@ -191,8 +195,8 @@ export function VolumeControl() {
               max={100}
               step={1}
               disabled={muted.voice}
-              className="pip-boy-slider"
-            />
+              className="pip-boy-slider" />
+
           </div>
 
           {/* 底部資訊 */}
@@ -203,6 +207,6 @@ export function VolumeControl() {
           </div>
         </div>
       </PopoverContent>
-    </Popover>
-  );
+    </Popover>);
+
 }

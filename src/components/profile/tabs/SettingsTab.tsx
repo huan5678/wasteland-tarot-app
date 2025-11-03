@@ -1,46 +1,46 @@
-'use client'
+'use client';
 
-import React from 'react'
-import { PixelIcon } from '@/components/ui/icons'
+import React from 'react';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 interface SettingsTabProps {
-  user: any
-  profile: any
-  isEditing: boolean
-  editForm: any
-  isSaving: boolean
-  isLoadingFactions: boolean
-  factions: any[]
-  sfxVolume: number
-  sfxMuted: boolean
-  handleInputChange: (field: string, value: any) => void
-  handleNotificationChange: (field: string) => void
-  handleSave: () => void
-  handleCancel: () => void
-  setVolume: (type: string, value: number) => void
-  toggleMute: (type: string) => void
-  formatDate: (dateString: string) => string
-  getFactionLabel: (factionKey: string) => string
+  user: any;
+  profile: any;
+  isEditing: boolean;
+  editForm: any;
+  isSaving: boolean;
+  isLoadingFactions: boolean;
+  factions: any[];
+  sfxVolume: number;
+  sfxMuted: boolean;
+  handleInputChange: (field: string, value: any) => void;
+  handleNotificationChange: (field: string) => void;
+  handleSave: () => void;
+  handleCancel: () => void;
+  setVolume: (type: string, value: number) => void;
+  toggleMute: (type: string) => void;
+  formatDate: (dateString: string) => string;
+  getFactionLabel: (factionKey: string) => string;
 }
 
 // 通知偏好配置
 const NOTIFICATION_PREFERENCES = [
-  {
-    key: 'dailyReadings',
-    label: '每日占卜推薦'
-  },
-  {
-    key: 'weeklyInsights',
-    label: '每週塔羅洞察'
-  },
-  {
-    key: 'systemUpdates',
-    label: '系統和安全更新'
-  }
-] as const
+{
+  key: 'dailyReadings',
+  label: '每日占卜推薦'
+},
+{
+  key: 'weeklyInsights',
+  label: '每週塔羅洞察'
+},
+{
+  key: 'systemUpdates',
+  label: '系統和安全更新'
+}] as
+const;
 
 // 音量視覺指示器數量
-const VOLUME_INDICATOR_COUNT = 10
+const VOLUME_INDICATOR_COUNT = 10;
 
 export function SettingsTab({
   user,
@@ -69,19 +69,19 @@ export function SettingsTab({
           <PixelIcon name="clipboard" size={24} className="mr-2 inline" decorative />個人資訊
         </h3>
 
-        {isEditing ? (
-          <div className="space-y-4">
+        {isEditing ?
+        <div className="space-y-4">
             <div>
               <label className="block text-pip-boy-green text-sm mb-2">
                 名稱
               </label>
               <input
-                type="text"
-                value={editForm.username || ''}
-                onChange={(e) => handleInputChange('username', e.target.value)}
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
-                maxLength={50}
-              />
+              type="text"
+              value={editForm.username || ''}
+              onChange={(e) => handleInputChange('username', e.target.value)}
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
+              maxLength={50} />
+
               <p className="text-pip-boy-green/50 text-xs mt-1">
                 可編輯 (1-50 字元)
               </p>
@@ -92,11 +92,11 @@ export function SettingsTab({
                 Email 信箱
               </label>
               <input
-                type="email"
-                value={editForm.email || ''}
-                disabled
-                className="w-full px-3 py-2 bg-black/50 border border-pip-boy-green/50 text-pip-boy-green/70 cursor-not-allowed"
-              />
+              type="email"
+              value={editForm.email || ''}
+              disabled
+              className="w-full px-3 py-2 bg-black/50 border border-pip-boy-green/50 text-pip-boy-green/70 cursor-not-allowed" />
+
               <p className="text-pip-boy-green/50 text-xs mt-1">
                 Email 無法變更
               </p>
@@ -107,42 +107,42 @@ export function SettingsTab({
                 陣營歸屬
               </label>
               <select
-                value={editForm.faction || ''}
-                onChange={(e) => handleInputChange('faction', e.target.value)}
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
-                disabled={isLoadingFactions}
-              >
-                {isLoadingFactions ? (
-                  <option value="">載入陣營資料中...</option>
-                ) : (
-                  factions.map((faction) => (
-                    <option key={faction.id} value={faction.key}>
+              value={editForm.faction || ''}
+              onChange={(e) => handleInputChange('faction', e.target.value)}
+              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green focus:outline-none focus:ring-1 focus:ring-pip-boy-green"
+              disabled={isLoadingFactions}>
+
+                {isLoadingFactions ?
+              <option value="">載入陣營資料中...</option> :
+
+              factions.map((faction) =>
+              <option key={faction.id} value={faction.key}>
                       {faction.name}
                     </option>
-                  ))
-                )}
+              )
+              }
               </select>
             </div>
 
             <div className="flex gap-4">
-              <button
-                onClick={handleSave}
-                disabled={isSaving}
-                className="flex-1 py-2 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 disabled:opacity-50 transition-colors"
-              >
+              <Button size="icon" variant="link"
+            onClick={handleSave}
+            disabled={isSaving}
+            className="flex-1 py-2 font-bold disabled:opacity-50 transition-colors">
+
                 {isSaving ? '儲存中...' : <><PixelIcon name="save" size={16} className="mr-2 inline" decorative />儲存變更</>}
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={isSaving}
-                className="flex-1 py-2 border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/10 disabled:opacity-50 transition-colors"
-              >
+              </Button>
+              <Button size="default" variant="outline"
+            onClick={handleCancel}
+            disabled={isSaving}
+            className="flex-1 py-2 border disabled:opacity-50 transition-colors">
+
                 取消
-              </button>
+              </Button>
             </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
+          </div> :
+
+        <div className="space-y-4">
             <div>
               <p className="text-pip-boy-green/70 text-sm">名稱</p>
               <p className="text-pip-boy-green">{user?.name || profile.username}</p>
@@ -164,7 +164,7 @@ export function SettingsTab({
               <p className="text-pip-boy-green">{profile.pipBoyModel}</p>
             </div>
           </div>
-        )}
+        }
       </div>
 
       {/* Preferences */}
@@ -174,18 +174,18 @@ export function SettingsTab({
         </h3>
 
         <div className="space-y-3">
-          {NOTIFICATION_PREFERENCES.map((pref) => (
-            <label key={pref.key} className="flex items-center text-pip-boy-green text-sm">
+          {NOTIFICATION_PREFERENCES.map((pref) =>
+          <label key={pref.key} className="flex items-center text-pip-boy-green text-sm">
               <input
-                type="checkbox"
-                checked={editForm.notificationPreferences?.[pref.key] || false}
-                onChange={() => handleNotificationChange(pref.key)}
-                className="mr-3 accent-pip-boy-green"
-                disabled={!isEditing}
-              />
+              type="checkbox"
+              checked={editForm.notificationPreferences?.[pref.key] || false}
+              onChange={() => handleNotificationChange(pref.key)}
+              className="mr-3 accent-pip-boy-green"
+              disabled={!isEditing} />
+
               {pref.label}
             </label>
-          ))}
+          )}
         </div>
       </div>
 
@@ -195,19 +195,19 @@ export function SettingsTab({
           <h3 className="text-xl font-bold text-pip-boy-green">
             <PixelIcon name="volume-up" size={24} className="mr-2 inline" decorative />音效系統
           </h3>
-          <button
-            onClick={() => toggleMute('sfx')}
-            className="px-4 py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors"
-            aria-label={sfxMuted ? '取消靜音' : '靜音'}
-          >
+          <Button size="icon" variant="outline"
+          onClick={() => toggleMute('sfx')}
+          className="px-4 py-2 border transition-colors"
+          aria-label={sfxMuted ? '取消靜音' : '靜音'}>
+
             <PixelIcon
               name={sfxMuted ? "volume-off" : "volume-up"}
               size={16}
               className="mr-2 inline"
-              aria-label={sfxMuted ? '已靜音' : '音效開啟'}
-            />
+              aria-label={sfxMuted ? '已靜音' : '音效開啟'} />
+
             {sfxMuted ? '已靜音' : '音效開啟'}
-          </button>
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -229,8 +229,10 @@ export function SettingsTab({
               className="w-full h-2 bg-black border border-pip-boy-green/30 rounded-lg appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed
                 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-pip-boy-green [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-pip-boy-green-dark [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(0,255,136,0.6)]
                 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-pip-boy-green [&::-moz-range-thumb]:cursor-pointer [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-pip-boy-green-dark [&::-moz-range-thumb]:shadow-[0_0_8px_rgba(0,255,136,0.6)]"
-              aria-label="音效音量"
-            />
+
+
+              aria-label="音效音量" />
+
           </div>
 
           {/* Info Text */}
@@ -241,16 +243,16 @@ export function SettingsTab({
           {/* Visual Indicator */}
           <div className="flex items-center gap-2 pt-2 border-t border-pip-boy-green/20">
             <div className="flex-1 flex gap-1">
-              {Array.from({ length: VOLUME_INDICATOR_COUNT }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 h-1.5 rounded-sm transition-all duration-200 ${
-                    i < Math.round(sfxVolume * VOLUME_INDICATOR_COUNT) && !sfxMuted
-                      ? 'bg-pip-boy-green shadow-[0_0_4px_rgba(0,255,136,0.6)]'
-                      : 'bg-pip-boy-green/20'
-                  }`}
-                />
-              ))}
+              {Array.from({ length: VOLUME_INDICATOR_COUNT }).map((_, i) =>
+              <div
+                key={i}
+                className={`flex-1 h-1.5 rounded-sm transition-all duration-200 ${
+                i < Math.round(sfxVolume * VOLUME_INDICATOR_COUNT) && !sfxMuted ?
+                'bg-pip-boy-green shadow-[0_0_4px_rgba(0,255,136,0.6)]' :
+                'bg-pip-boy-green/20'}`
+                } />
+
+              )}
             </div>
             <span className="text-pip-boy-green/50 text-xs font-mono min-w-[32px] text-right">
               {sfxMuted ? 'OFF' : 'ON'}
@@ -258,6 +260,6 @@ export function SettingsTab({
           </div>
         </div>
       </div>
-    </div>
-  )
+    </div>);
+
 }

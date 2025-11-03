@@ -11,7 +11,7 @@ import { DonutRotationController, DonutDriftController } from '@/lib/animations/
  * based on WebGL best practices research.
  *
  * Now with smooth random rotation animations!
- */
+ */import { Button } from "@/components/ui/button";
 export default function TestQuadDonutV2Page() {
   const containerRef = useRef<HTMLDivElement>(null);
   const rendererRef = useRef<WebGLQuadDonutRendererV2 | null>(null);
@@ -37,7 +37,7 @@ export default function TestQuadDonutV2Page() {
         K2: 5,
         thetaSpacing: 0.07,
         phiSpacing: 0.02,
-        luminanceChars: ' .:-=+*#%@',
+        luminanceChars: ' .:-=+*#%@'
       });
 
       rendererRef.current = renderer;
@@ -45,12 +45,12 @@ export default function TestQuadDonutV2Page() {
       // Initialize both controllers
       driftControllerRef.current = new DonutDriftController({
         angleA: 0,
-        angleB: 0,
+        angleB: 0
       });
 
       randomControllerRef.current = new DonutRotationController({
         angleA: 0,
-        angleB: 0,
+        angleB: 0
       });
 
       // Mount canvas to DOM container
@@ -83,7 +83,7 @@ export default function TestQuadDonutV2Page() {
         const elapsed = now - lastTimeRef.current;
 
         if (elapsed >= 1000) {
-          const currentFps = (frameCountRef.current / elapsed) * 1000;
+          const currentFps = frameCountRef.current / elapsed * 1000;
           setFps(Math.round(currentFps * 10) / 10);
           frameCountRef.current = 0;
           lastTimeRef.current = now;
@@ -132,41 +132,41 @@ export default function TestQuadDonutV2Page() {
           <h2 className="text-xl font-semibold mb-3 text-cyan-400">Animation Mode:</h2>
           <div className="flex flex-col gap-4">
             <div className="flex gap-3">
-              <button
-                onClick={() => setAnimationMode('drift')}
-                className={`flex-1 px-4 py-3 border rounded transition-all ${
-                  animationMode === 'drift'
-                    ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
-                    : 'border-green-500 bg-green-950/20 hover:bg-green-900/40'
-                }`}
-              >
+              <Button size="default" variant="default"
+              onClick={() => setAnimationMode('drift')}
+              className="{expression}">
+
+
+
+
+
                 <div className="font-semibold mb-1">🌊 Drift Mode</div>
                 <div className="text-xs opacity-80">Slow continuous drift + occasional random flips</div>
-              </button>
-              <button
-                onClick={() => setAnimationMode('random')}
-                className={`flex-1 px-4 py-3 border rounded transition-all ${
-                  animationMode === 'random'
-                    ? 'border-cyan-400 bg-cyan-900/40 text-cyan-300 shadow-lg'
-                    : 'border-green-500 bg-green-950/20 hover:bg-green-900/40'
-                }`}
-              >
+              </Button>
+              <Button size="default" variant="default"
+              onClick={() => setAnimationMode('random')}
+              className="{expression}">
+
+
+
+
+
                 <div className="font-semibold mb-1">🎲 Random Mode</div>
                 <div className="text-xs opacity-80">Continuous smooth random rotations (3-5s each, max 135°)</div>
-              </button>
+              </Button>
             </div>
 
             {/* Current mode description */}
             <div className="text-sm p-3 border border-green-700/50 rounded bg-black/30">
-              {animationMode === 'drift' ? (
-                <>
+              {animationMode === 'drift' ?
+              <>
                   <span className="text-cyan-400 font-semibold">Drift Mode:</span> Very slow base rotation with 0.1% chance per frame to trigger a 1.5s random flip animation.
-                </>
-              ) : (
-                <>
+                </> :
+
+              <>
                   <span className="text-cyan-400 font-semibold">Random Mode:</span> Continuously animates between random rotation targets (30-135° changes over 3-5 seconds) with smooth sine easing. Optimized to prevent jarring jumps.
                 </>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -178,31 +178,31 @@ export default function TestQuadDonutV2Page() {
               {fps.toFixed(1)}
             </span>
           </div>
-          <button
-            onClick={() => {
-              if (animationMode === 'drift' && driftControllerRef.current) {
-                driftControllerRef.current.triggerFlip();
-              } else if (animationMode === 'random' && randomControllerRef.current) {
-                randomControllerRef.current.randomize();
-              }
-            }}
-            className="px-4 py-2 border border-green-500 rounded bg-green-950/20 hover:bg-green-900/40 transition-colors text-sm"
-          >
+          <Button size="icon" variant="outline"
+          onClick={() => {
+            if (animationMode === 'drift' && driftControllerRef.current) {
+              driftControllerRef.current.triggerFlip();
+            } else if (animationMode === 'random' && randomControllerRef.current) {
+              randomControllerRef.current.randomize();
+            }
+          }}
+          className="px-4 py-2 border rounded transition-colors">
+
             {animationMode === 'drift' ? '🎲 Trigger Random Flip' : '🔄 New Random Target'}
-          </button>
+          </Button>
         </div>
 
-        {error && (
-          <div className="mb-6 p-4 border border-red-500 rounded bg-red-950/20 text-red-400">
+        {error &&
+        <div className="mb-6 p-4 border border-red-500 rounded bg-red-950/20 text-red-400">
             <h2 className="text-xl font-semibold mb-2">Error:</h2>
             <pre className="text-sm whitespace-pre-wrap">{error}</pre>
           </div>
-        )}
+        }
 
         <div
           ref={containerRef}
-          className="border-2 border-green-500 rounded overflow-hidden bg-black"
-        >
+          className="border-2 border-green-500 rounded overflow-hidden bg-black">
+
           {/* Canvas will be inserted here by renderer */}
         </div>
 
@@ -232,6 +232,6 @@ export default function TestQuadDonutV2Page() {
           <p>Full-screen quad + fragment shader ray-marching approach</p>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 }

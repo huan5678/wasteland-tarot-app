@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 // ============================================================================
 // Types
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 export interface ShortcutHelpProps {
   /** 是否顯示 */
   open: boolean;
@@ -54,7 +54,7 @@ export function ShortcutHelp({
   open,
   onClose,
   shortcuts,
-  className,
+  className
 }: ShortcutHelpProps) {
   // ========== Event Handlers ==========
 
@@ -87,70 +87,70 @@ export function ShortcutHelp({
 
   return (
     <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-[9999] flex items-center justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          onClick={handleBackdropClick}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="shortcut-help-title"
-        >
+      {open &&
+      <motion.div
+        className="fixed inset-0 z-[9999] flex items-center justify-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={handleBackdropClick}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="shortcut-help-title">
+
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
           {/* Modal Content */}
           <motion.div
-            className={cn(
-              // Base Layout
-              'relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto',
-              // Pip-Boy Theme
-              'bg-black border-2 border-pip-boy-green',
-              'text-pip-boy-green',
-              'p-6 rounded-lg',
-              // CRT Scanline Effect
-              'before:absolute before:inset-0 before:pointer-events-none before:z-10',
-              'before:bg-[linear-gradient(transparent_50%,rgba(0,255,136,0.03)_50%)]',
-              'before:bg-[length:100%_4px]',
-              // Glow Effect
-              'shadow-[0_0_30px_rgba(0,255,136,0.5)]',
-              // Custom Styles
-              className
-            )}
-            initial={{ scale: 0.9, y: 20 }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.9, y: 20 }}
-            transition={{ duration: 0.2 }}
-          >
+          className={cn(
+            // Base Layout
+            'relative w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto',
+            // Pip-Boy Theme
+            'bg-black border-2 border-pip-boy-green',
+            'text-pip-boy-green',
+            'p-6 rounded-lg',
+            // CRT Scanline Effect
+            'before:absolute before:inset-0 before:pointer-events-none before:z-10',
+            'before:bg-[linear-gradient(transparent_50%,rgba(0,255,136,0.03)_50%)]',
+            'before:bg-[length:100%_4px]',
+            // Glow Effect
+            'shadow-[0_0_30px_rgba(0,255,136,0.5)]',
+            // Custom Styles
+            className
+          )}
+          initial={{ scale: 0.9, y: 20 }}
+          animate={{ scale: 1, y: 0 }}
+          exit={{ scale: 0.9, y: 20 }}
+          transition={{ duration: 0.2 }}>
+
             {/* Header */}
             <div className="flex items-center justify-between mb-6 border-b-2 border-pip-boy-green pb-4">
               <h2
-                id="shortcut-help-title"
-                className="text-xl font-bold text-pip-boy-green"
-              >
+              id="shortcut-help-title"
+              className="text-xl font-bold text-pip-boy-green">
+
                 鍵盤快捷鍵
               </h2>
-              <button
-                onClick={onClose}
-                className="p-2 rounded transition-colors hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green"
-                aria-label="關閉"
-              >
+              <Button size="icon" variant="outline"
+            onClick={onClose}
+            className="p-2 rounded transition-colors"
+            aria-label="關閉">
+
                 <PixelIcon name="close" sizePreset="sm" decorative />
-              </button>
+              </Button>
             </div>
 
             {/* Shortcuts List */}
             <div className="space-y-3">
-              {shortcuts
-                .filter((shortcut) => shortcut.action !== 'show-help')
-                .map((shortcut, index) => (
-                  <div
-                    key={`${shortcut.key}-${index}`}
-                    className="flex items-center justify-between p-3 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded"
-                  >
+              {shortcuts.
+            filter((shortcut) => shortcut.action !== 'show-help').
+            map((shortcut, index) =>
+            <div
+              key={`${shortcut.key}-${index}`}
+              className="flex items-center justify-between p-3 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded">
+
                     {/* Description */}
                     <span className="text-sm text-pip-boy-green/80">
                       {shortcut.description}
@@ -158,25 +158,25 @@ export function ShortcutHelp({
 
                     {/* Key Badge */}
                     <kbd
-                      className={cn(
-                        'px-3 py-1 rounded',
-                        'bg-pip-boy-green text-black',
-                        'font-bold text-xs uppercase',
-                        'shadow-[0_0_10px_rgba(0,255,136,0.3)]'
-                      )}
-                    >
-                      {shortcut.key === ' '
-                        ? 'Space'
-                        : shortcut.key === 'Escape'
-                        ? 'Esc'
-                        : shortcut.key === 'ArrowLeft'
-                        ? '←'
-                        : shortcut.key === 'ArrowRight'
-                        ? '→'
-                        : shortcut.key}
+                className={cn(
+                  'px-3 py-1 rounded',
+                  'bg-pip-boy-green text-black',
+                  'font-bold text-xs uppercase',
+                  'shadow-[0_0_10px_rgba(0,255,136,0.3)]'
+                )}>
+
+                      {shortcut.key === ' ' ?
+                'Space' :
+                shortcut.key === 'Escape' ?
+                'Esc' :
+                shortcut.key === 'ArrowLeft' ?
+                '←' :
+                shortcut.key === 'ArrowRight' ?
+                '→' :
+                shortcut.key}
                     </kbd>
                   </div>
-                ))}
+            )}
             </div>
 
             {/* Footer */}
@@ -186,9 +186,9 @@ export function ShortcutHelp({
             </div>
           </motion.div>
         </motion.div>
-      )}
-    </AnimatePresence>
-  );
+      }
+    </AnimatePresence>);
+
 }
 
 ShortcutHelp.displayName = 'ShortcutHelp';

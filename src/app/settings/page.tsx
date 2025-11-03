@@ -1,18 +1,18 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { useRequireAuth } from '@/hooks/useRequireAuth'
-import { AuthLoading } from '@/components/auth/AuthLoading'
-import { usePreferences } from '@/hooks/usePreferences'
-import { Card } from '@/components/ui/card'
-import { PixelIcon } from '@/components/ui/icons'
-import { AuthMethodsManagement } from '@/components/auth/AuthMethodsManagement'
+import React, { useState } from 'react';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { AuthLoading } from '@/components/auth/AuthLoading';
+import { usePreferences } from '@/hooks/usePreferences';
+import { Card } from '@/components/ui/card';
+import { PixelIcon } from '@/components/ui/icons';
+import { AuthMethodsManagement } from '@/components/auth/AuthMethodsManagement';import { Button } from "@/components/ui/button";
 
-type TabType = 'reading' | 'interpretation' | 'notifications' | 'privacy' | 'security'
+type TabType = 'reading' | 'interpretation' | 'notifications' | 'privacy' | 'security';
 
 export default function SettingsPage() {
   // 統一認證檢查（自動處理初始化、重導向、日誌）
-  const { isReady, user } = useRequireAuth()
+  const { isReady, user } = useRequireAuth();
 
   const {
     preferences,
@@ -23,23 +23,23 @@ export default function SettingsPage() {
     updatePrivacySettings,
     resetPreferences,
     applyRecommendedSettings
-  } = usePreferences()
+  } = usePreferences();
 
-  const [activeTab, setActiveTab] = useState<TabType>('reading')
+  const [activeTab, setActiveTab] = useState<TabType>('reading');
 
-  console.log('[SettingsPage] Render - loading:', loading, 'preferences:', preferences)
+  console.log('[SettingsPage] Render - loading:', loading, 'preferences:', preferences);
 
   // 統一載入畫面
-  if (!isReady || (loading && !preferences)) {
-    return <AuthLoading isVerifying={!isReady} />
+  if (!isReady || loading && !preferences) {
+    return <AuthLoading isVerifying={!isReady} />;
   }
 
   if (!preferences) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <p className="text-center text-wasteland-tan/70">無法載入偏好設定</p>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -57,122 +57,122 @@ export default function SettingsPage() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-2 gap-4 mb-8">
-        <button
-          onClick={applyRecommendedSettings}
-          className="
-            p-4 rounded-lg
-            bg-pip-boy-green/10 hover:bg-pip-boy-green/20
-            border-2 border-pip-boy-green/40
-            transition-colors
-            flex items-center gap-3
-          "
-        >
+        <Button size="default" variant="outline"
+        onClick={applyRecommendedSettings}
+        className="p-4 transition-colors\n flex items-center gap-3\n">
+
+
+
+
+
+
+
           <PixelIcon name="sparkles" sizePreset="md" className="text-pip-boy-green" decorative />
           <div className="text-left">
             <p className="font-semibold text-sm">套用推薦設定</p>
             <p className="text-xs text-wasteland-tan/60">基於你的使用習慣</p>
           </div>
-        </button>
+        </Button>
 
-        <button
-          onClick={resetPreferences}
-          className="
-            p-4 rounded-lg
-            bg-wasteland-dark/40 hover:bg-wasteland-dark/60
-            border-2 border-pip-boy-green/20
-            transition-colors
-            flex items-center gap-3
-          "
-        >
+        <Button size="default" variant="outline"
+        onClick={resetPreferences}
+        className="p-4 transition-colors\n flex items-center gap-3\n">
+
+
+
+
+
+
+
           <PixelIcon name="reload" sizePreset="md" className="text-wasteland-tan" decorative />
           <div className="text-left">
             <p className="font-semibold text-sm">重設預設值</p>
             <p className="text-xs text-wasteland-tan/60">恢復原廠設定</p>
           </div>
-        </button>
+        </Button>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 border-b border-pip-boy-green/20 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('reading')}
-          className={`
-            px-4 py-2 text-sm whitespace-nowrap
-            border-b-2 transition-colors
-            ${activeTab === 'reading'
-              ? 'border-pip-boy-green text-pip-boy-green'
-              : 'border-transparent text-wasteland-tan/60 hover:text-wasteland-tan'
-            }
-          `}
-        >
+        <Button size="default" variant="default"
+        onClick={() => setActiveTab('reading')}
+        className="{expression}">
+
+
+
+
+
+
+
+
           <PixelIcon name="book-open" sizePreset="xs" className="inline mr-2" decorative />
           閱讀設定
-        </button>
+        </Button>
 
-        <button
-          onClick={() => setActiveTab('interpretation')}
-          className={`
-            px-4 py-2 text-sm whitespace-nowrap
-            border-b-2 transition-colors
-            ${activeTab === 'interpretation'
-              ? 'border-pip-boy-green text-pip-boy-green'
-              : 'border-transparent text-wasteland-tan/60 hover:text-wasteland-tan'
-            }
-          `}
-        >
+        <Button size="default" variant="default"
+        onClick={() => setActiveTab('interpretation')}
+        className="{expression}">
+
+
+
+
+
+
+
+
           <PixelIcon name="message-2" sizePreset="xs" className="inline mr-2" decorative />
           解讀設定
-        </button>
+        </Button>
 
-        <button
-          onClick={() => setActiveTab('notifications')}
-          className={`
-            px-4 py-2 text-sm whitespace-nowrap
-            border-b-2 transition-colors
-            ${activeTab === 'notifications'
-              ? 'border-pip-boy-green text-pip-boy-green'
-              : 'border-transparent text-wasteland-tan/60 hover:text-wasteland-tan'
-            }
-          `}
-        >
+        <Button size="default" variant="default"
+        onClick={() => setActiveTab('notifications')}
+        className="{expression}">
+
+
+
+
+
+
+
+
           <PixelIcon name="notification" sizePreset="xs" className="inline mr-2" decorative />
           通知設定
-        </button>
+        </Button>
 
-        <button
-          onClick={() => setActiveTab('privacy')}
-          className={`
-            px-4 py-2 text-sm whitespace-nowrap
-            border-b-2 transition-colors
-            ${activeTab === 'privacy'
-              ? 'border-pip-boy-green text-pip-boy-green'
-              : 'border-transparent text-wasteland-tan/60 hover:text-wasteland-tan'
-            }
-          `}
-        >
+        <Button size="default" variant="default"
+        onClick={() => setActiveTab('privacy')}
+        className="{expression}">
+
+
+
+
+
+
+
+
           <PixelIcon name="lock" sizePreset="xs" className="inline mr-2" decorative />
           隱私設定
-        </button>
+        </Button>
 
-        <button
-          onClick={() => setActiveTab('security')}
-          className={`
-            px-4 py-2 text-sm whitespace-nowrap
-            border-b-2 transition-colors
-            ${activeTab === 'security'
-              ? 'border-pip-boy-green text-pip-boy-green'
-              : 'border-transparent text-wasteland-tan/60 hover:text-wasteland-tan'
-            }
-          `}
-        >
+        <Button size="default" variant="default"
+        onClick={() => setActiveTab('security')}
+        className="{expression}">
+
+
+
+
+
+
+
+
           <PixelIcon name="shield" sizePreset="xs" className="inline mr-2" decorative />
           帳號與安全
-        </button>
+        </Button>
       </div>
 
       {/* Settings Content */}
-      {activeTab === 'reading' && (
-        <div className="space-y-6">
+      {activeTab === 'reading' &&
+      <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PixelIcon name="book-open" sizePreset="md" decorative />
@@ -187,11 +187,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">每次閱讀後自動儲存到歷史記錄</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.auto_save_readings}
-                  onChange={(e) => updateReadingSettings({ auto_save_readings: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.auto_save_readings}
+                onChange={(e) => updateReadingSettings({ auto_save_readings: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Share Readings Publicly */}
@@ -201,11 +201,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">允許其他使用者查看你的閱讀</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.share_readings_publicly}
-                  onChange={(e) => updateReadingSettings({ auto_save_readings: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.share_readings_publicly}
+                onChange={(e) => updateReadingSettings({ auto_save_readings: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Favorite Spread Types */}
@@ -228,10 +228,10 @@ export default function SettingsPage() {
             </p>
           </Card>
         </div>
-      )}
+      }
 
-      {activeTab === 'interpretation' && (
-        <div className="space-y-6">
+      {activeTab === 'interpretation' &&
+      <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PixelIcon name="message-2" sizePreset="md" decorative />
@@ -245,15 +245,20 @@ export default function SettingsPage() {
                   預設角色聲音
                 </label>
                 <select
-                  value={preferences.default_character_voice}
-                  onChange={(e) => updateInterpretationSettings({ preferred_character_voice: e.target.value })}
-                  className="
+                value={preferences.default_character_voice}
+                onChange={(e) => updateInterpretationSettings({ preferred_character_voice: e.target.value })}
+                className="
                     w-full px-3 py-2 rounded
                     bg-wasteland-dark border border-pip-boy-green/40
                     text-pip-boy-green
                     focus:outline-none focus:border-pip-boy-green
-                  "
-                >
+                  ">
+
+
+
+
+
+
                   <option value="pip_boy">Pip-Boy (電腦合成)</option>
                   <option value="mr_handy">Mr. Handy (機器人助手)</option>
                   <option value="overseer">Overseer (監督官)</option>
@@ -267,23 +272,23 @@ export default function SettingsPage() {
                   解讀深度
                 </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {['simple', 'medium', 'deep'].map(depth => (
-                    <button
-                      key={depth}
-                      onClick={() => updateInterpretationSettings({ depth })}
-                      className={`
-                        p-3 rounded border-2 transition-all text-sm
-                        ${depth === 'medium' // 預設選中 medium
-                          ? 'border-pip-boy-green bg-pip-boy-green/10'
-                          : 'border-pip-boy-green/20 hover:border-pip-boy-green/40'
-                        }
-                      `}
-                    >
+                  {['simple', 'medium', 'deep'].map((depth) =>
+                <Button size="icon" variant="default"
+                key={depth}
+                onClick={() => updateInterpretationSettings({ depth })}
+                className="{expression}">
+
+
+
+
+
+
+
                       {depth === 'simple' && '簡單'}
                       {depth === 'medium' && '中等'}
                       {depth === 'deep' && '深入'}
-                    </button>
-                  ))}
+                    </Button>
+                )}
                 </div>
               </div>
 
@@ -294,25 +299,25 @@ export default function SettingsPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: 'balanced', label: '平衡' },
-                    { value: 'mystical', label: '神秘' },
-                    { value: 'practical', label: '實用' },
-                    { value: 'psychological', label: '心理' }
-                  ].map(({ value, label }) => (
-                    <button
-                      key={value}
-                      onClick={() => updateInterpretationSettings({ style: value })}
-                      className={`
-                        p-3 rounded border-2 transition-all text-sm
-                        ${value === 'balanced' // 預設選中 balanced
-                          ? 'border-pip-boy-green bg-pip-boy-green/10'
-                          : 'border-pip-boy-green/20 hover:border-pip-boy-green/40'
-                        }
-                      `}
-                    >
+                { value: 'balanced', label: '平衡' },
+                { value: 'mystical', label: '神秘' },
+                { value: 'practical', label: '實用' },
+                { value: 'psychological', label: '心理' }].
+                map(({ value, label }) =>
+                <Button size="icon" variant="default"
+                key={value}
+                onClick={() => updateInterpretationSettings({ style: value })}
+                className="{expression}">
+
+
+
+
+
+
+
                       {label}
-                    </button>
-                  ))}
+                    </Button>
+                )}
                 </div>
               </div>
             </div>
@@ -325,10 +330,10 @@ export default function SettingsPage() {
             </p>
           </Card>
         </div>
-      )}
+      }
 
-      {activeTab === 'notifications' && (
-        <div className="space-y-6">
+      {activeTab === 'notifications' &&
+      <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PixelIcon name="notification" sizePreset="md" decorative />
@@ -343,11 +348,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">接收重要更新和活動通知</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.email_notifications}
-                  onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.email_notifications}
+                onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Daily Reading Reminder */}
@@ -357,11 +362,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">提醒你進行每日塔羅閱讀</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.daily_reading_reminder}
-                  onChange={(e) => updateNotificationSettings({ enable_reading_reminders: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.daily_reading_reminder}
+                onChange={(e) => updateNotificationSettings({ enable_reading_reminders: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Friend Activity Notifications */}
@@ -371,11 +376,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">當好友分享閱讀時通知你</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.friend_activity_notifications}
-                  onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.friend_activity_notifications}
+                onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Community Updates */}
@@ -385,32 +390,37 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">接收社群活動和更新資訊</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.community_updates}
-                  onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.community_updates}
+                onChange={(e) => updateNotificationSettings({ enable_email_notifications: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Reminder Time */}
-              {preferences.daily_reading_reminder && (
-                <div className="p-3 rounded border border-pip-boy-green/20">
+              {preferences.daily_reading_reminder &&
+            <div className="p-3 rounded border border-pip-boy-green/20">
                   <label className="block text-sm font-medium mb-2">
                     提醒時間
                   </label>
                   <input
-                    type="time"
-                    value={preferences.reading_reminder_time || '09:00'}
-                    onChange={(e) => updateNotificationSettings({ reminder_time: e.target.value })}
-                    className="
+                type="time"
+                value={preferences.reading_reminder_time || '09:00'}
+                onChange={(e) => updateNotificationSettings({ reminder_time: e.target.value })}
+                className="
                       w-full px-3 py-2 rounded
                       bg-wasteland-dark border border-pip-boy-green/40
                       text-pip-boy-green
                       focus:outline-none focus:border-pip-boy-green
-                    "
-                  />
+                    " />
+
+
+
+
+
+
                 </div>
-              )}
+            }
             </div>
           </Card>
 
@@ -421,10 +431,10 @@ export default function SettingsPage() {
             </p>
           </Card>
         </div>
-      )}
+      }
 
-      {activeTab === 'privacy' && (
-        <div className="space-y-6">
+      {activeTab === 'privacy' &&
+      <div className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
               <PixelIcon name="lock" sizePreset="md" decorative />
@@ -439,11 +449,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">允許其他使用者查看你的個人資料</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.public_profile}
-                  onChange={(e) => updatePrivacySettings({ profile_visibility: e.target.checked ? 'public' : 'private' })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.public_profile}
+                onChange={(e) => updatePrivacySettings({ profile_visibility: e.target.checked ? 'public' : 'private' })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Allow Friend Requests */}
@@ -453,11 +463,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">其他使用者可以向你發送好友請求</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.allow_friend_requests}
-                  onChange={(e) => updatePrivacySettings({ allow_reading_sharing: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.allow_friend_requests}
+                onChange={(e) => updatePrivacySettings({ allow_reading_sharing: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Share Reading History */}
@@ -467,11 +477,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">允許好友查看你的閱讀歷史</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.share_reading_history}
-                  onChange={(e) => updatePrivacySettings({ allow_reading_sharing: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.share_reading_history}
+                onChange={(e) => updatePrivacySettings({ allow_reading_sharing: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
 
               {/* Data Collection Consent */}
@@ -481,11 +491,11 @@ export default function SettingsPage() {
                   <p className="text-xs text-wasteland-tan/60">幫助我們改善服務（完全匿名）</p>
                 </div>
                 <input
-                  type="checkbox"
-                  checked={preferences.data_collection_consent}
-                  onChange={(e) => updatePrivacySettings({ anonymous_analytics: e.target.checked })}
-                  className="w-5 h-5"
-                />
+                type="checkbox"
+                checked={preferences.data_collection_consent}
+                onChange={(e) => updatePrivacySettings({ anonymous_analytics: e.target.checked })}
+                className="w-5 h-5" />
+
               </label>
             </div>
           </Card>
@@ -497,10 +507,10 @@ export default function SettingsPage() {
             </p>
           </Card>
         </div>
-      )}
+      }
 
-      {activeTab === 'security' && (
-        <div className="space-y-6">
+      {activeTab === 'security' &&
+      <div className="space-y-6">
           {/* 認證方式管理（主要功能） */}
           <AuthMethodsManagement />
 
@@ -526,7 +536,7 @@ export default function SettingsPage() {
             </div>
           </Card>
         </div>
-      )}
-    </div>
-  )
+      }
+    </div>);
+
 }

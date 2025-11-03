@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 /**
  * 快速占卜頁面 - 供訪客使用，無需登入
@@ -11,45 +11,45 @@
  * - CTA 導流至註冊/登入
  */
 
-import React, { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
-import { PixelIcon } from '@/components/ui/icons'
-import { enhancedWastelandCards } from '@/data/enhancedCards'
-import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal'
-import { QuickReadingStorage } from '@/lib/quickReadingStorage'
-import { CarouselContainer } from '@/components/readings/CarouselContainer'
-import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider'
-import dynamic from 'next/dynamic'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { PixelIcon } from '@/components/ui/icons';
+import { enhancedWastelandCards } from '@/data/enhancedCards';
+import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal';
+import { QuickReadingStorage } from '@/lib/quickReadingStorage';
+import { CarouselContainer } from '@/components/readings/CarouselContainer';
+import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider';
+import dynamic from 'next/dynamic';
 
 // Dynamic import CardDetailModal to reduce initial bundle size
-const CardDetailModal = dynamic(
+import { Button } from "@/components/ui/button";const CardDetailModal = dynamic(
   () => import('@/components/tarot/CardDetailModal').then((mod) => ({ default: mod.CardDetailModal })),
   { ssr: false }
-)
+);
 
 // Dynamic import TarotCard to reduce initial bundle size
 const TarotCard = dynamic(
   () => import('@/components/tarot/TarotCard').then((mod) => ({ default: mod.TarotCard })),
   { ssr: false }
-)
+);
 
 // 初始化 storage 服務
-const storage = new QuickReadingStorage()
+const storage = new QuickReadingStorage();
 
 export default function QuickReadingPage() {
-  const router = useRouter()
+  const router = useRouter();
 
   // 取得每日隨機卡背
-  const { cardBackPath, isLoading: isCardBackLoading } = useDailyCardBackContext()
-  const displayCardBackUrl = isCardBackLoading ? '/assets/cards/card-backs/01.png' : cardBackPath
+  const { cardBackPath, isLoading: isCardBackLoading } = useDailyCardBackContext();
+  const displayCardBackUrl = isCardBackLoading ? '/assets/cards/card-backs/01.png' : cardBackPath;
 
   // 狀態管理
-  const [cardPool, setCardPool] = useState<DetailedTarotCard[]>([])
-  const [selectedCardId, setSelectedCardId] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [activeCardIndex, setActiveCardIndex] = useState(0)
-  const [error, setError] = useState<string | null>(null)
+  const [cardPool, setCardPool] = useState<DetailedTarotCard[]>([]);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   /**
    * 從 enhancedCards 中隨機選取 3-5 張大阿爾克納
@@ -58,83 +58,83 @@ export default function QuickReadingPage() {
     // 篩選大阿爾克納
     const majorArcana = enhancedWastelandCards.filter(
       (card) => card.suit === 'major_arcana' // 修正：使用 API 枚舉值
-    )
+    );
 
     if (majorArcana.length === 0) {
-      console.error('No Major Arcana cards found in enhancedWastelandCards')
-      setError('卡牌資料載入失敗')
-      return []
+      console.error('No Major Arcana cards found in enhancedWastelandCards');
+      setError('卡牌資料載入失敗');
+      return [];
     }
 
     // 使用所有可用的大阿爾克納（3-5 張）
-    const availableCount = Math.min(majorArcana.length, 5)
-    const selectedCards: DetailedTarotCard[] = []
-    const usedIndices = new Set<number>()
+    const availableCount = Math.min(majorArcana.length, 5);
+    const selectedCards: DetailedTarotCard[] = [];
+    const usedIndices = new Set<number>();
 
     // 隨機選取（確保不重複）
     while (selectedCards.length < availableCount && selectedCards.length < 100) {
-      const randomIndex = Math.floor(Math.random() * majorArcana.length)
+      const randomIndex = Math.floor(Math.random() * majorArcana.length);
       if (!usedIndices.has(randomIndex)) {
-        usedIndices.add(randomIndex)
-        selectedCards.push(majorArcana[randomIndex])
+        usedIndices.add(randomIndex);
+        selectedCards.push(majorArcana[randomIndex]);
       }
     }
 
-    console.log(`Initialized card pool with ${selectedCards.length} cards:`, selectedCards.map(c => c.name))
-    return selectedCards
-  }, [])
+    console.log(`Initialized card pool with ${selectedCards.length} cards:`, selectedCards.map((c) => c.name));
+    return selectedCards;
+  }, []);
 
   /**
    * 頁面載入時初始化卡牌池與載入已保存狀態
    */
   useEffect(() => {
     const initialize = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
 
       // 檢查 localStorage 是否可用
       if (!storage.isAvailable()) {
-        console.warn('localStorage not available, using memory-only state')
+        console.warn('localStorage not available, using memory-only state');
       }
 
       // 嘗試載入已保存的狀態
-      const loadResult = storage.load()
+      const loadResult = storage.load();
 
       if (loadResult.success && loadResult.value) {
-        const savedData = loadResult.value
-        console.log('Loaded saved state from localStorage:', savedData)
+        const savedData = loadResult.value;
+        console.log('Loaded saved state from localStorage:', savedData);
 
         // 重建卡牌池
         const allMajorArcana = enhancedWastelandCards.filter(
           (card) => card.suit === 'major_arcana' // 修正：使用 API 枚舉值
-        )
+        );
 
-        const restoredCardPool = savedData.cardPoolIds
-          .map((id) => allMajorArcana.find((card) => card.id === id))
-          .filter((card): card is DetailedTarotCard => card !== undefined)
+        const restoredCardPool = savedData.cardPoolIds.
+        map((id) => allMajorArcana.find((card) => card.id === id)).
+        filter((card): card is DetailedTarotCard => card !== undefined);
 
         // 驗證恢復的卡牌池
         if (restoredCardPool.length === savedData.cardPoolIds.length) {
-          setCardPool(restoredCardPool)
-          setSelectedCardId(savedData.selectedCardId)
-          console.log('Successfully restored card pool and selection')
+          setCardPool(restoredCardPool);
+          setSelectedCardId(savedData.selectedCardId);
+          console.log('Successfully restored card pool and selection');
         } else {
-          console.warn('Some cards not found, reinitializing...')
-          const newCardPool = initializeCardPool()
-          setCardPool(newCardPool)
-          setSelectedCardId(null)
+          console.warn('Some cards not found, reinitializing...');
+          const newCardPool = initializeCardPool();
+          setCardPool(newCardPool);
+          setSelectedCardId(null);
         }
       } else {
         // 無保存記錄或資料損壞，重新初始化
-        const newCardPool = initializeCardPool()
-        setCardPool(newCardPool)
-        setSelectedCardId(null)
+        const newCardPool = initializeCardPool();
+        setCardPool(newCardPool);
+        setSelectedCardId(null);
       }
 
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    initialize()
-  }, [initializeCardPool])
+    initialize();
+  }, [initializeCardPool]);
 
   /**
    * 處理卡牌翻轉
@@ -143,26 +143,26 @@ export default function QuickReadingPage() {
     (cardId: string) => {
       if (selectedCardId) {
         // 已經選中卡牌，不允許再翻其他卡
-        return
+        return;
       }
 
-      console.log('Card flipped:', cardId)
-      setSelectedCardId(cardId)
+      console.log('Card flipped:', cardId);
+      setSelectedCardId(cardId);
 
       // 儲存至 localStorage
       const saveData = {
         selectedCardId: cardId,
         cardPoolIds: cardPool.map((c) => c.id.toString()),
-        timestamp: Date.now(),
-      }
+        timestamp: Date.now()
+      };
 
-      const saveResult = storage.save(saveData)
+      const saveResult = storage.save(saveData);
       if (!saveResult.success) {
-        console.error('Failed to save to localStorage:', saveResult.error)
+        console.error('Failed to save to localStorage:', saveResult.error);
       }
     },
     [selectedCardId, cardPool]
-  )
+  );
 
   /**
    * 處理點擊已翻開的卡牌（開啟 Modal）
@@ -170,45 +170,45 @@ export default function QuickReadingPage() {
   const handleCardClick = useCallback(
     (card: DetailedTarotCard) => {
       if (card.id.toString() === selectedCardId) {
-        console.log('Opening modal for card:', card.name)
-        setIsModalOpen(true)
+        console.log('Opening modal for card:', card.name);
+        setIsModalOpen(true);
       }
     },
     [selectedCardId]
-  )
+  );
 
   /**
    * 關閉 Modal
    */
   const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false)
-  }, [])
+    setIsModalOpen(false);
+  }, []);
 
   /**
    * 導航至註冊頁面
    */
   const handleRegister = useCallback(() => {
-    router.push('/auth/register')
-  }, [router])
+    router.push('/auth/register');
+  }, [router]);
 
   /**
    * 導航至登入頁面
    */
   const handleLogin = useCallback(() => {
-    router.push('/auth/login')
-  }, [router])
+    router.push('/auth/login');
+  }, [router]);
 
   /**
    * 返回首頁
    */
   const handleGoBack = useCallback(() => {
-    router.push('/')
-  }, [router])
+    router.push('/');
+  }, [router]);
 
   // 取得選中的卡牌物件
-  const selectedCard = selectedCardId
-    ? cardPool.find((c) => c.id.toString() === selectedCardId)
-    : null
+  const selectedCard = selectedCardId ?
+  cardPool.find((c) => c.id.toString() === selectedCardId) :
+  null;
 
   // 載入中狀態
   if (isLoading) {
@@ -220,8 +220,8 @@ export default function QuickReadingPage() {
             正在初始化廢土塔羅系統...
           </p>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   // 錯誤狀態
@@ -233,15 +233,15 @@ export default function QuickReadingPage() {
           <p className="text-sm text-pip-boy-green/70 mb-6">
             {error || '無法載入卡牌資料'}
           </p>
-          <button
-            onClick={handleGoBack}
-            className="border-2 border-pip-boy-green px-6 py-3 text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
-          >
+          <Button size="lg" variant="outline"
+          onClick={handleGoBack}
+          className="px-6 py-3 transition-all">
+
             返回首頁
-          </button>
+          </Button>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -250,17 +250,17 @@ export default function QuickReadingPage() {
         {/* Header */}
         <div
           className="border-2 border-pip-boy-green p-4 mb-8"
-          style={{ backgroundColor: 'var(--color-pip-boy-green-10)' }}
-        >
+          style={{ backgroundColor: 'var(--color-pip-boy-green-10)' }}>
+
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={handleGoBack}
-                className="text-pip-boy-green hover:text-cyan-400 transition-colors"
-                aria-label="返回首頁"
-              >
+              <Button size="icon" variant="link"
+              onClick={handleGoBack}
+              className="transition-colors"
+              aria-label="返回首頁">
+
                 <PixelIcon name="arrow-left" size={24} aria-label="返回首頁" />
-              </button>
+              </Button>
               <div className="text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
@@ -270,21 +270,21 @@ export default function QuickReadingPage() {
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleRegister}
-              className="flex items-center gap-2 text-xs text-pip-boy-green hover:text-cyan-400 transition-colors px-3 py-1 border border-pip-boy-green"
-            >
+            <Button size="xs" variant="outline"
+            onClick={handleRegister}
+            className="flex items-center gap-2 transition-colors px-3 py-1 border">
+
               <PixelIcon name="user-plus" size={16} aria-label="註冊 Vault 帳號" />
               註冊 Vault 帳號
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Main Content */}
         <div
           className="border-2 border-pip-boy-green p-8"
-          style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
-        >
+          style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}>
+
           <div className="text-center mb-8">
             <PixelIcon name="card-stack" size={64} className="mx-auto mb-4 text-pip-boy-green" decorative />
             <h1 className="text-3xl font-bold text-pip-boy-green mb-2">
@@ -296,67 +296,67 @@ export default function QuickReadingPage() {
           </div>
 
           {/* Carousel with Cards - 僅在未選卡時顯示 */}
-          {!selectedCardId ? (
-            <CarouselContainer
-              cards={cardPool}
-              selectedCardId={selectedCardId}
-              activeIndex={activeCardIndex}
-              onIndexChange={setActiveCardIndex}
-              onCardFlip={handleCardFlip}
-              onCardClick={handleCardClick}
-              isDisabled={false}
-            >
-              {(card, index, isActive) => (
-                <TarotCard
-                  card={card}
-                  isRevealed={card.id.toString() === selectedCardId}
-                  position="upright"
-                  size="large"
-                  flipStyle="kokonut"
-                  cardBackUrl={displayCardBackUrl}
-                  onClick={() => {
-                    if (!selectedCardId) {
-                      // 卡背狀態，點擊翻牌
-                      handleCardFlip(card.id.toString())
-                    } else if (card.id.toString() === selectedCardId) {
-                      // 已翻開的卡牌，點擊開啟 Modal
-                      handleCardClick(card)
-                    }
-                  }}
-                  isSelectable={!selectedCardId}
-                  isSelected={card.id.toString() === selectedCardId}
-                  showGlow={card.id.toString() === selectedCardId}
-                  enableHaptic={true}
-                  className={
-                    selectedCardId && card.id.toString() !== selectedCardId
-                      ? 'opacity-50 pointer-events-none'
-                      : ''
-                  }
-                />
-              )}
-            </CarouselContainer>
-          ) : (
-            /* 已選卡時僅顯示單張卡片 */
-            <div className="flex justify-center py-8">
+          {!selectedCardId ?
+          <CarouselContainer
+            cards={cardPool}
+            selectedCardId={selectedCardId}
+            activeIndex={activeCardIndex}
+            onIndexChange={setActiveCardIndex}
+            onCardFlip={handleCardFlip}
+            onCardClick={handleCardClick}
+            isDisabled={false}>
+
+              {(card, index, isActive) =>
+            <TarotCard
+              card={card}
+              isRevealed={card.id.toString() === selectedCardId}
+              position="upright"
+              size="large"
+              flipStyle="kokonut"
+              cardBackUrl={displayCardBackUrl}
+              onClick={() => {
+                if (!selectedCardId) {
+                  // 卡背狀態，點擊翻牌
+                  handleCardFlip(card.id.toString());
+                } else if (card.id.toString() === selectedCardId) {
+                  // 已翻開的卡牌，點擊開啟 Modal
+                  handleCardClick(card);
+                }
+              }}
+              isSelectable={!selectedCardId}
+              isSelected={card.id.toString() === selectedCardId}
+              showGlow={card.id.toString() === selectedCardId}
+              enableHaptic={true}
+              className={
+              selectedCardId && card.id.toString() !== selectedCardId ?
+              'opacity-50 pointer-events-none' :
+              ''
+              } />
+
+            }
+            </CarouselContainer> : (
+
+          /* 已選卡時僅顯示單張卡片 */
+          <div className="flex justify-center py-8">
               <TarotCard
-                card={selectedCard!}
-                isRevealed={true}
-                position="upright"
-                size="large"
-                flipStyle="kokonut"
-                cardBackUrl={displayCardBackUrl}
-                onClick={() => handleCardClick(selectedCard!)}
-                isSelectable={false}
-                isSelected={true}
-                showGlow={true}
-                enableHaptic={true}
-              />
-            </div>
-          )}
+              card={selectedCard!}
+              isRevealed={true}
+              position="upright"
+              size="large"
+              flipStyle="kokonut"
+              cardBackUrl={displayCardBackUrl}
+              onClick={() => handleCardClick(selectedCard!)}
+              isSelectable={false}
+              isSelected={true}
+              showGlow={true}
+              enableHaptic={true} />
+
+            </div>)
+          }
 
           {/* 主要 CTA - 翻牌後顯示 */}
-          {selectedCardId && (
-            <div className="mt-8 border-2 border-pip-boy-green p-6 animate-pulse-border">
+          {selectedCardId &&
+          <div className="mt-8 border-2 border-pip-boy-green p-6 animate-pulse-border">
               <div className="flex items-center gap-3 mb-4">
                 <PixelIcon name="card-stack" size={32} className="text-pip-boy-green animate-pulse" decorative />
                 <h3 className="text-xl text-pip-boy-green">
@@ -392,27 +392,27 @@ export default function QuickReadingPage() {
               </ul>
 
               <div className="flex flex-col sm:flex-row gap-4">
-                <button
-                  onClick={handleRegister}
-                  className="flex-1 border-2 border-pip-boy-green px-6 py-3 text-pip-boy-green hover:bg-pip-boy-green hover:text-black transition-all"
-                >
+                <Button size="lg" variant="outline"
+              onClick={handleRegister}
+              className="flex-1 px-6 py-3 transition-all">
+
                   立即註冊 - 解鎖完整體驗
-                </button>
-                <button
-                  onClick={handleLogin}
-                  className="text-sm text-pip-boy-green hover:text-cyan-400 transition-colors"
-                >
+                </Button>
+                <Button size="sm" variant="link"
+              onClick={handleLogin}
+              className="transition-colors">
+
                   已有帳號？立即登入 →
-                </button>
+                </Button>
               </div>
             </div>
-          )}
+          }
 
           {/* Info Box */}
           <div
             className="mt-8 border border-pip-boy-green p-4"
-            style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}
-          >
+            style={{ backgroundColor: 'var(--color-pip-boy-green-5)' }}>
+
             <p className="text-xs text-text-muted text-center flex items-center justify-center gap-2">
               <PixelIcon name="file-text" size={16} className="text-pip-boy-green flex-shrink-0" decorative />
               <span>註冊 Vault 帳號後，你可以：儲存占卜歷史 | 使用高級牌陣 | 獲得 AI 詳細解讀 | 追蹤 Karma 變化</span>
@@ -422,15 +422,15 @@ export default function QuickReadingPage() {
       </div>
 
       {/* Card Detail Modal */}
-      {selectedCard && (
-        <CardDetailModal
-          card={selectedCard}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          position="upright"
-          isGuestMode={true}
-        />
-      )}
-    </div>
-  )
+      {selectedCard &&
+      <CardDetailModal
+        card={selectedCard}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        position="upright"
+        isGuestMode={true} />
+
+      }
+    </div>);
+
 }

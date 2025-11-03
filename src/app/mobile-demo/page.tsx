@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { MobileTarotCard } from '@/components/mobile/MobileTarotCard'
-import { MobileReadingInterface } from '@/components/mobile/MobileReadingInterface'
-import { MobileNavigation, MobileTabBar, PullToRefresh } from '@/components/mobile/MobileNavigation'
-import { MobileSpreadSelector } from '@/components/mobile/MobileSpreadSelector'
-import { ResponsiveContainer, MobileGrid, MobileCard, SafeAreaView } from '@/components/layout/ResponsiveContainer'
-import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
-import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance'
-import { createMobileAccessibility } from '@/utils/mobileAccessibility'
-import { PixelIcon } from '@/components/ui/icons'
-import type { IconName } from '@/components/ui/icons'
+import React, { useState, useEffect } from 'react';
+import { MobileTarotCard } from '@/components/mobile/MobileTarotCard';
+import { MobileReadingInterface } from '@/components/mobile/MobileReadingInterface';
+import { MobileNavigation, MobileTabBar, PullToRefresh } from '@/components/mobile/MobileNavigation';
+import { MobileSpreadSelector } from '@/components/mobile/MobileSpreadSelector';
+import { ResponsiveContainer, MobileGrid, MobileCard, SafeAreaView } from '@/components/layout/ResponsiveContainer';
+import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures';
+import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance';
+import { createMobileAccessibility } from '@/utils/mobileAccessibility';
+import { PixelIcon } from '@/components/ui/icons';
+import type { IconName } from '@/components/ui/icons';
 
 // Mock data for demo
-const mockCard = {
+import { Button } from "@/components/ui/button";const mockCard = {
   id: 1,
   name: '愚者',
   suit: '大秘儀',
@@ -23,61 +23,61 @@ const mockCard = {
   image_url: '/images/cards/fool.jpg',
   keywords: ['新開始', '冒險', '純真', '自由'],
   position: 'upright' as const
-}
+};
 
 const mockSpreads = [
-  {
-    id: 'single',
-    name: '單牌占卜',
-    description: '最簡單的占卜方式，適合快速了解當前狀況或獲得簡單指引。',
-    cardCount: 1,
-    difficulty: 'beginner' as const,
-    category: 'daily' as const,
-    duration: '1-2 分鐘',
-    iconName: 'star' as IconName,
-    preview: ['當前狀況'],
-    positions: [
-      { id: '1', label: '核心訊息', meaning: '代表當前最重要的訊息或指引' }
-    ],
-    isPopular: true
-  },
-  {
-    id: 'love_triangle',
-    name: '愛情三角',
-    description: '探索愛情關係中的各種面向，包括過去、現在和未來的感情走向。',
-    cardCount: 3,
-    difficulty: 'intermediate' as const,
-    category: 'love' as const,
-    duration: '5-10 分鐘',
-    iconName: 'heart' as IconName,
-    preview: ['過去', '現在', '未來'],
-    positions: [
-      { id: '1', label: '過去影響', meaning: '影響現在愛情狀況的過去因素' },
-      { id: '2', label: '當前狀態', meaning: '目前愛情關係的真實狀況' },
-      { id: '3', label: '未來走向', meaning: '愛情關係可能的發展方向' }
-    ],
-    isNew: true
-  },
-  {
-    id: 'career_path',
-    name: '事業道路',
-    description: '深入分析您的職業發展，包括現狀分析、機會與挑戰、以及未來建議。',
-    cardCount: 5,
-    difficulty: 'advanced' as const,
-    category: 'career' as const,
-    duration: '15-20 分鐘',
-    iconName: 'coin' as IconName,
-    preview: ['現狀', '優勢', '挑戰', '機會', '建議'],
-    positions: [
-      { id: '1', label: '現況分析', meaning: '當前職業狀況的整體評估' },
-      { id: '2', label: '個人優勢', meaning: '您在職場上的核心競爭力' },
-      { id: '3', label: '面臨挑戰', meaning: '需要克服的困難或障礙' },
-      { id: '4', label: '發展機會', meaning: '可以把握的成長機會' },
-      { id: '5', label: '行動建議', meaning: '具體的改進或發展策略' }
-    ],
-    isFavorite: true
-  }
-]
+{
+  id: 'single',
+  name: '單牌占卜',
+  description: '最簡單的占卜方式，適合快速了解當前狀況或獲得簡單指引。',
+  cardCount: 1,
+  difficulty: 'beginner' as const,
+  category: 'daily' as const,
+  duration: '1-2 分鐘',
+  iconName: 'star' as IconName,
+  preview: ['當前狀況'],
+  positions: [
+  { id: '1', label: '核心訊息', meaning: '代表當前最重要的訊息或指引' }],
+
+  isPopular: true
+},
+{
+  id: 'love_triangle',
+  name: '愛情三角',
+  description: '探索愛情關係中的各種面向，包括過去、現在和未來的感情走向。',
+  cardCount: 3,
+  difficulty: 'intermediate' as const,
+  category: 'love' as const,
+  duration: '5-10 分鐘',
+  iconName: 'heart' as IconName,
+  preview: ['過去', '現在', '未來'],
+  positions: [
+  { id: '1', label: '過去影響', meaning: '影響現在愛情狀況的過去因素' },
+  { id: '2', label: '當前狀態', meaning: '目前愛情關係的真實狀況' },
+  { id: '3', label: '未來走向', meaning: '愛情關係可能的發展方向' }],
+
+  isNew: true
+},
+{
+  id: 'career_path',
+  name: '事業道路',
+  description: '深入分析您的職業發展，包括現狀分析、機會與挑戰、以及未來建議。',
+  cardCount: 5,
+  difficulty: 'advanced' as const,
+  category: 'career' as const,
+  duration: '15-20 分鐘',
+  iconName: 'coin' as IconName,
+  preview: ['現狀', '優勢', '挑戰', '機會', '建議'],
+  positions: [
+  { id: '1', label: '現況分析', meaning: '當前職業狀況的整體評估' },
+  { id: '2', label: '個人優勢', meaning: '您在職場上的核心競爭力' },
+  { id: '3', label: '面臨挑戰', meaning: '需要克服的困難或障礙' },
+  { id: '4', label: '發展機會', meaning: '可以把握的成長機會' },
+  { id: '5', label: '行動建議', meaning: '具體的改進或發展策略' }],
+
+  isFavorite: true
+}];
+
 
 const mockReading = {
   id: 'demo-reading',
@@ -87,18 +87,18 @@ const mockReading = {
   interpretation: '愚者牌代表著新的開始和無限的可能性。這張牌出現在您的占卜中，暗示著現在是一個適合冒險和嘗試新事物的時機。不要被過去的經驗束縛，保持開放的心態，勇敢地踏出第一步。雖然前方的路充滿未知，但正是這種不確定性帶來了最大的潛力和成長機會。',
   timestamp: new Date(),
   notes: '這是一個充滿希望的卦象，建議保持樂觀積極的態度。'
-}
+};
 
 export default function MobileDemoPage() {
   const [currentDemo, setCurrentDemo] = useState<
-    'cards' | 'reading' | 'spreads' | 'navigation' | 'performance'
-  >('cards')
-  const [showFullscreenReading, setShowFullscreenReading] = useState(false)
-  const [selectedSpread, setSelectedSpread] = useState('')
+    'cards' | 'reading' | 'spreads' | 'navigation' | 'performance'>(
+    'cards');
+  const [showFullscreenReading, setShowFullscreenReading] = useState(false);
+  const [selectedSpread, setSelectedSpread] = useState('');
 
-  const { isTouchDevice, screenSize, isIOS, isAndroid } = useAdvancedDeviceCapabilities()
-  const performanceMetrics = useMobilePerformance()
-  const { qualityLevel, settings } = useAdaptiveQuality()
+  const { isTouchDevice, screenSize, isIOS, isAndroid } = useAdvancedDeviceCapabilities();
+  const performanceMetrics = useMobilePerformance();
+  const { qualityLevel, settings } = useAdaptiveQuality();
 
   // Initialize mobile accessibility
   useEffect(() => {
@@ -107,31 +107,31 @@ export default function MobileDemoPage() {
       enableScreenReader: true,
       enableHighContrast: false,
       fontSize: 'medium'
-    })
+    });
 
-    accessibility.announce('歡迎使用廢土塔羅移動版演示')
+    accessibility.announce('歡迎使用廢土塔羅移動版演示');
 
     return () => {
-      accessibility.destroy()
-    }
-  }, [])
+      accessibility.destroy();
+    };
+  }, []);
 
   const refreshData = async () => {
     // Simulate data refresh
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    console.log('Data refreshed')
-  }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    console.log('Data refreshed');
+  };
 
   const demoTabs = [
-    { id: 'cards', label: '卡牌', iconName: 'star' as IconName, isActive: currentDemo === 'cards' },
-    { id: 'reading', label: '占卜', iconName: 'heart' as IconName, isActive: currentDemo === 'reading' },
-    { id: 'spreads', label: '牌陣', iconName: 'users' as IconName, isActive: currentDemo === 'spreads' },
-    { id: 'navigation', label: '導航', iconName: 'trending-up' as IconName, isActive: currentDemo === 'navigation' },
-    { id: 'performance', label: '性能', iconName: 'zap' as IconName, isActive: currentDemo === 'performance' }
-  ]
+  { id: 'cards', label: '卡牌', iconName: 'star' as IconName, isActive: currentDemo === 'cards' },
+  { id: 'reading', label: '占卜', iconName: 'heart' as IconName, isActive: currentDemo === 'reading' },
+  { id: 'spreads', label: '牌陣', iconName: 'users' as IconName, isActive: currentDemo === 'spreads' },
+  { id: 'navigation', label: '導航', iconName: 'trending-up' as IconName, isActive: currentDemo === 'navigation' },
+  { id: 'performance', label: '性能', iconName: 'zap' as IconName, isActive: currentDemo === 'performance' }];
 
-  const DeviceInfo = () => (
-    <MobileCard variant="outlined" className="mb-6">
+
+  const DeviceInfo = () =>
+  <MobileCard variant="outlined" className="mb-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-pip-boy-green font-bold">設備信息</h3>
         <div className="flex items-center gap-2 text-pip-boy-green/70">
@@ -168,8 +168,8 @@ export default function MobileDemoPage() {
           </div>
         </div>
       </div>
-    </MobileCard>
-  )
+    </MobileCard>;
+
 
   const renderCurrentDemo = () => {
     switch (currentDemo) {
@@ -196,8 +196,8 @@ export default function MobileDemoPage() {
                     enableHaptic={true}
                     onLongPress={(card) => console.log('Long press:', card.name)}
                     onSwipe={(direction, card) => console.log('Swipe:', direction, card.name)}
-                    onDoubleTap={(card) => console.log('Double tap:', card.name)}
-                  />
+                    onDoubleTap={(card) => console.log('Double tap:', card.name)} />
+
                 </div>
 
                 <div className="text-center">
@@ -208,8 +208,8 @@ export default function MobileDemoPage() {
                     position="upright"
                     size="small"
                     enableHaptic={true}
-                    onClick={(card) => console.log('Click:', card.name)}
-                  />
+                    onClick={(card) => console.log('Click:', card.name)} />
+
                 </div>
               </div>
 
@@ -224,18 +224,18 @@ export default function MobileDemoPage() {
                 </ul>
               </div>
 
-              <button
-                onClick={() => setShowFullscreenReading(true)}
-                className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
-                         font-bold hover:bg-pip-boy-green/90 transition-colors
-                         flex items-center justify-center gap-2"
-              >
+              <Button size="default" variant="link"
+              onClick={() => setShowFullscreenReading(true)}
+              className="w-full mt-6 py-3 font-bold transition-colors\n flex items-center justify-center gap-2">
+
+
+
                 體驗全螢幕閱讀
                 <PixelIcon name="arrow-right" size={24} decorative />
-              </button>
+              </Button>
             </MobileCard>
-          </div>
-        )
+          </div>);
+
 
       case 'reading':
         return (
@@ -267,16 +267,16 @@ export default function MobileDemoPage() {
                 </div>
               </div>
 
-              <button
-                onClick={() => setShowFullscreenReading(true)}
-                className="w-full mt-6 py-3 bg-pip-boy-green text-wasteland-dark rounded-lg
-                         font-bold hover:bg-pip-boy-green/90 transition-colors"
-              >
+              <Button size="default" variant="link"
+              onClick={() => setShowFullscreenReading(true)}
+              className="w-full mt-6 py-3 font-bold transition-colors">
+
+
                 開始演示閱讀
-              </button>
+              </Button>
             </MobileCard>
-          </div>
-        )
+          </div>);
+
 
       case 'spreads':
         return (
@@ -294,13 +294,13 @@ export default function MobileDemoPage() {
                 selectedSpread={selectedSpread}
                 onSpreadSelect={setSelectedSpread}
                 onStartReading={(spreadId) => {
-                  console.log('Starting reading with spread:', spreadId)
-                  setShowFullscreenReading(true)
-                }}
-              />
+                  console.log('Starting reading with spread:', spreadId);
+                  setShowFullscreenReading(true);
+                }} />
+
             </MobileCard>
-          </div>
-        )
+          </div>);
+
 
       case 'navigation':
         return (
@@ -320,8 +320,8 @@ export default function MobileDemoPage() {
                   <div className="border border-pip-boy-green/30 rounded-lg overflow-hidden">
                     <MobileTabBar
                       tabs={demoTabs}
-                      onTabChange={setCurrentDemo}
-                    />
+                      onTabChange={setCurrentDemo} />
+
                   </div>
                 </div>
 
@@ -357,8 +357,8 @@ export default function MobileDemoPage() {
                 </div>
               </div>
             </MobileCard>
-          </div>
-        )
+          </div>);
+
 
       case 'performance':
         return (
@@ -419,13 +419,13 @@ export default function MobileDemoPage() {
                 </div>
               </div>
             </MobileCard>
-          </div>
-        )
+          </div>);
+
 
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   return (
     <SafeAreaView className="min-h-screen bg-gradient-to-br from-wasteland-darker via-wasteland-dark to-black">
@@ -441,8 +441,8 @@ export default function MobileDemoPage() {
         <div className="p-4 pb-24">
           <ResponsiveContainer
             enableSwipeNavigation={true}
-            className="max-w-2xl mx-auto"
-          >
+            className="max-w-2xl mx-auto">
+
             {renderCurrentDemo()}
           </ResponsiveContainer>
         </div>
@@ -451,20 +451,20 @@ export default function MobileDemoPage() {
         <MobileTabBar
           tabs={demoTabs}
           onTabChange={setCurrentDemo}
-          className="fixed bottom-0 left-0 right-0"
-        />
+          className="fixed bottom-0 left-0 right-0" />
+
 
         {/* Fullscreen Reading Demo */}
-        {showFullscreenReading && (
-          <MobileReadingInterface
-            reading={mockReading}
-            onClose={() => setShowFullscreenReading(false)}
-            onShare={() => console.log('Share reading')}
-            onSave={() => console.log('Save reading')}
-            enableVoice={true}
-          />
-        )}
+        {showFullscreenReading &&
+        <MobileReadingInterface
+          reading={mockReading}
+          onClose={() => setShowFullscreenReading(false)}
+          onShare={() => console.log('Share reading')}
+          onSave={() => console.log('Save reading')}
+          enableVoice={true} />
+
+        }
       </PullToRefresh>
-    </SafeAreaView>
-  )
+    </SafeAreaView>);
+
 }

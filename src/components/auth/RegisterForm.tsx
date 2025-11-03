@@ -3,65 +3,65 @@
  * 支援 email + password + name 和 Google OAuth 註冊
  */
 
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { PixelIcon } from '@/components/ui/icons'
-import { useOAuth } from '@/hooks/useOAuth'
-import { authAPI } from '@/lib/api'
-import { useAuthStore } from '@/lib/authStore'
-import { toast } from 'sonner'
-import { useFactions } from '@/hooks/useCharacterVoices'
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { PixelIcon } from '@/components/ui/icons';
+import { useOAuth } from '@/hooks/useOAuth';
+import { authAPI } from '@/lib/api';
+import { useAuthStore } from '@/lib/authStore';
+import { toast } from 'sonner';
+import { useFactions } from '@/hooks/useCharacterVoices';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Switch } from '@/components/ui/switch'
+  SelectValue } from
+'@/components/ui/select';
+import { Switch } from '@/components/ui/switch';import { Button } from "@/components/ui/button";
 
 interface FormData {
-  email: string
-  password: string
-  confirmPassword: string
-  name: string
-  faction_alignment: string
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  faction_alignment: string;
 }
 
 interface FormErrors {
-  email?: string
-  password?: string
-  confirmPassword?: string
-  name?: string
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  name?: string;
 }
 
 interface RegisterFormProps {
-  hideHeader?: boolean
+  hideHeader?: boolean;
 }
 
 export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
-  const router = useRouter()
-  const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth()
-  const { setUser } = useAuthStore()
+  const router = useRouter();
+  const { signInWithGoogle, loading: oauthLoading, error: oauthError } = useOAuth();
+  const { setUser } = useAuthStore();
 
   // ✅ 使用 API 載入陣營資料
-  const { factions, isLoading: isLoadingFactions } = useFactions()
+  const { factions, isLoading: isLoadingFactions } = useFactions();
 
   const [formData, setFormData] = useState<FormData>({
     email: '',
     password: '',
     confirmPassword: '',
     name: '',
-    faction_alignment: 'vault_dweller', // 預設為 Vault Dweller
-  })
+    faction_alignment: 'vault_dweller' // 預設為 Vault Dweller
+  });
 
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitError, setSubmitError] = useState<string | null>(null)
-  const [showTraditionalForm, setShowTraditionalForm] = useState(false)
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showTraditionalForm, setShowTraditionalForm] = useState(false);
 
   // ✅ 陣營圖示映射（保留原本的映射邏輯）
   const getFactionIcon = (factionKey: string): string => {
@@ -74,66 +74,66 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
       institute: 'beaker',
       ncr: 'flag',
       legion: 'sword',
-      raiders: 'skull',
-    }
-    return iconMap[factionKey] || 'user'
-  }
+      raiders: 'skull'
+    };
+    return iconMap[factionKey] || 'user';
+  };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: FormErrors = {};
 
     // Email 驗證
     if (!formData.email) {
-      newErrors.email = 'Email 為必填'
+      newErrors.email = 'Email 為必填';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '無效的 Email 格式'
+      newErrors.email = '無效的 Email 格式';
     }
 
     // Name 驗證
     if (!formData.name) {
-      newErrors.name = '名稱為必填'
+      newErrors.name = '名稱為必填';
     } else if (formData.name.length < 1 || formData.name.length > 50) {
-      newErrors.name = '名稱長度需在 1-50 字元之間'
+      newErrors.name = '名稱長度需在 1-50 字元之間';
     }
 
     // Password 驗證
     if (!formData.password) {
-      newErrors.password = '密碼為必填'
+      newErrors.password = '密碼為必填';
     } else if (formData.password.length < 8) {
-      newErrors.password = '密碼至少需要 8 個字元'
+      newErrors.password = '密碼至少需要 8 個字元';
     }
 
     // Confirm Password 驗證
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = '請確認密碼'
+      newErrors.confirmPassword = '請確認密碼';
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = '密碼不一致'
+      newErrors.confirmPassword = '密碼不一致';
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = (field: keyof FormData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }))
+  e: React.ChangeEvent<HTMLInputElement>) =>
+  {
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }));
 
     // Clear field error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }))
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!validateForm()) {
-      return
+      return;
     }
 
-    setIsSubmitting(true)
-    setSubmitError(null)
+    setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
       // 使用 API 服務層呼叫註冊端點
@@ -143,57 +143,57 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
         password: formData.password,
         confirm_password: formData.confirmPassword,
         name: formData.name,
-        faction_alignment: formData.faction_alignment,
-      })
+        faction_alignment: formData.faction_alignment
+      });
 
       // 更新 authStore 狀態
-      setUser(data.user, data.token_expires_at)
+      setUser(data.user, data.token_expires_at);
 
       // 註冊成功後自動登入（後端會設定 httpOnly cookies）
-      toast.success('註冊成功', { description: `歡迎加入，${formData.name}!` })
-      router.push('/dashboard')
+      toast.success('註冊成功', { description: `歡迎加入，${formData.name}!` });
+      router.push('/dashboard');
     } catch (err: any) {
       // 處理各種錯誤情況
-      let errorMessage = '註冊失敗'
+      let errorMessage = '註冊失敗';
 
       if (err.status === 409) {
         // Email 已存在
-        setErrors({ email: 'Email 已被註冊' })
-        errorMessage = 'Email 已被註冊，請使用其他 Email 或嘗試登入'
+        setErrors({ email: 'Email 已被註冊' });
+        errorMessage = 'Email 已被註冊，請使用其他 Email 或嘗試登入';
       } else if (err.status === 422) {
         // 驗證錯誤
-        errorMessage = err.message || '輸入資料格式錯誤'
+        errorMessage = err.message || '輸入資料格式錯誤';
       } else if (err.message) {
-        errorMessage = err.message
+        errorMessage = err.message;
       }
 
-      setSubmitError(errorMessage)
-      toast.error('註冊失敗', { description: errorMessage })
+      setSubmitError(errorMessage);
+      toast.error('註冊失敗', { description: errorMessage });
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleGoogleRegister = async () => {
     try {
-      const result = await signInWithGoogle()
+      const result = await signInWithGoogle();
       if (result.success) {
-        toast.info('正在跳轉至 Google 註冊...')
+        toast.info('正在跳轉至 Google 註冊...');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Google 註冊失敗'
-      toast.error('Google 註冊失敗', { description: errorMessage })
+      const errorMessage = err instanceof Error ? err.message : 'Google 註冊失敗';
+      toast.error('Google 註冊失敗', { description: errorMessage });
     }
-  }
+  };
 
-  const isFormDisabled = isSubmitting || oauthLoading
+  const isFormDisabled = isSubmitting || oauthLoading;
 
   return (
     <div className={hideHeader ? '' : 'min-h-screen flex items-center justify-center px-4 py-8'}>
       <div className={hideHeader ? 'w-full' : 'max-w-md w-full'}>
         {/* Vault-Tec Header */}
-        {!hideHeader && (
-          <div className="text-center mb-8">
+        {!hideHeader &&
+        <div className="text-center mb-8">
             <h1 className="text-4xl text-pip-boy-green mb-2">
               VAULT-TEC
             </h1>
@@ -202,42 +202,42 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             </p>
             <div className="w-full h-px bg-pip-boy-green mt-4 opacity-50"></div>
           </div>
-        )}
+        }
 
         {/* Register Form */}
         <form
           className="bg-wasteland-dark border-2 border-pip-boy-green rounded-none p-6 shadow-lg shadow-pip-boy-green/20"
-          onSubmit={handleSubmit}
-        >
+          onSubmit={handleSubmit}>
+
           {/* Error Display */}
-          {submitError && (
-            <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
+          {submitError &&
+          <div className="mb-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-sm flex items-center">
               <PixelIcon name="alert-triangle" size={16} className="mr-2" aria-label="錯誤" />{submitError}
             </div>
-          )}
+          }
 
           {/* Google Register Button */}
-          <button
-            type="button"
-            onClick={handleGoogleRegister}
-            disabled={isFormDisabled}
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-          >
+          <Button size="icon" variant="outline"
+          type="button"
+          onClick={handleGoogleRegister}
+          disabled={isFormDisabled}
+          className="w-full py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2">
+
             <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             {oauthLoading ? '連接 Google...' : '使用 Google 註冊'}
-          </button>
+          </Button>
 
           {/* OAuth Error Display */}
-          {oauthError && (
-            <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
+          {oauthError &&
+          <div className="mt-4 p-3 border border-red-400 bg-red-900/20 text-red-400 text-xs flex items-center">
               <PixelIcon name="alert-triangle" size={16} className="mr-2" aria-label="錯誤" />{oauthError}
             </div>
-          )}
+          }
 
           {/* Divider */}
           <div className="mt-6 mb-6 flex items-center">
@@ -249,8 +249,8 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           {/* Passkey Register Link */}
           <Link
             href="/auth/register-passkey"
-            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green transition-colors flex items-center justify-center gap-2"
-          >
+            className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green/10 focus:outline-none focus:ring-2 focus:ring-pip-boy-green transition-colors flex items-center justify-center gap-2">
+
             <PixelIcon name="fingerprint" size={20} decorative />
             使用 Passkey 註冊
           </Link>
@@ -264,13 +264,13 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
             <Switch
               checked={showTraditionalForm}
               onCheckedChange={setShowTraditionalForm}
-              className="data-[state=checked]:bg-pip-boy-green data-[state=unchecked]:bg-pip-boy-green/30"
-            />
+              className="data-[state=checked]:bg-pip-boy-green data-[state=unchecked]:bg-pip-boy-green/30" />
+
           </div>
 
           {/* Traditional Form (Conditional) */}
-          {showTraditionalForm && (
-            <>
+          {showTraditionalForm &&
+          <>
               {/* Divider */}
               <div className="mt-6 mb-6 flex items-center">
                 <div className="flex-1 h-px bg-pip-boy-green/30"></div>
@@ -281,93 +281,93 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
               {/* Email Field */}
           <div className="mb-4">
             <label
-              htmlFor="email"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+                htmlFor="email"
+                className="block text-pip-boy-green text-sm mb-2">
+
               Email 信箱
             </label>
             <input
-              id="email"
-              type="email"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
-              placeholder="輸入你的 Email..."
-              value={formData.email}
-              onChange={handleInputChange('email')}
-              disabled={isFormDisabled}
-            />
-            {errors.email && (
+                id="email"
+                type="email"
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+                placeholder="輸入你的 Email..."
+                value={formData.email}
+                onChange={handleInputChange('email')}
+                disabled={isFormDisabled} />
+
+            {errors.email &&
               <p className="mt-1 text-red-400 text-xs flex items-center">
                 <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.email}
               </p>
-            )}
+              }
           </div>
 
           {/* Name Field */}
           <div className="mb-4">
             <label
-              htmlFor="name"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+                htmlFor="name"
+                className="block text-pip-boy-green text-sm mb-2">
+
               名稱
             </label>
             <input
-              id="name"
-              type="text"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
-              placeholder="輸入你的名稱..."
-              value={formData.name}
-              onChange={handleInputChange('name')}
-              disabled={isFormDisabled}
-            />
-            {errors.name && (
+                id="name"
+                type="text"
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+                placeholder="輸入你的名稱..."
+                value={formData.name}
+                onChange={handleInputChange('name')}
+                disabled={isFormDisabled} />
+
+            {errors.name &&
               <p className="mt-1 text-red-400 text-xs flex items-center">
                 <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.name}
               </p>
-            )}
+              }
           </div>
 
           {/* Faction Alignment Field */}
           <div className="mb-4">
             <label
-              htmlFor="faction_alignment"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+                htmlFor="faction_alignment"
+                className="block text-pip-boy-green text-sm mb-2">
+
               陣營選擇
             </label>
             <Select
-              value={formData.faction_alignment}
-              onValueChange={(value) => setFormData(prev => ({ ...prev, faction_alignment: value }))}
-              disabled={isFormDisabled}
-            >
+                value={formData.faction_alignment}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, faction_alignment: value }))}
+                disabled={isFormDisabled}>
+
               <SelectTrigger
-                id="faction_alignment"
-                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/5 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50 data-[placeholder]:text-pip-boy-green/50"
-              >
+                  id="faction_alignment"
+                  className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green hover:bg-pip-boy-green/5 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50 data-[placeholder]:text-pip-boy-green/50">
+
                 <SelectValue placeholder="選擇你的陣營..." />
               </SelectTrigger>
               <SelectContent className="bg-wasteland-dark border-2 border-pip-boy-green">
-                {isLoadingFactions ? (
+                {isLoadingFactions ?
                   <div className="p-3 text-pip-boy-green/70 text-sm text-center">
                     載入陣營資料中...
-                  </div>
-                ) : (
-                  factions.map((faction) => (
-                    <SelectItem
-                      key={faction.id}
-                      value={faction.key}
-                      className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer"
-                    >
+                  </div> :
+
+                  factions.map((faction) =>
+                  <SelectItem
+                    key={faction.id}
+                    value={faction.key}
+                    className="text-pip-boy-green hover:bg-pip-boy-green/10 focus:bg-pip-boy-green/20 focus:text-pip-boy-green cursor-pointer">
+
                       <div className="flex items-center gap-2">
                         <PixelIcon
-                          name={getFactionIcon(faction.key)}
-                          size={16}
-                          decorative
-                        />
+                        name={getFactionIcon(faction.key)}
+                        size={16}
+                        decorative />
+
                         <span>{faction.name}</span>
                       </div>
                     </SelectItem>
-                  ))
-                )}
+                  )
+                  }
               </SelectContent>
             </Select>
             <p className="mt-1 text-pip-boy-green/60 text-xs">
@@ -378,86 +378,86 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
           {/* Password Field */}
           <div className="mb-4">
             <label
-              htmlFor="password"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+                htmlFor="password"
+                className="block text-pip-boy-green text-sm mb-2">
+
               密碼
             </label>
             <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
-              placeholder="至少 8 個字元..."
-              value={formData.password}
-              onChange={handleInputChange('password')}
-              disabled={isFormDisabled}
-            />
-            {errors.password && (
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+                placeholder="至少 8 個字元..."
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                disabled={isFormDisabled} />
+
+            {errors.password &&
               <p className="mt-1 text-red-400 text-xs flex items-center">
                 <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.password}
               </p>
-            )}
+              }
           </div>
 
           {/* Confirm Password Field */}
           <div className="mb-4">
             <label
-              htmlFor="confirmPassword"
-              className="block text-pip-boy-green text-sm mb-2"
-            >
+                htmlFor="confirmPassword"
+                className="block text-pip-boy-green text-sm mb-2">
+
               確認密碼
             </label>
             <input
-              id="confirmPassword"
-              type="password"
-              autoComplete="new-password"
-              className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
-              placeholder="再次輸入密碼..."
-              value={formData.confirmPassword}
-              onChange={handleInputChange('confirmPassword')}
-              disabled={isFormDisabled}
-            />
-            {errors.confirmPassword && (
+                id="confirmPassword"
+                type="password"
+                autoComplete="new-password"
+                className="w-full px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/50 focus:outline-none focus:ring-1 focus:ring-pip-boy-green disabled:opacity-50"
+                placeholder="再次輸入密碼..."
+                value={formData.confirmPassword}
+                onChange={handleInputChange('confirmPassword')}
+                disabled={isFormDisabled} />
+
+            {errors.confirmPassword &&
               <p className="mt-1 text-red-400 text-xs flex items-center">
                 <PixelIcon name="alert-triangle" size={16} className="mr-1" decorative />{errors.confirmPassword}
               </p>
-            )}
+              }
           </div>
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isFormDisabled}
-                className="w-full py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green font-bold text-sm hover:bg-pip-boy-green hover:text-black focus:outline-none focus:ring-2 focus:ring-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
+              <Button size="icon" variant="outline"
+            type="submit"
+            disabled={isFormDisabled}
+            className="w-full py-3 font-bold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+
                 {isSubmitting ? '註冊中...' : '加入 Vault-Tec'}
-              </button>
+              </Button>
             </>
-          )}
+          }
 
           {/* Links */}
-          {!hideHeader && (
-            <div className="mt-6 text-center">
+          {!hideHeader &&
+          <div className="mt-6 text-center">
               <Link
-                href="/auth?tab=login"
-                className="text-pip-boy-green text-sm hover:text-pip-boy-green/80 transition-colors"
-              >
+              href="/auth?tab=login"
+              className="text-pip-boy-green text-sm hover:text-pip-boy-green/80 transition-colors">
+
                 已經有帳號？返回登入
               </Link>
             </div>
-          )}
+          }
         </form>
 
         {/* Terminal Footer */}
-        {!hideHeader && (
-          <div className="mt-8 text-center">
+        {!hideHeader &&
+        <div className="mt-8 text-center">
             <p className="text-pip-boy-green/50 text-xs">
               Vault-Tec：在地下建造更美好的明天
             </p>
           </div>
-        )}
+        }
       </div>
-    </div>
-  )
+    </div>);
+
 }
