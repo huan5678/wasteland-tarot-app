@@ -1,26 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import "remixicon/fonts/remixicon.css";
-import { ZustandAuthInitializer } from "@/components/providers/ZustandAuthProvider";
-import { AnalyticsProvider } from "@/components/providers/AnalyticsProvider";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { DynamicBackground } from "@/components/layout/DynamicBackground";
-import { ErrorBoundary } from "@/components/common/ErrorBoundary";
-import { GlobalErrorDisplay } from "@/components/common/GlobalErrorDisplay";
 import { ClientLayout } from '@/components/layout/ClientLayout';
-import { MetricsInitializer } from '@/components/system/MetricsInitializer';
-import { AudioInitializer } from '@/components/system/AudioInitializer';
-import { ActivityTrackerInitializer } from '@/components/system/ActivityTrackerInitializer';
-import { LoyaltyRewardInitializer } from '@/components/system/LoyaltyRewardInitializer';
-import { AchievementNotificationInitializer } from '@/components/system/AchievementNotificationInitializer';
-import { TiltConfigProvider } from '@/contexts/TiltConfigContext';
-import { MusicPlayerInitializer } from '@/components/system/MusicPlayerInitializer';
-import { MusicPlayerDrawer } from '@/components/music-player/MusicPlayerDrawer';
-import { FontLoadMonitor } from '@/components/system/FontLoadMonitor';
-import { DailyCardBackProvider } from '@/components/providers/DailyCardBackProvider';
-import { NotificationProvider } from '@/components/providers/NotificationProvider';
-import { DynamicMainContent } from '@/components/layout/DynamicMainContent';
+import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
+import { StagedAuthProvider } from '@/components/providers/StagedAuthProvider';
+import { AppProviders } from '@/components/providers/AppProviders';
+import { LoadingStrategy } from '@/components/providers/LoadingStrategy';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
@@ -72,53 +58,36 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <DynamicBackground />
-        <ErrorBoundary>
-          <ZustandAuthInitializer>
-            <AnalyticsProvider>
-              <MetricsInitializer />
-              <AudioInitializer />
-              {/* ActivityTrackerInitializer: 自動追蹤使用者活躍度，累積 30 分鐘後延長 token */}
-              <ActivityTrackerInitializer />
-              {/* FontLoadMonitor: 開發環境字體載入監控 */}
-              <FontLoadMonitor />
-              {/* NotificationProvider: 全域通知系統（忠誠度獎勵等） */}
-              <NotificationProvider>
-                {/* LoyaltyRewardInitializer: 每日登入忠誠度檢查與獎勵通知 */}
-                {/* 必須在 NotificationProvider 內部才能使用 useNotification hook */}
-                <LoyaltyRewardInitializer />
-                {/* AchievementNotificationInitializer: 成就解鎖通知系統 */}
-                {/* 自動顯示新解鎖的成就，支援自動消失與手動關閉 */}
-                <AchievementNotificationInitializer />
-                {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
-                {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
-                <TiltConfigProvider>
-                {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
-                <DailyCardBackProvider>
-                  <GlobalErrorDisplay />
-                  {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
-                  <MusicPlayerInitializer />
-                  <div className="min-h-screen flex flex-col relative z-10">
-                    <ClientLayout>
-                      {/* Header - 固定高度 */}
-                      <Header />
 
-                      {/* Main Content - 動態 padding-top 根據 Header 實際高度 */}
-                      <DynamicMainContent>
-                        {children}
-                      </DynamicMainContent>
+        {/*
+          重構後的 Provider 架構 (Next.js 2025 Best Practices)
 
-                      {/* Footer - 固定高度 */}
-                      <Footer />
-                    </ClientLayout>
-                  </div>
-                  {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
-                  <MusicPlayerDrawer />
-                </DailyCardBackProvider>
-              </TiltConfigProvider>
-              </NotificationProvider>
-            </AnalyticsProvider>
-          </ZustandAuthInitializer>
-        </ErrorBoundary>
+          設計原則：
+          1. StagedAuthProvider: 分階段 Auth 初始化（不阻擋渲染）
+          2. AppProviders: 統一管理所有功能 providers
+          3. LoadingStrategy: 根據頁面類型顯示不同 loading
+          4. 404 頁面完全獨立（在 ConditionalLayout 層級處理）
+
+          效能優化：
+          - Auth 初始化在背景執行，不阻擋頁面顯示
+          - Providers 只包裹 {children}，不包裹整個 HTML
+          - 按需載入，減少不必要的初始化
+        */}
+        <StagedAuthProvider requireAuth={true}>
+          <AppProviders>
+            <LoadingStrategy>
+              <div className="min-h-screen flex flex-col relative z-10">
+                <ClientLayout>
+                  {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
+                  {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
+                  <ConditionalLayout>
+                    {children}
+                  </ConditionalLayout>
+                </ClientLayout>
+              </div>
+            </LoadingStrategy>
+          </AppProviders>
+        </StagedAuthProvider>
       </body>
     </html>
   );
