@@ -3,6 +3,7 @@ Gamification Tasks API Endpoints
 /api/v1/tasks/* - Daily/Weekly tasks operations
 """
 
+import logging
 from typing import List
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -31,10 +32,12 @@ from app.schemas.tasks import (
 )
 from app.services.gamification_tasks_service import (
     GamificationTasksService,
-    get_week_start
+    get_week_start,
+    calculate_weekly_task_progress
 )
 
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/tasks", tags=["📋 Tasks System"])
 
 
@@ -132,13 +135,17 @@ async def get_weekly_tasks(
     db: AsyncSession = Depends(get_db)
 ):
     """
-    獲取每週任務列表
+    獲取每週任務列表（使用動態計算進度）
 
     Returns:
         - tasks: 每週任務列表（含進度）
         - reset_time: 重置時間
         - completed_count: 已完成任務數
         - total_count: 總任務數
+
+    Note:
+        current_value 從原始資料動態計算（Source of Truth）
+        is_completed/is_claimed 從 user_weekly_tasks 查詢
     """
     # 獲取所有每週任務定義
     result = await db.execute(
@@ -149,7 +156,7 @@ async def get_weekly_tasks(
     # 獲取當前週一日期
     week_start = get_week_start(date.today())
 
-    # 獲取用戶任務進度（本週）
+    # 獲取用戶任務進度（本週）- 只用於查詢完成/領取狀態
     result = await db.execute(
         select(UserWeeklyTask).where(
             and_(
@@ -163,12 +170,50 @@ async def get_weekly_tasks(
     # 組裝響應
     task_responses: List[TaskResponse] = []
     completed_count = 0
+    need_update_tasks = []  # 記錄需要更新完成狀態的任務
 
     for task in weekly_tasks:
         user_task = user_tasks.get(task.id)
-        current_value = user_task.current_value if user_task else 0
+
+        # ✅ 動態計算進度（Source of Truth）
+        try:
+            current_value = await calculate_weekly_task_progress(
+                db_session=db,
+                user_id=current_user.id,
+                task_key=task.task_key,
+                week_start=week_start
+            )
+        except Exception as e:
+            logger.error(f"Failed to calculate progress for task {task.task_key}: {e}")
+            current_value = 0
+
+        # 查詢完成/領取狀態
         is_completed = user_task.is_completed if user_task else False
         is_claimed = user_task.is_claimed if user_task else False
+
+        # 自動標記完成（如果達成目標但尚未標記）
+        if current_value >= task.target_value and not is_completed:
+            if user_task:
+                # 已有記錄，更新完成狀態
+                user_task.is_completed = True
+                user_task.completed_at = datetime.now(timezone.utc)
+                need_update_tasks.append(user_task)
+            else:
+                # 沒有記錄，建立新記錄
+                user_task = UserWeeklyTask(
+                    user_id=current_user.id,
+                    task_id=task.id,
+                    task_key=task.task_key,
+                    current_value=current_value,  # 儲存當前值（雖然不使用，但為了相容性）
+                    target_value=task.target_value,
+                    week_start=week_start,
+                    is_completed=True,
+                    completed_at=datetime.now(timezone.utc)
+                )
+                db.add(user_task)
+                need_update_tasks.append(user_task)
+
+            is_completed = True
 
         if is_completed:
             completed_count += 1
@@ -179,12 +224,17 @@ async def get_weekly_tasks(
             name=task.name,
             description=task.description,
             target_value=task.target_value,
-            current_value=current_value,
+            current_value=current_value,  # ✅ 使用動態計算的值
             karma_reward=task.karma_reward,
             is_completed=is_completed,
             is_claimed=is_claimed,
             progress_percentage=calculate_progress_percentage(current_value, task.target_value)
         ))
+
+    # 批次提交更新
+    if need_update_tasks:
+        await db.commit()
+        logger.info(f"Auto-completed {len(need_update_tasks)} weekly tasks for user {current_user.id}")
 
     # 計算重置時間（下週一 00:00 UTC+8）
     reset_time = get_next_monday_midnight()

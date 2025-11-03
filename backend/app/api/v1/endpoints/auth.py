@@ -871,20 +871,30 @@ async def daily_check_in(
         login_result = await token_service.track_daily_login(user_id)
 
         is_first_check_in_today = login_result.get('is_new_day', False)
+        consecutive_days = login_result.get('consecutive_days', 0)
+
+        logger.info(f"📊 [Daily Check-in] user={user_id}, is_new_day={is_first_check_in_today}, consecutive_days={consecutive_days}")
 
         # 每次簽到都更新 daily_login 任務進度
         # update_task_progress 會自動處理重複更新（已完成的任務不會再增加）
+        task_keys_to_update = ['daily_login']
+
+        # ✅ 移除 weekly_streak 即時更新邏輯
+        # weekly 任務進度現在從原始資料動態計算，無需即時更新
+
+        logger.info(f"🔄 [Background Task] Scheduling task updates: {task_keys_to_update}")
+
         background_tasks.add_task(
             schedule_task_progress_update,
             user_id=user_id,
-            task_keys=['daily_login'],
+            task_keys=task_keys_to_update,
             increment=1
         )
 
         if is_first_check_in_today:
-            logger.info(f"Daily check-in (first time today): Updated daily_login task for user {user_id}")
+            logger.info(f"✅ [Daily Check-in] First check-in today: Triggered daily_login update for user {user_id}")
         else:
-            logger.info(f"Daily check-in (already checked in): Ensured daily_login task is updated for user {user_id}")
+            logger.info(f"ℹ️ [Daily Check-in] Already checked in today: Ensured daily_login task is updated for user {user_id}")
 
         return DailyCheckInResponse(
             success=True,

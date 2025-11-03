@@ -36,8 +36,12 @@ async def update_task_progress_background(
         async with AsyncSessionLocal() as session:
             service = GamificationTasksService(db_session=session)
 
+            logger.info(f"🔄 [Background] Starting task updates for user {user_id}: {task_keys}")
+
             for task_key in task_keys:
                 try:
+                    logger.info(f"📝 [Background] Updating task '{task_key}' for user {user_id} (+{increment})")
+
                     result = await service.update_task_progress(
                         user_id=user_id,
                         task_key=task_key,
@@ -46,25 +50,27 @@ async def update_task_progress_background(
 
                     if result.get("is_completed"):
                         logger.info(
-                            f"[Background] User {user_id} completed task '{task_key}' "
+                            f"✅ [Background] User {user_id} COMPLETED task '{task_key}' "
                             f"(value: {result.get('new_value')})"
                         )
                     else:
-                        logger.debug(
-                            f"[Background] User {user_id} updated task '{task_key}' "
+                        logger.info(
+                            f"📊 [Background] User {user_id} updated task '{task_key}' "
                             f"progress to {result.get('new_value')}"
                         )
 
                 except ValueError as e:
                     # 任務不存在或其他錯誤，記錄但繼續處理其他任務
                     logger.warning(
-                        f"[Background] Failed to update task '{task_key}' for user {user_id}: {e}"
+                        f"⚠️ [Background] Failed to update task '{task_key}' for user {user_id}: {e}"
                     )
+
+            logger.info(f"✅ [Background] Finished task updates for user {user_id}")
 
     except Exception as e:
         # 背景任務失敗不影響主流程，但要記錄錯誤
         logger.error(
-            f"[Background] Failed to update task progress for user {user_id}: {e}",
+            f"❌ [Background] Failed to update task progress for user {user_id}: {e}",
             exc_info=True
         )
 

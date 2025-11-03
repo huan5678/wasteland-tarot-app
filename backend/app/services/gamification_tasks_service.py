@@ -3,12 +3,15 @@ Gamification Tasks Service
 處理每日/每週任務的進度更新與獎勵領取邏輯
 """
 
+import logging
 from typing import Dict, Any
 from datetime import date, datetime, timezone, timedelta
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+
+logger = logging.getLogger(__name__)
 
 from app.models.gamification import (
     DailyTask,
@@ -16,6 +19,7 @@ from app.models.gamification import (
     UserDailyTask,
     UserWeeklyTask,
 )
+from app.models.user import UserLoginHistory
 from app.services.gamification_karma_service import GamificationKarmaService
 from app.core.exceptions import UserNotFoundError
 
@@ -36,6 +40,156 @@ def get_week_start(date_obj: date) -> date:
     """
     days_since_monday = date_obj.weekday()  # Monday = 0, Sunday = 6
     return date_obj - timedelta(days=days_since_monday)
+
+
+# ========================================
+# 動態計算 Weekly 任務進度（Source of Truth）
+# ========================================
+
+async def calculate_weekly_streak(
+    db_session: AsyncSession,
+    user_id: UUID,
+    week_start: date
+) -> int:
+    """
+    從 user_login_history 動態計算本週連續登入天數
+
+    Args:
+        db_session: 資料庫會話
+        user_id: 用戶 ID
+        week_start: 週一日期
+
+    Returns:
+        int: 本週內登入的天數（0-7）
+
+    Note:
+        這是 Source of Truth，直接從原始登入記錄計算
+        不依賴 user_weekly_tasks.current_value
+    """
+    week_end = week_start + timedelta(days=6)  # 週日
+
+    # 查詢本週內的所有登入記錄
+    stmt = select(UserLoginHistory).where(
+        and_(
+            UserLoginHistory.user_id == user_id,
+            UserLoginHistory.login_date >= week_start,
+            UserLoginHistory.login_date <= week_end
+        )
+    ).order_by(UserLoginHistory.login_date)
+
+    result = await db_session.execute(stmt)
+    login_records = result.scalars().all()
+
+    # 計算登入天數（去重）
+    login_dates = set()
+    for record in login_records:
+        # login_date 是 datetime，取 date 部分
+        if isinstance(record.login_date, datetime):
+            login_dates.add(record.login_date.date())
+        else:
+            login_dates.add(record.login_date)
+
+    return len(login_dates)
+
+
+async def calculate_weekly_daily_complete(
+    db_session: AsyncSession,
+    user_id: UUID,
+    week_start: date
+) -> int:
+    """
+    從 user_daily_tasks 動態計算本週內完成每日任務的天數
+
+    Args:
+        db_session: 資料庫會話
+        user_id: 用戶 ID
+        week_start: 週一日期
+
+    Returns:
+        int: 本週內完成所有每日任務的天數（0-7）
+
+    Note:
+        「完成每日任務」定義為：當天所有啟用的 daily_tasks 都已完成且領取
+        這是 Source of Truth，從 user_daily_tasks 計算
+    """
+    week_end = week_start + timedelta(days=6)  # 週日
+
+    # 1. 獲取所有啟用的每日任務
+    stmt = select(DailyTask).where(DailyTask.is_active == True)
+    result = await db_session.execute(stmt)
+    all_daily_tasks = result.scalars().all()
+
+    if not all_daily_tasks:
+        return 0
+
+    # 2. 查詢本週內用戶的所有每日任務記錄
+    stmt = select(UserDailyTask).where(
+        and_(
+            UserDailyTask.user_id == user_id,
+            UserDailyTask.task_date >= week_start,
+            UserDailyTask.task_date <= week_end,
+            UserDailyTask.is_completed == True,
+            UserDailyTask.is_claimed == True
+        )
+    )
+    result = await db_session.execute(stmt)
+    user_tasks = result.scalars().all()
+
+    # 3. 按日期分組，檢查每一天是否完成所有任務
+    tasks_by_date: Dict[date, set] = {}
+    for task in user_tasks:
+        if task.task_date not in tasks_by_date:
+            tasks_by_date[task.task_date] = set()
+        tasks_by_date[task.task_date].add(task.task_id)
+
+    # 4. 計算有幾天完成了所有任務
+    all_task_ids = {task.id for task in all_daily_tasks}
+    completed_days = 0
+
+    for task_date, completed_task_ids in tasks_by_date.items():
+        if completed_task_ids == all_task_ids:
+            completed_days += 1
+
+    return completed_days
+
+
+async def calculate_weekly_task_progress(
+    db_session: AsyncSession,
+    user_id: UUID,
+    task_key: str,
+    week_start: date
+) -> int:
+    """
+    統一入口：動態計算 weekly 任務進度
+
+    Args:
+        db_session: 資料庫會話
+        user_id: 用戶 ID
+        task_key: 任務 key
+        week_start: 週一日期
+
+    Returns:
+        int: 當前進度值（未實作的任務返回 0）
+
+    Note:
+        未實作的任務類型會 log warning 並返回 0，不會拋出錯誤
+    """
+    if task_key == "weekly_streak":
+        return await calculate_weekly_streak(db_session, user_id, week_start)
+    elif task_key == "weekly_daily_complete":
+        return await calculate_weekly_daily_complete(db_session, user_id, week_start)
+    elif task_key.startswith("weekly_readings"):
+        # TODO: 從 reading_history 計算（如果有的話）
+        logger.warning(f"⚠️ Task '{task_key}' calculation not implemented yet, returning 0")
+        return 0
+    elif task_key.startswith("weekly_collection"):
+        # TODO: 從 card_collection_history 計算（如果有的話）
+        logger.warning(f"⚠️ Task '{task_key}' calculation not implemented yet, returning 0")
+        return 0
+    else:
+        # 其他未知任務類型，返回 0 並記錄警告
+        logger.warning(f"⚠️ Unknown weekly task '{task_key}', returning 0. Please implement calculation logic.")
+        return 0
 
 
 async def update_task_progress(
@@ -265,6 +419,10 @@ async def claim_task_reward(
             metadata={"task_id": str(task.id), "task_key": task.task_key}
         )
 
+        # ✅ 移除 weekly_daily_complete 即時更新邏輯
+        # weekly 任務進度現在從原始資料動態計算（calculate_weekly_daily_complete）
+        # 不需要在這裡即時更新
+
         return {
             "success": True,
             "karma_earned": task.karma_reward,
@@ -276,6 +434,10 @@ async def claim_task_reward(
         await db_session.rollback()
         raise RuntimeError(f"Failed to claim task reward: {str(e)}") from e
 
+
+# ========================================
+# Service Class
+# ========================================
 
 class GamificationTasksService:
     """
