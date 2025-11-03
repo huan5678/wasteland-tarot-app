@@ -13,13 +13,13 @@ import type { TrackType } from '@/lib/stores/rhythmEditorStore';
 
 /**
  * 軌道標籤映射
- */
+ */import { Button } from "@/components/ui/button";
 const TRACK_LABELS: Record<TrackType, string> = {
   kick: 'Kick',
   snare: 'Snare',
   hihat: 'HiHat',
   openhat: 'OpenHat',
-  clap: 'Clap',
+  clap: 'Clap'
 };
 
 /**
@@ -38,26 +38,26 @@ export const StepButton: React.FC<StepButtonProps> = ({
   step,
   isActive,
   isPlayhead,
-  onClick,
+  onClick
 }) => {
   return (
-    <button
-      type="button"
-      className={cn(
-        'w-full aspect-square rounded border transition-all duration-150',
-        'hover:border-pip-boy-green/70 focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-        // 啟用狀態：Pip-Boy 綠色填滿
-        isActive
-          ? 'bg-pip-boy-green border-pip-boy-green shadow-sm'
-          : 'bg-gray-800 border-gray-600',
-        // 播放頭高亮（脈衝動畫）
-        isPlayhead && 'ring-2 ring-pip-boy-green/80 animate-pulse'
-      )}
-      onClick={() => onClick(track, step)}
-      aria-label={`${TRACK_LABELS[track]} 步驟 ${step + 1}${isActive ? ' (啟用)' : ' (停用)'}`}
-      aria-pressed={isActive}
-    />
-  );
+    <Button size="icon" variant="default"
+    type="button"
+    className="{expression}"
+
+
+
+
+
+
+
+
+
+    onClick={() => onClick(track, step)}
+    aria-label={`${TRACK_LABELS[track]} 步驟 ${step + 1}${isActive ? ' (啟用)' : ' (停用)'}`}
+    aria-pressed={isActive} />);
+
+
 };
 
 /**
@@ -96,7 +96,7 @@ export const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
   pattern,
   currentStep,
   isPlaying,
-  onToggleStep,
+  onToggleStep
 }) => {
   return (
     <div className="flex items-center gap-2 sm:gap-3">
@@ -120,21 +120,21 @@ export const InstrumentTrackRow: React.FC<InstrumentTrackRowProps> = ({
               className={cn(
                 'w-8 sm:w-10 flex-shrink-0',
                 isGroupEnd && 'mr-1'
-              )}
-            >
+              )}>
+
               <StepButton
                 track={track}
                 step={step}
                 isActive={isActive}
                 isPlayhead={isPlayhead}
-                onClick={onToggleStep}
-              />
-            </div>
-          );
+                onClick={onToggleStep} />
+
+            </div>);
+
         })}
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 InstrumentTrackRow.displayName = 'InstrumentTrackRow';

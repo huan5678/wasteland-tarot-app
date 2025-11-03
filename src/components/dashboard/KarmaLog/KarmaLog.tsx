@@ -19,7 +19,7 @@ import { zhTW } from 'date-fns/locale';
 // ============================================================================
 // Action Type Translation Map
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 const ACTION_TYPE_LABELS: Record<string, string> = {
   daily_login: '每日登入',
   complete_reading: '完成占卜',
@@ -28,7 +28,7 @@ const ACTION_TYPE_LABELS: Record<string, string> = {
   milestone: '達成里程碑',
   achievement: '解鎖成就',
   social_interaction: '社交互動',
-  system_reward: '系統獎勵',
+  system_reward: '系統獎勵'
 };
 
 function getActionTypeLabel(actionType: string): string {
@@ -47,15 +47,15 @@ export function KarmaLog() {
     return (
       <div className="bg-black/75 backdrop-blur-sm border-2 border-pip-boy-green p-6 rounded-lg">
         <div className="animate-pulse space-y-3">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex justify-between items-center border-b border-pip-boy-green/20 pb-3">
+          {[...Array(5)].map((_, i) =>
+          <div key={i} className="flex justify-between items-center border-b border-pip-boy-green/20 pb-3">
               <div className="h-4 bg-pip-boy-green/20 rounded w-1/3"></div>
               <div className="h-4 bg-pip-boy-green/20 rounded w-1/4"></div>
             </div>
-          ))}
+          )}
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // Error state
@@ -66,8 +66,8 @@ export function KarmaLog() {
           <div className="text-lg font-bold mb-2">[ ERROR ]</div>
           <div className="text-sm">{error}</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // No logs state
@@ -78,8 +78,8 @@ export function KarmaLog() {
           <div className="text-lg">[ NO LOGS ]</div>
           <div className="text-sm mt-2">尚無 Karma 獲得記錄</div>
         </div>
-      </div>
-    );
+      </div>);
+
   }
 
   // Format relative time
@@ -110,21 +110,21 @@ export function KarmaLog() {
 
       {/* Logs List */}
       <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
-        {logs.map((log) => (
-          <div
-            key={log.id}
-            className="flex justify-between items-start border-b border-pip-boy-green/20 pb-3 hover:bg-pip-boy-green/5 transition-colors px-2 -mx-2 rounded"
-          >
+        {logs.map((log) =>
+        <div
+          key={log.id}
+          className="flex justify-between items-start border-b border-pip-boy-green/20 pb-3 hover:bg-pip-boy-green/5 transition-colors px-2 -mx-2 rounded">
+
             {/* Left side: Action info */}
             <div className="flex-1">
               <div className="text-pip-boy-green font-mono text-sm font-bold">
                 {getActionTypeLabel(log.action_type)}
               </div>
-              {log.description && (
-                <div className="text-pip-boy-green/70 font-mono text-xs mt-1">
+              {log.description &&
+            <div className="text-pip-boy-green/70 font-mono text-xs mt-1">
                   {log.description}
                 </div>
-              )}
+            }
               <div className="text-pip-boy-green/50 font-mono text-xs mt-1">
                 {formatRelativeTime(log.created_at)}
               </div>
@@ -132,29 +132,29 @@ export function KarmaLog() {
 
             {/* Right side: Karma amount */}
             <div
-              className="text-pip-boy-green font-mono text-lg font-bold ml-4"
-              style={{
-                textShadow: '0 0 10px rgba(0, 255, 136, 0.5)',
-              }}
-            >
+            className="text-pip-boy-green font-mono text-lg font-bold ml-4"
+            style={{
+              textShadow: '0 0 10px rgba(0, 255, 136, 0.5)'
+            }}>
+
               +{log.karma_amount}
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Load More Button */}
-      {currentPage < totalPages && (
-        <div className="mt-4 text-center">
-          <button
-            onClick={handleLoadMore}
-            disabled={isLoading}
-            className="px-6 py-2 bg-pip-boy-green/20 border-2 border-pip-boy-green text-pip-boy-green font-mono font-bold rounded hover:bg-pip-boy-green/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+      {currentPage < totalPages &&
+      <div className="mt-4 text-center">
+          <Button size="icon" variant="outline"
+        onClick={handleLoadMore}
+        disabled={isLoading}
+        className="px-6 py-2 font-mono font-bold rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+
             {isLoading ? '載入中...' : `載入更多 (${currentPage}/${totalPages})`}
-          </button>
+          </Button>
         </div>
-      )}
+      }
 
       {/* Custom Scrollbar Styles */}
       <style jsx>{`
@@ -176,6 +176,6 @@ export function KarmaLog() {
           background: rgba(0, 255, 136, 0.7);
         }
       `}</style>
-    </div>
-  );
+    </div>);
+
 }

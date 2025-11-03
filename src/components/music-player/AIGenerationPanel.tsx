@@ -16,16 +16,16 @@ import Link from 'next/link';
 
 /**
  * 快速關鍵字列表
- */
+ */import { Button } from "@/components/ui/button";
 const QUICK_KEYWORDS = [
-  '808 Cowbell',
-  'Glitch',
-  'Jazz Fusion',
-  'Afrobeat',
-  'Lo-Fi',
-  'Stadium Rock',
-  'Ambient',
-] as const;
+'808 Cowbell',
+'Glitch',
+'Jazz Fusion',
+'Afrobeat',
+'Lo-Fi',
+'Stadium Rock',
+'Ambient'] as
+const;
 
 /**
  * AIGenerationPanel 組件屬性
@@ -143,23 +143,23 @@ export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSave
           <PixelIcon name="magic" sizePreset="sm" decorative />
           AI 節奏生成
         </h3>
-        {isAuthenticated && aiQuota && (
-          <div className="flex items-center gap-2">
+        {isAuthenticated && aiQuota &&
+        <div className="flex items-center gap-2">
             <span
-              className={cn(
-                'text-sm font-mono',
-                isQuotaExhausted ? 'text-red-400' : 'text-pip-boy-green'
-              )}
-            >
+            className={cn(
+              'text-sm font-mono',
+              isQuotaExhausted ? 'text-red-400' : 'text-pip-boy-green'
+            )}>
+
               {aiQuota.remaining}/{aiQuota.limit} remaining
             </span>
           </div>
-        )}
+        }
       </div>
 
       {/* 未登入提示 */}
-      {!isAuthenticated && (
-        <div className="p-4 bg-yellow-900/20 border-2 border-yellow-600 rounded-lg space-y-3">
+      {!isAuthenticated &&
+      <div className="p-4 bg-yellow-900/20 border-2 border-yellow-600 rounded-lg space-y-3">
           <div className="flex items-center gap-2">
             <PixelIcon name="lock" variant="warning" sizePreset="md" decorative />
             <div className="flex-1">
@@ -170,72 +170,72 @@ export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSave
             </div>
           </div>
           <Link
-            href="/login"
-            className={cn(
-              'block w-full px-4 py-2.5 rounded-lg border-2',
-              'bg-yellow-600/20 border-yellow-600 text-yellow-400',
-              'hover:bg-yellow-600/30 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-yellow-600/50',
-              'flex items-center justify-center gap-2 font-medium text-sm'
-            )}
-          >
+          href="/login"
+          className={cn(
+            'block w-full px-4 py-2.5 rounded-lg border-2',
+            'bg-yellow-600/20 border-yellow-600 text-yellow-400',
+            'hover:bg-yellow-600/30 transition-colors',
+            'focus:outline-none focus:ring-2 focus:ring-yellow-600/50',
+            'flex items-center justify-center gap-2 font-medium text-sm'
+          )}>
+
             <PixelIcon name="login-box" sizePreset="sm" decorative />
             <span>前往登入</span>
           </Link>
         </div>
-      )}
+      }
 
       {/* 已登入：顯示 AI 生成功能 */}
-      {isAuthenticated && (
-        <>
+      {isAuthenticated &&
+      <>
           {/* 配額用盡警告 */}
-          {isQuotaExhausted && (
-            <div className="p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
+          {isQuotaExhausted &&
+        <div className="p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
               <PixelIcon name="forbid" variant="error" sizePreset="sm" decorative />
               <span className="text-xs text-red-400">
                 今日配額已用完（{aiQuota?.used}/{aiQuota?.limit}），明日重置
               </span>
             </div>
-          )}
+        }
 
           {/* 成功訊息與儲存按鈕 */}
-          {successMessage && (
-            <div className="space-y-3">
+          {successMessage &&
+        <div className="space-y-3">
               <div className="p-3 bg-pip-boy-green/20 border border-pip-boy-green rounded-lg flex items-center gap-2">
                 <PixelIcon name="checkbox-circle" variant="success" sizePreset="sm" decorative />
                 <span className="text-sm text-pip-boy-green">{successMessage}</span>
               </div>
 
               {/* 儲存為 Preset 按鈕 */}
-              {onOpenSaveDialog && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSuccessMessage('');
-                    onOpenSaveDialog();
-                  }}
-                  className={cn(
-                    'w-full px-4 py-2.5 rounded-lg border-2',
-                    'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green',
-                    'hover:bg-pip-boy-green/30 transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-                    'flex items-center justify-center gap-2 font-medium'
-                  )}
-                >
+              {onOpenSaveDialog &&
+          <Button size="default" variant="default"
+          type="button"
+          onClick={() => {
+            setSuccessMessage('');
+            onOpenSaveDialog();
+          }}
+          className="{expression}">
+
+
+
+
+
+
+
                   <PixelIcon name="save" sizePreset="sm" decorative />
                   <span>儲存為 Preset</span>
-                </button>
-              )}
+                </Button>
+          }
             </div>
-          )}
+        }
 
           {/* 錯誤訊息 */}
-          {(validationError || error) && (
-            <div className="p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
+          {(validationError || error) &&
+        <div className="p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
               <PixelIcon name="error-warning" variant="error" sizePreset="sm" decorative />
               <span className="text-sm text-red-400">{validationError || error}</span>
             </div>
-          )}
+        }
 
           {/* 快速關鍵字按鈕 */}
           <div>
@@ -243,24 +243,24 @@ export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSave
               快速關鍵字
             </label>
             <div className="flex flex-wrap gap-2">
-              {QUICK_KEYWORDS.map((keyword) => (
-                <button
-                  key={keyword}
-                  type="button"
-                  onClick={() => handleKeywordClick(keyword)}
-                  disabled={isLoading || isQuotaExhausted}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg border-2 text-xs',
-                    'bg-gray-800 border-gray-600 text-pip-boy-green',
-                    'hover:border-pip-boy-green/70 hover:bg-gray-700',
-                    'transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-                    'disabled:opacity-50 disabled:cursor-not-allowed'
-                  )}
-                >
+              {QUICK_KEYWORDS.map((keyword) =>
+            <Button size="icon" variant="default"
+            key={keyword}
+            type="button"
+            onClick={() => handleKeywordClick(keyword)}
+            disabled={isLoading || isQuotaExhausted}
+            className="{expression}">
+
+
+
+
+
+
+
+
                   {keyword}
-                </button>
-              ))}
+                </Button>
+            )}
             </div>
           </div>
 
@@ -270,55 +270,55 @@ export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSave
               生成提示
             </label>
             <textarea
-              id="ai-prompt"
-              value={prompt}
-              onChange={handlePromptChange}
-              maxLength={200}
-              rows={3}
-              placeholder="描述你想要的節奏風格...（例如：808 Cowbell、Glitch、Jazz Fusion）"
-              disabled={isLoading || isQuotaExhausted}
-              className={cn(
-                'w-full px-3 py-2 rounded-lg resize-none',
-                'bg-gray-800 border-2 border-gray-600',
-                'text-pip-boy-green placeholder-gray-500',
-                'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/50',
-                'transition-colors',
-                'disabled:opacity-50 disabled:cursor-not-allowed'
-              )}
-            />
+            id="ai-prompt"
+            value={prompt}
+            onChange={handlePromptChange}
+            maxLength={200}
+            rows={3}
+            placeholder="描述你想要的節奏風格...（例如：808 Cowbell、Glitch、Jazz Fusion）"
+            disabled={isLoading || isQuotaExhausted}
+            className={cn(
+              'w-full px-3 py-2 rounded-lg resize-none',
+              'bg-gray-800 border-2 border-gray-600',
+              'text-pip-boy-green placeholder-gray-500',
+              'focus:outline-none focus:border-pip-boy-green focus:ring-2 focus:ring-pip-boy-green/50',
+              'transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )} />
+
             <div className="mt-1 text-xs text-pip-boy-green/60 text-right">
               {prompt.length} / 200
             </div>
           </div>
 
           {/* 生成按鈕 */}
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={isLoading || isQuotaExhausted || !prompt.trim()}
-            className={cn(
-              'w-full px-4 py-3 rounded-lg border-2',
-              'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green',
-              'hover:bg-pip-boy-green/30 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'flex items-center justify-center gap-2 font-medium'
-            )}
-          >
-            {isLoading ? (
-              <>
+          <Button size="icon" variant="default"
+        type="button"
+        onClick={handleGenerate}
+        disabled={isLoading || isQuotaExhausted || !prompt.trim()}
+        className="{expression}">
+
+
+
+
+
+
+
+
+            {isLoading ?
+          <>
                 <PixelIcon name="loader-4" animation="spin" sizePreset="md" decorative />
                 <span className="uppercase tracking-wide">Generating Rhythm...</span>
-              </>
-            ) : (
-              <>
+              </> :
+
+          <>
                 <PixelIcon name="sparkling" sizePreset="md" decorative />
                 <span>生成節奏</span>
               </>
-            )}
-          </button>
+          }
+          </Button>
         </>
-      )}
+      }
 
       {/* 使用說明 */}
       <div className="p-4 bg-gray-800/50 border border-gray-700 rounded-lg">
@@ -333,8 +333,8 @@ export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSave
           <li>• 生成後可直接編輯或儲存為 Preset</li>
         </ul>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 AIGenerationPanel.displayName = 'AIGenerationPanel';

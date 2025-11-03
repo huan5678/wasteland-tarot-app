@@ -15,7 +15,7 @@ import { EditorAudioSynthesizer } from '@/lib/audio/EditorAudioSynthesizer';
 
 /**
  * RhythmEditorControls 組件屬性
- */
+ */import { Button } from "@/components/ui/button";
 export interface RhythmEditorControlsProps {
   /** 開啟儲存 Preset 對話框的回調 */
   onOpenSaveDialog?: () => void;
@@ -67,7 +67,7 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
     if (!synthesizerRef.current) {
       synthesizerRef.current = new EditorAudioSynthesizer({
         audioContext: new (window.AudioContext || (window as any).webkitAudioContext)(),
-        tempo,
+        tempo
       });
     }
 
@@ -101,7 +101,7 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
     play();
 
     // 模擬播放頭更新（實際應該從 EditorAudioSynthesizer 取得）
-    const stepDuration = (60 / tempo) / 4 * 1000; // 毫秒
+    const stepDuration = 60 / tempo / 4 * 1000; // 毫秒
 
     intervalIdRef.current = setInterval(() => {
       setCurrentStep((prev) => (prev + 1) % 16);
@@ -180,109 +180,109 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             {/* Play/Pause 按鈕 */}
-            <button
-              type="button"
-              onClick={isPlaying ? handlePause : handlePlay}
-              className={cn(
-                'flex items-center justify-center w-12 h-12 rounded-lg',
-                'border-2 transition-all duration-200',
-                'hover:scale-105 active:scale-95',
-                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-                isPlaying
-                  ? 'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green'
-                  : 'bg-gray-800 border-gray-600 text-pip-boy-green hover:border-pip-boy-green/70'
-              )}
-              aria-label={isPlaying ? '暫停' : '播放'}
-            >
+            <Button size="icon" variant="default"
+            type="button"
+            onClick={isPlaying ? handlePause : handlePlay}
+            className="{expression}"
+
+
+
+
+
+
+
+
+            aria-label={isPlaying ? '暫停' : '播放'}>
+
               <PixelIcon
                 name={isPlaying ? 'pause' : 'play'}
                 sizePreset="md"
                 variant="primary"
                 animation={isPlaying ? 'pulse' : undefined}
-                aria-label={isPlaying ? '暫停' : '播放'}
-              />
-            </button>
+                aria-label={isPlaying ? '暫停' : '播放'} />
+
+            </Button>
 
             {/* Stop 按鈕 */}
-            <button
-              type="button"
-              onClick={handleStop}
-              disabled={!isPlaying}
-              className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-lg',
-                'border-2 transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-                !isPlaying
-                  ? 'bg-gray-900 border-gray-700 text-gray-600 cursor-not-allowed'
-                  : 'bg-gray-800 border-gray-600 text-red-500 hover:border-red-500/70 hover:scale-105'
-              )}
-              aria-label="停止"
-            >
+            <Button size="icon" variant="default"
+            type="button"
+            onClick={handleStop}
+            disabled={!isPlaying}
+            className="{expression}"
+
+
+
+
+
+
+
+            aria-label="停止">
+
               <PixelIcon name="stop" sizePreset="sm" variant="error" aria-label="停止" />
-            </button>
+            </Button>
 
             {/* Clear 按鈕 */}
-            <button
-              type="button"
-              onClick={handleClear}
-              className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-lg',
-                'border-2 bg-gray-800 border-gray-600 transition-all duration-200',
-                'text-yellow-500 hover:border-yellow-500/70 hover:scale-105',
-                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50'
-              )}
-              aria-label="清除"
-            >
+            <Button size="icon" variant="default"
+            type="button"
+            onClick={handleClear}
+            className="{expression}"
+
+
+
+
+
+            aria-label="清除">
+
               <PixelIcon name="delete-bin" sizePreset="sm" variant="warning" aria-label="清除" />
-            </button>
+            </Button>
 
             {/* 分隔線 */}
             <div className="w-px h-10 bg-gray-700" />
 
             {/* 循環播放按鈕 */}
-            <button
-              type="button"
-              onClick={handleToggleLoop}
-              className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-lg',
-                'border-2 transition-all duration-200',
-                'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-                loop
-                  ? 'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green'
-                  : 'bg-gray-800 border-gray-600 text-gray-500 hover:border-gray-500/70 hover:scale-105'
-              )}
-              aria-label={loop ? '停用循環播放' : '啟用循環播放'}
-              aria-pressed={loop}
-            >
+            <Button size="icon" variant="default"
+            type="button"
+            onClick={handleToggleLoop}
+            className="{expression}"
+
+
+
+
+
+
+
+            aria-label={loop ? '停用循環播放' : '啟用循環播放'}
+            aria-pressed={loop}>
+
               <PixelIcon
                 name="repeat"
                 sizePreset="sm"
                 variant={loop ? 'primary' : 'muted'}
-                aria-label={loop ? '停用循環播放' : '啟用循環播放'}
-              />
-            </button>
+                aria-label={loop ? '停用循環播放' : '啟用循環播放'} />
+
+            </Button>
 
             {/* 儲存按鈕 */}
-            {onOpenSaveDialog && (
-              <>
+            {onOpenSaveDialog &&
+            <>
                 {/* 分隔線 */}
                 <div className="w-px h-10 bg-gray-700" />
 
-                <button
-                  type="button"
-                  onClick={onOpenSaveDialog}
-                  className={cn(
-                    'flex items-center justify-center w-10 h-10 rounded-lg',
-                    'border-2 bg-gray-800 border-gray-600 transition-all duration-200',
-                    'text-pip-boy-green hover:border-pip-boy-green/70 hover:scale-105',
-                    'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50'
-                  )}
-                  aria-label="儲存節奏"
-                >
+                <Button size="icon" variant="default"
+              type="button"
+              onClick={onOpenSaveDialog}
+              className="{expression}"
+
+
+
+
+
+              aria-label="儲存節奏">
+
                   <PixelIcon name="save" sizePreset="sm" variant="primary" aria-label="儲存" />
-                </button>
+                </Button>
               </>
-            )}
+            }
           </div>
         </div>
 
@@ -326,8 +326,8 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
               aria-valuenow={tempo}
               aria-valuemin={60}
               aria-valuemax={180}
-              aria-label={`節拍速度 ${tempo} BPM`}
-            />
+              aria-label={`節拍速度 ${tempo} BPM`} />
+
 
             <div className="flex items-center justify-between text-xs text-pip-boy-green/60">
               <span>60</span>
@@ -339,54 +339,54 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
       </div>
 
       {/* Clear 確認對話框（在 grid 外部） */}
-      {showClearDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          role="dialog"
-          aria-labelledby="clear-dialog-title"
-          aria-modal="true"
-        >
+      {showClearDialog &&
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+        role="dialog"
+        aria-labelledby="clear-dialog-title"
+        aria-modal="true">
+
           <div className="bg-gray-900 border-2 border-pip-boy-green rounded-lg p-6 max-w-sm mx-4 shadow-2xl">
             <h3
-              id="clear-dialog-title"
-              className="text-lg text-pip-boy-green font-bold mb-4"
-            >
+            id="clear-dialog-title"
+            className="text-lg text-pip-boy-green font-bold mb-4">
+
               確認清除
             </h3>
             <p className="text-sm text-gray-300 mb-6">
               確定要清除所有步驟嗎？此操作無法復原。
             </p>
             <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={cancelClear}
-                className={cn(
-                  'px-4 py-2 rounded-lg border-2',
-                  'bg-gray-800 border-gray-600 text-gray-300',
-                  'hover:border-pip-boy-green/70 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50'
-                )}
-              >
+              <Button size="default" variant="default"
+            type="button"
+            onClick={cancelClear}
+            className="{expression}">
+
+
+
+
+
+
                 取消
-              </button>
-              <button
-                type="button"
-                onClick={confirmClear}
-                className={cn(
-                  'px-4 py-2 rounded-lg border-2',
-                  'bg-red-900/50 border-red-500 text-red-400',
-                  'hover:bg-red-900/70 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-red-500/50'
-                )}
-              >
+              </Button>
+              <Button size="default" variant="success"
+            type="button"
+            onClick={confirmClear}
+            className="{expression}">
+
+
+
+
+
+
                 確認清除
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-      )}
-    </>
-  );
+      }
+    </>);
+
 };
 
 RhythmEditorControls.displayName = 'RhythmEditorControls';

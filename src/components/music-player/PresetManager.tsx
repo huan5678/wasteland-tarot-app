@@ -15,7 +15,7 @@ import type { UserRhythmPreset } from '@/lib/stores/rhythmPlaylistStore';
 
 /**
  * PresetButton 組件 - 單個 Preset 按鈕
- */
+ */import { Button } from "@/components/ui/button";
 interface PresetButtonProps {
   preset: UserRhythmPreset;
   isActive: boolean;
@@ -29,7 +29,7 @@ const PresetButton: React.FC<PresetButtonProps> = ({
   isActive,
   isSystemPreset = false,
   onLoad,
-  onDelete,
+  onDelete
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -50,105 +50,105 @@ const PresetButton: React.FC<PresetButtonProps> = ({
   return (
     <>
       <div className="relative group">
-        <button
-          type="button"
-          onClick={() => onLoad(preset)}
-          className={cn(
-            'relative w-full px-4 py-3 rounded-lg border-2 text-left',
-            'transition-all duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
-            // 啟用狀態：綠色背景填滿
-            isActive
-              ? 'bg-pip-boy-green/30 border-pip-boy-green text-pip-boy-green'
-              : 'bg-gray-800 border-gray-600 text-pip-boy-green hover:border-pip-boy-green/70'
-          )}
-        >
+        <Button size="icon" variant="default"
+        type="button"
+        onClick={() => onLoad(preset)}
+        className="{expression}">
+
+
+
+
+
+
+
+
+
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <div className="font-medium text-sm truncate">{preset.name}</div>
-              {preset.description && (
-                <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+              {preset.description &&
+              <div className="text-xs text-gray-400 mt-1 line-clamp-2">
                   {preset.description}
                 </div>
-              )}
+              }
             </div>
             {/* 預留刪除按鈕空間 */}
             {!isSystemPreset && onDelete && <div className="w-6" />}
           </div>
-        </button>
+        </Button>
 
         {/* 刪除按鈕（移到按鈕外面，使用絕對定位） */}
-        {!isSystemPreset && onDelete && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            className={cn(
-              'absolute top-3 right-3',
-              'opacity-0 group-hover:opacity-100 transition-opacity',
-              'p-1 rounded hover:bg-red-900/50',
-              'focus:outline-none focus:opacity-100',
-              'z-10'
-            )}
-            aria-label="刪除"
-          >
+        {!isSystemPreset && onDelete &&
+        <Button size="icon" variant="destructive"
+        type="button"
+        onClick={handleDelete}
+        className="{expression}"
+
+
+
+
+
+
+        aria-label="刪除">
+
             <PixelIcon name="delete-bin" sizePreset="xs" variant="error" aria-label="刪除" />
-          </button>
-        )}
+          </Button>
+        }
       </div>
 
       {/* 刪除確認對話框 */}
-      {showDeleteDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          role="dialog"
-          aria-labelledby="delete-preset-dialog-title"
-          aria-modal="true"
-          onClick={cancelDelete}
-        >
+      {showDeleteDialog &&
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+        role="dialog"
+        aria-labelledby="delete-preset-dialog-title"
+        aria-modal="true"
+        onClick={cancelDelete}>
+
           <div
-            className="bg-gray-900 border-2 border-pip-boy-green rounded-lg p-6 max-w-sm shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
+          className="bg-gray-900 border-2 border-pip-boy-green rounded-lg p-6 max-w-sm shadow-2xl"
+          onClick={(e) => e.stopPropagation()}>
+
             <h3
-              id="delete-preset-dialog-title"
-              className="text-lg text-pip-boy-green font-bold mb-4"
-            >
+            id="delete-preset-dialog-title"
+            className="text-lg text-pip-boy-green font-bold mb-4">
+
               確認刪除
             </h3>
             <p className="text-sm text-gray-300 mb-6">
               確定要刪除「{preset.name}」嗎？此操作無法復原。
             </p>
             <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={cancelDelete}
-                className={cn(
-                  'px-4 py-2 rounded-lg border-2',
-                  'bg-gray-800 border-gray-600 text-gray-300',
-                  'hover:border-pip-boy-green/70 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50'
-                )}
-              >
+              <Button size="default" variant="destructive"
+            type="button"
+            onClick={cancelDelete}
+            className="{expression}">
+
+
+
+
+
+
                 取消
-              </button>
-              <button
-                type="button"
-                onClick={confirmDelete}
-                className={cn(
-                  'px-4 py-2 rounded-lg border-2',
-                  'bg-red-900/50 border-red-500 text-red-400',
-                  'hover:bg-red-900/70 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-red-500/50'
-                )}
-              >
+              </Button>
+              <Button size="default" variant="destructive"
+            type="button"
+            onClick={confirmDelete}
+            className="{expression}">
+
+
+
+
+
+
                 確認刪除
-              </button>
+              </Button>
             </div>
           </div>
         </div>
-      )}
-    </>
-  );
+      }
+    </>);
+
 };
 
 /**
@@ -219,24 +219,24 @@ export const PresetManager: React.FC = () => {
           系統預設
         </h3>
 
-        {isLoading && systemPresets.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
+        {isLoading && systemPresets.length === 0 ?
+        <div className="flex items-center justify-center py-8">
             <PixelIcon name="loader-4" animation="spin" sizePreset="md" decorative />
             <span className="ml-2 text-sm text-pip-boy-green">載入中...</span>
+          </div> :
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {systemPresets.map((preset) =>
+          <PresetButton
+            key={preset.id}
+            preset={preset}
+            isActive={activePresetId === preset.id}
+            isSystemPreset
+            onLoad={handleLoadPreset} />
+
+          )}
           </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {systemPresets.map((preset) => (
-              <PresetButton
-                key={preset.id}
-                preset={preset}
-                isActive={activePresetId === preset.id}
-                isSystemPreset
-                onLoad={handleLoadPreset}
-              />
-            ))}
-          </div>
-        )}
+        }
       </div>
 
       {/* 使用者自訂 Presets */}
@@ -252,45 +252,45 @@ export const PresetManager: React.FC = () => {
         </div>
 
         {/* 限制警告 */}
-        {isAtLimit && (
-          <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-500 rounded-lg flex items-center gap-2">
+        {isAtLimit &&
+        <div className="mb-3 p-3 bg-yellow-900/20 border border-yellow-500 rounded-lg flex items-center gap-2">
             <PixelIcon name="alert" variant="warning" sizePreset="sm" decorative />
             <span className="text-xs text-yellow-400">
               已達到上限（10 個），請刪除舊的 Preset 後再儲存新的
             </span>
           </div>
-        )}
+        }
 
         {/* 錯誤訊息 */}
-        {error && (
-          <div className="mb-3 p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
+        {error &&
+        <div className="mb-3 p-3 bg-red-900/20 border border-red-500 rounded-lg flex items-center gap-2">
             <PixelIcon name="error-warning" variant="error" sizePreset="sm" decorative />
             <span className="text-xs text-red-400">{error}</span>
           </div>
-        )}
+        }
 
-        {isLoading && userPresets.length === 0 ? (
-          <div className="flex items-center justify-center py-8">
+        {isLoading && userPresets.length === 0 ?
+        <div className="flex items-center justify-center py-8">
             <PixelIcon name="loader-4" animation="spin" sizePreset="md" decorative />
             <span className="ml-2 text-sm text-pip-boy-green">載入中...</span>
-          </div>
-        ) : userPresets.length === 0 ? (
-          <div className="text-center py-8 text-sm text-gray-400">
+          </div> :
+        userPresets.length === 0 ?
+        <div className="text-center py-8 text-sm text-gray-400">
             還沒有自訂的 Preset，開始創作你的節奏吧！
+          </div> :
+
+        <div className="max-h-80 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
+            {userPresets.map((preset) =>
+          <PresetButton
+            key={preset.id}
+            preset={preset}
+            isActive={activePresetId === preset.id}
+            onLoad={handleLoadPreset}
+            onDelete={handleDeletePreset} />
+
+          )}
           </div>
-        ) : (
-          <div className="max-h-80 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
-            {userPresets.map((preset) => (
-              <PresetButton
-                key={preset.id}
-                preset={preset}
-                isActive={activePresetId === preset.id}
-                onLoad={handleLoadPreset}
-                onDelete={handleDeletePreset}
-              />
-            ))}
-          </div>
-        )}
+        }
       </div>
 
       {/* 自訂捲軸樣式 */}
@@ -310,8 +310,8 @@ export const PresetManager: React.FC = () => {
           background: #00dd77;
         }
       `}</style>
-    </div>
-  );
+    </div>);
+
 };
 
 PresetManager.displayName = 'PresetManager';
