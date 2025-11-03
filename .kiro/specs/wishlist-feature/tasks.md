@@ -34,13 +34,14 @@
 
 ## 第二階段：後端業務邏輯與 API
 
-- [ ] 2. 實作內容驗證工具
+- [x] 2. 實作內容驗證工具
   - 建立 `ContentValidator` 類別，提供 Markdown 內容驗證功能
   - 實作純文字長度計算方法：使用正則表達式移除 Markdown 語法符號（程式碼區塊、行內程式碼、連結、標題符號、粗體斜體、引用、清單符號）
   - 實作願望內容驗證方法：檢查非空白、純文字長度 1-500 字
   - 實作管理員回覆驗證方法：檢查非空白、純文字長度 1-1000 字
   - 拋出明確的自訂例外（ContentEmptyError、ContentTooLongError）
   - _Requirements: 1.4, 5.2, 11.6_
+  - **Completed**: ContentValidator class created at `backend/app/services/content_validator.py` with comprehensive Markdown stripping, character counting (plain text after Markdown removal), and validation methods. Custom exceptions defined. All 40 tests passing with 95% code coverage.
 
 - [ ] 2.1 實作時區處理工具
   - 建立 `TimezoneUtil` 模組，提供 UTC+8 時區計算功能
