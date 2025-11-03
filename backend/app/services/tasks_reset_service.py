@@ -84,7 +84,7 @@ class TasksResetService:
         """
         try:
             # 獲取當前週一日期
-            current_week_start = get_week_start()
+            current_week_start = get_week_start(date.today())
 
             # 刪除非本週的每週任務記錄
             result = await db.execute(

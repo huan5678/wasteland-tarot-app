@@ -70,7 +70,8 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-select',
     ],
     // 實驗性功能：更積極的 code splitting
-    optimizeCss: true,
+    // 已停用：需要 critters 模組且在開發環境可能造成問題
+    // optimizeCss: true,
   },
 
   typescript: {

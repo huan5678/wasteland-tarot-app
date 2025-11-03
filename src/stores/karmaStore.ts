@@ -1,9 +1,12 @@
 /**
  * Karma Store - Zustand state management for Dashboard Gamification Karma System
  * Handles Karma summary, logs, loading states, and error handling
+ *
+ * ✅ Refactored to use unified API Client (Task 2)
  */
 
 import { create } from 'zustand';
+import { api } from '@/lib/apiClient';
 
 // ============================================================================
 // TypeScript Interfaces
@@ -87,53 +90,6 @@ interface KarmaStore {
 }
 
 // ============================================================================
-// Helper Functions
-// ============================================================================
-
-/**
- * Get Supabase access token from localStorage
- */
-function getAccessToken(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  const authData = localStorage.getItem('auth');
-  if (!authData) return null;
-
-  try {
-    const parsed = JSON.parse(authData);
-    return parsed.state?.session?.access_token || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Make authenticated API request
- */
-async function makeAuthenticatedRequest(url: string, options: RequestInit = {}) {
-  const token = getAccessToken();
-
-  if (!token) {
-    throw new Error('未認證：請先登入');
-  }
-
-  const response = await fetch(url, {
-    ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`API 錯誤 (${response.status}): ${errorText}`);
-  }
-
-  return response.json();
-}
-
-// ============================================================================
 // Zustand Store
 // ============================================================================
 
@@ -153,13 +109,14 @@ export const useKarmaStore = create<KarmaStore>((set, get) => ({
   // Actions
   // ========================================
 
+  /**
+   * Task 2.1: Fetch Karma summary using unified API Client
+   */
   fetchSummary: async () => {
     set({ isLoading: true, error: null });
 
     try {
-      const data = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/karma/summary`
-      );
+      const data = await api.get<KarmaSummary>('/karma/summary');
 
       set({
         summary: data,
@@ -167,21 +124,27 @@ export const useKarmaStore = create<KarmaStore>((set, get) => ({
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入 Karma 總覽失敗';
+
       set({
         error: errorMessage,
         isLoading: false,
       });
+
       console.error('[KarmaStore] fetchSummary error:', error);
     }
   },
 
+  /**
+   * Task 2.2: Fetch Karma logs with pagination using unified API Client
+   */
   fetchLogs: async (page = 1) => {
     set({ isLoading: true, error: null });
 
     try {
-      const data = await makeAuthenticatedRequest(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/karma/logs?page=${page}&limit=20`
-      );
+      const data = await api.get<{
+        logs: KarmaLog[];
+        pagination: KarmaPaginationInfo;
+      }>(`/karma/logs?page=${page}&limit=20`);
 
       set({
         logs: data.logs,
@@ -192,10 +155,12 @@ export const useKarmaStore = create<KarmaStore>((set, get) => ({
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : '載入 Karma 記錄失敗';
+
       set({
         error: errorMessage,
         isLoading: false,
       });
+
       console.error('[KarmaStore] fetchLogs error:', error);
     }
   },
