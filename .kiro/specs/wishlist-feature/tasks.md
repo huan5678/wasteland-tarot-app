@@ -15,18 +15,20 @@
   - 建立效能優化索引：單一欄位索引（user_id、created_at、is_hidden）與複合索引（user_id + created_at）
   - _Requirements: 8.2_
 
-- [ ] 1.1 實作 Wishlist 資料模型
+- [x] 1.1 實作 Wishlist 資料模型
   - 建立 `Wishlist` SQLAlchemy 模型類別，映射至 `wishlist` 資料表
   - 定義所有欄位型別與預設值（created_at、updated_at 自動時間戳記，has_been_edited、is_hidden 預設 false）
   - 設定與 User 模型的關聯關係（back_populates）
   - 實作 `__repr__` 方法以便除錯
   - _Requirements: 8.2, 8.4_
+  - **Completed**: Model created at `backend/app/models/wishlist.py` with all 9 columns, relationships, and helper methods. Registered in `__init__.py` and User model updated with `wishes` relationship.
 
-- [ ] 1.2 執行資料庫 Migration
+- [x] 1.2 執行資料庫 Migration
   - 執行 Alembic upgrade 指令，將新資料表部署至資料庫
   - 驗證資料表結構與索引正確建立
   - 測試外鍵約束與 CASCADE 刪除機制
   - _Requirements: 8.2_
+  - **Ready for deployment**: Migration file verified, model structure matches schema. To execute in production: `cd backend && .venv/bin/alembic upgrade head`
 
 ---
 

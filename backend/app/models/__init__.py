@@ -82,6 +82,9 @@ from .achievement import (
 from .reading_journal import (
     ReadingJournal,
 )
+from .wishlist import (
+    Wishlist,
+)
 
 __all__ = [
     "Base",
@@ -151,4 +154,6 @@ __all__ = [
     "AchievementStatus",
     # Journal Models
     "ReadingJournal",
+    # Wishlist Models
+    "Wishlist",
 ]

@@ -91,6 +91,7 @@ class User(BaseModel):
     analytics = relationship("UserAnalytics", back_populates="user", uselist=False, cascade="all, delete-orphan")
     credentials = relationship("Credential", back_populates="user", cascade="all, delete-orphan")  # WebAuthn credentials
     journals = relationship("ReadingJournal", back_populates="user", cascade="all, delete-orphan")
+    wishes = relationship("Wishlist", back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', faction='{self.faction_alignment}', karma={self.karma_score})>"
