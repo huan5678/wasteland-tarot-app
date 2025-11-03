@@ -3,7 +3,7 @@
 import logging
 from typing import List, Optional, Dict, Any
 from uuid import UUID
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from supabase import Client
 from fastapi import HTTPException, status
@@ -297,9 +297,9 @@ class MusicService:
 
             # 若無記錄則建立
             if not quota_response.data:
-                today = datetime.utcnow().date()
+                today = datetime.now(timezone.utc).date()
                 tomorrow = today + timedelta(days=1)
-                reset_at = datetime.combine(tomorrow, datetime.min.time())
+                reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
 
                 self.supabase.table("user_ai_quotas").insert({
                     "user_id": str(user_id),
@@ -318,10 +318,10 @@ class MusicService:
 
             # Step 2: 檢查配額是否需要重置
             reset_at = datetime.fromisoformat(quota_data["last_reset_at"].replace('Z', '+00:00'))
-            if reset_at <= datetime.utcnow():
+            if reset_at <= datetime.now(timezone.utc):
                 # 重置配額
-                tomorrow = datetime.utcnow().date() + timedelta(days=1)
-                new_reset_at = datetime.combine(tomorrow, datetime.min.time())
+                tomorrow = datetime.now(timezone.utc).date() + timedelta(days=1)
+                new_reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
 
                 self.supabase.table("user_ai_quotas") \
                     .update({
@@ -409,9 +409,9 @@ class MusicService:
 
             # 若無記錄則建立
             if not quota_response.data:
-                today = datetime.utcnow().date()
+                today = datetime.now(timezone.utc).date()
                 tomorrow = today + timedelta(days=1)
-                reset_at = datetime.combine(tomorrow, datetime.min.time())
+                reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
 
                 self.supabase.table("user_ai_quotas").insert({
                     "user_id": str(user_id),
@@ -431,10 +431,10 @@ class MusicService:
 
             # 檢查是否需要重置
             reset_at = datetime.fromisoformat(quota_data["last_reset_at"].replace('Z', '+00:00'))
-            if reset_at <= datetime.utcnow():
+            if reset_at <= datetime.now(timezone.utc):
                 # 重置配額
-                tomorrow = datetime.utcnow().date() + timedelta(days=1)
-                new_reset_at = datetime.combine(tomorrow, datetime.min.time())
+                tomorrow = datetime.now(timezone.utc).date() + timedelta(days=1)
+                new_reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
 
                 self.supabase.table("user_ai_quotas") \
                     .update({

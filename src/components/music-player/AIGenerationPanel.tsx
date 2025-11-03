@@ -28,6 +28,14 @@ const QUICK_KEYWORDS = [
 ] as const;
 
 /**
+ * AIGenerationPanel 組件屬性
+ */
+export interface AIGenerationPanelProps {
+  /** 開啟儲存 Preset 對話框的回調 */
+  onOpenSaveDialog?: () => void;
+}
+
+/**
  * AIGenerationPanel 組件
  *
  * 功能：
@@ -38,13 +46,14 @@ const QUICK_KEYWORDS = [
  * - 顯示載入動畫：Pip-Boy 風格旋轉圖示 + "GENERATING RHYTHM..." 文字
  * - 顯示配額：「15/20 remaining」
  * - 配額用盡時停用按鈕並顯示「今日配額已用完（20/20），明日重置」
+ * - 生成成功後顯示「儲存為 Preset」按鈕
  *
  * @example
  * ```tsx
- * <AIGenerationPanel />
+ * <AIGenerationPanel onOpenSaveDialog={() => setIsDialogOpen(true)} />
  * ```
  */
-export const AIGenerationPanel: React.FC = () => {
+export const AIGenerationPanel: React.FC<AIGenerationPanelProps> = ({ onOpenSaveDialog }) => {
   // 認證狀態
   const { user } = useAuthStore();
   const isAuthenticated = !!user;
@@ -106,10 +115,10 @@ export const AIGenerationPanel: React.FC = () => {
       // 顯示成功訊息
       setSuccessMessage('節奏已生成！');
 
-      // 2 秒後清除成功訊息
+      // 10 秒後清除成功訊息（給用戶足夠時間決定是否儲存）
       setTimeout(() => {
         setSuccessMessage('');
-      }, 2000);
+      }, 10000);
 
       // 清空輸入框
       setPrompt('');
@@ -189,11 +198,34 @@ export const AIGenerationPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 成功訊息 */}
+          {/* 成功訊息與儲存按鈕 */}
           {successMessage && (
-            <div className="p-3 bg-pip-boy-green/20 border border-pip-boy-green rounded-lg flex items-center gap-2">
-              <PixelIcon name="checkbox-circle" variant="success" sizePreset="sm" decorative />
-              <span className="text-sm text-pip-boy-green">{successMessage}</span>
+            <div className="space-y-3">
+              <div className="p-3 bg-pip-boy-green/20 border border-pip-boy-green rounded-lg flex items-center gap-2">
+                <PixelIcon name="checkbox-circle" variant="success" sizePreset="sm" decorative />
+                <span className="text-sm text-pip-boy-green">{successMessage}</span>
+              </div>
+
+              {/* 儲存為 Preset 按鈕 */}
+              {onOpenSaveDialog && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSuccessMessage('');
+                    onOpenSaveDialog();
+                  }}
+                  className={cn(
+                    'w-full px-4 py-2.5 rounded-lg border-2',
+                    'bg-pip-boy-green/20 border-pip-boy-green text-pip-boy-green',
+                    'hover:bg-pip-boy-green/30 transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50',
+                    'flex items-center justify-center gap-2 font-medium'
+                  )}
+                >
+                  <PixelIcon name="save" sizePreset="sm" decorative />
+                  <span>儲存為 Preset</span>
+                </button>
+              )}
             </div>
           )}
 

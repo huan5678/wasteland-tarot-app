@@ -14,22 +14,31 @@ import { useRhythmEditorStore } from '@/lib/stores/rhythmEditorStore';
 import { EditorAudioSynthesizer } from '@/lib/audio/EditorAudioSynthesizer';
 
 /**
+ * RhythmEditorControls 組件屬性
+ */
+export interface RhythmEditorControlsProps {
+  /** 開啟儲存 Preset 對話框的回調 */
+  onOpenSaveDialog?: () => void;
+}
+
+/**
  * RhythmEditorControls 組件
  *
  * 功能：
- * - 按鈕：Play/Pause（切換）、Stop、Clear
+ * - 按鈕：Play/Pause（切換）、Stop、Clear、Save
  * - 實作 Tempo 滑桿（60-180 BPM，預設 120）
  * - 顯示當前 BPM 數值
  * - Clear 按鈕顯示確認對話框
+ * - Save 按鈕開啟儲存對話框
  * - 使用 PixelIcon 圖示
  * - 整合 rhythmEditorStore
  *
  * @example
  * ```tsx
- * <RhythmEditorControls />
+ * <RhythmEditorControls onOpenSaveDialog={() => setIsDialogOpen(true)} />
  * ```
  */
-export const RhythmEditorControls: React.FC = () => {
+export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOpenSaveDialog }) => {
   // 使用穩定的 selector 避免無限迴圈
   const pattern = useRhythmEditorStore((state) => state.pattern);
   const tempo = useRhythmEditorStore((state) => state.tempo);
@@ -252,6 +261,28 @@ export const RhythmEditorControls: React.FC = () => {
                 aria-label={loop ? '停用循環播放' : '啟用循環播放'}
               />
             </button>
+
+            {/* 儲存按鈕 */}
+            {onOpenSaveDialog && (
+              <>
+                {/* 分隔線 */}
+                <div className="w-px h-10 bg-gray-700" />
+
+                <button
+                  type="button"
+                  onClick={onOpenSaveDialog}
+                  className={cn(
+                    'flex items-center justify-center w-10 h-10 rounded-lg',
+                    'border-2 bg-gray-800 border-gray-600 transition-all duration-200',
+                    'text-pip-boy-green hover:border-pip-boy-green/70 hover:scale-105',
+                    'focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50'
+                  )}
+                  aria-label="儲存節奏"
+                >
+                  <PixelIcon name="save" sizePreset="sm" variant="primary" aria-label="儲存" />
+                </button>
+              </>
+            )}
           </div>
         </div>
 

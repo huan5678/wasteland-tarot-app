@@ -99,7 +99,7 @@ export default function RhythmEditorPage() {
               />
               播放控制
             </h2>
-            <RhythmEditorControls />
+            <RhythmEditorControls onOpenSaveDialog={() => setIsDialogOpen(true)} />
           </div>
         </section>
 
@@ -127,7 +127,7 @@ export default function RhythmEditorPage() {
 
           {/* AI 生成面板 */}
           <section className="bg-wasteland-darker border-2 border-pip-boy-green p-4 sm:p-6">
-            <AIGenerationPanel />
+            <AIGenerationPanel onOpenSaveDialog={() => setIsDialogOpen(true)} />
           </section>
         </div>
 

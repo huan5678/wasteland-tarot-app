@@ -401,10 +401,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             // 配額用盡
             if (response.status === 400 && errorData.error === 'Daily quota exceeded') {
               const quota: AIQuota = {
-                limit: errorData.quotaLimit || 20,
-                used: errorData.quotaUsed || 20,
+                limit: errorData.quota_limit ?? errorData.quotaLimit ?? 20,
+                used: errorData.quota_used ?? errorData.quotaUsed ?? 20,
                 remaining: 0,
-                resetAt: errorData.resetAt || new Date().toISOString(),
+                resetAt: errorData.reset_at ?? errorData.resetAt ?? new Date().toISOString(),
               };
               set({ aiQuota: quota, isLoading: false });
               throw new Error(`今日配額已用完（${quota.used}/${quota.limit}），明日重置`);
@@ -439,7 +439,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
           }
 
           // 更新配額
-          const quotaRemaining = data.quotaRemaining || 0;
+          const quotaRemaining = data.quota_remaining ?? data.quotaRemaining ?? 0;
           const { aiQuota } = get();
           if (aiQuota) {
             set({
@@ -486,10 +486,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
 
           const data = await response.json();
           const quota: AIQuota = {
-            limit: data.quotaLimit || data.quota_limit || 20,
-            used: data.quotaUsed || data.quota_used || 0,
-            remaining: data.quotaRemaining || data.remaining || 20,
-            resetAt: data.resetAt || data.reset_at || new Date().toISOString(),
+            limit: data.quota_limit ?? data.quotaLimit ?? 20,
+            used: data.quota_used ?? data.quotaUsed ?? 0,
+            remaining: data.quota_remaining ?? data.quotaRemaining ?? data.remaining ?? 20,
+            resetAt: data.reset_at ?? data.resetAt ?? new Date().toISOString(),
           };
 
           set({ aiQuota: quota });
