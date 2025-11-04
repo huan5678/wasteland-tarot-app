@@ -13,7 +13,8 @@ import { useKarmaStore } from '@/stores/karmaStore';
 import { KarmaDisplay } from '@/components/dashboard/KarmaDisplay/KarmaDisplay';
 import { KarmaProgressBar } from '@/components/dashboard/KarmaProgressBar';
 import { KarmaLog } from '@/components/dashboard/KarmaLog/KarmaLog';
-import { TasksPanel } from '@/components/dashboard/TasksPanel';import { Button } from "@/components/ui/button";
+import { TasksPanel } from '@/components/dashboard/TasksPanel';
+import { getLocaleDetector } from '@/lib/utils/localeDetector';import { Button } from "@/components/ui/button";
 
 interface Reading {
   id: string;
@@ -47,6 +48,16 @@ export default function DashboardPage() {
     daysInVault: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  // 初始化語系偵測
+  useEffect(() => {
+    const initLocale = async () => {
+      const detector = getLocaleDetector();
+      const locale = await detector.detect();
+      console.log('[Dashboard] 🌍 偵測到語系:', locale);
+    };
+    initLocale();
+  }, []);
 
   // 方案 3：重新驗證登入狀態（防止 OAuth callback 競態條件）
   useEffect(() => {
@@ -281,34 +292,8 @@ export default function DashboardPage() {
   }
 
   const formatDate = (dateString: string) => {
-    // 取得使用者的時區
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    
-    // 根據時區推測地區
-    const timeZoneToLocale: Record<string, string> = {
-      'Asia/Taipei': 'zh-TW',
-      'Asia/Tokyo': 'ja-JP',
-      'America/New_York': 'en-US',
-      'America/Los_Angeles': 'en-US',
-      'America/Chicago': 'en-US',
-      'Europe/London': 'en-GB',
-      'Europe/Paris': 'fr-FR',
-      'Europe/Berlin': 'de-DE',
-      'Asia/Shanghai': 'zh-CN',
-      'Asia/Hong_Kong': 'zh-HK',
-      'Asia/Seoul': 'ko-KR',
-      'Australia/Sydney': 'en-AU'
-    };
-    
-    const guessedLocale = timeZoneToLocale[timeZone] || undefined;
-    
-    return new Date(dateString).toLocaleString(guessedLocale, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const detector = getLocaleDetector();
+    return detector.formatDate(dateString);
   };
 
   return (
