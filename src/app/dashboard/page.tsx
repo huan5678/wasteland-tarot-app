@@ -300,7 +300,7 @@ export default function DashboardPage() {
       'Australia/Sydney': 'en-AU'
     };
     
-    const guessedLocale = timeZoneToLocale[timeZone] || 'en-US';
+    const guessedLocale = timeZoneToLocale[timeZone] || undefined;
     
     return new Date(dateString).toLocaleString(guessedLocale, {
       year: 'numeric',
