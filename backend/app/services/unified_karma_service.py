@@ -254,13 +254,16 @@ class UnifiedKarmaService:
         )
         today_earned = result.scalar() or 0
         
+        # Calculate karma_to_next_level
+        karma_to_next_level = self.rules_engine.calculate_karma_to_next_level(user_karma.total_karma)
+        
         return {
             "alignment_karma": user_karma.alignment_karma,
             "total_karma": user_karma.total_karma,
             "current_level": user_karma.current_level,
-            "karma_to_next_level": user_karma.karma_to_next_level,
+            "karma_to_next_level": karma_to_next_level,
             "alignment_category": self.rules_engine.get_alignment_category(user_karma.alignment_karma),
-            "rank": user_karma.rank,
+            "rank": None,  # rank is not a column in user_karma
             "today_earned": today_earned
         }
     
