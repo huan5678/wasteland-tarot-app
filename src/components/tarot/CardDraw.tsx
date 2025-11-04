@@ -370,17 +370,19 @@ export function CardDraw({
 
           {/* Enhanced control panel */}
           <div className="flex items-center justify-center gap-4 p-4 bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg">
-          <Button size="icon" variant="default"
-            onClick={() => setManualRevealMode((m) => !m)}
-            className="{expression}">
-
-
-
-
-
-
-            {manualRevealMode ? '切換至自動模式' : '切換至手動模式'}
-          </Button>
+            <Button
+              size="default"
+              variant="outline"
+              onClick={() => setManualRevealMode((m) => !m)}
+              className="px-6"
+            >
+              <PixelIcon
+                name={manualRevealMode ? "play" : "hand"}
+                sizePreset="xs"
+                decorative
+              />
+              {manualRevealMode ? '切換至自動模式' : '切換至手動模式'}
+            </Button>
 
           {manualRevealMode && revealedCards.size < drawnCards.length && drawnCards.length > 0 &&
             <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
@@ -493,15 +495,17 @@ export function CardDraw({
 
         {/* Enhanced control panel */}
         <div className="flex items-center justify-center gap-4 p-4 bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg">
-          <Button size="icon" variant="default"
-          onClick={() => setManualRevealMode((m) => !m)}
-          className="{expression}">
-
-
-
-
-
-
+          <Button
+            size="default"
+            variant="outline"
+            onClick={() => setManualRevealMode((m) => !m)}
+            className="px-6"
+          >
+            <PixelIcon
+              name={manualRevealMode ? "play" : "hand"}
+              sizePreset="xs"
+              decorative
+            />
             {manualRevealMode ? '切換至自動模式' : '切換至手動模式'}
           </Button>
 
@@ -534,31 +538,39 @@ export function CardDraw({
       }
 
       {/* Draw Button */}
-      {!enablePositionSelection && drawnCards.length === 0 &&
-      <Button size="icon" variant="default"
-      data-testid="card-deck"
-      onClick={drawCards}
-      disabled={isLoading || isDrawing}
-      className="{expression}">
-
-
-
-
-
-
-
-
-
-
-          <PixelIcon
-          name="sparkles"
-          size={24}
-          className={isDrawing ? 'animate-spin' : ''}
-          decorative />
-
-          <span>{isDrawing ? '抽牌中...' : `開始抽牌（${getCardCount()} 張）`}</span>
-        </Button>
-      }
+      {!enablePositionSelection && drawnCards.length === 0 && (
+        <div className="flex flex-col items-center gap-4">
+          {isDrawing ? (
+            // Loading state - Just icon
+            <div className="flex flex-col items-center gap-2">
+              <PixelIcon
+                name="sparkles"
+                sizePreset="xxl"
+                className="animate-spin text-pip-boy-green"
+                decorative
+              />
+              <span className="text-sm text-pip-boy-green/70">抽牌中...</span>
+            </div>
+          ) : (
+            // Start drawing button
+            <Button
+              size="lg"
+              variant="default"
+              data-testid="card-deck"
+              onClick={drawCards}
+              disabled={isLoading}
+              className="px-8 py-6"
+            >
+              <PixelIcon
+                name="sparkles"
+                sizePreset="sm"
+                decorative
+              />
+              <span className="text-lg">開始抽牌（{getCardCount()} 張）</span>
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Position Selection Mode */}
       {enablePositionSelection && renderPositionSelectors()}

@@ -94,23 +94,15 @@ export function AccountTab({ user, profile, isOAuthUser, logout }: AccountTabPro
               <p className="text-red-400/80 text-sm mb-2">
                 {action.label}
               </p>
-              {action.variant === 'border' ?
-            <Button size="icon" variant="outline"
-            onClick={() => action.onClick(logout)}
-            className="w-full px-4 py-2 border transition-colors">
-
-                  <PixelIcon name={action.icon} size={16} className="mr-2 inline" aria-label={action.buttonText} />
-                  {action.buttonText}
-                </Button> :
-
-            <Button size="icon" variant="link"
-            onClick={() => action.onClick(logout)}
-            className="w-full px-4 py-2 transition-colors">
-
-                  <PixelIcon name={action.icon} size={16} className="mr-2 inline" aria-label={action.buttonText} />
-                  {action.buttonText}
-                </Button>
-            }
+              <Button
+                size="default"
+                variant={action.variant === 'border' ? 'outline' : 'destructive'}
+                onClick={() => action.onClick(logout)}
+                className="w-full px-4 py-2 transition-colors"
+              >
+                <PixelIcon name={action.icon} size={16} className="mr-2 inline" aria-label={action.buttonText} />
+                {action.buttonText}
+              </Button>
             </div>
           )}
         </div>

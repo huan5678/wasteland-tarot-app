@@ -155,53 +155,49 @@ export const PlaybackControls = React.memo(function PlaybackControls({
         aria-label="播放模式控制">
 
         {/* Shuffle Button */}
-        <Button size="icon" variant="default"
-        onClick={handleToggleShuffle}
-        className="{expression}"
-
-
-
-
-        aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
-        aria-pressed={shuffleEnabled}>
-
+        <Button
+          size="icon"
+          variant={shuffleEnabled ? 'default' : 'ghost'}
+          onClick={handleToggleShuffle}
+          className="flex items-center justify-center w-10 h-10 transition-all"
+          aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
+          aria-pressed={shuffleEnabled}
+        >
           <PixelIcon
             name="shuffle"
             sizePreset="sm"
             variant={shuffleEnabled ? 'primary' : 'muted'}
-            aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'} />
-
+            aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
+          />
         </Button>
 
         {/* Repeat Button */}
-        <Button size="icon" variant="default"
-        onClick={handleToggleRepeat}
-        className="{expression}"
-
-
-
-
-        aria-label={
-        repeatMode === 'off' ?
-        '啟用循環播放' :
-        repeatMode === 'one' ?
-        '單曲循環' :
-        '列表循環'
-        }
-        aria-pressed={repeatMode !== 'off'}>
-
+        <Button
+          size="icon"
+          variant={repeatMode !== 'off' ? 'default' : 'ghost'}
+          onClick={handleToggleRepeat}
+          className="flex items-center justify-center w-10 h-10 transition-all"
+          aria-label={
+            repeatMode === 'off'
+              ? '啟用循環播放'
+              : repeatMode === 'one'
+              ? '單曲循環'
+              : '列表循環'
+          }
+          aria-pressed={repeatMode !== 'off'}
+        >
           <PixelIcon
             name="repeat"
             sizePreset="sm"
             variant={repeatMode !== 'off' ? 'primary' : 'muted'}
             aria-label={
-            repeatMode === 'off' ?
-            '啟用循環播放' :
-            repeatMode === 'one' ?
-            '單曲循環' :
-            '列表循環'
-            } />
-
+              repeatMode === 'off'
+                ? '啟用循環播放'
+                : repeatMode === 'one'
+                ? '單曲循環'
+                : '列表循環'
+            }
+          />
         </Button>
       </div>
 

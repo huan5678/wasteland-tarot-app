@@ -226,15 +226,17 @@ export default function AchievementsPage() {
 
 
 
-            {searchQuery &&
-              <Button size="icon" variant="default"
-              onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              aria-label="清除搜尋">
-
+            {searchQuery && (
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                onClick={() => setSearchQuery('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                aria-label="清除搜尋"
+              >
                 <PixelIcon name="close" sizePreset="xs" variant="muted" />
               </Button>
-              }
+            )}
           </div>
           {searchQuery &&
             <p className="mt-2 text-sm text-wasteland-lighter">

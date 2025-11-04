@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { MusicPlayerError, MusicPlayerErrorType } from '@/lib/audio/errorHandler';
 import { logger } from '@/lib/logger';

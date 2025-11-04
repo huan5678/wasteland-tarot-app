@@ -7,16 +7,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { PipBoyCard, PipBoyCardHeader, PipBoyCardTitle, PipBoyCardContent } from '@/components/ui/pipboy';
-import { PipBoyButton } from '@/components/ui/pipboy';
 import { PixelIcon } from '@/components/ui/icons';
+import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs';
 import { DailyTaskList } from './DailyTaskList';
 import { WeeklyTaskList } from './WeeklyTaskList';
 import { useTasksStore } from '@/stores/tasksStore';
 
-type TabType = 'daily' | 'weekly';
-
 export function TasksPanel() {
-  const [activeTab, setActiveTab] = useState<TabType>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'weekly'>('daily');
   const { dailyTasks, weeklyTasks, fetchDailyTasks, fetchWeeklyTasks } = useTasksStore();
 
   const [countdown, setCountdown] = useState<string>('');
@@ -79,58 +77,45 @@ export function TasksPanel() {
           </div>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex gap-2 mt-4">
-          <PipBoyButton
-            variant={activeTab === 'daily' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('daily')}
-            className="flex-1"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <PixelIcon name="calendar" sizePreset="xs" decorative />
-              每日任務
-              {dailyTasks && (
-                <span className="text-xs bg-black/60 px-2 py-0.5 rounded">
-                  {dailyTasks.completed_count}/{dailyTasks.total_count}
-                </span>
-              )}
-            </span>
-          </PipBoyButton>
-
-          <PipBoyButton
-            variant={activeTab === 'weekly' ? 'primary' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveTab('weekly')}
-            className="flex-1"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <PixelIcon name="calendar-week" sizePreset="xs" decorative />
-              每週任務
-              {weeklyTasks && (
-                <span className="text-xs bg-black/60 px-2 py-0.5 rounded">
-                  {weeklyTasks.completed_count}/{weeklyTasks.total_count}
-                </span>
-              )}
-            </span>
-          </PipBoyButton>
-        </div>
       </PipBoyCardHeader>
 
       <PipBoyCardContent className="flex-1 overflow-y-auto">
-        {/* Task Lists with smooth transition */}
-        <div className="relative">
-          {activeTab === 'daily' && (
-            <div className="animate-fade-in">
-              <DailyTaskList />
-            </div>
-          )}
-          {activeTab === 'weekly' && (
-            <div className="animate-fade-in">
-              <WeeklyTaskList />
-            </div>
-          )}
-        </div>
+        <PipBoyTabs 
+          value={activeTab} 
+          onValueChange={(value) => setActiveTab(value as 'daily' | 'weekly')}
+        >
+          <PipBoyTabsList className="mb-4">
+            <PipBoyTabsTrigger value="daily" icon="calendar" className="flex-1">
+              <span className="flex items-center gap-2">
+                每日任務
+                {dailyTasks && (
+                  <span className="text-xs bg-black/60 px-2 py-0.5 rounded">
+                    {dailyTasks.completed_count}/{dailyTasks.total_count}
+                  </span>
+                )}
+              </span>
+            </PipBoyTabsTrigger>
+            
+            <PipBoyTabsTrigger value="weekly" icon="calendar-week" className="flex-1">
+              <span className="flex items-center gap-2">
+                每週任務
+                {weeklyTasks && (
+                  <span className="text-xs bg-black/60 px-2 py-0.5 rounded">
+                    {weeklyTasks.completed_count}/{weeklyTasks.total_count}
+                  </span>
+                )}
+              </span>
+            </PipBoyTabsTrigger>
+          </PipBoyTabsList>
+
+          <PipBoyTabsContent value="daily" className="min-h-0">
+            <DailyTaskList />
+          </PipBoyTabsContent>
+
+          <PipBoyTabsContent value="weekly" className="min-h-0">
+            <WeeklyTaskList />
+          </PipBoyTabsContent>
+        </PipBoyTabs>
       </PipBoyCardContent>
     </PipBoyCard>
   );

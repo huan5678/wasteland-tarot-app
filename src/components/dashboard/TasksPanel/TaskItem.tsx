@@ -6,7 +6,7 @@
 'use client';
 
 import React from 'react';
-import { PipBoyButton } from '@/components/ui/pipboy';
+import { Button } from '@/components/ui/button';
 import { PixelIcon } from '@/components/ui/icons';
 import type { Task } from '@/stores/tasksStore';
 
@@ -113,8 +113,8 @@ export function TaskItem({ task, type, onClaimReward, isClaiming = false }: Task
           </div>
         ) : canClaim ? (
           // Can claim reward
-          <PipBoyButton
-            variant="primary"
+          <Button
+            variant={isClaiming ? "outline" : "default"}
             size="sm"
             onClick={handleClaim}
             disabled={isClaiming}
@@ -131,7 +131,7 @@ export function TaskItem({ task, type, onClaimReward, isClaiming = false }: Task
                 領取獎勵
               </span>
             )}
-          </PipBoyButton>
+          </Button>
         ) : (
           // Not completed yet
           <div className="flex items-center gap-2 text-pip-boy-green/60">

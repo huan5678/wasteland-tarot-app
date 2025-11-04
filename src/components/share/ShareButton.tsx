@@ -49,27 +49,27 @@ export function ShareButton({ readingId, className = '' }: ShareButtonProps) {
 
   return (
     <>
-      <Button size="icon" variant="default"
-      onClick={handleShare}
-      disabled={isLoading}
-      className="{expression}"
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={handleShare}
+        disabled={isLoading}
+        className="px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider"
 
 
 
 
-
-
-
-
-      aria-label="分享占卜結果">
-
-        <PixelIcon
-          name="share"
-          sizePreset="sm"
-          variant="primary"
-          decorative />
-
-        <span>{isLoading ? '生成中...' : '分享結果'}</span>
+        aria-label="分享占卜結果"
+      >
+        <span className="flex items-center justify-center gap-2">
+          <PixelIcon
+            name="share"
+            sizePreset="xs"
+            variant="default"
+            decorative
+          />
+          {isLoading ? '生成中...' : '分享結果'}
+        </span>
       </Button>
 
       {error &&

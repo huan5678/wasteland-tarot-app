@@ -98,7 +98,7 @@ export function PaginationControls({
   {
     const buttonContent =
     <PipBoyButton
-      variant="secondary"
+      variant={disabled ? "outline" : "secondary"}
       size="md"
       disabled={disabled}
       className={cn(
@@ -278,8 +278,9 @@ function PageNumberButton({
   const isCurrent = page === currentPage;
 
   const buttonContent =
-  <Button size="icon" variant="default"
-  className="{expression}"
+  <Button
+    size="icon"
+    variant={isCurrent ? "default" : "outline"}
 
 
 

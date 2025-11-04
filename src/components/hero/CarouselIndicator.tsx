@@ -7,10 +7,11 @@
 'use client';
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 
 /**
  * 元件 Props
- */import { Button } from "@/components/ui/button";
+ */
 export interface CarouselIndicatorProps {
   /** 文案總數 */
   totalCount: number;
@@ -50,40 +51,28 @@ export function CarouselIndicator({
     <div
       role="tablist"
       aria-label={`文案輪播指示器，共 ${totalCount} 組`}
-      className="flex justify-center gap-3 mt-8">
-
+      className="flex justify-center gap-3 mt-8"
+    >
       {Array.from({ length: totalCount }, (_, index) => {
         const isActive = index === currentIndex;
 
         return (
-          <Button size="icon" variant="default"
-          key={index}
-          role="tab"
-          aria-label={`第 ${index + 1} 組文案，共 ${totalCount} 組`}
-          aria-current={isActive ? 'true' : undefined}
-          aria-selected={isActive}
-          tabIndex={0}
-          onClick={() => onDotClick(index)}
-          onKeyDown={(e) => handleKeyDown(e, index)}
-          className="{expression}"
-
-
-
-
-
-
-
-
-
-
-
-          style={{
-            // 使用方形符合終端機風格
-            borderRadius: '2px'
-          }} />);
-
-
+          <Button
+            key={index}
+            size="icon-xxs"
+            variant={isActive ? 'default' : 'outline'}
+            role="tab"
+            aria-label={`第 ${index + 1} 組文案，共 ${totalCount} 組`}
+            aria-current={isActive ? 'true' : undefined}
+            aria-selected={isActive}
+            onClick={() => onDotClick(index)}
+            onKeyDown={(e) => handleKeyDown(e, index)}
+            style={{
+              borderRadius: '2px'
+            }}
+          />
+        );
       })}
-    </div>);
-
+    </div>
+  );
 }

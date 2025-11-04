@@ -125,18 +125,27 @@ export function SettingsTab({
             </div>
 
             <div className="flex gap-4">
-              <Button size="icon" variant="link"
-            onClick={handleSave}
-            disabled={isSaving}
-            className="flex-1 py-2 font-bold disabled:opacity-50 transition-colors">
-
-                {isSaving ? '儲存中...' : <><PixelIcon name="save" size={16} className="mr-2 inline" decorative />儲存變更</>}
+              <Button
+                size="default"
+                variant="default"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="flex-1 py-2 font-bold disabled:opacity-50 transition-colors"
+              >
+                {isSaving ? '儲存中...' : (
+                  <>
+                    <PixelIcon name="save" size={16} className="mr-2 inline" decorative />
+                    儲存變更
+                  </>
+                )}
               </Button>
-              <Button size="default" variant="outline"
-            onClick={handleCancel}
-            disabled={isSaving}
-            className="flex-1 py-2 border disabled:opacity-50 transition-colors">
-
+              <Button
+                size="default"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="flex-1 py-2 border disabled:opacity-50 transition-colors"
+              >
                 取消
               </Button>
             </div>
@@ -195,17 +204,19 @@ export function SettingsTab({
           <h3 className="text-xl font-bold text-pip-boy-green">
             <PixelIcon name="volume-up" size={24} className="mr-2 inline" decorative />音效系統
           </h3>
-          <Button size="icon" variant="outline"
-          onClick={() => toggleMute('sfx')}
-          className="px-4 py-2 border transition-colors"
-          aria-label={sfxMuted ? '取消靜音' : '靜音'}>
-
+          <Button
+            size="default"
+            variant="outline"
+            onClick={() => toggleMute('sfx')}
+            className="px-4 py-2 border transition-colors"
+            aria-label={sfxMuted ? '取消靜音' : '靜音'}
+          >
             <PixelIcon
               name={sfxMuted ? "volume-off" : "volume-up"}
               size={16}
               className="mr-2 inline"
-              aria-label={sfxMuted ? '已靜音' : '音效開啟'} />
-
+              aria-label={sfxMuted ? '已靜音' : '音效開啟'}
+            />
             {sfxMuted ? '已靜音' : '音效開啟'}
           </Button>
         </div>

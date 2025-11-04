@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs'
 import { LoginForm } from '@/components/auth/LoginForm'
 import { RegisterForm } from '@/components/auth/RegisterForm'
 
@@ -43,27 +43,27 @@ export function AuthPageClient() {
         </div>
 
         {/* Tabs Container */}
-        <Tabs defaultValue={initialTab}>
+        <PipBoyTabs defaultValue={initialTab}>
           {/* Tab Headers */}
-          <TabsList className="mb-6">
-            <TabsTrigger value="login">
+          <PipBoyTabsList>
+            <PipBoyTabsTrigger value="login" icon="user">
               存取終端機
-            </TabsTrigger>
-            <TabsTrigger value="register">
+            </PipBoyTabsTrigger>
+            <PipBoyTabsTrigger value="register" icon="user-add">
               註冊新用戶
-            </TabsTrigger>
-          </TabsList>
+            </PipBoyTabsTrigger>
+          </PipBoyTabsList>
 
           {/* Login Tab Content */}
-          <TabsContent value="login">
+          <PipBoyTabsContent value="login">
             <LoginForm hideHeader />
-          </TabsContent>
+          </PipBoyTabsContent>
 
           {/* Register Tab Content */}
-          <TabsContent value="register">
+          <PipBoyTabsContent value="register">
             <RegisterForm hideHeader />
-          </TabsContent>
-        </Tabs>
+          </PipBoyTabsContent>
+        </PipBoyTabs>
 
         {/* Terminal Footer */}
         <div className="mt-8 text-center">

@@ -14,7 +14,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { shareAPI } from '@/lib/api/share';
 import { PixelIcon } from '@/components/ui/icons';
 import type { PublicReadingData } from '@/types/api';

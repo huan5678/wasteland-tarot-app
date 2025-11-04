@@ -53,41 +53,85 @@ export default function HomePage() {
             </DynamicHeroTitleErrorBoundary>
           </div>
 
-          {/* Primary Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-16">
-            <PipBoyCard
-              variant="interactive"
-              isClickable
+          {/* Primary Actions - Fallout Terminal Style */}
+          <div className="flex flex-col sm:flex-row gap-4 max-w-4xl mx-auto mb-16 justify-center">
+            {/* Primary CTA */}
+            <button
               onClick={handleGetStarted}
-              className="group p-8 hover:scale-105"
+              className="group relative w-full sm:w-auto overflow-hidden"
             >
-              <div className="text-center">
-                <PixelIcon name="target" size={48} className="mb-4 mx-auto group-hover:animate-pulse text-pip-boy-green" aria-label={user ? '進入控制台' : '進入 Vault'} />
-                <h3 className="text-xl font-bold text-pip-boy-green mb-2">
-                  {user ? '進入控制台' : '進入 Vault'}
-                </h3>
-                <p className="text-pip-boy-green/60 text-sm">
-                  {user ? '查看你的占卜記錄並管理個人檔案' : '登入以存取你的個人 Pip-Boy 終端機'}
-                </p>
+              {/* Background layers */}
+              <div className="absolute inset-0 bg-black border-2 border-pip-boy-green"></div>
+              <div className="absolute inset-0 bg-pip-boy-green/5 group-hover:bg-pip-boy-green/10 transition-colors"></div>
+              
+              {/* Corner brackets */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-pip-boy-green"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-pip-boy-green"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-pip-boy-green"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-pip-boy-green"></div>
+              
+              {/* Scan line effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="h-full w-full bg-gradient-to-b from-transparent via-pip-boy-green/10 to-transparent animate-scan"></div>
               </div>
-            </PipBoyCard>
+              
+              {/* Content - Horizontal Layout */}
+              <div className="relative px-6 py-4 flex items-center gap-4">
+                <PixelIcon
+                  name="target"
+                  sizePreset="lg"
+                  className="text-pip-boy-green group-hover:animate-pulse flex-shrink-0"
+                  decorative
+                />
+                <div className="text-left flex-1">
+                  <div className="text-lg font-bold text-pip-boy-green tracking-wider uppercase">
+                    {user ? '> 進入控制台' : '> 進入 Vault'}
+                  </div>
+                  <div className="text-xs text-pip-boy-green/70 font-mono">
+                    {user ? '[ 查看占卜記錄 ]' : '[ 登入終端機 ]'}
+                  </div>
+                </div>
+              </div>
+            </button>
 
-            <PipBoyCard
-              variant="interactive"
-              isClickable
+            {/* Secondary CTA */}
+            <button
               onClick={handleQuickReading}
-              className="group p-8 hover:scale-105"
+              className="group relative w-full sm:w-auto overflow-hidden"
             >
-              <div className="text-center">
-                <PixelIcon name="card-stack" size={48} className="mb-4 mx-auto group-hover:animate-bounce text-pip-boy-green" aria-label={user ? '新占卜' : '快速占卜'} />
-                <h3 className="text-xl font-bold text-pip-boy-green mb-2">
-                  {user ? '新占卜' : '快速占卜'}
-                </h3>
-                <p className="text-pip-boy-green/60 text-sm">
-                  {user ? '開始一場全新的塔羅占卜' : '嘗試樣本占卜 - 無需 Vault 註冊'}
-                </p>
+              {/* Background layers */}
+              <div className="absolute inset-0 bg-black border-2 border-radiation-orange"></div>
+              <div className="absolute inset-0 bg-radiation-orange/5 group-hover:bg-radiation-orange/10 transition-colors"></div>
+              
+              {/* Corner brackets */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-radiation-orange"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-radiation-orange"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-radiation-orange"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-radiation-orange"></div>
+              
+              {/* Scan line effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="h-full w-full bg-gradient-to-b from-transparent via-radiation-orange/10 to-transparent animate-scan"></div>
               </div>
-            </PipBoyCard>
+              
+              {/* Content - Horizontal Layout */}
+              <div className="relative px-6 py-4 flex items-center gap-4">
+                <PixelIcon
+                  name="file-list-2"
+                  sizePreset="lg"
+                  className="text-radiation-orange group-hover:animate-pulse flex-shrink-0"
+                  decorative
+                />
+                <div className="text-left flex-1">
+                  <div className="text-lg font-bold text-radiation-orange tracking-wider uppercase">
+                    {user ? '> 新占卜' : '> 快速占卜'}
+                  </div>
+                  <div className="text-xs text-radiation-orange/70 font-mono">
+                    {user ? '[ 開始新占卜 ]' : '[ 免註冊試用 ]'}
+                  </div>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
 

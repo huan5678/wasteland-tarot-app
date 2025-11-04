@@ -15,6 +15,7 @@ import RewardNotification from '@/components/bingo/RewardNotification';
 import BingoHistory from '@/components/bingo/BingoHistory';
 import NumberPickerModal from '@/components/bingo/NumberPickerModal';
 import { PixelIcon } from '@/components/ui/icons';
+import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs';
 
 /**
  * 賓果遊戲主頁面
@@ -26,7 +27,7 @@ import { PixelIcon } from '@/components/ui/icons';
  * - Responsive 佈局
  *
  * 設計風格: Fallout/Wasteland
- */import { Button } from "@/components/ui/button";
+ */
 export default function BingoPage() {
   const router = useRouter();
   const { user, isInitialized } = useAuthStore();
@@ -47,7 +48,6 @@ export default function BingoPage() {
 
   const [showRewardNotification, setShowRewardNotification] = useState(false);
   const [prevHasReward, setPrevHasReward] = useState(false);
-  const [activeTab, setActiveTab] = useState<'game' | 'history'>('game');
   const [showNumberPicker, setShowNumberPicker] = useState(false);
   const [clickedNumber, setClickedNumber] = useState<number | null>(null);
 
@@ -197,45 +197,17 @@ export default function BingoPage() {
           </motion.div>) : (
 
           /* 賓果遊戲介面 */
-          <>
-            {/* Tab Navigation */}
-            <div className="flex justify-center mb-6 gap-4">
-              <Button size="default" variant="default"
-              onClick={() => setActiveTab('game')}
-              className="{expression}">
-
-
-
-
-
-
-
-                <PixelIcon name="grid" sizePreset="sm" decorative />
+          <PipBoyTabs defaultValue="game">
+            <PipBoyTabsList>
+              <PipBoyTabsTrigger value="game" icon="grid">
                 賓果遊戲
-              </Button>
-              <Button size="default" variant="default"
-              onClick={() => setActiveTab('history')}
-              className="{expression}">
-
-
-
-
-
-
-
-                <PixelIcon name="history" sizePreset="sm" decorative />
+              </PipBoyTabsTrigger>
+              <PipBoyTabsTrigger value="history" icon="history">
                 歷史記錄
-              </Button>
-            </div>
+              </PipBoyTabsTrigger>
+            </PipBoyTabsList>
 
-            {/* Tab Content */}
-            {activeTab === 'game' ?
-            <motion.div
-              key="game"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="space-y-8">
+            <PipBoyTabsContent value="game" className="space-y-8">
 
                 {/* 遊戲區塊 - Desktop 2 column, Mobile 1 column */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -304,19 +276,12 @@ export default function BingoPage() {
                     </p>
                   </motion.div>
               }
-              </motion.div> : (
+            </PipBoyTabsContent>
 
-            /* 歷史記錄 Tab */
-            <motion.div
-              key="history"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}>
-
-                <BingoHistory />
-              </motion.div>)
-            }
-          </>)
+            <PipBoyTabsContent value="history">
+              <BingoHistory />
+            </PipBoyTabsContent>
+          </PipBoyTabs>)
           }
       </div>
 

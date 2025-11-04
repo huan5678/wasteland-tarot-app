@@ -11,7 +11,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons';
 import type { IconName } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';

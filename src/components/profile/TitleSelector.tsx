@@ -99,15 +99,11 @@ export const TitleSelector: React.FC = () => {
 
         <div className="space-y-2">
             {/* 無稱號選項 */}
-            <Button size="default" variant="default"
-          type="button"
-          onClick={() => handleTitleSelect(null)}
-          className="{expression}">
-
-
-
-
-
+            <button
+              type="button"
+              onClick={() => handleTitleSelect(null)}
+              className="w-full flex items-center gap-3 px-4 py-3 border-2 border-pip-boy-green/30 bg-wasteland-dark hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all cursor-pointer"
+            >
               {/* Radio Button */}
               <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
             selectedTitle === null ?
@@ -134,19 +130,16 @@ export const TitleSelector: React.FC = () => {
                   當前
                 </span>
             }
-            </Button>
+            </button>
 
             {/* 已解鎖稱號列表 */}
-            {unlockedTitles.map((title) =>
-          <Button size="icon" variant="default"
-          key={title}
-          type="button"
-          onClick={() => handleTitleSelect(title)}
-          className="{expression}">
-
-
-
-
+            {unlockedTitles.map((title) => (
+              <button
+                key={title}
+                type="button"
+                onClick={() => handleTitleSelect(title)}
+                className="w-full flex items-center gap-3 px-4 py-3 border-2 border-pip-boy-green/30 bg-wasteland-dark hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all cursor-pointer"
+              >
 
                 {/* Radio Button */}
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -170,13 +163,13 @@ export const TitleSelector: React.FC = () => {
                 </span>
 
                 {/* Current Badge */}
-                {currentTitle === title &&
-            <span className="text-xs px-2 py-0.5 border border-pip-boy-green/50 text-pip-boy-green/70 rounded-sm">
+                {currentTitle === title && (
+                  <span className="text-xs px-2 py-0.5 border border-pip-boy-green/50 text-pip-boy-green/70 rounded-sm">
                     當前
                   </span>
-            }
-              </Button>
-          )}
+                )}
+              </button>
+            ))}
           </div>
         }
       </div>

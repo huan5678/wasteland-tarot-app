@@ -14,7 +14,7 @@ import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { TitleSelector } from '@/components/profile/TitleSelector';
 import { useTitleStore } from '@/lib/stores/titleStore';
 import { toast } from 'sonner';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs';
 import { OverviewTab } from '@/components/profile/tabs/OverviewTab';
 import { AchievementsTab } from '@/components/profile/tabs/AchievementsTab';
 import { SettingsTab } from '@/components/profile/tabs/SettingsTab';
@@ -324,43 +324,32 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-pip-boy-green">
-                Vault 居民檔案
-              </h1>
-              <p className="text-pip-boy-green/70 text-sm">
-                個人資料管理系統 - ID: {profile.username}
-              </p>
-            </div>
-            {!isEditing &&
-            <Button size="default" variant="outline"
-            onClick={handleEdit}
-            className="px-4 py-2 border transition-colors">
-
-                <PixelIcon name="edit" size={16} className="mr-2 inline" aria-label="編輯檔案" />編輯檔案
-              </Button>
-            }
+          <div>
+            <h1 className="text-2xl font-bold text-pip-boy-green">
+              Vault 居民檔案
+            </h1>
+            <p className="text-pip-boy-green/70 text-sm">
+              個人資料管理系統 - ID: {profile.username}
+            </p>
           </div>
         </div>
 
         {/* Tabs Navigation */}
-        <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="w-full mb-6 grid grid-cols-2 md:grid-cols-4 gap-2 bg-transparent border-0">
-            {PROFILE_TABS.map((tab) =>
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="">
-
-                <PixelIcon name={tab.icon} size={18} className="mr-2" decorative />
+        <PipBoyTabs defaultValue="overview" className="w-full">
+          <PipBoyTabsList>
+            {PROFILE_TABS.map((tab) => (
+              <PipBoyTabsTrigger
+                key={tab.value}
+                value={tab.value}
+                icon={tab.icon}
+              >
                 {tab.label}
-              </TabsTrigger>
-            )}
-          </TabsList>
+              </PipBoyTabsTrigger>
+            ))}
+          </PipBoyTabsList>
 
           {/* Tab 1: Overview */}
-          <TabsContent value="overview" className="space-y-6">
+          <PipBoyTabsContent value="overview" className="space-y-6">
             <OverviewTab
               user={user}
               profile={profile}
@@ -369,18 +358,18 @@ export default function ProfilePage() {
               updateAvatarUrl={updateAvatarUrl}
               getDaysInService={getDaysInService} />
 
-          </TabsContent>
+          </PipBoyTabsContent>
 
           {/* Tab 2: Achievements */}
-          <TabsContent value="achievements" className="space-y-6">
+          <PipBoyTabsContent value="achievements" className="space-y-6">
             <AchievementsTab
               summary={summary}
-              userProgress={userProgress} />
-
-          </TabsContent>
+              userProgress={userProgress}
+            />
+          </PipBoyTabsContent>
 
           {/* Tab 3: Settings */}
-          <TabsContent value="settings" className="space-y-6">
+          <PipBoyTabsContent value="settings" className="space-y-6">
             <SettingsTab
               user={user}
               profile={profile}
@@ -398,20 +387,20 @@ export default function ProfilePage() {
               setVolume={setVolume}
               toggleMute={toggleMute}
               formatDate={formatDate}
-              getFactionLabel={getFactionLabel} />
-
-          </TabsContent>
+              getFactionLabel={getFactionLabel}
+            />
+          </PipBoyTabsContent>
 
           {/* Tab 4: Account */}
-          <TabsContent value="account" className="space-y-6">
+          <PipBoyTabsContent value="account" className="space-y-6">
             <AccountTab
               user={user}
               profile={profile}
               isOAuthUser={isOAuthUser}
-              logout={logout} />
-
-          </TabsContent>
-        </Tabs>
+              logout={logout}
+            />
+          </PipBoyTabsContent>
+        </PipBoyTabs>
       </div>
     </div>);
 

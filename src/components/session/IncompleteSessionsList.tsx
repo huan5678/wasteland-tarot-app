@@ -103,15 +103,15 @@ export function IncompleteSessionsList() {
   if (incompleteSessions.length === 0) {
     return (
       <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-8 text-center">
-        <PixelIcon name="clock" sizePreset="lg" variant="muted" className="mx-auto mb-3 opacity-50" decorative />
+        <PixelIcon name="time" sizePreset="lg" variant="muted" className="mx-auto mb-3 opacity-50" decorative />
         <p className="text-pip-boy-green/70">
           目前沒有未完成的占卜會話
         </p>
         <p className="text-pip-boy-green/50 text-sm mt-2">
           開始新的占卜，系統會自動為你儲存進度
         </p>
-      </div>);
-
+      </div>
+    );
   }
 
   return (

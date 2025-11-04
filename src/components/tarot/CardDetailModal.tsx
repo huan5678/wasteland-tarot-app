@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { PixelIcon } from "../ui/icons";
 import type { IconName } from "../ui/icons";
 import { filterCharacterVoicesByFaction } from '@/lib/factionVoiceMapping';

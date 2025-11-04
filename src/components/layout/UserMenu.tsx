@@ -59,6 +59,8 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
             transition-all duration-200
             data-[state=open]:border-pip-boy-green
             data-[state=open]:bg-pip-boy-green/10
+            [&>svg]:text-pip-boy-green
+            hover:[&>svg]:text-pip-boy-green-bright
           ">
 
 
@@ -93,30 +95,25 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
 
 
             <div className="space-y-1">
-              {menuItems.map((item) =>
-              <Button size="icon" variant="default"
-              key={item.label}
-              onClick={item.action}
-              className="{expression}">
+              {menuItems.map((item) => (
+              <Button
+                key={item.label}
+                size="default"
+                variant="ghost"
+                onClick={item.action}
+                className="w-full justify-start gap-3 hover:bg-pip-boy-green/20 hover:text-pip-boy-green-bright"
+              >
 
 
-
-
-
-
-
-
-
-
-                  <PixelIcon
+                <PixelIcon
                   name={item.icon}
                   sizePreset="sm"
                   variant={item.variant || 'primary'}
-                  decorative />
-
-                  <span>{item.label}</span>
-                </Button>
-              )}
+                  decorative
+                />
+                <span>{item.label}</span>
+              </Button>
+              ))}
             </div>
           </NavigationMenuContent>
         </NavigationMenuItem>

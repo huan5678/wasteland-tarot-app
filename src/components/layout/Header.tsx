@@ -11,9 +11,10 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger } from
-'@/components/ui/sheet';
-import { UserMenu } from './UserMenu';import { Button } from "@/components/ui/button";
+  SheetTrigger
+} from '@/components/ui/sheet';
+import { UserMenu } from './UserMenu';
+import { Button } from '@/components/ui/button';
 
 interface NavItem {
   href: string;
@@ -304,53 +305,52 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Button size="default" variant="default"
-          onClick={() => handleNavigation('/')}
-          className="flex items-center gap-3 transition-opacity cursor-pointer">
-
+          <button
+            onClick={() => handleNavigation('/')}
+            className="flex items-center gap-3 transition-opacity cursor-pointer hover:opacity-80 bg-transparent border-0 p-0"
+          >
             <img
               src="/logo.svg"
               alt="廢土塔羅 Logo"
               className="w-12 h-12 md:w-14 md:h-14"
               style={{
                 filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
-              }} />
-
+              }}
+            />
             <div>
               <h1 className="text-xl font-bold text-pip-boy-green text-glow-green">廢土塔羅</h1>
               <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜終端機</p>
             </div>
-          </Button>
+          </button>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             {/* 導航連結 */}
-            {generalNavLinks.map((link) =>
-            <Button size="icon" variant="default"
-            key={link.href}
-            onClick={() => handleNavigation(link.href)}
-            className="{expression}">
+            {generalNavLinks.map((link) => (
+            <Button
+              key={link.href}
+              size="default"
+              variant="outline"
+              onClick={() => handleNavigation(link.href)}
+              className="relative flex items-center gap-2"
+            >
 
 
 
 
 
-
-
-
-
-                <PixelIcon
+              <PixelIcon
                 name={link.icon}
                 sizePreset="xs"
                 variant="primary"
-                aria-label={link.ariaLabel} />
-
-                <span>{link.label}</span>
-                {link.badge &&
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              }
-              </Button>
-            )}
+                aria-label={link.ariaLabel}
+              />
+              <span>{link.label}</span>
+              {link.badge && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </Button>
+            ))}
 
             {/* 已登入：顯示 UserMenu */}
             {user &&
@@ -409,33 +409,31 @@ export function Header() {
 
                           {/* 選單項目 */}
                           <div>
-                            {section.items.map((item) =>
-                        <Button size="icon" variant="default"
-                        key={item.href}
-                        onClick={() => handleNavigation(item.href)}
-                        className="{expression}"
+                            {section.items.map((item) => (
+                        <Button
+                          key={item.href}
+                          size="default"
+                          variant="ghost"
+                          onClick={() => handleNavigation(item.href)}
+                          className="w-full justify-start gap-3 px-4 py-3 mx-2 hover:bg-pip-boy-green/10"
 
 
 
-
-
-
-
-                        aria-label={item.ariaLabel}
-                        aria-current={isActive(item.href) ? 'page' : undefined}>
-
-                                <PixelIcon
+                          aria-label={item.ariaLabel}
+                          aria-current={isActive(item.href) ? 'page' : undefined}
+                        >
+                          <PixelIcon
                             name={item.icon}
                             sizePreset="sm"
                             variant="primary"
-                            decorative />
-
-                                <span className="flex-1 text-left">{item.label}</span>
-                                {item.badge &&
-                          <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
-                          }
-                              </Button>
-                        )}
+                            decorative
+                          />
+                          <span className="flex-1 text-left">{item.label}</span>
+                          {item.badge && (
+                            <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
+                          )}
+                        </Button>
+                        ))}
                           </div>
                         </div>
                     )}
@@ -443,34 +441,32 @@ export function Header() {
 
                   // 一般導航選單
                   <>
-                      {generalNavLinks.map((link) =>
-                    <Button size="icon" variant="default"
-                    key={link.href}
-                    onClick={() => handleNavigation(link.href)}
-                    className="{expression}"
+                      {generalNavLinks.map((link) => (
+                    <Button
+                      key={link.href}
+                      size="default"
+                      variant="ghost"
+                      onClick={() => handleNavigation(link.href)}
+                      className="w-full justify-start gap-3 px-4 py-3 mx-2 hover:bg-pip-boy-green/10"
 
 
 
 
-
-
-
-
-                    aria-label={link.ariaLabel}
-                    aria-current={isActive(link.href) ? 'page' : undefined}>
-
-                          <PixelIcon
+                      aria-label={link.ariaLabel}
+                      aria-current={isActive(link.href) ? 'page' : undefined}
+                    >
+                      <PixelIcon
                         name={link.icon}
                         sizePreset="sm"
                         variant="primary"
-                        decorative />
-
-                          <span className="flex-1 text-left">{link.label}</span>
-                          {link.badge &&
-                      <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
-                      }
-                        </Button>
-                    )}
+                        decorative
+                      />
+                      <span className="flex-1 text-left">{link.label}</span>
+                      {link.badge && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" aria-label="有新內容" />
+                      )}
+                    </Button>
+                    ))}
                     </>
                   }
 
@@ -478,23 +474,22 @@ export function Header() {
                   {user &&
                   <>
                       <div className="h-px bg-pip-boy-green/20 my-2 mx-2" />
-                      <Button size="sm" variant="outline"
-                    onClick={() => {
-                      handleLogout();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 mx-2\n border transition-all duration-200"
-
-
-
-                    aria-label="登出">
-
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          handleLogout();
+                          setMobileMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 mx-2 border transition-all duration-200"
+                        aria-label="登出"
+                      >
                         <PixelIcon
-                        name="door-open"
-                        sizePreset="sm"
-                        variant="error"
-                        decorative />
-
+                          name="door-open"
+                          sizePreset="sm"
+                          variant="error"
+                          decorative
+                        />
                         <span className="flex-1 text-left">登出</span>
                       </Button>
                     </>

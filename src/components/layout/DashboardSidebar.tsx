@@ -9,8 +9,10 @@ import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger } from
-'@/components/ui/tooltip';import { Button } from "@/components/ui/button";
+  TooltipTrigger
+} from '@/components/ui/tooltip';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const SIDEBAR_COLLAPSED_KEY = 'dashboard-sidebar-collapsed';
 
@@ -125,77 +127,84 @@ export function DashboardSidebar() {
   const isActive = (href: string) => pathname === href;
 
   // 選單項目渲染（展開狀態）
-  const renderExpandedItem = (item: NavItem) =>
-  <Button size="icon" variant="default"
-  key={item.href}
-  onClick={() => handleNavigation(item.href)}
-  className="{expression}"
-
-
-
-
-
-
-
-  aria-label={item.ariaLabel}
-  aria-current={isActive(item.href) ? 'page' : undefined}>
-
-      <div className="relative">
-        <PixelIcon
-        name={item.icon}
-        sizePreset="sm"
-        variant="primary"
-        decorative />
-
-        {item.badge &&
-      <span
-        className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"
-        aria-label="有新內容" />
-
-      }
-      </div>
-      <span className="flex-1 text-left">{item.label}</span>
-    </Button>;
+  const renderExpandedItem = (item: NavItem) => {
+    const active = isActive(item.href);
+    return (
+      <Button
+        key={item.href}
+        size="default"
+        variant={active ? 'default' : 'ghost'}
+        onClick={() => handleNavigation(item.href)}
+        className={cn(
+          "w-full justify-start gap-3 px-4 py-3",
+          active ? "" : "hover:bg-pip-boy-green/10 hover:text-pip-boy-green"
+        )}
+        aria-label={item.ariaLabel}
+        aria-current={active ? 'page' : undefined}
+      >
+        <div className="relative">
+          <PixelIcon
+            name={item.icon}
+            sizePreset="sm"
+            variant={active ? undefined : "primary"}
+            className={active ? "text-black" : ""}
+            decorative
+          />
+          {item.badge && (
+            <span
+              className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"
+              aria-label="有新內容"
+            />
+          )}
+        </div>
+        <span className={cn(
+          "flex-1 text-left",
+          active ? "text-black font-bold" : ""
+        )}>
+          {item.label}
+        </span>
+      </Button>
+    );
+  };
 
 
   // 選單項目渲染（收合狀態）
-  const renderCollapsedItem = (item: NavItem) =>
-  <TooltipProvider key={item.href} delayDuration={300}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button size="icon" variant="default"
-        onClick={() => handleNavigation(item.href)}
-        className="{expression}"
-
-
-
-
-
-
-
-        aria-label={item.ariaLabel}
-        aria-current={isActive(item.href) ? 'page' : undefined}>
-
-            <PixelIcon
-            name={item.icon}
-            sizePreset="sm"
-            variant="primary"
-            decorative />
-
-            {item.badge &&
-          <span
-            className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"
-            aria-label="有新內容" />
-
-          }
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="right">
-          <p>{item.label}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>;
-
+  const renderCollapsedItem = (item: NavItem) => {
+    const active = isActive(item.href);
+    return (
+      <TooltipProvider key={item.href} delayDuration={300}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant={active ? 'default' : 'ghost'}
+              onClick={() => handleNavigation(item.href)}
+              className="relative h-12 w-12"
+              aria-label={item.ariaLabel}
+              aria-current={active ? 'page' : undefined}
+            >
+              <PixelIcon
+                name={item.icon}
+                sizePreset="sm"
+                variant={active ? undefined : "primary"}
+                className={active ? "text-black" : ""}
+                decorative
+              />
+              {item.badge && (
+                <span
+                  className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"
+                  aria-label="有新內容"
+                />
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right">
+            <p>{item.label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  };
 
   return (
     <aside

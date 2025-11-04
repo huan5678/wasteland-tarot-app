@@ -12,7 +12,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { readingsAPI } from '@/lib/api';
 import { PixelIcon } from '@/components/ui/icons';
 import type { Reading } from '@/lib/api';
@@ -624,30 +624,29 @@ export default function ReadingDetailPage() {
             AI 深度解讀
           </h3>
 
-          {!hasAI &&
-          <Button size="icon" variant="default"
-          onClick={handleRequestAI}
-          disabled={!canRequest}
-          className="{expression}">
+          {!hasAI && (
+          <Button
+            size="default"
+            variant="default"
+            onClick={handleRequestAI}
+            disabled={!canRequest}
+            className="flex items-center gap-2"
+          >
 
 
-
-
-
-
-              {isRequestingAI ?
-            <>
-                  <PixelIcon name="loader" animation="spin" sizePreset="xs" decorative />
-                  <span>分析中...</span>
-                </> :
-
-            <>
-                  <PixelIcon name="sparkles" sizePreset="xs" variant="warning" decorative />
-                  <span>請求 AI 解讀</span>
-                </>
-            }
-            </Button>
-          }
+            {isRequestingAI ? (
+              <>
+                <PixelIcon name="loader" animation="spin" sizePreset="xs" className="text-black" decorative />
+                <span>分析中...</span>
+              </>
+            ) : (
+              <>
+                <PixelIcon name="sparkles" sizePreset="xs" className="text-black" decorative />
+                <span>請求 AI 解讀</span>
+              </>
+            )}
+          </Button>
+          )}
 
           {hasAI &&
           <div className="flex items-center gap-2 text-xs text-pip-boy-green/70">
@@ -1035,13 +1034,15 @@ export default function ReadingDetailPage() {
 
         {/* Actions */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Button size="sm" variant="outline"
-          onClick={() => router.push('/dashboard')}
-          className="px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider">
-
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => router.push('/readings')}
+            className="px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider"
+          >
             <span className="flex items-center justify-center gap-2">
               <PixelIcon name="arrow-left" sizePreset="xs" variant="default" decorative />
-              返回 Dashboard
+              返回占卜記錄
             </span>
           </Button>
 

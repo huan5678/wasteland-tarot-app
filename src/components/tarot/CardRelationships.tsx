@@ -6,7 +6,7 @@
 'use client';
 
 import React, { useMemo, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { DetailedTarotCard } from './CardDetailModal';
 import { PixelIcon } from '@/components/ui/icons';

@@ -5,7 +5,16 @@ import { useReadingsStore } from '@/lib/readingsStore';
 import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore';
 import { PixelIcon } from '@/components/ui/icons';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { toDisplay } from '@/lib/spreadMapping';import { Button } from "@/components/ui/button";
+import { toDisplay } from '@/lib/spreadMapping';
+import { Button } from '@/components/ui/button';
+import { PaginationControls } from '@/components/cards/PaginationControls';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 
 interface Props {onSelect?: (id: string) => void;}
 
@@ -279,9 +288,74 @@ export function ReadingHistory({ onSelect }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button size="icon" variant="default" onClick={(e) => {e.stopPropagation();toggleFavorite(r.id).then(() => import('@/lib/actionTracker').then((m) => m.track('reading:toggle_favorite', { id: r.id, value: !r.is_favorite })));}} className="{expression}" title={r.is_favorite ? '取消收藏' : '加入收藏'}><PixelIcon name="star" className="w-4 h-4" /></Button>
-                <Button size="icon" variant="link" onClick={(e) => {e.stopPropagation();const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });const a = document.createElement('a');a.href = URL.createObjectURL(blob);a.download = `reading-${r.id}.json`;a.click();}} title="匯出 JSON"><PixelIcon name="save" className="w-4 h-4" /></Button>
-                <Button size="icon" variant="link" onClick={(e) => handleDeleteClick(e, r.id)} title="刪除占卜"><PixelIcon name="trash" className="w-4 h-4" /></Button>
+                <Button
+                  size="icon-sm"
+                  variant={r.is_favorite ? 'default' : 'ghost'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(r.id).then(() =>
+                      import('@/lib/actionTracker').then((m) =>
+                        m.track('reading:toggle_favorite', { id: r.id, value: !r.is_favorite })
+                      )
+                    );
+                  }}
+                  title={r.is_favorite ? '取消收藏' : '加入收藏'}
+                >
+                  <PixelIcon name="star" className="w-4 h-4" />
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={(e) => e.stopPropagation()}
+                      title="更多操作"
+                    >
+                      <PixelIcon name="more-2" className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-wasteland-dark border-2 border-pip-boy-green/30"
+                  >
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/readings/${r.id}`);
+                      }}
+                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                    >
+                      <PixelIcon name="eye" className="w-4 h-4 mr-2" />
+                      查看詳情
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `reading-${r.id}.json`;
+                        a.click();
+                      }}
+                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                    >
+                      <PixelIcon name="save" className="w-4 h-4 mr-2" />
+                      匯出 JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-pip-boy-green/30" />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(e, r.id);
+                      }}
+                      className="text-red-400 hover:bg-red-400/10 hover:text-red-300 cursor-pointer"
+                    >
+                      <PixelIcon name="trash" className="w-4 h-4 mr-2" />
+                      刪除占卜
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             {/* 使用者的問題 */}
@@ -314,131 +388,44 @@ export function ReadingHistory({ onSelect }: Props) {
       </div>
 
       {/* Pagination Controls */}
-      {filtered.length > 0 && totalPages > 1 &&
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-pip-boy-green/30">
-          {/* Items per page selector */}
-          <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
-            <span>每頁顯示</span>
-            <select
-            value={itemsPerPage}
-            onChange={(e) => {
-              setItemsPerPage(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-2 py-1 bg-black border border-pip-boy-green/50 text-pip-boy-green text-sm">
-
-              <option value={5}>5</option>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-            <span>筆</span>
-          </div>
-
-          {/* Page navigation */}
-          <div className="flex items-center gap-2">
-            {/* Previous button */}
-            <Button size="default" variant="default"
-          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-          disabled={currentPage === 1}
-          className="{expression}"
-
-
-
-
-          title="上一頁">
-
-              <PixelIcon name="arrow-left-s" size={16} decorative />
-              <span className="text-xs">上一頁</span>
-            </Button>
-
-            {/* Page numbers */}
-            <div className="flex items-center gap-1">
-              {(() => {
-              const pages = [];
-              const maxVisible = 5;
-              let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-              let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-
-              if (endPage - startPage < maxVisible - 1) {
-                startPage = Math.max(1, endPage - maxVisible + 1);
-              }
-
-              // First page
-              if (startPage > 1) {
-                pages.push(
-                  <Button size="xs" variant="outline"
-                  key={1}
-                  onClick={() => setCurrentPage(1)}
-                  className="px-3 py-1 border transition-colors">
-
-                      1
-                    </Button>
-                );
-                if (startPage > 2) {
-                  pages.push(<span key="ellipsis-start" className="text-pip-boy-green/50 px-1">...</span>);
-                }
-              }
-
-              // Middle pages
-              for (let i = startPage; i <= endPage; i++) {
-                pages.push(
-                  <Button size="icon" variant="default"
-                  key={i}
-                  onClick={() => setCurrentPage(i)}
-                  className="{expression}">
-
-
-
-
-
-                      {i}
-                    </Button>
-                );
-              }
-
-              // Last page
-              if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                  pages.push(<span key="ellipsis-end" className="text-pip-boy-green/50 px-1">...</span>);
-                }
-                pages.push(
-                  <Button size="icon" variant="outline"
-                  key={totalPages}
-                  onClick={() => setCurrentPage(totalPages)}
-                  className="px-3 py-1 border transition-colors">
-
-                      {totalPages}
-                    </Button>
-                );
-              }
-
-              return pages;
-            })()}
+      {filtered.length > 0 && totalPages > 1 && (
+        <div className="mt-6 pt-4 border-t border-pip-boy-green/30">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
+              <span>每頁顯示</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="px-2 py-1 bg-black border border-pip-boy-green/50 text-pip-boy-green text-sm"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span>筆</span>
             </div>
 
-            {/* Next button */}
-            <Button size="default" variant="default"
-          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-          disabled={currentPage === totalPages}
-          className="{expression}"
-
-
-
-
-          title="下一頁">
-
-              <span className="text-xs">下一頁</span>
-              <PixelIcon name="arrow-right-s" size={16} decorative />
-            </Button>
+            {/* Page info */}
+            <div className="text-xs text-pip-boy-green/70">
+              第 <span className="numeric tabular-nums">{currentPage}</span> / <span className="numeric tabular-nums">{totalPages}</span> 頁
+            </div>
           </div>
 
-          {/* Page info */}
-          <div className="text-xs text-pip-boy-green/70">
-            第 <span className="numeric tabular-nums">{currentPage}</span> / <span className="numeric tabular-nums">{totalPages}</span> 頁
-          </div>
+          {/* Pagination Component */}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            baseUrl="/readings"
+            onPageChange={setCurrentPage}
+            clientSideNavigation={true}
+          />
         </div>
-      }
+      )}
 
       {/* 刪除確認對話框 */}
       <ConfirmDialog

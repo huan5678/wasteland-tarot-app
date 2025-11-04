@@ -625,17 +625,19 @@ export default function NewReadingPage() {
                     常見問題：
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {randomQuestions.map((item, index) =>
-                  <Button size="icon" variant="outline"
-                  key={index}
-                  type="button"
-                  onClick={() => setQuestion(item.text)}
-                  className="px-3 py-1.5 border transition-all duration-200"
-                  title={`${item.category}類問題`}>
-
+                    {randomQuestions.map((item, index) => (
+                      <Button
+                        key={index}
+                        size="sm"
+                        variant="outline"
+                        type="button"
+                        onClick={() => setQuestion(item.text)}
+                        className="px-3 py-1.5 border transition-all duration-200"
+                        title={`${item.category}類問題`}
+                      >
                         {item.text}
                       </Button>
-                  )}
+                    ))}
                   </div>
                 </div>
 
