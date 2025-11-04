@@ -472,32 +472,35 @@ export default function DashboardPage() {
               <Button size="default" variant="outline"
               key={reading.id}
               onClick={() => router.push(`/readings/${reading.id}`)}
-              className="w-full p-4 transition-all duration-200 cursor-pointer">
+              className="w-full h-auto py-4 px-4 transition-all duration-200 cursor-pointer">
 
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex flex-col items-start w-full text-left gap-3">
                       <h3 className="text-sm font-bold text-pip-boy-green">
                         {reading.spread_template?.display_name || '占卜'}
                       </h3>
-                      <span className="text-xs text-pip-boy-green/70">
-                        {formatDate(reading.date)}
-                      </span>
+
+                      <p className="text-pip-boy-green/80 text-sm italic">
+                        "{reading.question}"
+                      </p>
+
+                      <div className="flex gap-2">
+                        {(reading.cards || []).slice(0, 3).map((card, index) =>
+                    <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
+                            <PixelIcon name="spade" size={16} decorative />
+                          </div>
+                    )}
+                      </div>
+
+                      <p className="text-pip-boy-green/70 text-xs line-clamp-2">
+                        {reading.interpretation}
+                      </p>
+
+                      <div className="flex justify-end w-full">
+                        <span className="text-xs text-pip-boy-green/70">
+                          {formatDate(reading.date)}
+                        </span>
+                      </div>
                     </div>
-
-                    <p className="text-pip-boy-green/80 text-sm mb-3 italic">
-                      "{reading.question}"
-                    </p>
-
-                    <div className="flex gap-2 mb-3">
-                      {(reading.cards || []).slice(0, 3).map((card, index) =>
-                  <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
-                          <PixelIcon name="spade" size={16} decorative />
-                        </div>
-                  )}
-                    </div>
-
-                    <p className="text-pip-boy-green/70 text-xs line-clamp-2">
-                      {reading.interpretation}
-                    </p>
                   </Button>
               ) :
 
