@@ -31,7 +31,12 @@ interface APIRequestOptions {
 interface APIErrorResponse {
   detail?: string;
   message?: string;
-  error?: string;
+  error?: string | {
+    code?: string;
+    message?: string;
+    details?: any;
+    radiation_level?: string;
+  };
 }
 
 // ============================================================================
@@ -109,22 +114,28 @@ class APIClient {
       // 提取錯誤訊息（確保是字串）
       let errorMessage: string;
 
+      // 如果 error 是物件，提取 message 欄位
+      if (errorData.error && typeof errorData.error === 'object') {
+        errorMessage = errorData.error.message || JSON.stringify(errorData.error);
+      } 
       // 如果 detail 是物件，嘗試提取 message 欄位
-      if (errorData.detail && typeof errorData.detail === 'object') {
+      else if (errorData.detail && typeof errorData.detail === 'object') {
         errorMessage = (errorData.detail as any).message || JSON.stringify(errorData.detail);
-      } else {
+      } 
+      // 否則嘗試從各個字串欄位提取
+      else {
         errorMessage =
+          (typeof errorData.error === 'string' ? errorData.error : null) ||
           (typeof errorData.detail === 'string' ? errorData.detail : null) ||
           errorData.message ||
-          errorData.error ||
           `API 錯誤 (${response.status})`;
       }
 
       // 推送錯誤到 errorStore
       useErrorStore.getState().pushError({
+        source: 'api',
         message: errorMessage,
-        details: `${method} ${endpoint}`,
-        timestamp: new Date().toISOString(),
+        statusCode: response.status,
       });
 
       throw new Error(errorMessage);
