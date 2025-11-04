@@ -281,7 +281,28 @@ export default function DashboardPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString(undefined, {
+    // 取得使用者的時區
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    
+    // 根據時區推測地區
+    const timeZoneToLocale: Record<string, string> = {
+      'Asia/Taipei': 'zh-TW',
+      'Asia/Tokyo': 'ja-JP',
+      'America/New_York': 'en-US',
+      'America/Los_Angeles': 'en-US',
+      'America/Chicago': 'en-US',
+      'Europe/London': 'en-GB',
+      'Europe/Paris': 'fr-FR',
+      'Europe/Berlin': 'de-DE',
+      'Asia/Shanghai': 'zh-CN',
+      'Asia/Hong_Kong': 'zh-HK',
+      'Asia/Seoul': 'ko-KR',
+      'Australia/Sydney': 'en-AU'
+    };
+    
+    const guessedLocale = timeZoneToLocale[timeZone] || 'en-US';
+    
+    return new Date(dateString).toLocaleString(guessedLocale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
