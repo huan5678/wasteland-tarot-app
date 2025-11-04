@@ -21,6 +21,7 @@ const KNOWN_ROUTES = [
   '/privacy',
   '/profile',
   '/reading',
+  '/readings',
   '/terms',
   '/test',
   '/icon-showcase',
