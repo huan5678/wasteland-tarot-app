@@ -121,66 +121,84 @@ VOICE_MAPPING = {
 #
 # 注意：Chirp 3:HD 目前主要支援英文語音（en-US），
 # 在中文環境下使用時，會利用 Chirp 3:HD 的跨語言能力處理中文文字。
+# Chirp 3:HD 語音映射（官方星體名稱版本）
+# 根據 Google Cloud TTS 官方文檔：https://cloud.google.com/text-to-speech/docs/chirp3-hd#voice_options
+# Chirp 3:HD 使用真實的星體和衛星名稱作為語音變體
+# 只存儲星體名稱，完整語音名稱格式：{language_code}-Chirp3-HD-{star_name}
 CHIRP3_VOICE_MAPPING = {
-    # === 極低音角色（威脅、強大）===
-    "super_mutant": "en-US-Chirp3-HD-Algenib",
-    # 選擇理由：Algenib 提供深沉、強有力的低音，適合表現超級變種人的威脅性和強大
-    # 配合 -12st pitch 和 0.65 rate，創造極具威懾力的聲音
+    # === 極低音男性角色（威脅、強大）===
+    "super_mutant": "Algenib",
+    # 選擇理由：Algenib（飛馬座γ星）提供深沉、強有力的男性低音
+    # 適合表現超級變種人的威脅性和強大
+    # 配合 -20st pitch 和 0.65 rate，創造極具威懾力的聲音
 
-    "brotherhood_paladin": "en-US-Chirp3-HD-Algieba",
-    # 選擇理由：Algieba 具有軍事權威感，低音域穩定，適合鋼鐵兄弟會聖騎士的指揮官形象
+    "brotherhood_paladin": "Alnilam",
+    # 選擇理由：Alnilam（獵戶座腰帶中央星）具有軍事權威感
+    # 低音域穩定，適合鋼鐵兄弟會聖騎士的指揮官形象
     # 配合 -8st pitch 和 0.75 rate，展現威嚴但不失清晰
 
-    "legion_centurion": "en-US-Chirp3-HD-Alnilam",
-    # 選擇理由：Alnilam 提供嚴厲、紀律性的低音，適合凱薩軍團百夫長的軍事紀律特質
+    "legion_centurion": "Enceladus",
+    # 選擇理由：Enceladus（土衛二）提供嚴厲、紀律性的男性低音
+    # 適合凱薩軍團百夫長的軍事紀律特質
     # 配合 -10st pitch 和 0.7 rate，展現嚴酷的軍事命令風格
 
-    # === 低音角色（粗獷、老練）===
-    "ghoul": "en-US-Chirp3-HD-Mizar",
-    # 選擇理由：Mizar 具有歷經風霜的低音特質，沙啞但不失表現力，適合屍鬼倖存者的老練形象
+    # === 低音男性角色（粗獷、老練）===
+    "ghoul": "Fenrir",
+    # 選擇理由：Fenrir（土衛九，北歐神話巨狼）具有歷經風霜的低音特質
+    # 沙啞但不失表現力，適合屍鬼倖存者的老練形象
     # 配合 -6st pitch 和 0.8 rate，展現經歷廢土磨難的聲音
 
-    "wasteland_trader": "en-US-Chirp3-HD-Vega",
-    # 選擇理由：Vega 提供實用、商人般的低音，適合廢土商人的精明特質
+    "wasteland_trader": "Achird",
+    # 選擇理由：Achird（仙后座η星）提供實用、商人般的男性中低音
+    # 適合廢土商人的精明特質
     # 配合 -4st pitch 和 0.9 rate，展現實務主義的說話風格
 
-    "ncr_ranger": "en-US-Chirp3-HD-Deneb",
-    # 選擇理由：Deneb 具有專業、冷靜的中低音，適合 NCR 遊騎兵的職業軍人形象
+    "ncr_ranger": "Iapetus",
+    # 選擇理由：Iapetus（土衛八）具有專業、冷靜的男性中低音
+    # 適合 NCR 遊騎兵的職業軍人形象
     # 配合 -5st pitch 和 0.85 rate，展現專業但不失人性
 
-    # === 中音角色（標準、友善）===
-    "pip_boy": "en-US-Chirp3-HD-Regulus",
-    # 選擇理由：Regulus 提供中性、友善的中音，適合 Pip-Boy AI 助手的標準化形象
+    # === 中音男性角色（標準、友善）===
+    "pip_boy": "Puck",
+    # 選擇理由：Puck（天王星衛星）提供中性、友善的男性中音
+    # 適合 Pip-Boy AI 助手的標準化形象
     # 配合 0st pitch 和 1.0 rate，展現標準、清晰、友善的語音
 
-    "minuteman": "en-US-Chirp3-HD-Altair",
-    # 選擇理由：Altair 提供穩重、可靠的中音，適合民兵組織的平民保護者形象
+    "minuteman": "Schedar",
+    # 選擇理由：Schedar（仙后座α星）提供穩重、可靠的男性中音
+    # 適合民兵組織的平民保護者形象
     # 配合 -2st pitch 和 0.95 rate，展現穩重可靠的聲音
 
-    # === 高音角色（年輕、活潑）===
-    "vault_dweller": "en-US-Chirp3-HD-Aoede",
-    # 選擇理由：Aoede 提供年輕、樂觀的女性高音，適合避難所居民的年輕活力形象
-    # 配合 +4st pitch 和 1.1 rate，展現年輕、充滿希望的聲音
+    # === 高音女性角色（年輕、活潑）===
+    "vault_dweller": "Aoede",
+    # 選擇理由：Aoede（木衛四十一，繆斯女神之一）提供年輕、樂觀的女性高音
+    # 適合避難所居民的年輕活力形象
+    # 配合 +8st pitch 和 1.1 rate，展現年輕、充滿希望的聲音
 
-    "railroad_agent": "en-US-Chirp3-HD-Leda",
-    # 選擇理由：Leda 提供機敏、快速的女高音，適合地下鐵路特工的機智敏捷特質
+    "railroad_agent": "Leda",
+    # 選擇理由：Leda（木衛十三，希臘神話斯巴達王后）提供機敏、快速的女性高音
+    # 適合地下鐵路特工的機智敏捷特質
     # 配合 +3st pitch 和 1.15 rate，展現快速、機敏的說話風格
 
-    "brotherhood_scribe": "en-US-Chirp3-HD-Callisto",
-    # 選擇理由：Callisto 提供聰明、好奇的女性高音，適合鋼鐵兄弟會學者的求知特質
+    "brotherhood_scribe": "Callirrhoe",
+    # 選擇理由：Callirrhoe（木衛十七，希臘神話河神之女）提供聰明、好奇的女性高音
+    # 適合鋼鐵兄弟會學者的求知特質
     # 配合 +5st pitch 和 1.05 rate，展現聰明、好學的聲音
 
     # === 特殊角色 ===
-    "codsworth": "en-US-Chirp3-HD-Fomalhaut",
-    # 選擇理由：Fomalhaut 提供精確、正式的語音，適合機器人管家 Codsworth 的正式服務特質
+    "codsworth": "Despina",
+    # 選擇理由：Despina（海王星衛星）提供精確、正式的女性高音
+    # 適合機器人管家 Codsworth 的正式服務特質
     # 配合 +8st pitch 和 1.25 rate，展現機器人化的高音、快速、精確語音
 
-    "raider": "en-US-Chirp3-HD-Hadar",
-    # 選擇理由：Hadar 提供攻擊性、不穩定的低音，適合掠奪者的暴力、不可預測特質
+    "raider": "Rasalgethi",
+    # 選擇理由：Rasalgethi（武仙座α星）提供攻擊性、不穩定的男性中音
+    # 適合掠奪者的暴力、不可預測特質
     # 配合 -3st pitch 和 1.3 rate，展現粗野、快速、具威脅性的聲音
 
-    "institute_scientist": "en-US-Chirp3-HD-Kore",
-    # 選擇理由：Kore 提供分析性、理性的女性高音，適合學院科學家的知識分子形象
+    "institute_scientist": "Kore",
+    # 選擇理由：Kore（希臘神話冥后珀耳塞福涅的別名）提供分析性、理性的女性高音
+    # 適合學院科學家的知識分子形象
     # 配合 +6st pitch 和 1.15 rate，展現理性、分析性、略帶疏離的聲音
 }
 
@@ -469,8 +487,16 @@ class TTSService:
             {"pitch": 1.0, "rate": 1.0}
         )
 
-        # 轉換 pitch (0.6-1.3) → semitones (-20 to +15)
-        pitch_semitones = (config["pitch"] - 1.0) * 50
+        pitch_value = config["pitch"]
+        
+        # 檢查 pitch 是否已經是 semitones 格式（-20 到 +20）
+        # 如果值在 -20 到 +20 範圍內，假設已經是 semitones
+        if -20.0 <= pitch_value <= 20.0:
+            pitch_semitones = pitch_value
+        else:
+            # 否則轉換 pitch (0.6-1.3) → semitones (-20 to +15)
+            pitch_semitones = (pitch_value - 1.0) * 50
+        
         # 限制範圍
         pitch_semitones = max(-20.0, min(20.0, pitch_semitones))
 
@@ -529,13 +555,14 @@ class TTSService:
         self,
         text: str,
         character_key: str,
-        language_code: str = "zh-TW",
+        language_code: str = "cmn-CN",
         return_base64: bool = False,
         user_id: Optional[str] = None,
         cache_source: Optional[str] = None,
         custom_pronunciations: Optional[List[CustomPronunciation]] = None,
         voice_controls: Optional[VoiceControlParams] = None,
-        force_voice_model: Optional[str] = None
+        force_voice_model: Optional[str] = None,
+        voice_name_override: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         合成語音（核心方法，支援自動路由）
@@ -550,6 +577,7 @@ class TTSService:
             custom_pronunciations: 可選的自訂發音覆寫（僅 Chirp 3:HD）
             voice_controls: 可選的語音控制參數（僅 Chirp 3:HD）
             force_voice_model: 強制使用指定模型（"chirp3-hd" 或 "wavenet"），覆寫路由邏輯
+            voice_name_override: 自訂語音名稱，覆寫角色預設語音（例如：'en-US-Chirp3-HD-Algenib'）
 
         Returns:
             {
@@ -597,8 +625,10 @@ class TTSService:
                 result = self._synthesize_chirp3(
                     text,
                     character_key,
+                    language_code,
                     custom_pronunciations,
-                    voice_controls
+                    voice_controls,
+                    voice_name_override
                 )
             else:
                 result = self._synthesize_wavenet(
@@ -1025,35 +1055,40 @@ class TTSService:
 
         return result
 
-    def _build_custom_pronunciations(
+    def _apply_custom_pronunciations(
         self,
+        text: str,
         custom_pronunciations: Optional[List[CustomPronunciation]] = None
-    ) -> Optional[List[texttospeech.PhoneticPronunciation]]:
+    ) -> str:
         """
-        構建 Google Cloud TTS 的自訂發音列表
-
+        應用自訂發音到文字中
+        
+        對於 Chirp 3:HD，使用自訂發音標記替換文字中的特定詞彙。
+        注意：Chirp 3:HD 不支援傳統 SSML phoneme 標籤，而是使用自己的標記格式。
+        
         Args:
+            text: 原始文字
             custom_pronunciations: 自訂發音列表
 
         Returns:
-            Google Cloud TTS PhoneticPronunciation 列表，如果沒有則返回 None
+            應用自訂發音後的文字
         """
         if not custom_pronunciations:
-            return None
+            return text
 
-        pronunciations = []
-        for custom_pron in custom_pronunciations:
-            # 將自訂發音轉換為 Google Cloud TTS 格式
-            phonetic_pron = texttospeech.PhoneticPronunciation(
-                text=custom_pron.phrase,
-                phonetic_encoding=texttospeech.PhoneticEncoding.IPA
-                if custom_pron.phonetic_encoding == "PHONETIC_ENCODING_IPA"
-                else texttospeech.PhoneticEncoding.UNSPECIFIED,
-                phonetic_alphabet=custom_pron.pronunciation
-            )
-            pronunciations.append(phonetic_pron)
+        modified_text = text
+        for pron in custom_pronunciations:
+            # 替換文字中的詞彙為帶 IPA 標記的格式
+            # Chirp 3:HD 格式：[ipa {pronunciation}]{phrase}[/ipa]
+            # 例如：[ipa pɪp bɔɪ]Pip-Boy[/ipa]
+            if pron.phrase in modified_text:
+                replacement = f"[ipa {pron.pronunciation}]{pron.phrase}[/ipa]"
+                modified_text = modified_text.replace(pron.phrase, replacement)
+                logger.debug(
+                    f"[TTSService] Applied custom pronunciation: '{pron.phrase}' -> '{pron.pronunciation}'"
+                )
 
-        return pronunciations if pronunciations else None
+        return modified_text
 
     def generate_chirp3_markup(
         self,
@@ -1069,18 +1104,19 @@ class TTSService:
         - 音高調整：`[pitch {value}st]`
         - 語速調整：`[pace {value}]`
         - 暫停：`[pause {duration}]`
+        - 自訂發音：`[ipa {pronunciation}]{phrase}[/ipa]`
 
         Args:
             text: 要合成的文字
             character_key: 角色識別碼
-            custom_pronunciations: 自訂發音列表（將通過 custom_pronunciations 參數傳遞）
+            custom_pronunciations: 自訂發音列表（會嵌入到標記文字中）
             voice_controls: 語音控制參數
 
         Returns:
             Chirp 3:HD 標記文字
 
         Note:
-            - 自訂發音會通過 custom_pronunciations 參數傳遞給 API，不包含在標記中
+            - 自訂發音會直接嵌入到標記文字中
             - 暫停會直接插入到文字中
         """
         # 取得角色預設參數
@@ -1093,9 +1129,12 @@ class TTSService:
             if voice_controls.rate is not None:
                 rate = voice_controls.rate
 
-        # 插入暫停
+        # 先應用自訂發音
+        processed_text = self._apply_custom_pronunciations(text, custom_pronunciations)
+
+        # 再插入暫停
         marked_text = self._insert_pauses(
-            text,
+            processed_text,
             voice_controls.pauses if voice_controls else None
         )
 
@@ -1114,12 +1153,106 @@ class TTSService:
 
         return " ".join(markup_parts)
 
+    def _is_chirp3_language_supported(self, language_code: str) -> bool:
+        """
+        檢查語言是否支援 Chirp 3:HD
+        
+        根據 Google Cloud 文檔，Chirp 3:HD 支援多種語言。
+        參考：https://docs.cloud.google.com/text-to-speech/docs/chirp3-hd#language_availability
+        
+        Args:
+            language_code: 語言代碼
+            
+        Returns:
+            是否支援 Chirp 3:HD
+        """
+        supported_languages = {
+            "en-US",      # 美式英文
+            "en-GB",      # 英式英文  
+            "en-AU",      # 澳洲英文
+            "en-IN",      # 印度英文
+            "cmn-CN",     # 簡體中文 (中國大陸)
+            "cmn-TW",     # 繁體中文 (台灣)
+            "cmn-Hant-TW", # 繁體中文 (台灣) - 新格式
+            "yue-Hant-HK", # 粵語 (香港)
+            "ja-JP",      # 日文
+            "ko-KR",      # 韓文
+            "fr-FR",      # 法文
+            "de-DE",      # 德文
+            "es-ES",      # 西班牙文
+            "pt-BR",      # 葡萄牙文 (巴西)
+            "it-IT",      # 義大利文
+        }
+        # 也支援標準化的語言代碼 (zh-TW, zh-CN 等)
+        normalized_map = {
+            "zh-TW": "cmn-TW",
+            "zh-CN": "cmn-CN",
+            "zh-HK": "yue-Hant-HK",
+        }
+        return language_code in supported_languages or language_code in normalized_map
+
+    def _convert_to_chirp_language_code(self, language_code: str) -> str:
+        """
+        轉換標準語言代碼為 Chirp 3:HD 支援的語言代碼
+        
+        根據 Google 官方文件，Chirp 3:HD 使用特定的語言代碼格式。
+        參考：https://docs.cloud.google.com/text-to-speech/docs/chirp3-hd#language_availability
+        
+        Args:
+            language_code: 標準語言代碼 (zh-TW, zh-CN, en-US 等)
+            
+        Returns:
+            Chirp 3:HD 相容的語言代碼
+        """
+        # 檢查是否為支援的語言
+        if not self._is_chirp3_language_supported(language_code):
+            logger.warning(
+                f"[TTSService] Language '{language_code}' is not supported by Chirp 3:HD. "
+                f"Will fallback to WaveNet."
+            )
+            return language_code
+        
+        # 語言代碼轉換映射表
+        language_map = {
+            # 英文變體
+            "en-US": "en-US",
+            "en-GB": "en-GB",
+            "en-AU": "en-AU",
+            "en-IN": "en-IN",
+            # 中文變體 - 使用 cmn 前綴 (Mandarin Chinese)
+            "zh-TW": "cmn-TW",      # 台灣繁體中文
+            "zh-CN": "cmn-CN",      # 中國簡體中文
+            "cmn-TW": "cmn-TW",     # 直接使用
+            "cmn-CN": "cmn-CN",     # 直接使用
+            "cmn-Hant-TW": "cmn-Hant-TW",  # 新格式繁體中文
+            # 粵語
+            "zh-HK": "yue-Hant-HK",  # 香港粵語
+            "yue-Hant-HK": "yue-Hant-HK",
+            # 其他亞洲語言
+            "ja-JP": "ja-JP",        # 日文
+            "ko-KR": "ko-KR",        # 韓文
+            # 歐洲語言
+            "fr-FR": "fr-FR",        # 法文
+            "de-DE": "de-DE",        # 德文
+            "es-ES": "es-ES",        # 西班牙文
+            "pt-BR": "pt-BR",        # 葡萄牙文
+            "it-IT": "it-IT",        # 義大利文
+        }
+        
+        result = language_map.get(language_code, language_code)
+        if result != language_code:
+            logger.info(f"[TTSService] Converted language code: {language_code} → {result}")
+        
+        return result
+
     def _synthesize_chirp3(
         self,
         text: str,
         character_key: str,
+        language_code: str = "en-US",
         custom_pronunciations: Optional[List[CustomPronunciation]] = None,
-        voice_controls: Optional[VoiceControlParams] = None
+        voice_controls: Optional[VoiceControlParams] = None,
+        voice_name_override: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         使用 Chirp 3:HD 模型合成語音
@@ -1127,8 +1260,10 @@ class TTSService:
         Args:
             text: 要合成的文字
             character_key: 角色識別碼
+            language_code: 語言代碼 (en-US, en-GB, cmn-CN, cmn-TW, ja-JP, ko-KR 等)
             custom_pronunciations: 可選的自訂發音覆寫
             voice_controls: 可選的語音控制參數
+            voice_name_override: 自訂語音名稱，覆寫角色預設語音
 
         Returns:
             合成結果字典，包含音檔內容和元資料
@@ -1140,13 +1275,60 @@ class TTSService:
         if not self.client:
             raise Exception("TTS client not initialized")
 
-        # 取得 Chirp 3:HD 語音名稱
-        voice_name = CHIRP3_VOICE_MAPPING.get(character_key)
-        if not voice_name:
-            raise ValueError(
-                f"No Chirp 3:HD voice for character: {character_key}. "
-                f"Available characters: {', '.join(CHIRP3_VOICE_MAPPING.keys())}"
+        # 先轉換語言代碼到 Chirp 3:HD 格式，再檢查是否支援
+        converted_language_code = self._convert_to_chirp_language_code(language_code)
+        
+        # 檢查轉換後的語言是否支援 Chirp 3:HD
+        if not self._is_chirp3_language_supported(converted_language_code):
+            logger.warning(
+                f"[TTSService] Language '{language_code}' (converted to '{converted_language_code}') "
+                f"not supported by Chirp 3:HD. Raising exception to trigger WaveNet fallback."
             )
+            raise ValueError(
+                f"Chirp 3:HD does not support language '{converted_language_code}'. "
+                f"Supported languages: en-US, cmn-TW, cmn-CN, ja-JP, ko-KR, etc. "
+                f"Please use WaveNet for other languages."
+            )
+        
+        # 使用轉換後的語言代碼
+        language_code = converted_language_code
+        logger.info(f"[TTSService] Using Chirp3 language code: {language_code}")
+
+        # 取得 Chirp 3:HD 語音名稱（支援自訂覆寫）
+        # 無論是從映射表還是自訂，都需要提取 voice_id 並根據 language_code 重新構建
+        
+        if voice_name_override:
+            voice_base = voice_name_override
+            logger.info(f"[TTSService] Using custom voice base: {voice_base}")
+        else:
+            # 從映射表取得語音名稱（可能包含或不包含語言代碼）
+            voice_base = CHIRP3_VOICE_MAPPING.get(character_key)
+            if not voice_base:
+                raise ValueError(
+                    f"No Chirp 3:HD voice for character: {character_key}. "
+                    f"Available characters: {', '.join(CHIRP3_VOICE_MAPPING.keys())}"
+                )
+        
+        # 提取語音星體名稱（支援多種格式）
+        if "-Chirp3-HD-" in voice_base:
+            # 完整格式：en-US-Chirp3-HD-Algenib → Algenib
+            star_name = voice_base.split("-Chirp3-HD-")[-1]
+            logger.info(f"[TTSService] Extracted star name from full name: {voice_base} → {star_name}")
+        else:
+            # 簡短格式：直接是星體名稱（如 Algenib, Aoede）
+            star_name = voice_base
+            logger.info(f"[TTSService] Using star name directly: {star_name}")
+        
+        # 驗證星體名稱不為空
+        if not star_name:
+            logger.warning(f"[TTSService] Empty star name, using default 'Algenib'")
+            star_name = "Algenib"
+        
+        # 根據語言代碼動態構建完整語音名稱
+        # 格式：{language_code}-Chirp3-HD-{star_name}
+        # Chirp 3:HD 語言代碼不需要轉換（已在上面檢查過支援性）
+        voice_name = f"{language_code}-Chirp3-HD-{star_name}"
+        logger.info(f"[TTSService] Built voice name: {voice_name} (language: {language_code}, star: {star_name})")
 
         # 取得語音參數
         pitch, rate = self.convert_voice_params(character_key)
@@ -1162,7 +1344,7 @@ class TTSService:
             if voice_controls.volume is not None:
                 volume = voice_controls.volume
 
-        # 生成 Chirp 3:HD 標記
+        # 生成 Chirp 3:HD 標記（自訂發音已嵌入其中）
         markup_text = self.generate_chirp3_markup(
             text,
             character_key,
@@ -1170,17 +1352,21 @@ class TTSService:
             voice_controls
         )
 
-        # 構建自訂發音列表
-        phonetic_pronunciations = self._build_custom_pronunciations(custom_pronunciations)
-
         # 創建合成輸入
         synthesis_input = texttospeech.SynthesisInput(
             markup=markup_text
         )
 
         # 創建語音參數
+        # voice_name 已經包含正確的語言代碼前綴（在上面構建時已轉換）
+        # 例如：cmn-TW-Chirp3-HD-Algenib
+        
+        # 從語音名稱提取語言代碼
+        # 格式：{language_code}-Chirp3-HD-{voice_id}
+        voice_language_code = voice_name.split("-Chirp3-HD-")[0]
+        
         voice = texttospeech.VoiceSelectionParams(
-            language_code="en-US",  # Chirp 3:HD 目前主要支援英文
+            language_code=voice_language_code,
             name=voice_name
         )
 
@@ -1202,27 +1388,12 @@ class TTSService:
 
         # 執行合成
         try:
-            # 構建 synthesize_speech 請求參數
-            request_params = {
-                "input": synthesis_input,
-                "voice": voice,
-                "audio_config": audio_config
-            }
-
-            # 如果存在自訂發音，添加到請求中
-            # 注意：Google Cloud TTS API v1 中，custom_pronunciations 是 synthesize_speech 的參數
-            # 但在某些版本中可能需要通過其他方式設置
-            # 這裡先嘗試直接傳遞，如果 API 不支援會自動忽略
-            if phonetic_pronunciations:
-                # 根據 Google Cloud TTS API 文檔，custom_pronunciations 應該在請求層級
-                # 但具體實作可能因版本而異，這裡先記錄並嘗試
-                logger.debug(
-                    f"[TTSService] Custom pronunciations provided: {len(phonetic_pronunciations)} entries"
-                )
-                # 注意：實際的 API 呼叫可能需要調整，取決於 google-cloud-texttospeech 版本
-                # 如果 custom_pronunciations 不支援，會在使用時發現並處理
-
-            response = self.client.synthesize_speech(**request_params)
+            # 執行 TTS 合成（自訂發音已嵌入 markup_text 中）
+            response = self.client.synthesize_speech(
+                input=synthesis_input,
+                voice=voice,
+                audio_config=audio_config
+            )
 
             # 處理回應
             audio_content = response.audio_content

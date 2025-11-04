@@ -15,7 +15,7 @@ class AudioType(str, enum.Enum):
     """音檔類型"""
     STATIC_CARD = "static_card"           # 靜態卡牌解讀
     DYNAMIC_READING = "dynamic_reading"   # 動態牌組解讀
-    AI_RESPONSE = "ai_response"           # AI 回答
+    AI_RESPONSE = "ai_response"           # AI 回答 & 故事/測試音檔
 
 
 class GenerationStatus(str, enum.Enum):

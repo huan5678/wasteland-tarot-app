@@ -70,6 +70,17 @@ class SynthesizeRequest(BaseModel):
         pattern="^(chirp3-hd|wavenet)$",
         description="強制使用指定語音模型（覆寫路由邏輯）"
     )
+    
+    # Voice and language customization
+    voice_name: Optional[str] = Field(
+        None,
+        description="自訂語音名稱（覆寫角色預設語音，例如：'en-US-Chirp3-HD-Algenib'）"
+    )
+    language_code: Optional[str] = Field(
+        None,
+        pattern="^([a-z]{2,3}-[A-Z]{2}|[a-z]{3}-[A-Z][a-z]{3}-[A-Z]{2})$",
+        description="自訂語言代碼（覆寫預設語言，例如：'en-US', 'cmn-CN', 'cmn-Hant-TW'）"
+    )
 
 
 class SynthesizeResponse(BaseModel):
@@ -287,21 +298,28 @@ async def synthesize_audio(
         result = tts_service.synthesize_speech(
             text=request.text,
             character_key=request.character_key,
-            language_code="zh-TW",
+            language_code=request.language_code or "cmn-CN",  # 使用自訂語言代碼或預設簡體中文
             return_base64=(request.return_format == "base64"),
             user_id=None,  # TODO: 從認證中取得
             cache_source=None,  # 將在後面設置
             custom_pronunciations=request.custom_pronunciations,
             voice_controls=request.voice_controls,
-            force_voice_model=request.force_voice_model
+            force_voice_model=request.force_voice_model,
+            voice_name_override=request.voice_name  # 傳遞自訂語音名稱
         )
 
         # 生成儲存路徑
-        audio_type = AudioType.AI_RESPONSE if request.audio_type == "ai_response" else AudioType.DYNAMIC_READING
+        # 映射請求類型到 AudioType enum
+        audio_type_map = {
+            "ai_response": AudioType.AI_RESPONSE,
+            "dynamic_reading": AudioType.DYNAMIC_READING,
+        }
+        audio_type = audio_type_map.get(request.audio_type, AudioType.AI_RESPONSE)
         storage_path = storage_service.generate_storage_path(
             audio_type=audio_type,
-            identifier=text_hash[:8],  # 使用 hash 前 8 字元
-            character_key=request.character_key
+            identifier=cache_key[:8],  # 使用 cache_key 前 8 字元以避免衝突
+            character_key=request.character_key,
+            voice_name=result.get("voice_name")  # 傳遞語音名稱以避免衝突
         )
 
         # 上傳到 Supabase
@@ -321,7 +339,7 @@ async def synthesize_audio(
             duration_seconds=result["duration"],
             text_length=result["text_length"],
             text_hash=text_hash,
-            language_code="zh-TW",
+            language_code=request.language_code or "cmn-CN",  # 使用請求的語言代碼
             voice_name=result["voice_name"],
             ssml_params=result["ssml_params"],
             audio_type=audio_type
