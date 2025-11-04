@@ -336,7 +336,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-8">
           <Button size="default" variant="outline"
           onClick={() => window.location.href = '/readings/new'}
-          className="p-6 transition-all duration-200 group cursor-pointer">
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
 
 
             <div className="text-center">
@@ -350,7 +350,7 @@ export default function DashboardPage() {
 
           <Button size="default" variant="outline"
           onClick={() => window.location.href = '/cards'}
-          className="p-6 transition-all duration-200 group cursor-pointer">
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
 
 
             <div className="text-center">
@@ -364,7 +364,7 @@ export default function DashboardPage() {
 
           <Button size="default" variant="outline"
           onClick={() => window.location.href = '/profile'}
-          className="p-6 transition-all duration-200 group cursor-pointer">
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
 
 
             <div className="text-center">
