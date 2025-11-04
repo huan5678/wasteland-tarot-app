@@ -5,6 +5,9 @@ import { PipBoyCard, PipBoyButton } from '@/components/ui/pipboy'
 import { useGyroscopePermission } from '@/hooks/tilt/useGyroscopePermission'
 import { useDeviceCapabilities } from '@/hooks/tilt/useDeviceCapabilities'
 
+// Force dynamic rendering to prevent prerendering errors with DeviceOrientationEvent
+export const dynamic = 'force-dynamic'
+
 /**
  * 陀螺儀權限測試頁面
  *

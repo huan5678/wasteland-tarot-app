@@ -1,0 +1,5 @@
+{
+  "build_command": "bun install && bun run build",
+  "start_command": "node .next/standalone/server.js",
+  "node_version": "18"
+}

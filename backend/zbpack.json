@@ -1,0 +1,6 @@
+{
+  "dockerfile": "Dockerfile",
+  "build_args": {
+    "ENVIRONMENT": "production"
+  }
+}
