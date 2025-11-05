@@ -1,6 +1,7 @@
 """
 Cards API endpoints for Wasteland Tarot
 Comprehensive card management with rich documentation and examples
+(Optimized with caching)
 """
 
 from typing import List, Optional, Dict, Any
@@ -12,6 +13,7 @@ import random
 import logging
 
 from app.db.session import get_db
+from app.core.cache import cached
 from app.models.user import User
 from app.models.wasteland_card import WastelandCard as WastelandCardModel
 from app.schemas.cards import (
