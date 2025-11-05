@@ -7,6 +7,7 @@ import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { StagedAuthProvider } from '@/components/providers/StagedAuthProvider';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { LoadingStrategy } from '@/components/providers/LoadingStrategy';
+import { BackendHealthCheck } from '@/components/providers/BackendHealthCheck';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
@@ -63,31 +64,35 @@ export default function RootLayout({
           重構後的 Provider 架構 (Next.js 2025 Best Practices)
 
           設計原則：
-          1. StagedAuthProvider: 分階段 Auth 初始化（不阻擋渲染）
-          2. AppProviders: 統一管理所有功能 providers
-          3. LoadingStrategy: 根據頁面類型顯示不同 loading
-          4. 404 頁面完全獨立（在 ConditionalLayout 層級處理）
+          1. BackendHealthCheck: 確保後端喚醒後才載入應用（防止 serverless cold start 錯誤）
+          2. StagedAuthProvider: 分階段 Auth 初始化（不阻擋渲染）
+          3. AppProviders: 統一管理所有功能 providers
+          4. LoadingStrategy: 根據頁面類型顯示不同 loading
+          5. 404 頁面完全獨立（在 ConditionalLayout 層級處理）
 
           效能優化：
+          - Backend health check 最優先（避免 API 請求失敗）
           - Auth 初始化在背景執行，不阻擋頁面顯示
           - Providers 只包裹 {children}，不包裹整個 HTML
           - 按需載入，減少不必要的初始化
         */}
-        <StagedAuthProvider requireAuth={false}>
-          <AppProviders>
-            <LoadingStrategy>
-              <div className="min-h-screen flex flex-col relative z-10">
-                <ClientLayout>
-                  {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
-                  {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
-                  <ConditionalLayout>
-                    {children}
-                  </ConditionalLayout>
-                </ClientLayout>
-              </div>
-            </LoadingStrategy>
-          </AppProviders>
-        </StagedAuthProvider>
+        <BackendHealthCheck>
+          <StagedAuthProvider requireAuth={false}>
+            <AppProviders>
+              <LoadingStrategy>
+                <div className="min-h-screen flex flex-col relative z-10">
+                  <ClientLayout>
+                    {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
+                    {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
+                    <ConditionalLayout>
+                      {children}
+                    </ConditionalLayout>
+                  </ClientLayout>
+                </div>
+              </LoadingStrategy>
+            </AppProviders>
+          </StagedAuthProvider>
+        </BackendHealthCheck>
       </body>
     </html>
   );
