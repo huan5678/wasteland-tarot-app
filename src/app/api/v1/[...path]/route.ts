@@ -65,8 +65,10 @@ async function proxyRequest(
     // Prepare request headers (forward from client)
     const headers = new Headers()
     request.headers.forEach((value, key) => {
-      // Skip Next.js internal headers
-      if (!key.startsWith('x-nextjs') && !key.startsWith('x-middleware')) {
+      // Skip Next.js internal headers and accept-encoding (to avoid compression issues)
+      if (!key.startsWith('x-nextjs') && 
+          !key.startsWith('x-middleware') && 
+          key.toLowerCase() !== 'accept-encoding') {
         headers.set(key, value)
       }
     })

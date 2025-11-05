@@ -442,57 +442,43 @@ async def get_readings(
         result = await db.execute(query)
         readings_data = result.scalars().all()
 
+        # Pre-fetch all missing spread templates in one query (performance optimization)
+        missing_template_ids = [
+            reading.spread_template_id 
+            for reading in readings_data 
+            if not reading.spread_template and reading.spread_template_id
+        ]
+        
+        templates_map = {}
+        if missing_template_ids:
+            templates_query = select(SpreadTemplateModel).where(
+                SpreadTemplateModel.id.in_(missing_template_ids)
+            )
+            templates_result = await db.execute(templates_query)
+            templates_map = {str(t.id): t for t in templates_result.scalars().all()}
+        
         # Convert to response models using Pydantic's from_attributes
         readings = []
         for reading in readings_data:
             try:
-                # Get spread template data from loaded relationship or create fallback
+                # Get spread template data from loaded relationship or pre-fetched map
                 if reading.spread_template:
                     spread_template_data = SpreadTemplate(**reading.spread_template.to_dict())
+                elif reading.spread_template_id and str(reading.spread_template_id) in templates_map:
+                    template = templates_map[str(reading.spread_template_id)]
+                    spread_template_data = SpreadTemplate(**template.to_dict())
                 else:
-                    # Fallback for readings without spread_template
-                    # Try to find matching template by spread_template_id or card count
-                    fallback_template = None
-
-                    if reading.spread_template_id:
-                        # Try to fetch the template by ID
-                        template_query = select(SpreadTemplateModel).where(
-                            SpreadTemplateModel.id == reading.spread_template_id
-                        )
-                        template_result = await db.execute(template_query)
-                        fallback_template = template_result.scalar_one_or_none()
-
-                    # If not found, try to match by card count
-                    if not fallback_template:
-                        # Count card positions for this reading
-                        card_count_query = select(func.count()).select_from(ReadingCardPositionModel).where(
-                            ReadingCardPositionModel.completed_reading_id == reading.id
-                        )
-                        card_count_result = await db.execute(card_count_query)
-                        actual_card_count = card_count_result.scalar() or 0
-
-                        # Try to find a template with matching card count
-                        if actual_card_count > 0:
-                            matching_template_query = select(SpreadTemplateModel).where(
-                                SpreadTemplateModel.card_count == actual_card_count
-                            ).limit(1)
-                            matching_template_result = await db.execute(matching_template_query)
-                            fallback_template = matching_template_result.scalar_one_or_none()
-
-                    # Use found template or create generic fallback
-                    if fallback_template:
-                        spread_template_data = SpreadTemplate(**fallback_template.to_dict())
-                    else:
-                        spread_template_data = SpreadTemplate(
-                            id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
-                            name="unknown_spread",
-                            display_name="未知牌陣",
-                            description="找不到牌陣模板",
-                            spread_type="single_wasteland",
-                            card_count=1,
-                            positions=[],
-                            difficulty_level="beginner"
-                        )
+                    # Use generic fallback for missing templates (avoid additional queries)
+                    spread_template_data = SpreadTemplate(
+                        id=str(reading.spread_template_id) if reading.spread_template_id else "unknown",
+                        name="unknown_spread",
+                        display_name="未知牌陣",
+                        description="找不到牌陣模板",
+                        spread_type="custom_spread",
+                        card_count=1,
+                        positions=[],
+                        difficulty_level="beginner"
+                    )
 
                 # Use Pydantic's model_validate with from_attributes=True
                 # This properly converts SQLAlchemy model to Pydantic model

@@ -23,6 +23,7 @@ class SpreadType(str, PyEnum):
     NCR_STRATEGIC = "ncr_strategic"  # NCR戰略陣（6張）
     BROTHERHOOD_COUNCIL = "brotherhood_council"  # 兄弟會議會（7張）
     CELTIC_CROSS = "celtic_cross"  # 十字路口抉擇陣（10張）
+    CUSTOM_SPREAD = "custom_spread"  # 自訂牌陣
 
 
 class InterpretationStyle(str, PyEnum):

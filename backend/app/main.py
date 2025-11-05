@@ -336,8 +336,13 @@ app = FastAPI(
 
 
 # Add GZip compression middleware (optimize response size)
-from fastapi.middleware.gzip import GZipMiddleware
-app.add_middleware(GZipMiddleware, minimum_size=1000)
+# Temporarily disabled in development to avoid ERR_CONTENT_DECODING_FAILED with Next.js proxy
+# from fastapi.middleware.gzip import GZipMiddleware
+# app.add_middleware(GZipMiddleware, minimum_size=1000)
+# Enable only in production if needed:
+if settings.environment == "production":
+    from fastapi.middleware.gzip import GZipMiddleware
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add security headers middleware (always enabled)
 app.add_middleware(

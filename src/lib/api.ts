@@ -329,8 +329,9 @@ export const readingsAPI = {
       body: JSON.stringify(readingData),
     }),
 
-  // 獲取用戶的占卜記錄（使用正確的後端端點）
-  getUserReadings: (userId: string): Promise<{ readings: Reading[], total_count: number, page: number, page_size: number, has_more: boolean }> =>
+  // 獲取當前用戶的占卜記錄（透過 httpOnly Cookie 自動識別使用者）
+  // 注意：userId 參數保留用於向後相容，但實際不使用（後端通過 JWT token 識別使用者）
+  getUserReadings: (userId?: string): Promise<{ readings: Reading[], total_count: number, page: number, page_size: number, has_more: boolean }> =>
     apiRequest(`/api/v1/readings/?page=1&page_size=100&sort_by=created_at&sort_order=desc`),
 
   // 根據 ID 獲取占卜
