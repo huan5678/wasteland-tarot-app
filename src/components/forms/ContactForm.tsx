@@ -173,7 +173,7 @@ export default function ContactForm() {
             id="contact-name"
             type="text"
             placeholder="請輸入您的姓名"
-            errorMessage={errors.name?.message}
+            error={errors.name?.message}
             disabled={isSubmitting}
             {...register('name')}
           />
@@ -197,7 +197,7 @@ export default function ContactForm() {
             id="contact-email"
             type="email"
             placeholder="your.email@wasteland.vault"
-            errorMessage={errors.email?.message}
+            error={errors.email?.message}
             disabled={isSubmitting}
             {...register('email')}
           />
@@ -267,10 +267,21 @@ export default function ContactForm() {
             id="contact-message"
             placeholder="請輸入您的問題或建議（至少 20 個字元）..."
             rows={6}
-            errorMessage={errors.message?.message}
             disabled={isSubmitting}
+            className={errors.message ? 'border-destructive focus-visible:ring-destructive' : ''}
+            aria-invalid={errors.message ? 'true' : 'false'}
+            aria-describedby={errors.message ? 'contact-message-error' : undefined}
             {...register('message')}
           />
+          {errors.message && (
+            <p
+              id="contact-message-error"
+              className="mt-2 text-sm text-destructive"
+              role="alert"
+            >
+              {errors.message.message}
+            </p>
+          )}
           <p className="text-xs text-green-700">
             <span aria-hidden="true">&gt;</span> 最少 20 字元，最多
             1000 字元

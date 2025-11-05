@@ -3,6 +3,7 @@ import { getStaticPageContent } from '@/lib/contentParser';
 import StaticPageLayout from '@/components/layout/StaticPageLayout';
 import FAQAccordion, { type FAQItem } from '@/components/faq/FAQAccordion';
 import MarkdownRenderer from '@/components/markdown/MarkdownRenderer';
+import { PixelIcon } from '@/components/ui/icons';
 
 /**
  * FAQ Page Metadata
@@ -47,13 +48,9 @@ function CategoryCard({ category }: { category: FAQCategory }) {
       href={`#${category.id}`}
       className="flex items-center gap-3 border-2 border-green-800 bg-green-950/20 p-4 transition-all hover:border-green-600 hover:bg-green-950/30"
     >
-      <span className="text-2xl" aria-hidden="true">
-        {category.icon === 'balance-scale' && '⚖️'}
-        {category.icon === 'brain' && '🧠'}
-        {category.icon === 'user' && '👤'}
-        {category.icon === 'cards' && '🃏'}
-        {category.icon === 'wrench' && '🔧'}
-      </span>
+      <div className="text-green-600">
+        <PixelIcon name={category.icon as any} size={24} decorative />
+      </div>
       <span className="font-bold text-green-500">{category.name}</span>
       <span className="ml-auto text-green-700" aria-hidden="true">
         →

@@ -53,8 +53,13 @@ export function StagedAuthProvider({ children, requireAuth = true }: StagedAuthP
       return
     }
 
-    // 如果不需要 auth，也跳過初始化
+    // 如果不需要 auth，標記為已初始化但不執行認證流程
     if (!requireAuth) {
+      // 直接設置為已初始化，這樣 LoadingStrategy 不會卡住
+      if (!isInitialized) {
+        useAuthStore.setState({ isInitialized: true })
+      }
+      hasInitialized.current = true
       return
     }
 
@@ -70,7 +75,7 @@ export function StagedAuthProvider({ children, requireAuth = true }: StagedAuthP
       hasInitialized.current = true
       isInitializing.current = false
     })
-  }, [initialize, requireAuth])
+  }, [initialize, requireAuth, isInitialized])
 
   // 關鍵改變：直接渲染 children，不等待初始化完成
   // Auth 狀態會在背景更新，UI 會自動反應

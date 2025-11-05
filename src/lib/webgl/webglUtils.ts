@@ -79,8 +79,8 @@ export function createWebGLContext(
     };
   }
 
-  // WebGL not supported
-  console.error('[WebGL] WebGL is not supported in this browser');
+  // WebGL not supported - return null without throwing error
+  console.warn('[WebGL] WebGL is not supported in this browser, falling back to CPU rendering');
   return null;
 }
 

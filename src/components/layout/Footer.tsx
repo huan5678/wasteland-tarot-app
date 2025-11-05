@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 export function Footer() {
+  const router = useRouter();
   const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   // Set year only on client side to avoid potential hydration mismatch
@@ -13,6 +15,7 @@ export function Footer() {
 
   const footerLinks = [
   { href: '/about', label: '關於我們' },
+  { href: '/faq', label: '常見問題' },
   { href: '/privacy', label: '隱私政策' },
   { href: '/terms', label: '服務條款' },
   { href: '/contact', label: '聯絡支援' }];
@@ -58,15 +61,25 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-bold text-pip-boy-green mb-4">快速存取</h4>
             <nav className="space-y-2">
-              {footerLinks.map((link) =>
-              <Button size="icon" variant="link"
-              key={link.href}
-              onClick={() => window.location.href = link.href}
-              className="block transition-all duration-200 cursor-pointer">
-
-                  {link.label}
-                </Button>
-              )}
+              {footerLinks.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push(link.href);
+                  }}
+                  className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 cursor-pointer"
+                >
+                  <PixelIcon
+                    name="chevron-right"
+                    size={16}
+                    className="w-4 h-4"
+                    decorative
+                  />
+                  <span>{link.label}</span>
+                </a>
+              ))}
             </nav>
           </div>
 

@@ -220,9 +220,8 @@ export function CarouselContainer({
         </Button>
       </div>
 
-      {/* 位置指示器 with Enhanced Accessibility - 移到最外層 */}
-      <div className="flex justify-center items-center gap-4 mt-4">
-        {/* 數字指示器 */}
+      {/* 位置指示器 - 僅顯示數字 */}
+      <div className="flex justify-center items-center mt-4">
         <div
           className="text-pip-boy-green text-sm"
           aria-live="polite"
@@ -232,26 +231,6 @@ export function CarouselContainer({
 
           <span className="sr-only">當前卡牌: </span>
           {activeIndex + 1} / {cards.length}
-        </div>
-
-        {/* 點狀指示器 */}
-        <div className="flex gap-2" role="tablist" aria-label="卡牌選擇指示器">
-          {cards.map((_, index) =>
-          <Button size="icon" variant="default"
-          key={index}
-          onClick={() => goToIndex(index)}
-          role="tab"
-          aria-selected={index === activeIndex}
-          aria-controls={`card-panel-${index}`}
-          tabIndex={index === activeIndex ? 0 : -1}
-          className="{expression}"
-
-
-
-
-          aria-label={`第 ${index + 1} 張卡牌${index === activeIndex ? ' (當前)' : ''}`} />
-
-          )}
         </div>
       </div>
 

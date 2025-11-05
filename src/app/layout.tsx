@@ -73,7 +73,7 @@ export default function RootLayout({
           - Providers 只包裹 {children}，不包裹整個 HTML
           - 按需載入，減少不必要的初始化
         */}
-        <StagedAuthProvider requireAuth={true}>
+        <StagedAuthProvider requireAuth={false}>
           <AppProviders>
             <LoadingStrategy>
               <div className="min-h-screen flex flex-col relative z-10">
