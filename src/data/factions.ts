@@ -12,15 +12,21 @@ export interface FactionInfo {
 
 /**
  * 完整的陣營列表（合併 Fallout 3/4/NV）
- * 順序：獨立派 → 經典陣營 → Fallout 4 陣營
+ * 順序：獨立派 → 避難所系統 → 主要陣營 → Fallout 4 陣營 → 其他陣營
+ * 
+ * ⚠️ 注意：這是前端的靜態定義，僅用於快速查詢和 fallback
+ * 推薦使用 API 驅動的 useFactions() Hook 取得最新的陣營資料
  */
 export const FACTIONS: FactionInfo[] = [
+  // 獨立派
   {
     value: 'independent',
     label: 'Independent（獨立派）',
     description: '不隸屬於任何組織，自由探索廢土',
     themeColor: '#00ff88', // pip-boy-green
   },
+
+  // 避難所系統
   {
     value: 'vault_dweller',
     label: 'Vault Dweller（避難所居民）',
@@ -28,11 +34,39 @@ export const FACTIONS: FactionInfo[] = [
     themeColor: '#0ea5e9', // blue
   },
   {
+    value: 'vault_tec',
+    label: 'Vault-Tec',
+    description: 'Vault-Tec 公司，戰前的避難所建造者',
+    themeColor: '#0284c7', // sky blue
+  },
+
+  // 主要陣營（經典）
+  {
     value: 'brotherhood',
     label: 'Brotherhood of Steel（鋼鐵兄弟會）',
     description: '致力於保護和收集前戰爭科技的軍事組織',
     themeColor: '#3b82f6', // steel blue
   },
+  {
+    value: 'enclave',
+    label: 'Enclave（英克雷）',
+    description: '美國政府殘存的軍事組織，致力於重建美國',
+    themeColor: '#1e3a8a', // navy
+  },
+  {
+    value: 'ncr',
+    label: 'NCR（新加州共和國）',
+    description: '民主政府組織，試圖恢復戰前文明',
+    themeColor: '#f59e0b', // amber
+  },
+  {
+    value: 'legion',
+    label: "Caesar's Legion（凱薩軍團）",
+    description: '以古羅馬為範本的獨裁軍事帝國',
+    themeColor: '#dc2626', // red
+  },
+
+  // Fallout 4 陣營
   {
     value: 'minutemen',
     label: 'Minutemen（民兵組織）',
@@ -51,17 +85,13 @@ export const FACTIONS: FactionInfo[] = [
     description: '地下高科技研究機構，創造合成人',
     themeColor: '#06b6d4', // cyan
   },
+
+  // 其他陣營
   {
-    value: 'ncr',
-    label: 'NCR（新加州共和國）',
-    description: '民主政府組織，試圖恢復戰前文明',
-    themeColor: '#f59e0b', // amber
-  },
-  {
-    value: 'legion',
-    label: "Caesar's Legion（凱薩軍團）",
-    description: '以古羅馬為範本的獨裁軍事帝國',
-    themeColor: '#dc2626', // red
+    value: 'children_of_atom',
+    label: 'Children of Atom（原子教）',
+    description: '崇拜輻射的宗教組織',
+    themeColor: '#22c55e', // lime green
   },
   {
     value: 'raiders',

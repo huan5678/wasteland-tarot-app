@@ -463,9 +463,9 @@ export default function NewReadingPage() {
       const result = await completeSession(activeSession.id, {
         interpretation: interpretation,
         spread_template_id: spreadTemplateId, // ✅ NOW PASSING spread_template_id!
-        character_voice: 'pip-boy',
+        character_voice: 'pip_boy',
         karma_context: 'neutral',
-        faction_influence: 'vault-tec'
+        faction_influence: 'independent' // 預設使用獨立派
       });
 
       console.log('會話已完成並轉換為 Reading:', result);
@@ -833,7 +833,7 @@ export default function NewReadingPage() {
         showBookmark={!!user}
         showShare={true}
         showPersonalNotes={!!user}
-        factionInfluence="vault-tec" />
+        factionInfluence="independent" />
 
     </div>);
 

@@ -497,17 +497,35 @@ export default function ReadingDetailPage() {
       console.log('[handleRequestAI] 呼叫後端 streaming API');
 
       // Map faction values to backend enum
+      // 統一陣營 key 格式（使用底線）
       const factionMapping: Record<string, string> = {
+        // 獨立派
+        'independent': 'independent',
+        
+        // 避難所系統
         'vault-tec': 'vault_dweller',
+        'vault_tec': 'vault_dweller',
         'vault_dweller': 'vault_dweller',
+        
+        // 主要陣營
         'brotherhood': 'brotherhood',
+        'brotherhood-of-steel': 'brotherhood',
+        'brotherhood_of_steel': 'brotherhood',
+        'enclave': 'enclave',
         'ncr': 'ncr',
         'legion': 'legion',
-        'raiders': 'raiders',
+        'caesars-legion': 'legion',
+        'caesars_legion': 'legion',
+        
+        // Fallout 4 陣營
         'minutemen': 'minutemen',
         'railroad': 'railroad',
         'institute': 'institute',
-        'independent': 'independent'
+        
+        // 其他陣營
+        'children-of-atom': 'children_of_atom',
+        'children_of_atom': 'children_of_atom',
+        'raiders': 'raiders'
       };
 
       const mappedFaction = reading.faction_influence ?
