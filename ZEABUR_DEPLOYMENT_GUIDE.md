@@ -111,17 +111,27 @@
    Node Version: 18
    ```
 
-3. **環境變數**
+3. **環境變數** ⚠️ **重要：正確配置內部域名**
    ```bash
-   # Public vars (前端可見)
+   # Supabase (前端可見)
    NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
    
-   # Backend URL (使用 Zeabur 提供的內部 URL)
-   NEXT_PUBLIC_API_URL=${backend.url}  # Zeabur 自動注入
+   # 🔒 Backend API URL (伺服器端專用 - 使用 Zeabur 內部域名)
+   # ⚠️ 注意：不要使用 NEXT_PUBLIC_ 前綴！
+   # ⚠️ 格式：http://<service-name>.zeabur.internal:<port>
+   API_BASE_URL=http://wasteland-tarot-app.zeabur.internal:8080
    
-   # Or manually:
-   NEXT_PUBLIC_API_URL=https://your-backend-url.zeabur.app
+   # 網站 URL
+   NEXT_PUBLIC_SITE_URL=https://wt.ai-404.app
+   
+   # ❌ 錯誤示範：
+   # NEXT_PUBLIC_API_URL=wasteland-tarot-app.zeabur.internal:8080
+   # ↑ 瀏覽器無法訪問內部域名！
+   
+   # ✅ 正確架構：
+   # 瀏覽器 → /api/v1/* → Next.js Proxy → 內部後端
+   #                      ↑ 使用 API_BASE_URL
    ```
 
 4. **部署**
@@ -260,7 +270,42 @@ Dashboard → Service → Deployments → "Redeploy"
 
 ### 常見問題
 
-**Q1: Frontend 建置失敗**
+**Q1: 靜態資源 404 錯誤 (CSS/JS 找不到)**
+```bash
+# 症狀:
+# - 網頁可以打開但樣式全無
+# - Console 顯示大量 404 錯誤：*.css, *.js 找不到
+# - 錯誤: Failed to load resource: the server responded with a status of 404
+
+# 原因:
+# Next.js standalone 模式需要手動複製 public/ 和 .next/static/
+
+# 解決方案:
+# 1. 檢查 zbpack.json 的 build_command:
+#    應該包含: && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
+# 2. 重新部署
+# 3. 已修復 ✅ (commit: fix: copy static assets for Zeabur standalone deployment)
+```
+
+**Q2: 瀏覽器無法連接後端 (URL scheme not supported)**
+```bash
+# 症狀:
+# - Console 錯誤: URL scheme "wasteland-tarot-app.zeabur.internal" is not supported
+# - 或: Fetch API cannot load wasteland-tarot-app.zeabur.internal:8080
+
+# 原因:
+# ❌ 前端代碼直接使用了內部域名 (瀏覽器無法訪問)
+
+# 解決方案:
+# 1. 客戶端代碼應該使用相對路徑: /api/v1/*
+# 2. Next.js API Route Proxy 使用 API_BASE_URL (server-side) 轉發到內部後端
+# 3. 檢查環境變數設置:
+#    ✓ API_BASE_URL=http://wasteland-tarot-app.zeabur.internal:8080  (server-side)
+#    ❌ 不要使用 NEXT_PUBLIC_API_URL (瀏覽器無法訪問內部域名)
+# 4. 已修復 ✅ (使用 apiClient 和相對路徑)
+```
+
+**Q3: Frontend 建置失敗**
 ```bash
 # 檢查:
 1. bun.lockb 是否已提交
@@ -268,7 +313,7 @@ Dashboard → Service → Deployments → "Redeploy"
 3. Build logs 中的具體錯誤
 ```
 
-**Q2: Backend 無法連接資料庫**
+**Q4: Backend 無法連接資料庫**
 ```bash
 # 檢查:
 1. POSTGRES_CONNECTION_STRING 是否自動注入
@@ -276,7 +321,7 @@ Dashboard → Service → Deployments → "Redeploy"
 3. Backend logs 中的連接錯誤
 ```
 
-**Q3: 502 Bad Gateway**
+**Q5: 502 Bad Gateway**
 ```bash
 # 檢查:
 1. Backend 服務健康狀態
@@ -284,7 +329,7 @@ Dashboard → Service → Deployments → "Redeploy"
 3. Health check endpoint 是否正常
 ```
 
-**Q4: Environment variables 沒有生效**
+**Q6: Environment variables 沒有生效**
 ```bash
 # 解決:
 1. 檢查變數名稱拼寫

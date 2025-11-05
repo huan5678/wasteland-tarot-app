@@ -38,7 +38,8 @@ export function GuestPlaylistManager({
 
   // ========== Constants ==========
   const MAX_GUEST_PATTERNS = 4;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
+  // Use relative path to go through Next.js API proxy
+  const API_BASE_URL = '/api/v1';
 
   // ========== Effects ==========
 

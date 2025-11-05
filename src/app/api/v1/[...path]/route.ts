@@ -16,7 +16,10 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// Use private env var for server-side backend URL (can be internal Zeabur domain)
+// In production: http://wasteland-tarot-app.zeabur.internal:8080
+// In development: http://localhost:8000
+const BACKEND_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
 
 // Configure runtime
 export const runtime = 'nodejs'
