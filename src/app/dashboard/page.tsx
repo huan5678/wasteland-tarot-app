@@ -133,13 +133,22 @@ export default function DashboardPage() {
 
           totalReadings = response.total_count;
         } catch (apiError: any) {
-          // Gracefully handle 503 (service unavailable) - table doesn't exist yet
-          if (apiError?.status === 503 || apiError?.status === 500) {
-            console.info('Readings table not available yet - showing empty state');
+          // Gracefully handle various errors
+          console.warn('[Dashboard] Failed to load readings:', apiError);
+          
+          // Handle network errors or API unavailable
+          if (apiError?.status === 503 || apiError?.status === 500 || apiError?.message?.includes('Failed to fetch')) {
+            console.info('Readings API not available - showing empty state');
             transformedReadings = [];
             totalReadings = 0;
+          } else if (apiError?.status === 401 || apiError?.status === 403) {
+            // Authentication error - will be handled by outer try-catch
+            throw apiError;
           } else {
-            throw apiError; // Re-throw other errors
+            // Other errors - show empty state but log the error
+            console.error('Unexpected error loading readings:', apiError);
+            transformedReadings = [];
+            totalReadings = 0;
           }
         }
 
