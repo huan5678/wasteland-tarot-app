@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { PixelIcon } from "../ui/icons";
 import type { IconName } from "../ui/icons";
 import { filterCharacterVoicesByFaction } from '@/lib/factionVoiceMapping';
-import { useCharacters } from '@/hooks/useCharacterVoices';
+import { useCharacters, useFactions } from '@/hooks/useCharacterVoices';
 /*
   X, Radiation, Zap, Heart, Sword, Coins, Star, AlertTriangle,
   Volume2, VolumeX, BookOpen, Users, Share2, Bookmark, BookmarkCheck,
@@ -336,6 +336,9 @@ export function CardDetailModal({
 }: CardDetailModalProps) {
   // ✅ 使用 API 載入角色資料
   const { characters, isLoading: isLoadingCharacters } = useCharacters();
+  
+  // ✅ 使用 API 載入陣營資料（用於過濾角色聲音）
+  const { factions, isLoading: isLoadingFactions } = useFactions();
 
   // Enhanced state management
   const [selectedVoice, setSelectedVoice] = useState('PIP_BOY');
@@ -413,7 +416,8 @@ export function CardDetailModal({
     // 根據陣營過濾角色聲音
     const filteredVoices = filterCharacterVoicesByFaction(
       card.character_voices,
-      factionInfluence
+      factionInfluence,
+      factions
     );
     const availableVoices = Object.keys(filteredVoices);
 
@@ -1037,9 +1041,23 @@ export function CardDetailModal({
 
   const renderCharactersTab = () => {
     // 根據陣營過濾角色聲音
+    console.log('[CardDetailModal] 🔍 Debugging character voices:', {
+      hasCard: !!card,
+      hasCharacterVoices: !!card?.character_voices,
+      characterVoicesKeys: card?.character_voices ? Object.keys(card.character_voices) : [],
+      factionInfluence,
+      hasFactions: !!factions,
+      factionsCount: factions?.length || 0
+    });
+    
     const filteredVoices = card.character_voices ?
-    filterCharacterVoicesByFaction(card.character_voices, factionInfluence) :
+    filterCharacterVoicesByFaction(card.character_voices, factionInfluence, factions) :
     {};
+    
+    console.log('[CardDetailModal] 📤 Filtered voices:', {
+      filteredKeys: Object.keys(filteredVoices),
+      filteredCount: Object.keys(filteredVoices).length
+    });
 
     return (
       <motion.div

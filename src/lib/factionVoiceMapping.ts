@@ -33,10 +33,17 @@ export function buildFactionVoiceMapping(
     // 正規化陣營 key（處理大小寫和連字符）
     const normalizedKey = faction.key.toLowerCase().replace('-', '_')
     mapping[normalizedKey] = characterKeys
+    
+    // 同時保留原始的連字符版本（支援 'vault-tec' 等）
+    const withHyphen = faction.key.toLowerCase().replace('_', '-')
+    if (withHyphen !== normalizedKey) {
+      mapping[withHyphen] = characterKeys
+    }
 
     // 處理 vault-tec 變體（前端常用的連字符版本）
     if (normalizedKey === 'vault_dweller') {
       mapping['vault-tec'] = characterKeys
+      mapping['vault_tec'] = characterKeys
     }
   })
 

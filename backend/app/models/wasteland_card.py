@@ -307,13 +307,13 @@ class WastelandCard(BaseModel):
             "neutral_karma_interpretation": self.neutral_karma_interpretation,
             "evil_karma_interpretation": self.evil_karma_interpretation,
 
-            # Character voices
+            # Character voices (使用 CharacterVoice enum 的值作為 key)
             "character_voices": {
-                "pip_boy_analysis": self.pip_boy_analysis,
-                "vault_dweller_perspective": self.vault_dweller_perspective,
-                "wasteland_trader_wisdom": self.wasteland_trader_wisdom,
-                "super_mutant_simplicity": self.super_mutant_simplicity,
-                "codsworth_analysis": self.codsworth_analysis,
+                CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
+                CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
+                CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
+                CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
+                CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
             },
 
             # Faction meanings

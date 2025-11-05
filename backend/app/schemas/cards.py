@@ -118,8 +118,8 @@ class WastelandCard(CardBase):
     neutral_karma_interpretation: Optional[str] = Field(None, description="中立業力的解讀")
     evil_karma_interpretation: Optional[str] = Field(None, description="邪惡業力的解讀")
 
-    # 角色聲音解讀
-    character_voices: CharacterInterpretations = Field(default_factory=CharacterInterpretations)
+    # 角色聲音解讀（使用 Dict 以支援動態過濾）
+    character_voices: Dict[str, Optional[str]] = Field(default_factory=dict, description="角色解讀字典，key 為角色名稱")
 
     # 派系陣營
     faction_meanings: FactionSignificances = Field(default_factory=FactionSignificances)

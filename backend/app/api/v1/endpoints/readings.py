@@ -604,12 +604,19 @@ async def get_reading(
             for pos in card_positions:
                 if pos.card:
                     card_dict = pos.card.to_dict()
+                    
+                    # 調試：檢查 to_dict() 的輸出
+                    logger.info(f"[DEBUG] Card {pos.card.name} to_dict() character_voices keys: {list(card_dict.get('character_voices', {}).keys())}")
+                    logger.info(f"[DEBUG] User faction: {user_faction}")
+                    
                     # 根據用戶陣營過濾角色聲音解讀
                     if 'character_voices' in card_dict and card_dict['character_voices']:
+                        original_voices = card_dict['character_voices'].copy()
                         card_dict['character_voices'] = filter_character_voices_by_faction(
                             card_dict['character_voices'],
                             user_faction
                         )
+                        logger.info(f"[DEBUG] After filter: {list(card_dict['character_voices'].keys())} (from {len(original_voices)} to {len(card_dict['character_voices'])})")
 
                     card_position = CardPosition(
                         position_number=pos.position_number,

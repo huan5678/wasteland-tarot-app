@@ -144,6 +144,17 @@ export default function ReadingDetailPage() {
         if ('card_positions' in data) {
           console.log('🃏 Card positions (NEW structure):', data.card_positions);
           console.log('🃏 Card positions length:', data.card_positions?.length);
+          
+          // 檢查第一張卡的 character_voices
+          if (data.card_positions && data.card_positions.length > 0) {
+            const firstCard = data.card_positions[0].card;
+            console.log('🔍 First card from API:', {
+              name: firstCard?.name,
+              hasCharacterVoices: !!firstCard?.character_voices,
+              characterVoicesKeys: firstCard?.character_voices ? Object.keys(firstCard.character_voices) : [],
+              firstVoiceValue: firstCard?.character_voices ? Object.values(firstCard.character_voices)[0] : null
+            });
+          }
         } else {
           console.log('🃏 Cards drawn (LEGACY structure):', (data as any).cards_drawn);
           console.log('🃏 Cards drawn length:', (data as any).cards_drawn?.length);
@@ -240,6 +251,14 @@ export default function ReadingDetailPage() {
           }, index);
         }
 
+        // 調試：檢查從 API 收到的 card 資料
+        console.log('[Convert] Converting card:', {
+          name: card.name,
+          hasCharacterVoices: !!card.character_voices,
+          characterVoicesKeys: card.character_voices ? Object.keys(card.character_voices) : [],
+          characterVoicesSample: card.character_voices
+        });
+        
         // 使用完整的卡牌資料
         return convertToReadingCard({
           card_id: card.id,
@@ -291,6 +310,14 @@ export default function ReadingDetailPage() {
 
   // 卡片點擊處理（開啟 Modal）
   const handleCardClick = useCallback((card: ReadingCard, index: number) => {
+    // 調試：檢查 card 物件
+    console.log('[handleCardClick] 🔍 Card object:', {
+      cardName: card.name,
+      hasCharacterVoices: !!card.character_voices,
+      characterVoicesKeys: card.character_voices ? Object.keys(card.character_voices) : [],
+      characterVoicesSample: card.character_voices
+    });
+    
     // 轉換為 WastelandCard 格式
     const wastelandCard: WastelandCard & {story?: any;audioUrls?: Record<string, string>;} = {
       id: card.id,
