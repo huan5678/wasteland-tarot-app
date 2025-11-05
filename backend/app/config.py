@@ -135,9 +135,9 @@ class Settings(BaseSettings):
     ai_cache_ttl: int = Field(3600, env="AI_CACHE_TTL")  # 1 hour
     ai_fallback_to_template: bool = Field(True, env="AI_FALLBACK_TO_TEMPLATE")
 
-    # Performance Settings
-    database_pool_size: int = 20
-    database_max_overflow: int = 0
+    # Performance Settings - Optimized for lower memory usage
+    database_pool_size: int = 5  # Reduced from 20 (saves ~150MB)
+    database_max_overflow: int = 5  # Allow some overflow for bursts
     cache_expire_seconds: int = 3600  # 1 hour
 
     @validator("backend_cors_origins", pre=True)

@@ -53,9 +53,10 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Use uvicorn with production settings
+# Use uvicorn with production settings (optimized for memory)
 CMD ["uvicorn", "app.main:app", \
      "--host", "0.0.0.0", \
      "--port", "8000", \
-     "--workers", "4", \
-     "--log-level", "info"]
+     "--workers", "2", \
+     "--log-level", "warning", \
+     "--no-access-log"]

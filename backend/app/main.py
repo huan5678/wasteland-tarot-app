@@ -26,12 +26,12 @@ from app.db.session import init_db
 
 settings = get_settings()
 
-# Setup enhanced logging
+# Setup enhanced logging (optimized for production)
 setup_logging(
     level=settings.log_level.upper(),
     log_dir=Path("logs"),
     enable_json=settings.environment == "production",
-    enable_file=True
+    enable_file=False  # Disable file logging, use stdout only (saves memory)
 )
 
 logger = get_logger(__name__)
@@ -334,6 +334,10 @@ app = FastAPI(
     },
 )
 
+
+# Add GZip compression middleware (optimize response size)
+from fastapi.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add security headers middleware (always enabled)
 app.add_middleware(

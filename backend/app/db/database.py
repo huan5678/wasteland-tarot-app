@@ -28,10 +28,12 @@ connect_args = {
 # Add prepared_statement_name_func to fully disable prepared statements for PgBouncer
 engine = create_async_engine(
     settings.database_url,
-    echo=settings.debug,
+    echo=False,  # Always disable SQL logging for performance
     pool_pre_ping=True,
-    pool_size=5 if settings.environment == "production" else 10,
-    max_overflow=0,  # No overflow for Supabase to avoid connection limits
+    pool_size=settings.database_pool_size,
+    max_overflow=settings.database_max_overflow,
+    pool_recycle=3600,  # Recycle connections every hour
+    pool_timeout=30,
     poolclass=NullPool if settings.environment == "testing" else None,
     connect_args=connect_args,
     # Critical fix for Supabase PgBouncer: disable prepared statement caching entirely

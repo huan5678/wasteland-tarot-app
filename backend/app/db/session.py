@@ -35,16 +35,19 @@ else:
     # Reference: https://www.pgbouncer.org/features.html
     engine = create_async_engine(
         settings.database_url,
-        echo=settings.debug,
+        echo=False,  # Always disable SQL logging in production for performance
         pool_size=settings.database_pool_size,
         max_overflow=settings.database_max_overflow,
         pool_pre_ping=True,  # Enable connection health checks before using
+        pool_recycle=3600,  # Recycle connections every hour to prevent stale connections
+        pool_timeout=30,  # Connection timeout
         connect_args={
             "statement_cache_size": 0,  # Disable asyncpg statement cache (CRITICAL for Transaction mode)
             "prepared_statement_cache_size": 0,  # Additional safety
             "prepared_statement_name_func": lambda: f"__pstmt_{uuid.uuid4().hex[:8]}__",  # Generate unique prepared statement names
             "server_settings": {
-                "jit": "off",  # Disable JIT compilation
+                "jit": "off",  # Disable JIT compilation to save memory
+                "application_name": "wasteland-tarot",
             }
         },
         # CRITICAL: Disable SQLAlchemy's internal prepared statement optimization

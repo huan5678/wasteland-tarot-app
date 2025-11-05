@@ -160,15 +160,15 @@ def setup_logging(
     console_handler.addFilter(RequestContextFilter())
     root_logger.addHandler(console_handler)
 
-    # File handlers
+    # File handlers (optimized: reduced backup count and file size)
     if enable_file and log_dir:
         # General log file (rotating by size)
         general_handler = RotatingFileHandler(
             log_dir / "app.log",
-            maxBytes=10 * 1024 * 1024,  # 10MB
-            backupCount=5
+            maxBytes=5 * 1024 * 1024,  # 5MB (reduced from 10MB)
+            backupCount=2  # Reduced from 5 to save disk space
         )
-        general_handler.setLevel(logging.INFO)
+        general_handler.setLevel(logging.WARNING)  # Only log warnings and above
         general_handler.setFormatter(StructuredFormatter())
         general_handler.addFilter(RequestContextFilter())
         root_logger.addHandler(general_handler)

@@ -56,9 +56,9 @@ def initialize_scheduler() -> BackgroundScheduler:
         )
     }
 
-    # 執行器配置
+    # 執行器配置 (優化: 減少執行緒數以節省記憶體)
     executors = {
-        'default': ThreadPoolExecutor(max_workers=10)
+        'default': ThreadPoolExecutor(max_workers=3)  # Reduced from 10
     }
 
     # 任務預設配置
