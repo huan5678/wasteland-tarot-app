@@ -94,7 +94,8 @@ monitoring
 
 # Scripts (not needed in production)
 scripts
-*.sh
+# *.sh  # Commented out - we need start-zeabur.sh for production
+!start-zeabur.sh  # Explicitly include startup script
 
 # Test files
 tests
