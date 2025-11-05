@@ -402,14 +402,22 @@ class AIInterpretationService:
         prompt_parts = [
             "【重要】請務必使用繁體中文 (zh-TW) 回答所有內容。",
             "",
-            f"**Card Drawn:** {card.name}",
+            f"**Wasteland Card:** {card.name}",
+        ]
+        
+        # Add standard tarot name mapping for accurate interpretation
+        if hasattr(card, 'standard_tarot_name') and card.standard_tarot_name:
+            prompt_parts.append(f"**Standard Tarot:** {card.standard_tarot_name_zh} ({card.standard_tarot_name})")
+            prompt_parts.append(f"**Standard Suit:** {card.standard_suit}")
+        
+        prompt_parts.extend([
             f"**Card Meaning:** {card.upright_meaning}",
             f"**Question Asked:** {question}",
             f"**Querent's Karma Alignment:** {karma.value}",
-        ]
+        ])
 
         if card.suit:
-            prompt_parts.append(f"**Suit:** {card.suit}")
+            prompt_parts.append(f"**Wasteland Suit:** {card.suit}")
 
         if card.radiation_level:
             prompt_parts.append(f"**Radiation Level:** {card.radiation_level}/5 (intensity of change/chaos)")

@@ -84,6 +84,11 @@ class WastelandCard(BaseModel):
     name = Column(String(100), nullable=False)
     suit = Column(String(50), nullable=False)
     number = Column(Integer, nullable=True)  # None for Major Arcana
+    
+    # Standard Tarot Mapping (for AI interpretation)
+    standard_tarot_name = Column(String(100), nullable=True)  # e.g., "Six of Swords"
+    standard_tarot_name_zh = Column(String(100), nullable=True)  # e.g., "寶劍六"
+    standard_suit = Column(String(50), nullable=True)  # "Major Arcana", "Cups", "Swords", "Pentacles", "Wands"
 
     # Fallout-specific Attributes
     radiation_level = Column(Float, default=0.0)  # 0.0 to 1.0
@@ -302,7 +307,13 @@ class WastelandCard(BaseModel):
             "name": self.name,
             "suit": self.suit,
             "number": self.number,
-            "rank": "Jack" if self.number == 11 else "Queen" if self.number == 12 else "King" if self.number == 13 else None,
+            "rank": "Page" if self.number == 11 else "Knight" if self.number == 12 else "Queen" if self.number == 13 else "King" if self.number == 14 else None,
+            
+            # Standard Tarot mapping
+            "standard_tarot_name": self.standard_tarot_name,
+            "standard_tarot_name_zh": self.standard_tarot_name_zh,
+            "standard_suit": self.standard_suit,
+            
             "upright_meaning": self.upright_meaning,
             "reversed_meaning": self.reversed_meaning,
 
