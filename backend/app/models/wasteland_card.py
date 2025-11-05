@@ -99,12 +99,23 @@ class WastelandCard(BaseModel):
     neutral_karma_interpretation = Column(Text)
     evil_karma_interpretation = Column(Text)
 
-    # Character Voice Interpretations
+    # Character Voice Interpretations (基礎角色)
     pip_boy_analysis = Column(Text)
     vault_dweller_perspective = Column(Text)
     wasteland_trader_wisdom = Column(Text)
     super_mutant_simplicity = Column(Text)
     codsworth_analysis = Column(Text)
+    
+    # Character Voice Interpretations (擴展角色)
+    brotherhood_scribe_analysis = Column(Text)
+    brotherhood_paladin_combat_wisdom = Column(Text)
+    ghoul_perspective = Column(Text)
+    raider_perspective = Column(Text)
+    ncr_ranger_tactical_analysis = Column(Text)
+    legion_centurion_command = Column(Text)
+    minuteman_hope_message = Column(Text)
+    railroad_agent_liberation_view = Column(Text)
+    institute_scientist_research_notes = Column(Text)
 
     # Faction Alignments
     brotherhood_significance = Column(Text)
@@ -309,11 +320,22 @@ class WastelandCard(BaseModel):
 
             # Character voices (使用 CharacterVoice enum 的值作為 key)
             "character_voices": {
+                # 基礎角色
                 CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
                 CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
                 CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
                 CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
                 CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
+                # 擴展角色
+                CharacterVoice.BROTHERHOOD_SCRIBE.value: self.brotherhood_scribe_analysis,
+                CharacterVoice.BROTHERHOOD_PALADIN.value: self.brotherhood_paladin_combat_wisdom,
+                CharacterVoice.GHOUL.value: self.ghoul_perspective,
+                CharacterVoice.RAIDER.value: self.raider_perspective,
+                CharacterVoice.NCR_RANGER.value: self.ncr_ranger_tactical_analysis,
+                CharacterVoice.LEGION_CENTURION.value: self.legion_centurion_command,
+                CharacterVoice.MINUTEMAN.value: self.minuteman_hope_message,
+                CharacterVoice.RAILROAD_AGENT.value: self.railroad_agent_liberation_view,
+                CharacterVoice.INSTITUTE_SCIENTIST.value: self.institute_scientist_research_notes,
             },
 
             # Faction meanings
