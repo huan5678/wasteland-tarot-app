@@ -12,7 +12,7 @@ from app.core.supabase import get_supabase_client
 from app.core.dependencies import get_current_user
 from app.models.music import QuotaResponse, MusicParameters
 from app.models.user import User
-from app.services import AIService
+from app.services.ai_service import AIService
 
 logger = logging.getLogger(__name__)
 

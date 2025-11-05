@@ -46,35 +46,42 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("💾 Database initialized")
 
-    # Initialize and start scheduler
-    try:
-        from app.core.scheduler import start_scheduler, register_cron_job, get_scheduler
-        from app.jobs.daily_number_job import daily_number_generation_job
-        from app.jobs.monthly_reset_job import monthly_reset_job
+    # Initialize and start scheduler (conditional for memory optimization)
+    if settings.enable_scheduler:
+        try:
+            from app.core.scheduler import start_scheduler, register_cron_job, get_scheduler
+            from app.jobs.daily_number_job import daily_number_generation_job
+            from app.jobs.monthly_reset_job import monthly_reset_job
 
-        scheduler = get_scheduler()
+            scheduler = get_scheduler()
 
-        # Register daily number generation job (00:00 UTC+8 daily)
-        register_cron_job(
-            scheduler,
-            daily_number_generation_job,
-            job_id='daily-number-generation',
-            cron_expression='0 0 * * *'
-        )
+            # Register daily number generation job (00:00 UTC+8 daily)
+            register_cron_job(
+                scheduler,
+                daily_number_generation_job,
+                job_id='daily-number-generation',
+                cron_expression='0 0 * * *'
+            )
 
-        # Register monthly reset job (00:00 UTC+8 on 1st of each month)
-        register_cron_job(
-            scheduler,
-            monthly_reset_job,
-            job_id='monthly-reset',
-            cron_expression='0 0 1 * *'
-        )
+            # Register monthly reset job (00:00 UTC+8 on 1st of each month)
+            register_cron_job(
+                scheduler,
+                monthly_reset_job,
+                job_id='monthly-reset',
+                cron_expression='0 0 1 * *'
+            )
 
-        # Start scheduler
-        start_scheduler()
-        logger.info("⏰ APScheduler started with bingo jobs registered")
+            # Start scheduler
+            start_scheduler()
+            logger.info("⏰ APScheduler started with bingo jobs registered")
 
-        # Check and generate today's daily number if not exists (fix cold start issue)
+        except Exception as e:
+            logger.error(f"Failed to start scheduler: {str(e)}", exc_info=True)
+    else:
+        logger.info("⏰ Scheduler disabled (ENABLE_SCHEDULER=false)")
+
+    # Check and generate today's daily number if not exists (conditional for memory optimization)
+    if settings.enable_bingo_cold_start_check:
         try:
             from app.services.daily_number_generator_service import DailyNumberGeneratorService
             from app.db.session import get_db
@@ -103,19 +110,19 @@ async def lifespan(app: FastAPI):
 
         except Exception as num_check_error:
             logger.error(f"❌ Failed to initialize daily number check: {str(num_check_error)}", exc_info=True)
-
-    except Exception as e:
-        logger.error(f"Failed to start scheduler: {str(e)}", exc_info=True)
+    else:
+        logger.info("🔍 Bingo cold start check disabled (ENABLE_BINGO_COLD_START_CHECK=false)")
 
     yield
 
-    # Shutdown scheduler
-    try:
-        from app.core.scheduler import shutdown_scheduler
-        shutdown_scheduler()
-        logger.info("⏰ APScheduler shut down")
-    except Exception as e:
-        logger.error(f"Failed to shutdown scheduler: {str(e)}")
+    # Shutdown scheduler (if enabled)
+    if settings.enable_scheduler:
+        try:
+            from app.core.scheduler import shutdown_scheduler
+            shutdown_scheduler()
+            logger.info("⏰ APScheduler shut down")
+        except Exception as e:
+            logger.error(f"Failed to shutdown scheduler: {str(e)}")
 
     logger.info("🚪 Shutting down Wasteland Tarot API...")
 
