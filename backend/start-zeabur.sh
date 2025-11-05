@@ -10,6 +10,9 @@ PORT="${PORT:-8000}"
 WORKERS="${WORKERS:-2}"
 LOG_LEVEL="${LOG_LEVEL:-warning}"
 
+# Convert LOG_LEVEL to lowercase (uvicorn requires lowercase)
+LOG_LEVEL=$(echo "$LOG_LEVEL" | tr '[:upper:]' '[:lower:]')
+
 echo "🚀 Starting Wasteland Tarot Backend on Zeabur"
 echo "   Host: $HOST"
 echo "   Port: $PORT"
