@@ -40,23 +40,20 @@ COPY ./app ./app
 COPY ./alembic ./alembic
 COPY ./alembic.ini ./alembic.ini
 COPY ./main.py ./main.py
+COPY ./start-zeabur.sh ./start-zeabur.sh
 
 # Create non-root user for security
 RUN useradd -m -u 1001 fastapi && \
+    chmod +x /app/start-zeabur.sh && \
     chown -R fastapi:fastapi /app
 
 USER fastapi
 
 EXPOSE 8000
 
-# Health check endpoint
+# Health check endpoint (use /health for better Zeabur compatibility)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-# Use uvicorn with production settings (optimized for memory)
-CMD ["uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "2", \
-     "--log-level", "warning", \
-     "--no-access-log"]
+# Use startup script for Zeabur compatibility
+CMD ["/bin/bash", "/app/start-zeabur.sh"]
