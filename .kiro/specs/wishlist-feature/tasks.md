@@ -4,6 +4,8 @@
 
 本實作計畫將願望功能分為 4 個主要階段：**資料層建置**、**後端業務邏輯**、**前端介面實作**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
+**當前進度**: 資料層與後端業務邏輯已完成 (Tasks 1-2.3)，接下來進入後端 API 實作與前端開發階段。
+
 ---
 
 ## 第一階段：資料層建置
@@ -86,7 +88,7 @@
 
 - [ ] 3.2 實作管理員 API Endpoints
   - 實作 `GET /api/v1/admin/wishlist`：接收 query 參數（filter_status, sort_order, page, page_size），使用 `get_current_admin_user` dependency 驗證管理員權限，呼叫 `WishlistService.get_admin_wishes()`，回傳分頁願望列表與總數
-  - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/reply`：接收 `AdminReplyRequest` schema，呼叫 `WishlistService.add_reply()`，回傳更新後的願望
+  - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/reply`：接收 `AdminReplyRequest` schema，呼叫 `WishlistService.add_or_update_reply()`，回傳更新後的願望
   - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/hide`：呼叫 `WishlistService.toggle_hidden(is_hidden=True)`，回傳更新後的願望
   - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/unhide`：呼叫 `WishlistService.toggle_hidden(is_hidden=False)`，回傳更新後的願望
   - 確保所有管理員 endpoints 使用 `get_current_admin_user` dependency 進行權限驗證
@@ -282,6 +284,24 @@
 
 ---
 
-**總計**: 13 個主要任務，38 個子任務，預估總時數：60-80 小時
+## 實作進度總結
 
-**下一步**: 依序執行任務，完成後勾選核取方塊。使用 `/kiro:spec-impl wishlist-feature [task-numbers]` 指令執行實作。
+### 已完成任務 (✅ 7/38 子任務，18% 完成)
+- ✅ 資料層：Migration、Wishlist 模型、資料庫部署 (Tasks 1, 1.1, 1.2)
+- ✅ 後端業務邏輯：ContentValidator、TimezoneUtil、WishlistService 使用者方法、WishlistService 管理員方法 (Tasks 2, 2.1, 2.2, 2.3)
+
+### 下一步建議 (優先順序)
+1. **Task 3**: 定義 Pydantic Schemas - 建立 API 輸入輸出驗證結構
+2. **Task 3.1**: 實作使用者 API Endpoints - 連接前端與後端業務邏輯
+3. **Task 3.2**: 實作管理員 API Endpoints - 完成後端 API 層
+4. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
+5. **Task 5**: 建立 Zustand 願望狀態管理 - 前端狀態管理基礎
+6. **Task 6**: 實作 Markdown 編輯器元件 - 核心前端功能
+
+**預估剩餘時數**: 42-62 小時 (31 個待完成子任務)
+**總預估時數**: 60-80 小時
+
+---
+
+**執行指令**: `/kiro:spec-impl wishlist-feature [task-numbers]`
+**範例**: `/kiro:spec-impl wishlist-feature 3 3.1 3.2` (實作 Pydantic Schemas 與 API Endpoints)
