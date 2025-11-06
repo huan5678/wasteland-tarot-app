@@ -117,22 +117,30 @@ export function filterCharacterVoicesByFaction(
 ): Record<string, string> {
   const allowedVoices = getAllowedVoicesForFaction(faction, factions)
 
-  return Object.entries(characterVoices).reduce((filtered, [voice, interpretation]) => {
-    // 跳過 null 或空字串的解讀
-    if (!interpretation) {
-      return filtered
-    }
-
+  const result = Object.entries(characterVoices).reduce((filtered, [voice, interpretation]) => {
     // 提取基礎角色名稱（處理 _analysis, _perspective 等後綴）
     const baseVoice = extractBaseVoiceName(voice)
 
     // 檢查是否在允許列表中
     if (allowedVoices.includes(baseVoice)) {
-      filtered[voice] = interpretation
+      // 保留 null 值的角色，以便前端可以顯示「暫無解讀」提示
+      // 前端會負責處理 null 值的顯示邏輯
+      filtered[voice] = interpretation || ''
     }
 
     return filtered
   }, {} as Record<string, string>)
+
+  // Debug: Log filtering results
+  if (Object.keys(result).length === 0) {
+    console.warn('[factionVoiceMapping] No voices matched filter:', {
+      faction,
+      allowedVoices,
+      availableVoices: Object.keys(characterVoices)
+    })
+  }
+
+  return result
 }
 
 /**

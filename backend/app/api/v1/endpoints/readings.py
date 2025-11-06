@@ -586,10 +586,15 @@ async def get_reading(
         # Fetch card positions if requested
         card_positions_data = []
         if include_cards:
-            # JOIN WastelandCardModel to get complete card information
+            # JOIN WastelandCardModel and load character interpretations
+            from app.models.character_voice import CardInterpretation, Character
             card_positions_query = (
                 select(ReadingCardPositionModel)
-                .options(selectinload(ReadingCardPositionModel.card))
+                .options(
+                    selectinload(ReadingCardPositionModel.card)
+                    .selectinload(WastelandCardModel.interpretations)
+                    .selectinload(CardInterpretation.character)
+                )
                 .where(ReadingCardPositionModel.completed_reading_id == reading_id)
                 .order_by(ReadingCardPositionModel.draw_order)
             )

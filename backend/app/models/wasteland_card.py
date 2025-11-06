@@ -4,7 +4,7 @@ Wasteland Tarot Card Model - Fallout-themed tarot card representation
 
 from sqlalchemy import Column, String, Integer, Float, Text, JSON, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
-from sqlalchemy.orm import validates
+from sqlalchemy.orm import validates, relationship
 from .base import BaseModel
 from .story_constants import (
     VALID_FACTIONS,
@@ -163,6 +163,15 @@ class WastelandCard(BaseModel):
     story_faction_involved = Column(JSONB, nullable=True)  # 涉及的陣營列表
     story_related_quest = Column(String(200), nullable=True)  # 相關任務名稱
 
+    # Relationships
+    # Lazy import to avoid circular dependency - defined in character_voice.py
+    interpretations = relationship(
+        "CardInterpretation",
+        foreign_keys="CardInterpretation.card_id",
+        back_populates="card",
+        lazy="selectin"  # Eagerly load interpretations with card
+    )
+
     def __repr__(self):
         return f"<WastelandCard(name='{self.name}', suit='{self.suit}', radiation={self.radiation_level})>"
 
@@ -205,6 +214,41 @@ class WastelandCard(BaseModel):
     def is_major_arcana(self) -> bool:
         """Check if this is a Major Arcana card"""
         return self.suit == WastelandSuit.MAJOR_ARCANA
+
+    def _get_character_voices(self) -> Dict[str, Optional[str]]:
+        """
+        從 card_interpretations 關聯表載入角色解讀
+        如果沒有載入 interpretations 關聯，則返回舊欄位的備用值
+        
+        Returns:
+            Dict[character_key, interpretation_text]
+        """
+        if not hasattr(self, 'interpretations') or not self.interpretations:
+            # 備用方案：使用舊的欄位（如果存在）
+            return {
+                CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
+                CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
+                CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
+                CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
+                CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
+                CharacterVoice.BROTHERHOOD_SCRIBE.value: self.brotherhood_scribe_analysis,
+                CharacterVoice.BROTHERHOOD_PALADIN.value: self.brotherhood_paladin_combat_wisdom,
+                CharacterVoice.GHOUL.value: self.ghoul_perspective,
+                CharacterVoice.RAIDER.value: self.raider_perspective,
+                CharacterVoice.NCR_RANGER.value: self.ncr_ranger_tactical_analysis,
+                CharacterVoice.LEGION_CENTURION.value: self.legion_centurion_command,
+                CharacterVoice.MINUTEMAN.value: self.minuteman_hope_message,
+                CharacterVoice.RAILROAD_AGENT.value: self.railroad_agent_liberation_view,
+                CharacterVoice.INSTITUTE_SCIENTIST.value: self.institute_scientist_research_notes,
+            }
+        
+        # 從關聯表載入角色解讀
+        voices = {}
+        for interpretation in self.interpretations:
+            if interpretation.is_active and hasattr(interpretation, 'character') and interpretation.character:
+                voices[interpretation.character.key] = interpretation.interpretation_text
+        
+        return voices
 
     def is_court_card(self) -> bool:
         """Check if this is a court card (11-14 in Minor Arcana)"""
@@ -329,25 +373,8 @@ class WastelandCard(BaseModel):
             "neutral_karma_interpretation": self.neutral_karma_interpretation,
             "evil_karma_interpretation": self.evil_karma_interpretation,
 
-            # Character voices (使用 CharacterVoice enum 的值作為 key)
-            "character_voices": {
-                # 基礎角色
-                CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
-                CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
-                CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
-                CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
-                CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
-                # 擴展角色
-                CharacterVoice.BROTHERHOOD_SCRIBE.value: self.brotherhood_scribe_analysis,
-                CharacterVoice.BROTHERHOOD_PALADIN.value: self.brotherhood_paladin_combat_wisdom,
-                CharacterVoice.GHOUL.value: self.ghoul_perspective,
-                CharacterVoice.RAIDER.value: self.raider_perspective,
-                CharacterVoice.NCR_RANGER.value: self.ncr_ranger_tactical_analysis,
-                CharacterVoice.LEGION_CENTURION.value: self.legion_centurion_command,
-                CharacterVoice.MINUTEMAN.value: self.minuteman_hope_message,
-                CharacterVoice.RAILROAD_AGENT.value: self.railroad_agent_liberation_view,
-                CharacterVoice.INSTITUTE_SCIENTIST.value: self.institute_scientist_research_notes,
-            },
+            # Character voices - 從 card_interpretations 關聯表載入
+            "character_voices": self._get_character_voices(),
 
             # Faction meanings
             "faction_meanings": {

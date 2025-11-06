@@ -336,13 +336,14 @@ app = FastAPI(
 
 
 # Add GZip compression middleware (optimize response size)
-# Temporarily disabled in development to avoid ERR_CONTENT_DECODING_FAILED with Next.js proxy
+# Temporarily disabled to avoid ERR_CONTENT_DECODING_FAILED with Next.js dev proxy
+# The issue occurs because Next.js dev server doesn't handle double-compression well
 # from fastapi.middleware.gzip import GZipMiddleware
 # app.add_middleware(GZipMiddleware, minimum_size=1000)
-# Enable only in production if needed:
-if settings.environment == "production":
-    from fastapi.middleware.gzip import GZipMiddleware
-    app.add_middleware(GZipMiddleware, minimum_size=1000)
+# TODO: Re-enable in production deployment
+# if settings.environment == "production":
+#     from fastapi.middleware.gzip import GZipMiddleware
+#     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Add security headers middleware (always enabled)
 app.add_middleware(

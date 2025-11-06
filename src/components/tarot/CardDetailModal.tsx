@@ -1122,9 +1122,19 @@ export function CardDetailModal({
               }
             </div>
 
-            <p className="text-pip-boy-green/90 text-sm leading-relaxed">
-              {filteredVoices[selectedVoice] || '無可用解讀'}
-            </p>
+            {filteredVoices[selectedVoice] ? (
+              <p className="text-pip-boy-green/90 text-sm leading-relaxed">
+                {filteredVoices[selectedVoice]}
+              </p>
+            ) : (
+              <div className="text-center py-8 space-y-3">
+                <PixelIcon name="info" size={32} className="mx-auto text-pip-boy-green/40" decorative />
+                <p className="text-pip-boy-green/60 text-xs">
+                  該角色的解讀內容尚未完成<br />
+                  請稍後再回來查看
+                </p>
+              </div>
+            )}
 
             {isSpeaking &&
             <motion.div

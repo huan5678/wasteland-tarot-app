@@ -213,7 +213,7 @@ class CardInterpretation(BaseModel):
     is_active = Column(Boolean, default=True, nullable=False, index=True)
 
     # Relationships
-    # Note: We'll add relationship to WastelandCard later to avoid circular import
+    card = relationship("WastelandCard", back_populates="interpretations")
     character = relationship("Character", back_populates="interpretations")
 
     def __repr__(self):
