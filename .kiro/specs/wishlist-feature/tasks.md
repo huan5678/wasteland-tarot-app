@@ -305,4 +305,167 @@
 ---
 
 **執行指令**: `/kiro:spec-impl wishlist-feature [task-numbers]`
-**範例**: `/kiro:spec-impl wishlist-feature 3 3.1 3.2` (實作 Pydantic Schemas 與 API Endpoints)
+**範例**: `/kiro:spec-impl wishlist-feature 3.1 3.2` (實作使用者與管理員 API Endpoints)
+
+---
+
+## 任務依賴關係圖
+
+此圖展示任務之間的依賴關係，方便平行執行與進度追蹤。
+
+```mermaid
+flowchart TD
+    %% Phase 1: Data Layer (Completed)
+    T1[Task 1: 建立資料表與 Migration ✅]
+    T1_1[Task 1.1: 實作 Wishlist 模型 ✅]
+    T1_2[Task 1.2: 執行資料庫 Migration ✅]
+
+    %% Phase 2: Backend Business Logic (Completed)
+    T2[Task 2: 實作內容驗證工具 ✅]
+    T2_1[Task 2.1: 實作時區處理工具 ✅]
+    T2_2[Task 2.2: 實作願望業務邏輯服務 ✅]
+    T2_3[Task 2.3: 實作管理員業務邏輯 ✅]
+    T3[Task 3: 定義 Pydantic Schemas ✅]
+
+    %% Phase 2: Backend API (Next Step)
+    T3_1[Task 3.1: 實作使用者 API Endpoints]
+    T3_2[Task 3.2: 實作管理員 API Endpoints]
+    T4[Task 4: 後端單元測試與整合測試]
+
+    %% Phase 3: Frontend Core (Can start after API ready)
+    T5[Task 5: 建立 Zustand 願望狀態管理]
+    T6[Task 6: 實作 Markdown 編輯器元件]
+    T6_1[Task 6.1: 實作編輯器無障礙功能]
+    T7[Task 7: 實作願望歷史列表元件]
+    T7_1[Task 7.1: 實作願望卡片互動功能]
+    T8[Task 8: 實作願望彈窗主容器元件]
+    T8_1[Task 8.1: 實作彈窗無障礙與鍵盤操作]
+    T9[Task 9: 整合願望彈窗至個人資料頁面]
+
+    %% Phase 4: Admin Interface
+    T10[Task 10: 建立管理員願望管理頁面]
+    T10_1[Task 10.1: 實作管理員篩選與排序功能]
+    T10_2[Task 10.2: 實作管理員回覆功能]
+    T10_3[Task 10.3: 實作管理員隱藏/取消隱藏功能]
+    T10_4[Task 10.4: 實作管理員分頁功能]
+
+    %% Phase 5: Testing & QA
+    T11[Task 11: 前端單元測試]
+    T11_1[Task 11.1: 前端整合測試]
+    T12[Task 12: 端對端測試 E2E]
+    T12_1[Task 12.1: 無障礙性測試]
+    T13[Task 13: 效能與安全性測試]
+    T13_1[Task 13.1: 錯誤處理與日誌測試]
+
+    %% Dependencies
+    %% Phase 1 (Completed)
+    T1 --> T1_1
+    T1_1 --> T1_2
+
+    %% Phase 2 Backend Logic (Completed)
+    T1_2 --> T2
+    T1_2 --> T2_1
+    T2 --> T2_2
+    T2_1 --> T2_2
+    T2_2 --> T2_3
+    T1_1 --> T3
+
+    %% Phase 2 Backend API (Next Step)
+    T3 --> T3_1
+    T3 --> T3_2
+    T2_2 --> T3_1
+    T2_3 --> T3_2
+    T3_1 --> T4
+    T3_2 --> T4
+
+    %% Phase 3 Frontend Core
+    T3_1 --> T5
+    T3_2 --> T5
+    T5 --> T6
+    T6 --> T6_1
+    T5 --> T7
+    T7 --> T7_1
+    T6 --> T8
+    T7 --> T8
+    T8 --> T8_1
+    T8 --> T9
+
+    %% Phase 4 Admin Interface
+    T3_2 --> T10
+    T5 --> T10
+    T10 --> T10_1
+    T10 --> T10_2
+    T10 --> T10_3
+    T10 --> T10_4
+
+    %% Phase 5 Testing
+    T6 --> T11
+    T7 --> T11
+    T8 --> T11
+    T11 --> T11_1
+    T9 --> T12
+    T10 --> T12
+    T12 --> T12_1
+    T4 --> T13
+    T11_1 --> T13
+    T13 --> T13_1
+
+    %% Styling
+    style T1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T1_1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T1_2 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T2 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T2_1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T2_2 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T2_3 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T3 fill:#28a745,stroke:#1e7e34,color:#fff
+
+    style T3_1 fill:#ffc107,stroke:#ff9800,color:#000
+    style T3_2 fill:#ffc107,stroke:#ff9800,color:#000
+    style T4 fill:#e1f5fe,stroke:#0288d1,color:#000
+
+    style T5 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T6 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T6_1 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T7 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T7_1 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T8 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T8_1 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T9 fill:#e1f5fe,stroke:#0288d1,color:#000
+
+    style T10 fill:#f3e5f5,stroke:#9c27b0,color:#000
+    style T10_1 fill:#f3e5f5,stroke:#9c27b0,color:#000
+    style T10_2 fill:#f3e5f5,stroke:#9c27b0,color:#000
+    style T10_3 fill:#f3e5f5,stroke:#9c27b0,color:#000
+    style T10_4 fill:#f3e5f5,stroke:#9c27b0,color:#000
+
+    style T11 fill:#fff3e0,stroke:#ff9800,color:#000
+    style T11_1 fill:#fff3e0,stroke:#ff9800,color:#000
+    style T12 fill:#fff3e0,stroke:#ff9800,color:#000
+    style T12_1 fill:#fff3e0,stroke:#ff9800,color:#000
+    style T13 fill:#fff3e0,stroke:#ff9800,color:#000
+    style T13_1 fill:#fff3e0,stroke:#ff9800,color:#000
+```
+
+### 圖例說明
+
+- 🟢 **綠色 (已完成)**: Tasks 1-3 - 資料層與後端業務邏輯
+- 🟡 **黃色 (下一步)**: Tasks 3.1-3.2 - 後端 API Endpoints
+- 🔵 **藍色 (待實作)**: Tasks 4-9 - 後端測試與前端核心元件
+- 🟣 **紫色 (待實作)**: Tasks 10-10.4 - 管理員介面
+- 🟠 **橘色 (待實作)**: Tasks 11-13.1 - 測試與 QA
+
+### 平行執行建議
+
+以下任務可以平行執行（需先完成依賴任務）：
+
+**階段 2A (當前):**
+- Task 3.1 與 Task 3.2 可以由不同開發者平行實作
+
+**階段 3 (API 完成後):**
+- Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) 可以平行開發
+- Task 10.1-10.4 (管理員功能) 可以在前端核心元件完成後平行開發
+
+**階段 5 (測試階段):**
+- Task 11 (前端單元測試) 與 Task 13 (效能測試) 可以部分平行
+- Task 12 (E2E 測試) 與 Task 12.1 (無障礙測試) 需要完整功能後依序進行
