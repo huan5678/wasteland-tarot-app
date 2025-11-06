@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 4 個主要階段：**資料層建置**、**後端業務邏輯**、**前端介面實作**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 資料層與後端業務邏輯已完成 (Tasks 1-2.3)，接下來進入後端 API 實作與前端開發階段。
+**當前進度**: 資料層、後端業務邏輯、Pydantic Schemas 已完成 (Tasks 1-3, 8/38 完成, 21%)。接下來進入後端 API Endpoints 實作階段 (Tasks 3.1-3.2)，隨後展開前端開發。
 
 ---
 
@@ -78,6 +78,28 @@
   - 建立 `AdminWishListResponse` schema：包含願望列表、總數、頁碼、每頁數量
   - _Requirements: 1.5, 2.1, 5.2_
   - **Completed**: All 5 schemas created at `backend/app/schemas/wishlist.py` with comprehensive validation rules, JSON examples, and ORM support (from_attributes). Request schemas validate raw Markdown length (wish: 1-10000 chars, admin reply: 1-20000 chars). Response schemas support nested structures and pagination. Registered in `__init__.py` for import. Standalone validation tests confirm all schemas work correctly.
+
+---
+
+### 🎯 當前實作階段：後端 API Endpoints
+
+**階段目標**: 建立完整的 RESTful API endpoints，連接前端與後端業務邏輯層。
+
+**為何重要**: Tasks 3.1-3.2 是前後端整合的關鍵橋樑。完成後，前端即可開始呼叫 API 進行願望提交、查詢、編輯等操作。
+
+**實作重點**:
+- 使用現有的 `get_current_user` 和 `get_current_admin_user` dependencies 進行身份驗證
+- 整合已完成的 `WishlistService` 業務邏輯
+- 使用已定義的 Pydantic schemas 進行請求/回應驗證
+- 遵循現有的錯誤處理模式（HTTPException）
+- 參考現有 API routers 的架構模式（如 `/backend/app/api/v1/users.py`）
+
+**完成後解鎖**:
+- ✅ 後端測試 (Task 4)
+- ✅ 前端 Zustand store 實作 (Task 5)
+- ✅ 前端 UI 元件開發 (Tasks 6-9)
+
+---
 
 - [ ] 3.1 實作使用者 API Endpoints
   - 建立 `/api/v1/wishlist` router，設定 tags=["wishlist"]
@@ -293,19 +315,96 @@
 - ✅ Pydantic Schemas：WishCreate、WishUpdate、AdminReplyRequest、WishResponse、AdminWishListResponse (Task 3)
 
 ### 下一步建議 (優先順序)
-1. **Task 3.1**: 實作使用者 API Endpoints - 連接前端與後端業務邏輯
-2. **Task 3.2**: 實作管理員 API Endpoints - 完成後端 API 層
+
+#### 🚀 立即執行：後端 API Endpoints (Tasks 3.1-3.2)
+
+**Task 3.1 - 使用者 API Endpoints** (預估 2-3 小時)
+- 建立 `/backend/app/api/v1/wishlist.py` router 檔案
+- 實作 3 個 endpoints：GET, POST, PUT `/api/v1/wishlist`
+- 整合 `WishlistService` 已完成的方法
+- 處理所有自訂例外並回傳適當 HTTP 狀態碼
+- 參考：`/backend/app/api/v1/users.py` 作為架構模板
+
+**Task 3.2 - 管理員 API Endpoints** (預估 2-3 小時)
+- 在同一 router 檔案添加管理員 endpoints
+- 實作 4 個 endpoints：GET, PUT (reply/hide/unhide)
+- 使用 `get_current_admin_user` dependency 驗證權限
+- 實作分頁、篩選、排序參數處理
+
+**執行命令**:
+```bash
+/kiro:spec-impl wishlist-feature 3.1 3.2
+```
+
+#### 📋 後續階段
 3. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
 4. **Task 5**: 建立 Zustand 願望狀態管理 - 前端狀態管理基礎
 5. **Task 6**: 實作 Markdown 編輯器元件 - 核心前端功能
 
 **預估剩餘時數**: 40-58 小時 (30 個待完成子任務)
 **總預估時數**: 60-80 小時
+**當前完成度**: 21% (8/38)
 
 ---
 
 **執行指令**: `/kiro:spec-impl wishlist-feature [task-numbers]`
 **範例**: `/kiro:spec-impl wishlist-feature 3.1 3.2` (實作使用者與管理員 API Endpoints)
+
+---
+
+## 📖 API Endpoints 快速參考
+
+### 使用者端 API (Task 3.1)
+
+```python
+# GET /api/v1/wishlist
+# 功能：取得當前使用者的願望列表（未隱藏）
+# 認證：get_current_user dependency
+# 回應：List[WishResponse]
+
+# POST /api/v1/wishlist
+# 功能：提交新願望
+# 認證：get_current_user dependency
+# 請求體：WishCreate
+# 回應：WishResponse (status_code=201)
+# 錯誤：AlreadySubmittedTodayError (400), ContentTooLongError (400)
+
+# PUT /api/v1/wishlist/{wish_id}
+# 功能：編輯願望（需符合編輯條件）
+# 認證：get_current_user dependency
+# 請求體：WishUpdate
+# 回應：WishResponse
+# 錯誤：EditNotAllowedError (403), WishNotFoundError (404)
+```
+
+### 管理員端 API (Task 3.2)
+
+```python
+# GET /api/v1/admin/wishlist
+# 功能：取得所有願望列表（支援篩選、排序、分頁）
+# 認證：get_current_admin_user dependency
+# Query 參數：filter_status, sort_order, page, page_size
+# 回應：AdminWishListResponse
+
+# PUT /api/v1/admin/wishlist/{wish_id}/reply
+# 功能：新增或編輯管理員回覆
+# 認證：get_current_admin_user dependency
+# 請求體：AdminReplyRequest
+# 回應：WishResponse
+
+# PUT /api/v1/admin/wishlist/{wish_id}/hide
+# 功能：隱藏願望
+# 認證：get_current_admin_user dependency
+# 回應：WishResponse
+
+# PUT /api/v1/admin/wishlist/{wish_id}/unhide
+# 功能：取消隱藏願望
+# 認證：get_current_admin_user dependency
+# 回應：WishResponse
+```
+
+**實作檔案位置**: `/backend/app/api/v1/wishlist.py`
+**參考架構**: `/backend/app/api/v1/users.py`
 
 ---
 
