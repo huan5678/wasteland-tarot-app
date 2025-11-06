@@ -13,7 +13,7 @@ import { useRhythmPlaylistStore, type UserRhythmPreset } from '@/lib/stores/rhyt
 
 /**
  * 排序選項
- */
+ */import { Button } from "@/components/ui/button";
 type SortOption = 'created_at_desc' | 'created_at_asc' | 'name_asc' | 'name_desc';
 
 export interface PublicSongsBrowserProps {
@@ -36,7 +36,7 @@ export interface PublicSongsBrowserProps {
 export function PublicSongsBrowser({
   isGuest,
   onAddToPlaylist,
-  className,
+  className
 }: PublicSongsBrowserProps) {
   // ========== State ==========
   const [systemPresets, setSystemPresets] = useState<UserRhythmPreset[]>([]);
@@ -49,7 +49,8 @@ export function PublicSongsBrowser({
 
   // ========== Constants ==========
   const ITEMS_PER_PAGE = 10;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
+  // Use relative path to go through Next.js API proxy
+  const API_BASE_URL = '/api/v1';
 
   // ========== Effects ==========
 
@@ -76,7 +77,7 @@ export function PublicSongsBrowser({
         page: currentPage.toString(),
         limit: ITEMS_PER_PAGE.toString(),
         sort: sortBy,
-        ...(searchQuery.trim() && { search: searchQuery.trim() }),
+        ...(searchQuery.trim() && { search: searchQuery.trim() })
       });
 
       const response = await fetch(`${API_BASE_URL}/music/presets/public?${params}`);
@@ -108,8 +109,8 @@ export function PublicSongsBrowser({
     const query = searchQuery.toLowerCase();
     return publicPresets.filter(
       (preset) =>
-        preset.name.toLowerCase().includes(query) ||
-        preset.description?.toLowerCase().includes(query)
+      preset.name.toLowerCase().includes(query) ||
+      preset.description?.toLowerCase().includes(query)
     );
   }, [publicPresets, searchQuery]);
 
@@ -141,8 +142,8 @@ export function PublicSongsBrowser({
             name="search"
             sizePreset="xs"
             className="absolute left-3 top-1/2 -translate-y-1/2 text-pip-boy-green/50"
-            decorative
-          />
+            decorative />
+
           <input
             type="text"
             value={searchQuery}
@@ -157,20 +158,28 @@ export function PublicSongsBrowser({
               focus:ring-2 focus:ring-pip-boy-green/30
               transition-all duration-200
             "
-            aria-label="搜尋歌曲"
-          />
-          {searchQuery && (
-            <button
-              onClick={handleClearSearch}
-              className="
-                absolute right-3 top-1/2 -translate-y-1/2
-                text-pip-boy-green/50 hover:text-pip-boy-green
-              "
-              aria-label="清除搜尋"
-            >
+
+
+
+
+
+
+
+
+            aria-label="搜尋歌曲" />
+
+          {searchQuery &&
+          <Button size="icon" variant="link"
+          onClick={handleClearSearch}
+          className="absolute right-3 top-1/2 -translate-y-1/2\n"
+
+
+
+          aria-label="清除搜尋">
+
               <PixelIcon name="close" sizePreset="xs" decorative />
-            </button>
-          )}
+            </Button>
+          }
         </div>
 
         {/* 排序下拉選單 */}
@@ -188,8 +197,14 @@ export function PublicSongsBrowser({
               text-pip-boy-green text-xs
               focus:outline-none focus:border-pip-boy-green
               focus:ring-2 focus:ring-pip-boy-green/30
-            "
-          >
+            ">
+
+
+
+
+
+
+
             <option value="created_at_desc">最新建立</option>
             <option value="created_at_asc">最早建立</option>
             <option value="name_asc">名稱 A-Z</option>
@@ -199,81 +214,81 @@ export function PublicSongsBrowser({
       </div>
 
       {/* 載入中 */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-8">
+      {isLoading &&
+      <div className="flex items-center justify-center py-8">
           <PixelIcon
-            name="loader"
-            sizePreset="md"
-            variant="primary"
-            animation="spin"
-            decorative
-          />
+          name="loader"
+          sizePreset="md"
+          variant="primary"
+          animation="spin"
+          decorative />
+
           <span className="ml-2 text-sm text-pip-boy-green">載入中...</span>
         </div>
-      )}
+      }
 
       {/* 錯誤訊息 */}
-      {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded">
+      {error &&
+      <div className="p-4 bg-red-500/10 border border-red-500/50 rounded">
           <p className="text-sm text-red-500">{error}</p>
         </div>
-      )}
+      }
 
       {/* 內容 */}
-      {!isLoading && !error && (
-        <>
+      {!isLoading && !error &&
+      <>
           {/* 系統預設歌曲區塊 */}
-          {systemPresets.length > 0 && (
-            <div className="space-y-3">
+          {systemPresets.length > 0 &&
+        <div className="space-y-3">
               <h3 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider flex items-center gap-2">
                 <PixelIcon name="star" sizePreset="xs" variant="warning" decorative />
                 系統預設歌曲
               </h3>
               <div className="space-y-2">
-                {systemPresets.map((preset) => (
-                  <PresetCard
-                    key={preset.id}
-                    preset={preset}
-                    onAdd={handleAddToPlaylist}
-                  />
-                ))}
+                {systemPresets.map((preset) =>
+            <PresetCard
+              key={preset.id}
+              preset={preset}
+              onAdd={handleAddToPlaylist} />
+
+            )}
               </div>
             </div>
-          )}
+        }
 
           {/* 公開使用者創作區塊 */}
-          {filteredPublicPresets.length > 0 && (
-            <div className="space-y-3">
+          {filteredPublicPresets.length > 0 &&
+        <div className="space-y-3">
               <h3 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider flex items-center gap-2">
                 <PixelIcon name="users" sizePreset="xs" variant="primary" decorative />
                 公開使用者創作
               </h3>
               <div className="space-y-2">
-                {filteredPublicPresets.map((preset) => (
-                  <PresetCard
-                    key={preset.id}
-                    preset={preset}
-                    onAdd={handleAddToPlaylist}
-                    showCreator
-                  />
-                ))}
+                {filteredPublicPresets.map((preset) =>
+            <PresetCard
+              key={preset.id}
+              preset={preset}
+              onAdd={handleAddToPlaylist}
+              showCreator />
+
+            )}
               </div>
             </div>
-          )}
+        }
 
           {/* 空狀態 */}
-          {systemPresets.length === 0 && filteredPublicPresets.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
+          {systemPresets.length === 0 && filteredPublicPresets.length === 0 &&
+        <div className="flex flex-col items-center justify-center py-12 text-center">
               <PixelIcon name="music-off" sizePreset="lg" variant="muted" decorative />
               <p className="mt-4 text-sm text-pip-boy-green/50">
                 找不到符合的歌曲
               </p>
             </div>
-          )}
+        }
         </>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
 
 /**
@@ -293,38 +308,43 @@ function PresetCard({ preset, onAdd, showCreator }: PresetCardProps) {
         bg-pip-boy-green/5 border border-pip-boy-green/30
         hover:bg-pip-boy-green/10 hover:border-pip-boy-green/50
         transition-all duration-200
-      "
-    >
+      ">
+
+
+
+
+
+
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-pip-boy-green truncate">
             {preset.name}
           </h4>
-          {preset.description && (
-            <p className="text-xs text-pip-boy-green/70 mt-1 line-clamp-2">
+          {preset.description &&
+          <p className="text-xs text-pip-boy-green/70 mt-1 line-clamp-2">
               {preset.description}
             </p>
-          )}
-          {showCreator && (
-            <p className="text-xs text-pip-boy-green/50 mt-1">
+          }
+          {showCreator &&
+          <p className="text-xs text-pip-boy-green/50 mt-1">
               創作者：{preset.userId || '未知'}
             </p>
-          )}
+          }
         </div>
-        <button
-          onClick={() => onAdd(preset.id)}
-          className="
-            flex-shrink-0 p-2
-            text-pip-boy-green bg-pip-boy-green/10
-            border border-pip-boy-green/50
-            rounded hover:bg-pip-boy-green hover:text-black
-            transition-all duration-200
-          "
-          aria-label={`加入 ${preset.name} 到播放清單`}
-        >
+        <Button size="icon" variant="outline"
+        onClick={() => onAdd(preset.id)}
+        className="flex-shrink-0 p-2\n border rounded transition-all duration-200\n"
+
+
+
+
+
+
+        aria-label={`加入 ${preset.name} 到播放清單`}>
+
           <PixelIcon name="add" sizePreset="xs" decorative />
-        </button>
+        </Button>
       </div>
-    </div>
-  );
+    </div>);
+
 }

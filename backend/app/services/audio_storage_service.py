@@ -42,7 +42,8 @@ class AudioStorageService:
         self,
         audio_type: AudioType,
         identifier: str,
-        character_key: str
+        character_key: str,
+        voice_name: Optional[str] = None
     ) -> str:
         """
         生成儲存路徑
@@ -51,20 +52,39 @@ class AudioStorageService:
             audio_type: 音檔類型
             identifier: 識別碼（card_id 或 text_hash[:8]）
             character_key: 角色 key
+            voice_name: 可選的語音名稱（用於區分不同語音測試）
 
         Returns:
             儲存路徑
 
         Examples:
             static/a1b2c3d4-e5f6-7890-abcd-ef1234567890/super_mutant.mp3
-            dynamic/f3a2b1c0/codsworth.mp3
+            dynamic/f3a2b1c0_1699123456_abc123_Algenib/codsworth.mp3
         """
+        import time
+        import uuid
+        
         if audio_type == AudioType.STATIC_CARD:
             # 靜態卡牌解讀: static/{card_id}/{character_key}.mp3
             return f"static/{identifier}/{character_key}.mp3"
         else:
-            # 動態解讀: dynamic/{hash[:8]}/{character_key}.mp3
-            return f"dynamic/{identifier}/{character_key}.mp3"
+            # 動態解讀: 使用 UUID 確保唯一性以避免衝突
+            timestamp = int(time.time() * 1000)  # 使用毫秒級時間戳
+            unique_id = str(uuid.uuid4())  # 完整 UUID
+            
+            # 如果有 voice_name，提取星體名稱添加到路徑中
+            voice_suffix = ""
+            if voice_name:
+                if "-Chirp3-HD-" in voice_name:
+                    voice_suffix = f"_{voice_name.split('-Chirp3-HD-')[-1]}"
+                elif "-Wavenet-" in voice_name:
+                    voice_suffix = f"_{voice_name.split('-Wavenet-')[-1]}"
+                else:
+                    # 提取最後一個部分作為語音識別
+                    safe_voice = voice_name.split('-')[-1]
+                    voice_suffix = f"_{safe_voice}"
+            
+            return f"dynamic/{identifier}_{timestamp}_{unique_id}{voice_suffix}/{character_key}.mp3"
 
     async def upload_audio(
         self,
@@ -151,34 +171,90 @@ class AudioStorageService:
             Exception: 儲存失敗
         """
         try:
-            # 建立 AudioFile 記錄
-            audio_file = AudioFile(
-                card_id=card_id,
-                character_id=character_id,
-                storage_path=storage_path,
-                storage_url=storage_url,
-                file_size=file_size,
-                duration_seconds=duration_seconds,
-                text_length=text_length,
-                text_hash=text_hash,
-                language_code=language_code,
-                voice_name=voice_name,
-                ssml_params=ssml_params,
-                audio_type=audio_type,
-                generation_status=GenerationStatus.COMPLETED,
-                access_count=0
-            )
+            # 檢查是否已存在相同 storage_path 的記錄
+            from sqlalchemy import select
+            stmt = select(AudioFile).where(AudioFile.storage_path == storage_path)
+            result = await db.execute(stmt)
+            existing_audio = result.scalar_one_or_none()
+            
+            if existing_audio:
+                # 更新現有記錄
+                logger.info(f"[AudioStorage] Updating existing record: {existing_audio.id}")
+                existing_audio.storage_url = storage_url
+                existing_audio.file_size = file_size
+                existing_audio.duration_seconds = duration_seconds
+                existing_audio.text_length = text_length
+                existing_audio.text_hash = text_hash
+                existing_audio.language_code = language_code
+                existing_audio.voice_name = voice_name
+                existing_audio.ssml_params = ssml_params
+                existing_audio.audio_type = audio_type
+                existing_audio.generation_status = GenerationStatus.COMPLETED
+                existing_audio.access_count += 1  # 增加訪問計數
+                
+                await db.commit()
+                await db.refresh(existing_audio)
+                
+                logger.info(f"[AudioStorage] Updated metadata: {existing_audio.id}")
+                return existing_audio
+            else:
+                # 建立新的 AudioFile 記錄
+                audio_file = AudioFile(
+                    card_id=card_id,
+                    character_id=character_id,
+                    storage_path=storage_path,
+                    storage_url=storage_url,
+                    file_size=file_size,
+                    duration_seconds=duration_seconds,
+                    text_length=text_length,
+                    text_hash=text_hash,
+                    language_code=language_code,
+                    voice_name=voice_name,
+                    ssml_params=ssml_params,
+                    audio_type=audio_type,
+                    generation_status=GenerationStatus.COMPLETED,
+                    access_count=0
+                )
 
-            db.add(audio_file)
-            await db.commit()
-            await db.refresh(audio_file)
+                db.add(audio_file)
+                await db.commit()
+                await db.refresh(audio_file)
 
-            logger.info(f"[AudioStorage] Saved metadata: {audio_file.id}")
-            return audio_file
+                logger.info(f"[AudioStorage] Saved new metadata: {audio_file.id}")
+                return audio_file
 
         except Exception as e:
             await db.rollback()
             logger.error(f"[AudioStorage] Failed to save metadata: {e}")
+            # 如果是唯一性約束錯誤，嘗試更新現有記錄
+            if "UniqueViolationError" in str(type(e).__name__) or "duplicate key" in str(e).lower():
+                logger.info(f"[AudioStorage] Detected duplicate, attempting to update existing record")
+                try:
+                    stmt = select(AudioFile).where(AudioFile.storage_path == storage_path)
+                    result = await db.execute(stmt)
+                    existing_audio = result.scalar_one_or_none()
+                    
+                    if existing_audio:
+                        existing_audio.storage_url = storage_url
+                        existing_audio.file_size = file_size
+                        existing_audio.duration_seconds = duration_seconds
+                        existing_audio.text_length = text_length
+                        existing_audio.text_hash = text_hash
+                        existing_audio.language_code = language_code
+                        existing_audio.voice_name = voice_name
+                        existing_audio.ssml_params = ssml_params
+                        existing_audio.audio_type = audio_type
+                        existing_audio.generation_status = GenerationStatus.COMPLETED
+                        existing_audio.access_count += 1
+                        
+                        await db.commit()
+                        await db.refresh(existing_audio)
+                        
+                        logger.info(f"[AudioStorage] Successfully updated after conflict: {existing_audio.id}")
+                        return existing_audio
+                except Exception as retry_error:
+                    logger.error(f"[AudioStorage] Retry failed: {retry_error}")
+            
             raise Exception(f"Failed to save audio metadata: {str(e)}")
 
     async def get_audio_by_card_and_character(

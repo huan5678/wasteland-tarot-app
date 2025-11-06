@@ -46,19 +46,21 @@ export function StorySection({ story, audioUrls }: StorySectionProps) {
       </div>
 
       {/* Factions */}
-      <div className="story-factions">
-        <span className="text-pip-boy-green/60 text-sm">陣營：</span>
-        <div className="flex flex-wrap gap-2 mt-1">
-          {story.factionsInvolved.map((faction) => (
-            <span
-              key={faction}
-              className="px-2 py-1 bg-pip-boy-green/20 text-pip-boy-green text-xs rounded border border-pip-boy-green/40"
-            >
-              {faction}
-            </span>
-          ))}
+      {story.factionsInvolved && story.factionsInvolved.length > 0 && (
+        <div className="story-factions">
+          <span className="text-pip-boy-green/60 text-sm">陣營：</span>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {story.factionsInvolved.map((faction) => (
+              <span
+                key={faction}
+                className="px-2 py-1 bg-pip-boy-green/20 text-pip-boy-green text-xs rounded border border-pip-boy-green/40"
+              >
+                {faction}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

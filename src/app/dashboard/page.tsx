@@ -1,45 +1,63 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/lib/authStore'
-import { readingsAPI, cardsAPI } from '@/lib/api'
-import { PixelIcon } from '@/components/ui/icons'
-import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList'
-import { useActivityTracker } from '@/hooks/useActivityTracker'
-import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore'
-import ActivityProgressCard from '@/components/activity/ActivityProgressCard'
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/authStore';
+import { readingsAPI, cardsAPI, analyticsAPI } from '@/lib/api';
+import { PixelIcon } from '@/components/ui/icons';
+import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList';
+import { useActivityTracker } from '@/hooks/useActivityTracker';
+import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore';
+import ActivityProgressCard from '@/components/activity/ActivityProgressCard';
+import { useKarmaStore } from '@/stores/karmaStore';
+import { KarmaDisplay } from '@/components/dashboard/KarmaDisplay/KarmaDisplay';
+import { KarmaProgressBar } from '@/components/dashboard/KarmaProgressBar';
+import { KarmaLog } from '@/components/dashboard/KarmaLog/KarmaLog';
+import { TasksPanel } from '@/components/dashboard/TasksPanel';
+import { getLocaleDetector } from '@/lib/utils/localeDetector';import { Button } from "@/components/ui/button";
 
 interface Reading {
-  id: string
-  date: string
-  question: string
-  cards: any[]
-  spread_type: string
+  id: string;
+  date: string;
+  question: string;
+  cards: any[];
+  spread_type: string;
   spread_template?: {
-    id: string
-    name: string
-    display_name: string
-    spread_type: string
-  }
-  interpretation: string
+    id: string;
+    name: string;
+    display_name: string;
+    spread_type: string;
+  };
+  interpretation: string;
 }
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const user = useAuthStore(s => s.user)
-  const isInitialized = useAuthStore(s => s.isInitialized)
-  const initialize = useAuthStore(s => s.initialize)
-  const { isActive, activeTime, progress } = useActivityTracker()
-  const { userProgress, fetchUserProgress } = useAchievementStore()
-  const [recentReadings, setRecentReadings] = useState<Reading[]>([])
+  const router = useRouter();
+  const user = useAuthStore((s) => s.user);
+  const isInitialized = useAuthStore((s) => s.isInitialized);
+  const initialize = useAuthStore((s) => s.initialize);
+  const { isActive, activeTime, progress } = useActivityTracker();
+  const { userProgress, fetchUserProgress } = useAchievementStore();
+  const { fetchSummary, fetchLogs } = useKarmaStore();
+  const [recentReadings, setRecentReadings] = useState<Reading[]>([]);
   const [stats, setStats] = useState({
     totalReadings: 0,
     karmaLevel: '中立漆泊者',
     favoriteCard: null as any,
+    favoriteCardDrawCount: 0,
     daysInVault: 0
-  })
-  const [isLoading, setIsLoading] = useState(true)
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  // 初始化語系偵測
+  useEffect(() => {
+    const initLocale = async () => {
+      const detector = getLocaleDetector();
+      const locale = await detector.detect();
+      console.log('[Dashboard] 🌍 偵測到語系:', locale);
+    };
+    initLocale();
+  }, []);
 
   // 方案 3：重新驗證登入狀態（防止 OAuth callback 競態條件）
   useEffect(() => {
@@ -47,13 +65,13 @@ export default function DashboardPage() {
       isInitialized,
       hasUser: !!user,
       userId: user?.id
-    })
+    });
 
     // 如果尚未初始化，先初始化
     if (!isInitialized) {
-      console.log('[Dashboard] ⏳ 尚未初始化，開始初始化...')
-      initialize()
-      return
+      console.log('[Dashboard] ⏳ 尚未初始化，開始初始化...');
+      initialize();
+      return;
     }
 
     // 初始化完成後，檢查是否有使用者
@@ -65,118 +83,208 @@ export default function DashboardPage() {
         to: '/auth/login',
         reason: 'User not authenticated',
         isInitialized
-      })
-      router.push('/auth/login')
-      return
+      });
+      router.push('/auth/login');
+      return;
     }
 
-    console.log('[Dashboard] ✅ 登入狀態有效，使用者:', user?.email)
-  }, [user, isInitialized, initialize, router])
+    console.log('[Dashboard] ✅ 登入狀態有效，使用者:', user?.email);
+  }, [user, isInitialized, initialize, router]);
 
   // Load real data from API
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!user?.id) return
+      // 確保認證狀態已初始化且用戶存在
+      if (!isInitialized || !user?.id) {
+        console.log('[Dashboard] ⏳ 等待認證初始化...', {
+          isInitialized,
+          hasUser: !!user?.id
+        });
+        return;
+      }
 
-      setIsLoading(true)
+      console.log('[Dashboard] 📊 開始載入 Dashboard 資料...', {
+        userId: user.id,
+        userEmail: user.email,
+        isOAuthUser: user.isOAuthUser
+      });
+
+      setIsLoading(true);
 
       try {
         // Get user's readings (使用正確的 API 回應格式)
         // NOTE: Temporarily handling 503 errors gracefully until completed_readings table is created
-        let transformedReadings: Reading[] = []
-        let totalReadings = 0
+        let transformedReadings: Reading[] = [];
+        let totalReadings = 0;
 
         try {
-          const response = await readingsAPI.getUserReadings(user.id)
+          const response = await readingsAPI.getUserReadings(user.id);
 
           // Transform API data to match component interface
-          transformedReadings = response.readings.map(reading => ({
+          transformedReadings = response.readings.map((reading) => ({
             id: reading.id,
             date: reading.created_at,
             question: reading.question,
-            cards: reading.cards_drawn || [],  // Ensure cards is always an array
+            cards: reading.cards_drawn || [], // Ensure cards is always an array
             spread_type: reading.spread_type,
-            spread_template: reading.spread_template,  // Preserve spread_template data
+            spread_template: reading.spread_template, // Preserve spread_template data
             interpretation: reading.interpretation || ''
-          }))
+          }));
 
-          totalReadings = response.total_count
+          totalReadings = response.total_count;
         } catch (apiError: any) {
-          // Gracefully handle 503 (service unavailable) - table doesn't exist yet
-          if (apiError?.status === 503 || apiError?.status === 500) {
-            console.info('Readings table not available yet - showing empty state')
-            transformedReadings = []
-            totalReadings = 0
+          // Gracefully handle various errors
+          console.warn('[Dashboard] Failed to load readings:', apiError);
+          
+          // Handle network errors or API unavailable
+          if (apiError?.status === 503 || apiError?.status === 500 || apiError?.message?.includes('Failed to fetch')) {
+            console.info('Readings API not available - showing empty state');
+            transformedReadings = [];
+            totalReadings = 0;
+          } else if (apiError?.status === 401 || apiError?.status === 403) {
+            // Authentication error - will be handled by outer try-catch
+            throw apiError;
           } else {
-            throw apiError // Re-throw other errors
+            // Other errors - show empty state but log the error
+            console.error('Unexpected error loading readings:', apiError);
+            transformedReadings = [];
+            totalReadings = 0;
           }
         }
 
-        setRecentReadings(transformedReadings.slice(0, 5)) // Show only recent 5
+        setRecentReadings(transformedReadings.slice(0, 5)); // Show only recent 5
 
         // Calculate stats from real data
-        const daysInVault = user.created_at
-          ? Math.floor((Date.now() - Date.parse(user.created_at)) / (1000 * 60 * 60 * 24))
-          : 0
+        const daysInVault = user.created_at ?
+        Math.floor((Date.now() - Date.parse(user.created_at)) / (1000 * 60 * 60 * 24)) :
+        0;
 
         // Determine karma level based on readings count
-        let karmaLevel = '新手流浪者'
-        if (totalReadings >= 50) karmaLevel = '傳奇廢土智者'
-        else if (totalReadings >= 20) karmaLevel = '經驗豐富占卜師'
-        else if (totalReadings >= 10) karmaLevel = '好業力漂泊者'
-        else if (totalReadings >= 5) karmaLevel = '中立漂泊者'
+        let karmaLevel = '新手流浪者';
+        if (totalReadings >= 50) karmaLevel = '傳奇廢土智者';else
+        if (totalReadings >= 20) karmaLevel = '經驗豐富占卜師';else
+        if (totalReadings >= 10) karmaLevel = '好業力漂泊者';else
+        if (totalReadings >= 5) karmaLevel = '中立漂泊者';
 
-        // Find most frequent card (simplified)
-        let favoriteCard = null
-        if (transformedReadings.length > 0) {
-          try {
-            const allCards = await cardsAPI.getAll()
-            favoriteCard = allCards[0] // Simplified - just take first card
-          } catch (error) {
-            console.error('Failed to load favorite card:', error)
+        // Get user's most drawn card from analytics
+        let favoriteCard = null;
+        let cardDrawCount = 0;
+        try {
+          const analytics = await analyticsAPI.getUserAnalytics();
+          const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
+
+          if (mostDrawnCards.length > 0) {
+            // Get the most frequently drawn card (first in the array)
+            const mostDrawnCardId = mostDrawnCards[0];
+            favoriteCard = await cardsAPI.getById(mostDrawnCardId);
+
+            // Count how many times this card appears in all user's readings
+            cardDrawCount = transformedReadings.reduce((count, reading) => {
+              const cardsInReading = reading.cards_drawn || reading.cards || [];
+              return count + cardsInReading.filter((c: any) => c.id === mostDrawnCardId || c === mostDrawnCardId).length;
+            }, 0);
           }
+        } catch (error) {
+          console.error('Failed to load favorite card from analytics:', error);
         }
 
         setStats({
           totalReadings,
           karmaLevel,
           favoriteCard,
+          favoriteCardDrawCount: cardDrawCount,
           daysInVault
-        })
+        });
 
       } catch (error) {
-        console.error('Failed to load dashboard data:', error)
+        console.error('Failed to load dashboard data:', error);
         // Set default empty state
-        setRecentReadings([])
+        setRecentReadings([]);
         setStats({
           totalReadings: 0,
           karmaLevel: '新手流浪者',
           favoriteCard: null,
           daysInVault: 0
-        })
+        });
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadDashboardData()
-  }, [user])
+    loadDashboardData();
+  }, [user, isInitialized]);
 
   // 載入成就資料
   useEffect(() => {
-    if (user) {
-      fetchUserProgress()
+    if (isInitialized && user) {
+      fetchUserProgress();
     }
-  }, [user, fetchUserProgress])
+  }, [user, isInitialized, fetchUserProgress]);
+
+  // 載入 Karma 資料
+  useEffect(() => {
+    if (isInitialized && user) {
+      fetchSummary();
+      fetchLogs(1);
+    }
+  }, [user, isInitialized, fetchSummary, fetchLogs]);
+
+  // 每日簽到 - 更新 daily_login 任務進度
+  useEffect(() => {
+    if (isInitialized && user) {
+      const performDailyCheckIn = async () => {
+        try {
+          const { api } = await import('@/lib/apiClient');
+          const { useTasksStore } = await import('@/stores/tasksStore');
+
+          interface DailyCheckInResponse {
+            success: boolean;
+            is_first_check_in_today: boolean;
+            login_date: string;
+            message: string;
+            task_updated: boolean;
+            consecutive_days: number;
+          }
+
+          const data = await api.post<DailyCheckInResponse>('/auth/daily-check-in');
+
+          if (data.success) {
+            if (data.is_first_check_in_today) {
+              console.log('✅ 每日簽到成功！daily_login 任務已更新');
+              console.log(`📊 簽到資訊:`, {
+                連續登入天數: data.consecutive_days,
+                簽到日期: data.login_date,
+                任務已更新: data.task_updated
+              });
+            } else {
+              console.log('ℹ️ 今日已簽到', {
+                連續登入天數: data.consecutive_days
+              });
+            }
+
+            // 無論是否第一次簽到，都重新載入每日任務以確保 UI 同步
+            useTasksStore.getState().fetchDailyTasks();
+          } else {
+            console.warn('⚠️ 每日簽到失敗:', data.message);
+          }
+        } catch (error) {
+          console.error('❌ Daily check-in error:', error);
+          // 失敗不影響使用者體驗，靜默處理
+        }
+      };
+
+      performDailyCheckIn();
+    }
+  }, [user, isInitialized]);
 
   // 計算最近解鎖的成就（最多3個）
   const recentAchievements = useMemo(() => {
-    return userProgress
-      .filter(p => p.status === AchievementStatus.UNLOCKED || p.status === AchievementStatus.CLAIMED)
-      .filter(p => p.unlocked_at)
-      .sort((a, b) => new Date(b.unlocked_at!).getTime() - new Date(a.unlocked_at!).getTime())
-      .slice(0, 3)
-  }, [userProgress])
+    return userProgress.
+    filter((p) => p.status === 'UNLOCKED' || p.status === 'CLAIMED').
+    filter((p) => p.unlocked_at).
+    sort((a, b) => new Date(b.unlocked_at!).getTime() - new Date(a.unlocked_at!).getTime()).
+    slice(0, 3);
+  }, [userProgress]);
 
   // 顯示載入畫面（初始化中或資料載入中）
   if (!isInitialized || isLoading) {
@@ -188,19 +296,14 @@ export default function DashboardPage() {
             {!isInitialized ? '驗證認證狀態...' : '初始化 Pip-Boy 介面...'}
           </p>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    const detector = getLocaleDetector();
+    return detector.formatDate(dateString);
+  };
 
   return (
     <div className="min-h-screen bg-transparent p-4 md:p-6 lg:p-8">
@@ -221,8 +324,8 @@ export default function DashboardPage() {
             <ActivityProgressCard
               isActive={isActive}
               activeTime={activeTime}
-              progress={progress}
-            />
+              progress={progress} />
+
           </div>
 
           {/* Quick Stats */}
@@ -246,11 +349,11 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 mb-8">
-          <button
-            onClick={() => window.location.href = '/readings/new'}
-            className="border-2 border-pip-boy-green bg-pip-boy-green/10 hover:bg-pip-boy-green/20
-                     p-6 transition-all duration-200 group cursor-pointer"
-          >
+          <Button size="default" variant="outline"
+          onClick={() => window.location.href = '/readings/new'}
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
+
+
             <div className="text-center">
               <PixelIcon name="spade" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">新占卜</h3>
@@ -258,13 +361,13 @@ export default function DashboardPage() {
                 開始一場全新的塔羅占卜會議
               </p>
             </div>
-          </button>
+          </Button>
 
-          <button
-            onClick={() => window.location.href = '/cards'}
-            className="border-2 border-pip-boy-green bg-pip-boy-green/10 hover:bg-pip-boy-green/20
-                     p-6 transition-all duration-200 group cursor-pointer"
-          >
+          <Button size="default" variant="outline"
+          onClick={() => window.location.href = '/cards'}
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
+
+
             <div className="text-center">
               <PixelIcon name="library" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">卡牌圖書館</h3>
@@ -272,13 +375,13 @@ export default function DashboardPage() {
                 瀏覽所有可用的塔羅牌
               </p>
             </div>
-          </button>
+          </Button>
 
-          <button
-            onClick={() => window.location.href = '/profile'}
-            className="border-2 border-pip-boy-green bg-pip-boy-green/10 hover:bg-pip-boy-green/20
-                     p-6 transition-all duration-200 group cursor-pointer"
-          >
+          <Button size="default" variant="outline"
+          onClick={() => window.location.href = '/profile'}
+          className="h-auto py-6 px-6 transition-all duration-200 group cursor-pointer">
+
+
             <div className="text-center">
               <PixelIcon name="user-circle" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">個人檔案</h3>
@@ -286,7 +389,89 @@ export default function DashboardPage() {
                 管理你的 Vault Dweller 設定
               </p>
             </div>
-          </button>
+          </Button>
+        </div>
+
+        {/* Gamification System - Karma + Tasks */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-pip-boy-green mb-4 flex items-center">
+            <PixelIcon name="sparkles" size={20} className="mr-2" decorative />
+            遊戲化系統
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {/* Left Column: Karma Display + Progress */}
+            <div className="space-y-6">
+              <KarmaDisplay />
+              <KarmaProgressBar />
+            </div>
+
+            {/* Middle Column: Tasks Panel */}
+            <TasksPanel />
+
+            {/* Right Column: Karma Log + Recent Achievements */}
+            <div className="space-y-6">
+              <KarmaLog />
+
+              {/* Recent Achievements */}
+              <div className="border-2 border-pip-boy-green/30 bg-black/75 backdrop-blur-sm p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-sm font-bold text-pip-boy-green flex items-center">
+                    <PixelIcon name="trophy" size={16} className="mr-2" decorative />
+                    最近獲得成就
+                  </h3>
+                  <Button size="xs" variant="link"
+                  onClick={() => router.push('/achievements')}
+                  className="transition-colors">
+
+                    查看全部
+                  </Button>
+                </div>
+
+                {recentAchievements.length > 0 ?
+                <div className="space-y-2">
+                    {recentAchievements.map((progress) =>
+                  <Button size="icon" variant="outline"
+                  key={progress.id}
+                  onClick={() => router.push('/achievements')}
+                  className="w-full flex items-center gap-3 p-2 border transition-colors rounded">
+
+                        <div className="flex-shrink-0">
+                          <PixelIcon
+                        name={progress.achievement.icon_name || 'trophy'}
+                        sizePreset="md"
+                        variant="primary"
+                        decorative />
+
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-pip-boy-green text-xs font-semibold truncate">
+                            {progress.achievement.name}
+                          </div>
+                          <div className="text-pip-boy-green/60 text-[10px]">
+                            {progress.unlocked_at && new Date(progress.unlocked_at).toLocaleDateString('zh-TW')}
+                          </div>
+                        </div>
+                        {progress.status === 'UNLOCKED' &&
+                    <div className="flex-shrink-0">
+                            <span className="text-[10px] text-pip-boy-green border border-pip-boy-green/50 px-2 py-0.5 rounded-sm">
+                              待領取
+                            </span>
+                          </div>
+                    }
+                      </Button>
+                  )}
+                  </div> :
+
+                <div className="text-center py-6 text-pip-boy-green/50 text-xs">
+                    <PixelIcon name="trophy" sizePreset="lg" variant="muted" decorative />
+                    <p className="mt-2">尚未解鎖任何成就</p>
+                    <p className="text-[10px] mt-1">探索廢土來獲得成就吧！</p>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Recent Readings */}
@@ -297,65 +482,68 @@ export default function DashboardPage() {
             </h2>
 
             <div className="space-y-4">
-              {recentReadings.length > 0 ? (
-                recentReadings.map((reading) => (
-                  <button
-                    key={reading.id}
-                    onClick={() => router.push(`/readings/${reading.id}`)}
-                    className="w-full text-left border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-all duration-200 cursor-pointer"
-                  >
-                    <div className="flex justify-between items-start mb-3">
+              {recentReadings.length > 0 ?
+              recentReadings.map((reading) =>
+              <Button size="default" variant="outline"
+              key={reading.id}
+              onClick={() => router.push(`/readings/${reading.id}`)}
+              className="w-full h-auto py-4 px-4 transition-all duration-200 cursor-pointer">
+
+                    <div className="flex flex-col items-start w-full text-left gap-3">
                       <h3 className="text-sm font-bold text-pip-boy-green">
                         {reading.spread_template?.display_name || '占卜'}
                       </h3>
-                      <span className="text-xs text-pip-boy-green/70">
-                        {formatDate(reading.date)}
-                      </span>
+
+                      <p className="text-pip-boy-green/80 text-sm italic">
+                        "{reading.question}"
+                      </p>
+
+                      <div className="flex gap-2">
+                        {(reading.cards || []).slice(0, 3).map((card, index) =>
+                    <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
+                            <PixelIcon name="spade" size={16} decorative />
+                          </div>
+                    )}
+                      </div>
+
+                      <p className="text-pip-boy-green/70 text-xs line-clamp-2">
+                        {reading.interpretation}
+                      </p>
+
+                      <div className="flex justify-end w-full">
+                        <span className="text-xs text-pip-boy-green/70">
+                          {formatDate(reading.date)}
+                        </span>
+                      </div>
                     </div>
+                  </Button>
+              ) :
 
-                    <p className="text-pip-boy-green/80 text-sm mb-3 italic">
-                      "{reading.question}"
-                    </p>
-
-                    <div className="flex gap-2 mb-3">
-                      {(reading.cards || []).slice(0, 3).map((card, index) => (
-                        <div key={index} className="w-8 h-12 bg-pip-boy-green/20 border border-pip-boy-green/50 rounded flex items-center justify-center">
-                          <PixelIcon name="spade" size={16} decorative />
-                        </div>
-                      ))}
-                    </div>
-
-                    <p className="text-pip-boy-green/70 text-xs line-clamp-2">
-                      {reading.interpretation}
-                    </p>
-                  </button>
-                ))
-              ) : (
-                <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 text-center">
+              <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 text-center">
                   <PixelIcon name="spade" size={32} className="mb-3 mx-auto text-pip-boy-green opacity-50" decorative />
                   <p className="text-pip-boy-green/70 text-sm">
                     尚無占卜記錄。開始你的第一次占卜會議！
                   </p>
-                  <button
-                    onClick={() => window.location.href = '/readings/new'}
-                    className="inline-block mt-3 px-4 py-2 border border-pip-boy-green text-pip-boy-green
-                             hover:bg-pip-boy-green/10 text-xs transition-colors cursor-pointer"
-                  >
+                  <Button size="xs" variant="outline"
+                onClick={() => window.location.href = '/readings/new'}
+                className="inline-block mt-3 px-4 py-2 border transition-colors cursor-pointer">
+
+
                     新占卜
-                  </button>
+                  </Button>
                 </div>
-              )}
+              }
             </div>
 
-            {recentReadings.length > 0 && (
-              <button
-                onClick={() => window.location.href = '/readings'}
-                className="inline-block mt-4 text-pip-boy-green hover:text-pip-boy-green/80
-                         text-sm transition-colors cursor-pointer"
-              >
+            {recentReadings.length > 0 &&
+            <Button size="sm" variant="link"
+            onClick={() => window.location.href = '/readings'}
+            className="inline-block mt-4 transition-colors cursor-pointer">
+
+
                 → 查看所有占卜
-              </button>
-            )}
+              </Button>
+            }
           </div>
 
           {/* Favorite Card & System Status */}
@@ -365,8 +553,8 @@ export default function DashboardPage() {
             </h2>
 
             {/* Favorite Card - Temporarily simplified to fix React errors */}
-            {stats.favoriteCard && (
-              <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 mb-6">
+            {stats.favoriteCard &&
+            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 mb-6">
                 <h3 className="text-sm font-bold text-pip-boy-green mb-3">最常抽到的牌</h3>
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-24 border-2 border-pip-boy-green/50 bg-pip-boy-green/10 rounded flex items-center justify-center">
@@ -377,69 +565,30 @@ export default function DashboardPage() {
                       {stats.favoriteCard.name}
                     </p>
                     <p className="text-pip-boy-green/70 text-xs">
-                      已抽取 8 次
+                      已抽取 {stats.favoriteCardDrawCount} 次
                     </p>
                   </div>
                 </div>
               </div>
-            )}
+            }
 
-            {/* Recent Achievements */}
+            {/* System Status */}
             <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
-              <div className="flex justify-between items-center mb-3">
-                <h3 className="text-sm font-bold text-pip-boy-green flex items-center">
-                  <PixelIcon name="trophy" size={16} className="mr-2" decorative />
-                  最近獲得成就
-                </h3>
-                <button
-                  onClick={() => router.push('/achievements')}
-                  className="text-pip-boy-green/70 hover:text-pip-boy-green text-xs transition-colors"
-                >
-                  查看全部
-                </button>
+              <h3 className="text-sm font-bold text-pip-boy-green mb-3">系統狀態</h3>
+              <div className="space-y-2 text-xs text-pip-boy-green/70 font-mono">
+                <div className="flex justify-between">
+                  <span>連線狀態</span>
+                  <span className="text-pip-boy-green font-bold">[ ONLINE ]</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>服務天數</span>
+                  <span className="text-pip-boy-green font-bold">{stats.daysInVault}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>占卜總數</span>
+                  <span className="text-pip-boy-green font-bold">{stats.totalReadings}</span>
+                </div>
               </div>
-
-              {recentAchievements.length > 0 ? (
-                <div className="space-y-2">
-                  {recentAchievements.map((progress) => (
-                    <button
-                      key={progress.id}
-                      onClick={() => router.push('/achievements')}
-                      className="w-full text-left flex items-center gap-3 p-2 border border-pip-boy-green/20 bg-pip-boy-green/5 hover:bg-pip-boy-green/10 transition-colors"
-                    >
-                      <div className="flex-shrink-0">
-                        <PixelIcon
-                          name={progress.achievement.icon_name || 'trophy'}
-                          sizePreset="md"
-                          variant="primary"
-                          decorative
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-pip-boy-green text-xs font-semibold truncate">
-                          {progress.achievement.name}
-                        </div>
-                        <div className="text-pip-boy-green/60 text-[10px]">
-                          {progress.unlocked_at && new Date(progress.unlocked_at).toLocaleDateString('zh-TW')}
-                        </div>
-                      </div>
-                      {progress.status === AchievementStatus.UNLOCKED && (
-                        <div className="flex-shrink-0">
-                          <span className="text-[10px] text-pip-boy-green border border-pip-boy-green/50 px-2 py-0.5 rounded-sm">
-                            待領取
-                          </span>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-6 text-pip-boy-green/50 text-xs">
-                  <PixelIcon name="trophy" sizePreset="lg" variant="muted" decorative />
-                  <p className="mt-2">尚未解鎖任何成就</p>
-                  <p className="text-[10px] mt-1">探索廢土來獲得成就吧！</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -449,6 +598,6 @@ export default function DashboardPage() {
           <IncompleteSessionsList />
         </div>
       </div>
-    </div>
-  )
+    </div>);
+
 }

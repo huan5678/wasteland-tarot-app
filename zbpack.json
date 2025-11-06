@@ -1,0 +1,5 @@
+{
+  "build_command": "bun install && bun run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/",
+  "start_command": "node .next/standalone/server.js",
+  "node_version": "18"
+}

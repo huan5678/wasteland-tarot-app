@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import StaticPageLayout from '@/components/layout/StaticPageLayout';
 import ContactForm from '@/components/forms/ContactForm';
+import { PixelIcon } from '@/components/ui/icons';
 
 /**
  * Contact Page Metadata
@@ -43,8 +44,8 @@ interface ContactMethod {
 function ContactMethodCard({ method }: { method: ContactMethod }) {
   return (
     <div className="border-2 border-green-800 bg-green-950/20 p-4 transition-colors hover:border-green-600 hover:bg-green-950/30">
-      <div className="mb-2 text-2xl text-green-600" aria-hidden="true">
-        {method.icon}
+      <div className="mb-2 text-green-600">
+        <PixelIcon name={method.icon as any} size={32} decorative />
       </div>
       <h3 className="mb-2 text-lg font-bold text-green-400">
         {method.title}
@@ -84,28 +85,28 @@ function ContactMethodCard({ method }: { method: ContactMethod }) {
 export default function ContactPage() {
   const contactMethods: ContactMethod[] = [
     {
-      icon: '📧',
+      icon: 'mail',
       title: '電子郵件',
       description: '一般諮詢與問題回報',
       link: 'mailto:support@wasteland-tarot.vault',
       linkText: 'support@wasteland-tarot.vault',
     },
     {
-      icon: '🐛',
+      icon: 'bug',
       title: 'Bug 回報',
       description: '發現技術問題或錯誤',
       link: 'mailto:bugs@wasteland-tarot.vault',
       linkText: 'bugs@wasteland-tarot.vault',
     },
     {
-      icon: '💡',
+      icon: 'lightbulb',
       title: '功能建議',
       description: '分享您的創意與想法',
       link: 'mailto:feedback@wasteland-tarot.vault',
       linkText: 'feedback@wasteland-tarot.vault',
     },
     {
-      icon: '⚖️',
+      icon: 'file-text',
       title: '法律相關',
       description: '隱私、條款與智財問題',
       link: 'mailto:legal@wasteland-tarot.vault',

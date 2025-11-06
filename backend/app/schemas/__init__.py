@@ -55,6 +55,11 @@ from .wishlist import (
     WishResponse,
     AdminWishListResponse,
 )
+from .user import (
+    UserTitlesResponse,
+    UpdateTitleRequest,
+    UpdateTitleResponse,
+)
 
 __all__ = [
     "SessionCreateSchema",
@@ -104,4 +109,8 @@ __all__ = [
     "AdminReplyRequest",
     "WishResponse",
     "AdminWishListResponse",
+    # User schemas (Titles)
+    "UserTitlesResponse",
+    "UpdateTitleRequest",
+    "UpdateTitleResponse",
 ]

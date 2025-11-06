@@ -337,11 +337,12 @@ async def oauth_callback(
                     metadata={"email": email}
                 )
             else:
-                # 現有用戶登入
+                # 現有用戶登入 - 查詢是否有 Passkey
+                auth_info = await coordinator.get_auth_methods(user.id, db)
                 await tracker.track_oauth_login_success(
                     user_id=str(user.id),
                     provider=provider,
-                    metadata={"has_passkey": False}  # TODO: 從 result 取得實際值
+                    metadata={"has_passkey": auth_info.has_passkey}
                 )
         except Exception as e:
             # 事件追蹤失敗不應阻擋登入流程
@@ -409,6 +410,7 @@ async def oauth_callback(
         from app.config import settings
         is_production = settings.environment == "production"
 
+        # 準備完整的 user 資料回應（包含所有前端需要的欄位）
         response_data = {
             "access_token": access_token,
             "refresh_token": refresh_token,
@@ -416,9 +418,16 @@ async def oauth_callback(
             "user": {
                 "id": str(user.id),
                 "email": user.email,
-                "name": user.name,
+                "name": user.name,  # User model 只有 name，沒有 username
                 "oauth_provider": user.oauth_provider,
-                "profile_picture_url": user.profile_picture_url,
+                "profile_picture_url": user.profile_picture_url,  # Google OAuth 頭像
+                "avatar_url": user.avatar_url,  # 使用者上傳的頭像（優先顯示）
+                "created_at": user.created_at.isoformat() if user.created_at else None,  # 註冊時間
+                "total_readings": user.total_readings or 0,
+                "karma_score": user.karma_score or 0,
+                "experience_level": user.experience_level,
+                "faction_alignment": user.faction_alignment,
+                "favorite_card_suit": user.favorite_card_suit,
                 "is_oauth_user": True
             }
         }

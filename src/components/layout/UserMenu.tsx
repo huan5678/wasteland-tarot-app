@@ -1,50 +1,50 @@
-'use client'
+'use client';
 
-import React from 'react'
-import { useRouter } from 'next/navigation'
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuList,
-  NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu'
-import { PixelIcon } from '@/components/ui/icons'
-import { UserAvatar } from './UserAvatar'
+  NavigationMenuTrigger } from
+'@/components/ui/navigation-menu';
+import { PixelIcon } from '@/components/ui/icons';
+import { UserAvatar } from './UserAvatar';import { Button } from "@/components/ui/button";
 
 interface UserMenuProps {
   user: {
-    name: string
-    avatarUrl?: string | null // 用戶上傳的頭像
-    profilePicture?: string | null // OAuth 頭像
-  }
-  onLogout: () => void
+    name: string;
+    avatarUrl?: string | null; // 用戶上傳的頭像
+    profilePicture?: string | null; // OAuth 頭像
+  };
+  onLogout: () => void;
 }
 
 export function UserMenu({ user, onLogout }: UserMenuProps) {
-  const router = useRouter()
+  const router = useRouter();
 
   const menuItems = [
-    {
-      label: '個人資料',
-      icon: 'user-circle',
-      href: '/profile',
-      action: () => router.push('/profile')
-    },
-    {
-      label: '帳號設定',
-      icon: 'settings',
-      href: '/settings',
-      action: () => router.push('/settings')
-    },
-    {
-      label: '登出',
-      icon: 'door-open',
-      href: null,
-      action: onLogout,
-      variant: 'error' as const
-    }
-  ]
+  {
+    label: '個人資料',
+    icon: 'user-circle',
+    href: '/profile',
+    action: () => router.push('/profile')
+  },
+  {
+    label: '帳號設定',
+    icon: 'settings',
+    href: '/settings',
+    action: () => router.push('/settings')
+  },
+  {
+    label: '登出',
+    icon: 'door-open',
+    href: null,
+    action: onLogout,
+    variant: 'error' as const
+  }];
+
 
   return (
     <NavigationMenu>
@@ -59,14 +59,25 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
             transition-all duration-200
             data-[state=open]:border-pip-boy-green
             data-[state=open]:bg-pip-boy-green/10
+            [&>svg]:text-pip-boy-green
+            hover:[&>svg]:text-pip-boy-green-bright
           ">
+
+
+
+
+
+
+
+
+
             <UserAvatar
               name={user.name}
               avatarUrl={user.avatarUrl}
               profilePictureUrl={user.profilePicture}
               size="sm"
-              showName={false}
-            />
+              showName={false} />
+
             <span className="text-sm text-pip-boy-green font-bold hidden sm:inline">
               {user.name}
             </span>
@@ -78,35 +89,35 @@ export function UserMenu({ user, onLogout }: UserMenuProps) {
             border-2 border-pip-boy-green
             shadow-[0_0_20px_rgba(0,255,136,0.3)]
           ">
+
+
+
+
+
             <div className="space-y-1">
               {menuItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={item.action}
-                  className={`
-                    w-full flex items-center gap-3 px-4 py-3
-                    text-sm font-medium text-left
-                    transition-all duration-200
-                    border border-transparent
-                    ${item.variant === 'error'
-                      ? 'text-red-400 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/30'
-                      : 'text-pip-boy-green/70 hover:text-pip-boy-green hover:bg-pip-boy-green/10 hover:border-pip-boy-green/30'
-                    }
-                  `}
-                >
-                  <PixelIcon
-                    name={item.icon}
-                    sizePreset="sm"
-                    variant={item.variant || 'primary'}
-                    decorative
-                  />
-                  <span>{item.label}</span>
-                </button>
+              <Button
+                key={item.label}
+                size="default"
+                variant="ghost"
+                onClick={item.action}
+                className="w-full justify-start gap-3 hover:bg-pip-boy-green/20 hover:text-pip-boy-green-bright"
+              >
+
+
+                <PixelIcon
+                  name={item.icon}
+                  sizePreset="sm"
+                  variant={item.variant || 'primary'}
+                  decorative
+                />
+                <span>{item.label}</span>
+              </Button>
               ))}
             </div>
           </NavigationMenuContent>
         </NavigationMenuItem>
       </NavigationMenuList>
-    </NavigationMenu>
-  )
+    </NavigationMenu>);
+
 }

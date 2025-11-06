@@ -4,39 +4,39 @@
  * Fixed version with PixelIcon only
  */
 
-'use client'
+'use client';
 
-import React, { useState, useCallback, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { cn } from '@/lib/utils'
-import { DetailedTarotCard } from './CardDetailModal'
-import { PixelIcon } from '../ui/icons'
+import React, { useState, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { cn } from '@/lib/utils';
+import { DetailedTarotCard } from './CardDetailModal';
+import { PixelIcon } from '../ui/icons';import { Button } from "@/components/ui/button";
 
 export interface ShareOptions {
-  includeImage: boolean
-  includeDescription: boolean
-  includeKeywords: boolean
-  includeMeaning: boolean
-  includeCharacterVoice: boolean
-  selectedVoice?: string
-  customMessage?: string
+  includeImage: boolean;
+  includeDescription: boolean;
+  includeKeywords: boolean;
+  includeMeaning: boolean;
+  includeCharacterVoice: boolean;
+  selectedVoice?: string;
+  customMessage?: string;
 }
 
 export interface CardShareProps {
-  card: DetailedTarotCard
-  onShare?: (method: string, options: ShareOptions) => void
-  onClose?: () => void
-  className?: string
-  position?: 'upright' | 'reversed'
+  card: DetailedTarotCard;
+  onShare?: (method: string, options: ShareOptions) => void;
+  onClose?: () => void;
+  className?: string;
+  position?: 'upright' | 'reversed';
 }
 
-type ShareMethod = 'url' | 'image' | 'text' | 'social' | 'qr' | 'export'
+type ShareMethod = 'url' | 'image' | 'text' | 'social' | 'qr' | 'export';
 
 interface ShareData {
-  title: string
-  text: string
-  url?: string
-  image?: string
+  title: string;
+  text: string;
+  url?: string;
+  image?: string;
 }
 
 export function CardShare({
@@ -46,7 +46,7 @@ export function CardShare({
   className,
   position = 'upright'
 }: CardShareProps) {
-  const [activeMethod, setActiveMethod] = useState<ShareMethod>('url')
+  const [activeMethod, setActiveMethod] = useState<ShareMethod>('url');
   const [shareOptions, setShareOptions] = useState<ShareOptions>({
     includeImage: true,
     includeDescription: true,
@@ -55,238 +55,238 @@ export function CardShare({
     includeCharacterVoice: false,
     selectedVoice: 'pip_boy',
     customMessage: ''
-  })
-  const [copyStatus, setCopyStatus] = useState<{ [key: string]: boolean }>({})
-  const [isGeneratingQR, setIsGeneratingQR] = useState(false)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  });
+  const [copyStatus, setCopyStatus] = useState<{[key: string]: boolean;}>({});
+  const [isGeneratingQR, setIsGeneratingQR] = useState(false);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Generate shareable content
   const generateShareContent = useCallback((): ShareData => {
     const meaning = position === 'reversed' ?
-      (card.reversed_meaning || card.meaning_reversed) :
-      (card.upright_meaning || card.meaning_upright)
+    card.reversed_meaning || card.meaning_reversed :
+    card.upright_meaning || card.meaning_upright;
 
-    let text = `🃏 ${card.name}`
+    let text = `🃏 ${card.name}`;
 
     if (shareOptions.includeDescription && card.description) {
-      text += `\n\n${card.description}`
+      text += `\n\n${card.description}`;
     }
 
     if (shareOptions.includeMeaning && meaning) {
-      text += `\n\n💫 ${position === 'reversed' ? 'Reversed' : 'Upright'} Meaning:\n${meaning}`
+      text += `\n\n💫 ${position === 'reversed' ? 'Reversed' : 'Upright'} Meaning:\n${meaning}`;
     }
 
     if (shareOptions.includeKeywords && card.keywords?.length) {
-      text += `\n\n🔑 Keywords: ${card.keywords.slice(0, 5).join(', ')}`
+      text += `\n\n🔑 Keywords: ${card.keywords.slice(0, 5).join(', ')}`;
     }
 
     if (shareOptions.includeCharacterVoice &&
-        shareOptions.selectedVoice &&
-        card.character_voice_interpretations?.[shareOptions.selectedVoice]) {
-      const voiceName = shareOptions.selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-      text += `\n\n🎭 ${voiceName}'s Perspective:\n${card.character_voice_interpretations[shareOptions.selectedVoice]}`
+    shareOptions.selectedVoice &&
+    card.character_voices?.[shareOptions.selectedVoice]) {
+      const voiceName = shareOptions.selectedVoice.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase());
+      text += `\n\n🎭 ${voiceName}'s Perspective:\n${card.character_voices[shareOptions.selectedVoice]}`;
     }
 
     if (shareOptions.customMessage) {
-      text += `\n\n✨ ${shareOptions.customMessage}`
+      text += `\n\n✨ ${shareOptions.customMessage}`;
     }
 
-    text += `\n\n🌟 Explore the Wasteland Tarot deck!`
+    text += `\n\n🌟 Explore the Wasteland Tarot deck!`;
 
     return {
       title: `${card.name} - Wasteland Tarot`,
       text,
       url: window.location.href,
       image: shareOptions.includeImage ? card.image_url : undefined
-    }
-  }, [card, position, shareOptions])
+    };
+  }, [card, position, shareOptions]);
 
   // Copy to clipboard
   const copyToClipboard = useCallback(async (text: string, key: string) => {
     try {
-      await navigator.clipboard.writeText(text)
-      setCopyStatus(prev => ({ ...prev, [key]: true }))
+      await navigator.clipboard.writeText(text);
+      setCopyStatus((prev) => ({ ...prev, [key]: true }));
       setTimeout(() => {
-        setCopyStatus(prev => ({ ...prev, [key]: false }))
-      }, 2000)
+        setCopyStatus((prev) => ({ ...prev, [key]: false }));
+      }, 2000);
     } catch (error) {
-      console.error('Failed to copy to clipboard:', error)
+      console.error('Failed to copy to clipboard:', error);
     }
-  }, [])
+  }, []);
 
   // Generate and download image
   const generateCardImage = useCallback(async () => {
-    if (!canvasRef.current) return
+    if (!canvasRef.current) return;
 
-    const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
     // Set canvas size
-    canvas.width = 800
-    canvas.height = 1200
+    canvas.width = 800;
+    canvas.height = 1200;
 
     // Background
-    ctx.fillStyle = '#0a0a0a'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Border
-    ctx.strokeStyle = '#00ff41'
-    ctx.lineWidth = 4
-    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40)
+    ctx.strokeStyle = '#00ff41';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
 
     // Load and draw card image
     try {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
 
       return new Promise<void>((resolve, reject) => {
         img.onload = () => {
           // Draw card image
-          const imageHeight = 600
-          const imageWidth = (img.width / img.height) * imageHeight
-          const x = (canvas.width - imageWidth) / 2
+          const imageHeight = 600;
+          const imageWidth = img.width / img.height * imageHeight;
+          const x = (canvas.width - imageWidth) / 2;
 
-          ctx.drawImage(img, x, 40, imageWidth, imageHeight)
+          ctx.drawImage(img, x, 40, imageWidth, imageHeight);
 
           // Add text content
-          ctx.fillStyle = '#00ff41'
-          ctx.font = 'bold 48px monospace'
-          ctx.textAlign = 'center'
+          ctx.fillStyle = '#00ff41';
+          ctx.font = 'bold 48px monospace';
+          ctx.textAlign = 'center';
 
           // Card name
-          ctx.fillText(card.name, canvas.width / 2, 720)
+          ctx.fillText(card.name, canvas.width / 2, 720);
 
           // Suit
-          ctx.font = '24px monospace'
-          ctx.fillText(card.suit.replace('_', ' '), canvas.width / 2, 760)
+          ctx.font = '24px monospace';
+          ctx.fillText(card.suit.replace('_', ' '), canvas.width / 2, 760);
 
           // Meaning
           const meaning = position === 'reversed' ?
-            (card.reversed_meaning || card.meaning_reversed) :
-            (card.upright_meaning || card.meaning_upright)
+          card.reversed_meaning || card.meaning_reversed :
+          card.upright_meaning || card.meaning_upright;
 
           if (meaning) {
-            ctx.font = '20px monospace'
-            ctx.textAlign = 'left'
+            ctx.font = '20px monospace';
+            ctx.textAlign = 'left';
 
             // Word wrap for meaning
-            const words = meaning.split(' ')
-            const lines: string[] = []
-            let currentLine = ''
+            const words = meaning.split(' ');
+            const lines: string[] = [];
+            let currentLine = '';
 
-            words.forEach(word => {
-              const testLine = currentLine + word + ' '
-              const metrics = ctx.measureText(testLine)
+            words.forEach((word) => {
+              const testLine = currentLine + word + ' ';
+              const metrics = ctx.measureText(testLine);
 
               if (metrics.width > canvas.width - 80) {
-                lines.push(currentLine)
-                currentLine = word + ' '
+                lines.push(currentLine);
+                currentLine = word + ' ';
               } else {
-                currentLine = testLine
+                currentLine = testLine;
               }
-            })
+            });
 
-            if (currentLine) lines.push(currentLine)
+            if (currentLine) lines.push(currentLine);
 
-            let y = 820
-            lines.slice(0, 6).forEach(line => {
-              ctx.fillText(line, 40, y)
-              y += 30
-            })
+            let y = 820;
+            lines.slice(0, 6).forEach((line) => {
+              ctx.fillText(line, 40, y);
+              y += 30;
+            });
           }
 
           // Watermark
-          ctx.font = '16px monospace'
-          ctx.textAlign = 'center'
-          ctx.fillStyle = '#00ff41aa'
-          ctx.fillText('Wasteland Tarot - Generated with Claude', canvas.width / 2, canvas.height - 40)
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillStyle = '#00ff41aa';
+          ctx.fillText('Wasteland Tarot - Generated with Claude', canvas.width / 2, canvas.height - 40);
 
-          resolve()
-        }
+          resolve();
+        };
 
-        img.onerror = reject
-        img.src = card.image_url
-      })
+        img.onerror = reject;
+        img.src = card.image_url;
+      });
     } catch (error) {
-      console.error('Error generating card image:', error)
+      console.error('Error generating card image:', error);
     }
-  }, [card, position])
+  }, [card, position]);
 
   // Download generated image
   const downloadImage = useCallback(async () => {
-    await generateCardImage()
+    await generateCardImage();
 
     if (canvasRef.current) {
-      const link = document.createElement('a')
-      link.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-wasteland-tarot.png`
-      link.href = canvasRef.current.toDataURL()
-      link.click()
+      const link = document.createElement('a');
+      link.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-wasteland-tarot.png`;
+      link.href = canvasRef.current.toDataURL();
+      link.click();
     }
-  }, [generateCardImage, card.name])
+  }, [generateCardImage, card.name]);
 
   // Native share API
   const nativeShare = useCallback(async () => {
-    if (!navigator.share) return
+    if (!navigator.share) return;
 
-    const shareData = generateShareContent()
+    const shareData = generateShareContent();
 
     try {
       await navigator.share({
         title: shareData.title,
         text: shareData.text,
         url: shareData.url
-      })
+      });
 
-      onShare?.('native', shareOptions)
+      onShare?.('native', shareOptions);
     } catch (error) {
-      console.error('Native share failed:', error)
+      console.error('Native share failed:', error);
     }
-  }, [generateShareContent, shareOptions, onShare])
+  }, [generateShareContent, shareOptions, onShare]);
 
   // Social media sharing
   const shareToSocial = useCallback((platform: string) => {
-    const shareData = generateShareContent()
-    let url = ''
+    const shareData = generateShareContent();
+    let url = '';
 
     switch (platform) {
       case 'twitter':
-        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url || '')}`
-        break
+        url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareData.text)}&url=${encodeURIComponent(shareData.url || '')}`;
+        break;
       case 'facebook':
-        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url || '')}&quote=${encodeURIComponent(shareData.text)}`
-        break
+        url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url || '')}&quote=${encodeURIComponent(shareData.text)}`;
+        break;
       case 'whatsapp':
-        url = `https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + (shareData.url || ''))}`
-        break
+        url = `https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + (shareData.url || ''))}`;
+        break;
       case 'telegram':
-        url = `https://t.me/share/url?url=${encodeURIComponent(shareData.url || '')}&text=${encodeURIComponent(shareData.text)}`
-        break
+        url = `https://t.me/share/url?url=${encodeURIComponent(shareData.url || '')}&text=${encodeURIComponent(shareData.text)}`;
+        break;
     }
 
     if (url) {
-      window.open(url, '_blank', 'width=600,height=400')
-      onShare?.(platform, shareOptions)
+      window.open(url, '_blank', 'width=600,height=400');
+      onShare?.(platform, shareOptions);
     }
-  }, [generateShareContent, shareOptions, onShare])
+  }, [generateShareContent, shareOptions, onShare]);
 
-  const shareData = generateShareContent()
+  const shareData = generateShareContent();
 
   const shareMethods = [
-    { id: 'url', label: 'Link', name: 'link' as const, color: 'text-pip-boy-green' },
-    { id: 'image', label: 'Image', name: 'image' as const, color: 'text-blue-400' },
-    { id: 'text', label: 'Text', name: 'file-text' as const, color: 'text-purple-400' },
-    { id: 'social', label: 'Social', name: 'share' as const, color: 'text-pink-400' },
-    { id: 'qr', label: 'QR Code', name: 'qrcode' as const, color: 'text-cyan-400' },
-    { id: 'export', label: 'Export', name: 'download' as const, color: 'text-orange-400' }
-  ]
+  { id: 'url', label: 'Link', name: 'link' as const, color: 'text-pip-boy-green' },
+  { id: 'image', label: 'Image', name: 'image' as const, color: 'text-blue-400' },
+  { id: 'text', label: 'Text', name: 'file-text' as const, color: 'text-purple-400' },
+  { id: 'social', label: 'Social', name: 'share' as const, color: 'text-pink-400' },
+  { id: 'qr', label: 'QR Code', name: 'qrcode' as const, color: 'text-cyan-400' },
+  { id: 'export', label: 'Export', name: 'download' as const, color: 'text-orange-400' }];
+
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={cn("bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg overflow-hidden", className)}
-    >
+      className={cn("bg-pip-boy-green/5 border border-pip-boy-green/20 rounded-lg overflow-hidden", className)}>
+
       {/* Header */}
       <div className="p-4 border-b border-pip-boy-green/20 bg-pip-boy-green/5">
         <div className="flex items-center justify-between">
@@ -294,14 +294,14 @@ export function CardShare({
             <PixelIcon name="share" size={24} decorative />
             Share {card.name}
           </h3>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="text-pip-boy-green/60 hover:text-pip-boy-green transition-colors"
-            >
+          {onClose &&
+          <Button size="default" variant="link"
+          onClick={onClose}
+          className="transition-colors">
+
               ×
-            </button>
-          )}
+            </Button>
+          }
         </div>
       </div>
 
@@ -309,7 +309,7 @@ export function CardShare({
         {/* Share Method Tabs */}
         <div className="flex flex-wrap gap-2">
           {shareMethods.map((method) => {
-            const isActive = activeMethod === method.id
+            const isActive = activeMethod === method.id;
             return (
               <motion.button
                 key={method.id}
@@ -318,15 +318,15 @@ export function CardShare({
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                   "flex items-center gap-2 px-3 py-2 rounded text-sm transition-all",
-                  isActive
-                    ? `${method.color} bg-current/10 border border-current/30`
-                    : "text-pip-boy-green/60 hover:text-pip-boy-green hover:bg-pip-boy-green/10"
-                )}
-              >
+                  isActive ?
+                  `${method.color} bg-current/10 border border-current/30` :
+                  "text-pip-boy-green/60 hover:text-pip-boy-green hover:bg-pip-boy-green/10"
+                )}>
+
                 <PixelIcon name={method.name} size={16} decorative />
                 {method.label}
-              </motion.button>
-            )
+              </motion.button>);
+
           })}
         </div>
 
@@ -335,52 +335,52 @@ export function CardShare({
           <h4 className="text-pip-boy-green font-bold mb-3 text-sm">Share Options</h4>
           <div className="grid grid-cols-2 gap-3 text-sm">
             {[
-              { key: 'includeImage', label: 'Include Image' },
-              { key: 'includeDescription', label: 'Description' },
-              { key: 'includeKeywords', label: 'Keywords' },
-              { key: 'includeMeaning', label: 'Meaning' },
-              { key: 'includeCharacterVoice', label: 'Character Voice' }
-            ].map((option) => (
-              <label key={option.key} className="flex items-center gap-2 cursor-pointer">
+            { key: 'includeImage', label: 'Include Image' },
+            { key: 'includeDescription', label: 'Description' },
+            { key: 'includeKeywords', label: 'Keywords' },
+            { key: 'includeMeaning', label: 'Meaning' },
+            { key: 'includeCharacterVoice', label: 'Character Voice' }].
+            map((option) =>
+            <label key={option.key} className="flex items-center gap-2 cursor-pointer">
                 <input
-                  type="checkbox"
-                  checked={(shareOptions as any)[option.key]}
-                  onChange={(e) => setShareOptions(prev => ({
-                    ...prev,
-                    [option.key]: e.target.checked
-                  }))}
-                  className="w-4 h-4 accent-pip-boy-green"
-                />
+                type="checkbox"
+                checked={(shareOptions as any)[option.key]}
+                onChange={(e) => setShareOptions((prev) => ({
+                  ...prev,
+                  [option.key]: e.target.checked
+                }))}
+                className="w-4 h-4 accent-pip-boy-green" />
+
                 <span className="text-pip-boy-green/80">{option.label}</span>
               </label>
-            ))}
+            )}
           </div>
 
-          {shareOptions.includeCharacterVoice && card.character_voice_interpretations && (
-            <div className="mt-3">
+          {shareOptions.includeCharacterVoice && card.character_voices &&
+          <div className="mt-3">
               <label className="block text-pip-boy-green/80 text-sm mb-2">Character Voice:</label>
               <select
-                value={shareOptions.selectedVoice || ''}
-                onChange={(e) => setShareOptions(prev => ({ ...prev, selectedVoice: e.target.value }))}
-                className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded"
-              >
-                {Object.keys(card.character_voice_interpretations).map(voice => (
-                  <option key={voice} value={voice}>
-                    {voice.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+              value={shareOptions.selectedVoice || ''}
+              onChange={(e) => setShareOptions((prev) => ({ ...prev, selectedVoice: e.target.value }))}
+              className="w-full bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded">
+
+                {Object.keys(card.character_voices).map((voice) =>
+              <option key={voice} value={voice}>
+                    {voice.replace('_', ' ').toLowerCase().replace(/\b\w/g, (l) => l.toUpperCase())}
                   </option>
-                ))}
+              )}
               </select>
             </div>
-          )}
+          }
 
           <div className="mt-3">
             <label className="block text-pip-boy-green/80 text-sm mb-2">Custom Message:</label>
             <textarea
               value={shareOptions.customMessage}
-              onChange={(e) => setShareOptions(prev => ({ ...prev, customMessage: e.target.value }))}
+              onChange={(e) => setShareOptions((prev) => ({ ...prev, customMessage: e.target.value }))}
               placeholder="Add your personal message..."
-              className="w-full h-20 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded resize-none"
-            />
+              className="w-full h-20 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded resize-none" />
+
           </div>
         </div>
 
@@ -391,218 +391,218 @@ export function CardShare({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-4"
-          >
+            className="space-y-4">
+
             {/* URL Sharing */}
-            {activeMethod === 'url' && (
-              <div className="space-y-4">
+            {activeMethod === 'url' &&
+            <div className="space-y-4">
                 <div>
                   <label className="block text-pip-boy-green/80 text-sm mb-2">Shareable URL:</label>
                   <div className="flex gap-2">
                     <input
-                      type="text"
-                      value={shareData.url || window.location.href}
-                      readOnly
-                      className="flex-1 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded"
-                    />
+                    type="text"
+                    value={shareData.url || window.location.href}
+                    readOnly
+                    className="flex-1 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-2 rounded" />
+
                     <motion.button
-                      onClick={() => copyToClipboard(shareData.url || window.location.href, 'url')}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2"
-                    >
-                      {copyStatus.url ? (
-                        <><PixelIcon name="check-circle" size={16} decorative /> Copied!</>
-                      ) : (
-                        <><PixelIcon name="copy" size={16} decorative /> Copy</>
-                      )}
+                    onClick={() => copyToClipboard(shareData.url || window.location.href, 'url')}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green text-sm rounded hover:bg-pip-boy-green/30 transition-colors flex items-center gap-2">
+
+                      {copyStatus.url ?
+                    <><PixelIcon name="check-circle" size={16} decorative /> Copied!</> :
+
+                    <><PixelIcon name="copy" size={16} decorative /> Copy</>
+                    }
                     </motion.button>
                   </div>
                 </div>
 
-                {navigator.share && (
-                  <motion.button
-                    onClick={nativeShare}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-full py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
-                  >
+                {navigator.share &&
+              <motion.button
+                onClick={nativeShare}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2">
+
                     <PixelIcon name="smartphone" size={20} decorative />
                     Share via Device
                   </motion.button>
-                )}
+              }
               </div>
-            )}
+            }
 
             {/* Text Sharing */}
-            {activeMethod === 'text' && (
-              <div className="space-y-4">
+            {activeMethod === 'text' &&
+            <div className="space-y-4">
                 <div>
                   <label className="block text-pip-boy-green/80 text-sm mb-2">Share Text:</label>
                   <textarea
-                    value={shareData.text}
-                    readOnly
-                    className="w-full h-48 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-3 rounded resize-none"
-                  />
+                  value={shareData.text}
+                  readOnly
+                  className="w-full h-48 bg-wasteland-dark border border-pip-boy-green/30 text-pip-boy-green text-sm p-3 rounded resize-none" />
+
                 </div>
                 <motion.button
-                  onClick={() => copyToClipboard(shareData.text, 'text')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
-                >
-                  {copyStatus.text ? (
-                    <><PixelIcon name="check-circle" size={20} decorative /> Text Copied!</>
-                  ) : (
-                    <><PixelIcon name="copy" size={20} decorative /> Copy Text</>
-                  )}
+                onClick={() => copyToClipboard(shareData.text, 'text')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2">
+
+                  {copyStatus.text ?
+                <><PixelIcon name="check-circle" size={20} decorative /> Text Copied!</> :
+
+                <><PixelIcon name="copy" size={20} decorative /> Copy Text</>
+                }
                 </motion.button>
               </div>
-            )}
+            }
 
             {/* Image Sharing */}
-            {activeMethod === 'image' && (
-              <div className="space-y-4">
+            {activeMethod === 'image' &&
+            <div className="space-y-4">
                 <div className="text-center">
                   <canvas
-                    ref={canvasRef}
-                    className="max-w-full h-auto border border-pip-boy-green/30 rounded"
-                    style={{ maxHeight: '300px' }}
-                  />
+                  ref={canvasRef}
+                  className="max-w-full h-auto border border-pip-boy-green/30 rounded"
+                  style={{ maxHeight: '300px' }} />
+
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <motion.button
-                    onClick={generateCardImage}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2"
-                  >
+                  onClick={generateCardImage}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="py-3 bg-blue-500/20 border border-blue-400 text-blue-400 rounded hover:bg-blue-500/30 transition-colors flex items-center justify-center gap-2">
+
                     <PixelIcon name="image" size={16} decorative />
                     Generate
                   </motion.button>
                   <motion.button
-                    onClick={downloadImage}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
-                  >
+                  onClick={downloadImage}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2">
+
                     <PixelIcon name="download" size={16} decorative />
                     Download
                   </motion.button>
                 </div>
               </div>
-            )}
+            }
 
             {/* Social Media Sharing */}
-            {activeMethod === 'social' && (
-              <div className="grid grid-cols-2 gap-3">
+            {activeMethod === 'social' &&
+            <div className="grid grid-cols-2 gap-3">
                 {[
-                  { platform: 'twitter', label: 'Twitter', name: 'message' as const, color: 'bg-blue-500/20 border-blue-400 text-blue-400' },
-                  { platform: 'facebook', label: 'Facebook', name: 'message' as const, color: 'bg-blue-600/20 border-blue-600 text-blue-300' },
-                  { platform: 'whatsapp', label: 'WhatsApp', name: 'message' as const, color: 'bg-green-500/20 border-green-400 text-green-400' },
-                  { platform: 'telegram', label: 'Telegram', name: 'send' as const, color: 'bg-cyan-500/20 border-cyan-400 text-cyan-400' }
-                ].map((social) => (
-                  <motion.button
-                    key={social.platform}
-                    onClick={() => shareToSocial(social.platform)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={cn(
-                      "py-3 border rounded hover:opacity-80 transition-all flex items-center justify-center gap-2",
-                      social.color
-                    )}
-                  >
+              { platform: 'twitter', label: 'Twitter', name: 'message' as const, color: 'bg-blue-500/20 border-blue-400 text-blue-400' },
+              { platform: 'facebook', label: 'Facebook', name: 'message' as const, color: 'bg-blue-600/20 border-blue-600 text-blue-300' },
+              { platform: 'whatsapp', label: 'WhatsApp', name: 'message' as const, color: 'bg-green-500/20 border-green-400 text-green-400' },
+              { platform: 'telegram', label: 'Telegram', name: 'send' as const, color: 'bg-cyan-500/20 border-cyan-400 text-cyan-400' }].
+              map((social) =>
+              <motion.button
+                key={social.platform}
+                onClick={() => shareToSocial(social.platform)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={cn(
+                  "py-3 border rounded hover:opacity-80 transition-all flex items-center justify-center gap-2",
+                  social.color
+                )}>
+
                     <PixelIcon name={social.name} size={16} decorative />
                     {social.label}
                   </motion.button>
-                ))}
+              )}
               </div>
-            )}
+            }
 
             {/* QR Code */}
-            {activeMethod === 'qr' && (
-              <div className="space-y-4">
+            {activeMethod === 'qr' &&
+            <div className="space-y-4">
                 <div className="text-center">
-                  {isGeneratingQR ? (
-                    <div className="w-48 h-48 mx-auto bg-pip-boy-green/10 border border-pip-boy-green/30 rounded flex items-center justify-center">
+                  {isGeneratingQR ?
+                <div className="w-48 h-48 mx-auto bg-pip-boy-green/10 border border-pip-boy-green/30 rounded flex items-center justify-center">
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full"
-                      />
-                    </div>
-                  ) : (
-                    <img
-                      src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`}
-                      alt="QR Code"
-                      className="w-48 h-48 mx-auto border border-pip-boy-green/30 rounded"
-                    />
-                  )}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 border-2 border-pip-boy-green border-t-transparent rounded-full" />
+
+                    </div> :
+
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`}
+                  alt="QR Code"
+                  className="w-48 h-48 mx-auto border border-pip-boy-green/30 rounded" />
+
+                }
                 </div>
                 <p className="text-center text-pip-boy-green/70 text-sm">
                   Scan to view card details
                 </p>
                 <motion.button
-                  onClick={() => copyToClipboard(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`, 'qr')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2"
-                >
-                  {copyStatus.qr ? (
-                    <><PixelIcon name="check-circle" size={20} decorative /> QR URL Copied!</>
-                  ) : (
-                    <><PixelIcon name="copy" size={20} decorative /> Copy QR URL</>
-                  )}
+                onClick={() => copyToClipboard(`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(shareData.url || shareData.text)}`, 'qr')}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="w-full py-3 bg-pip-boy-green/20 border border-pip-boy-green text-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors flex items-center justify-center gap-2">
+
+                  {copyStatus.qr ?
+                <><PixelIcon name="check-circle" size={20} decorative /> QR URL Copied!</> :
+
+                <><PixelIcon name="copy" size={20} decorative /> Copy QR URL</>
+                }
                 </motion.button>
               </div>
-            )}
+            }
 
             {/* Export */}
-            {activeMethod === 'export' && (
-              <div className="grid grid-cols-1 gap-3">
+            {activeMethod === 'export' &&
+            <div className="grid grid-cols-1 gap-3">
                 <motion.button
-                  onClick={() => {
-                    const blob = new Blob([JSON.stringify(card, null, 2)], { type: 'application/json' })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.json`
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="py-3 bg-purple-500/20 border border-purple-400 text-purple-400 rounded hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2"
-                >
+                onClick={() => {
+                  const blob = new Blob([JSON.stringify(card, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.json`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="py-3 bg-purple-500/20 border border-purple-400 text-purple-400 rounded hover:bg-purple-500/30 transition-colors flex items-center justify-center gap-2">
+
                   <PixelIcon name="file-text" size={16} decorative />
                   Export as JSON
                 </motion.button>
 
                 <motion.button
-                  onClick={() => {
-                    const csvContent = `Name,Suit,Upright Meaning,Reversed Meaning,Keywords,Description\n"${card.name}","${card.suit}","${(card.upright_meaning || '').replace(/"/g, '""')}","${(card.reversed_meaning || '').replace(/"/g, '""')}","${(card.keywords || []).join('; ')}","${(card.description || '').replace(/"/g, '""')}"`
-                    const blob = new Blob([csvContent], { type: 'text/csv' })
-                    const url = URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = url
-                    a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.csv`
-                    a.click()
-                    URL.revokeObjectURL(url)
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="py-3 bg-cyan-500/20 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors flex items-center justify-center gap-2"
-                >
+                onClick={() => {
+                  const csvContent = `Name,Suit,Upright Meaning,Reversed Meaning,Keywords,Description\n"${card.name}","${card.suit}","${(card.upright_meaning || '').replace(/"/g, '""')}","${(card.reversed_meaning || '').replace(/"/g, '""')}","${(card.keywords || []).join('; ')}","${(card.description || '').replace(/"/g, '""')}"`;
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${card.name.toLowerCase().replace(/\s+/g, '-')}-data.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="py-3 bg-cyan-500/20 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors flex items-center justify-center gap-2">
+
                   <PixelIcon name="download" size={16} decorative />
                   Export as CSV
                 </motion.button>
               </div>
-            )}
+            }
           </motion.div>
         </AnimatePresence>
       </div>
-    </motion.div>
-  )
+    </motion.div>);
+
 }
 
-export default CardShare
+export default CardShare;

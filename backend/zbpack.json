@@ -1,0 +1,11 @@
+{
+  "dockerfile": "Dockerfile",
+  "build_args": {
+    "ENVIRONMENT": "production"
+  },
+  "port": 8000,
+  "healthcheck": {
+    "path": "/health",
+    "timeout": 10
+  }
+}

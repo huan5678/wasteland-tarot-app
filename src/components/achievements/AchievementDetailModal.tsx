@@ -52,13 +52,6 @@ const getRarityConfig = (rarity: AchievementRarity): {
         label: '普通',
         glow: 'shadow-[0_0_15px_rgba(156,163,175,0.4)]'
       }
-    case 'UNCOMMON':
-      return {
-        color: 'text-green-400',
-        bgColor: 'bg-green-900/50',
-        label: '罕見',
-        glow: 'shadow-[0_0_20px_rgba(74,222,128,0.5)]'
-      }
     case 'RARE':
       return {
         color: 'text-blue-400',
@@ -95,11 +88,11 @@ const getRarityConfig = (rarity: AchievementRarity): {
  */
 const getCategoryLabel = (category: AchievementCategory): string => {
   const labels: Record<AchievementCategory, string> = {
-    [AchievementCategory.READING]: '閱讀',
-    [AchievementCategory.SOCIAL]: '社交',
-    [AchievementCategory.BINGO]: 'Bingo',
-    [AchievementCategory.KARMA]: 'Karma',
-    [AchievementCategory.EXPLORATION]: '探索'
+    'READING': '閱讀',
+    'SOCIAL': '社交',
+    'BINGO': 'Bingo',
+    'KARMA': 'Karma',
+    'EXPLORATION': '探索'
   }
   return labels[category] || '未知'
 }
@@ -188,9 +181,9 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
   const categoryLabel = getCategoryLabel(achievementDef.category as AchievementCategory)
   const criteriaDescription = parseCriteriaDescription(achievementDef.criteria)
 
-  const isUnlocked = status === AchievementStatus.UNLOCKED
-  const isClaimed = status === AchievementStatus.CLAIMED
-  const isInProgress = status === AchievementStatus.IN_PROGRESS
+  const isUnlocked = status === 'UNLOCKED'
+  const isClaimed = status === 'CLAIMED'
+  const isInProgress = status === 'IN_PROGRESS'
 
   const handleClaim = () => {
     if (isUnlocked && onClaim) {
@@ -202,6 +195,7 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={cn(
         "max-w-2xl border-2",
+        "bg-gray-900/95 backdrop-blur-md",
         rarityConfig.glow,
         isUnlocked ? 'border-pip-boy-green' : 'border-border-primary'
       )}>
@@ -415,10 +409,14 @@ export const AchievementDetailModal: React.FC<AchievementDetailModalProps> = ({
             variant="outline"
             size="lg"
             className={cn(
+              "border-2 hover:bg-gray-700/50 active:bg-gray-600/50",
+              "transition-all duration-200",
+              "hover:border-pip-boy-green/50 hover:text-pip-boy-green",
               isUnlocked && onClaim ? 'flex-none' : 'flex-1'
             )}
           >
-            關閉
+            <PixelIcon name="close" sizePreset="sm" decorative />
+            <span className="ml-2">關閉</span>
           </Button>
         </div>
       </DialogContent>

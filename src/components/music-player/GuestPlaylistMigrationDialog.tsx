@@ -19,7 +19,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { guestPlaylistManager } from '@/lib/localStorage/guestPlaylistManager';
 import { useToast } from '@/hooks/use-toast';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { useAuthStore } from '@/lib/authStore';
 
 /**
  * GuestPlaylistMigrationDialog Props
@@ -40,7 +40,7 @@ export function GuestPlaylistMigrationDialog({
   onImportSuccess,
 }: GuestPlaylistMigrationDialogProps) {
   const { toast } = useToast();
-  const supabase = createClientComponentClient();
+  const { user } = useAuthStore();
 
   // ========== State ==========
   const [guestPlaylist, setGuestPlaylist] = useState<ReturnType<
@@ -69,21 +69,18 @@ export function GuestPlaylistMigrationDialog({
     setError(null);
 
     try {
-      // 取得當前使用者 session
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
+      // 檢查使用者是否已登入
+      if (!user) {
         throw new Error('未登入');
       }
 
-      // 呼叫匯入 API
+      // 呼叫匯入 API（使用 httpOnly cookies 進行認證）
       const response = await fetch('/api/v1/playlists/import-guest', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
         },
+        credentials: 'include', // 自動發送 httpOnly cookies
         body: JSON.stringify({
           guestPlaylist: guestPlaylistManager.exportForMigration(),
         }),
@@ -289,15 +286,15 @@ export function GuestPlaylistMigrationDialog({
  */
 export function useGuestPlaylistMigration() {
   const [isOpen, setIsOpen] = useState(false);
-  const supabase = createClientComponentClient();
+  const { user, isLoading } = useAuthStore();
 
   useEffect(() => {
-    const checkForGuestPlaylist = async () => {
+    const checkForGuestPlaylist = () => {
+      // 等待 authStore 載入完成
+      if (isLoading) return;
+
       // 檢查使用者是否已登入
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!user) return;
 
       // 檢查 localStorage 是否有訪客播放清單
       const guestPlaylist = guestPlaylistManager.loadFromLocalStorage();
@@ -314,7 +311,7 @@ export function useGuestPlaylistMigration() {
     };
 
     checkForGuestPlaylist();
-  }, [supabase]);
+  }, [user, isLoading]);
 
   return {
     isOpen,

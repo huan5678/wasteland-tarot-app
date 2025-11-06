@@ -199,10 +199,33 @@ async def get_user_karma_statistics(
     """Get another user's karma statistics (requires friendship or admin)"""
     service = KarmaService(db)
 
-    # TODO: Add friendship/admin check here
-    # For now, only allow users to see their own stats
-    if user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    # 權限檢查：允許用戶查看自己的統計資料、管理員、或好友
+    if str(user_id) != str(current_user.id) and not current_user.is_admin:
+        # 檢查是否為好友關係
+        from app.services.user_service import UserService
+        user_service = UserService(db)
+
+        try:
+            # 取得當前用戶的好友列表
+            friends = await user_service.get_user_friends(str(current_user.id))
+            friend_ids = [str(friend.id) for friend in friends]
+
+            # 檢查目標用戶是否在好友列表中
+            if str(user_id) not in friend_ids:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Insufficient permissions. Only friends can view karma statistics."
+                )
+        except HTTPException:
+            # 重新拋出 HTTPException
+            raise
+        except Exception as e:
+            # 好友查詢失敗時，拒絕存取（安全優先）
+            logger.warning(f"Failed to check friendship status: {str(e)}")
+            raise HTTPException(
+                status_code=403,
+                detail="Unable to verify permissions"
+            )
 
     try:
         stats = await service.get_karma_statistics(user_id)

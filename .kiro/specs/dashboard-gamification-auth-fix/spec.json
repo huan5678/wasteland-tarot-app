@@ -1,0 +1,22 @@
+{
+  "feature_name": "dashboard-gamification-auth-fix",
+  "created_at": "2025-11-03T01:35:07Z",
+  "updated_at": "2025-11-03T03:30:00Z",
+  "language": "en",
+  "phase": "implementation",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

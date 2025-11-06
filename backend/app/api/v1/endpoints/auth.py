@@ -11,6 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from app.db.database import get_db
+from app.models.user import User
+from app.core.dependencies import get_current_user
 from app.core.security import (
     verify_token,
     create_access_token,
@@ -29,6 +31,9 @@ from app.core.exceptions import (
 from app.services.user_service import UserService
 from app.services.achievement_service import AchievementService
 from app.services.achievement_background_tasks import schedule_achievement_check
+from app.services.tasks_background_tasks import schedule_task_progress_update
+from app.core.supabase import get_supabase_client
+from supabase import Client
 import logging
 
 logger = logging.getLogger(__name__)
@@ -406,7 +411,7 @@ async def logout_user(
 
 
 @router.get("/me", response_model=MeResponse)
-async def get_current_user(
+async def get_me(
     access_token: Optional[str] = Cookie(None),
     db: AsyncSession = Depends(get_db)
 ):
@@ -465,22 +470,21 @@ async def get_current_user(
     # 取得使用者統計資料（可選）
     statistics = {}
     try:
-        # TODO: 實作完整的統計資料查詢
-        # statistics = await user_service.get_user_statistics(user_id)
-        pass
+        statistics = await user_service.get_user_statistics(user_id)
     except Exception as e:
         logger.warning(f"Failed to fetch user statistics: {str(e)}")
 
     # 返回完整使用者資訊(包含 token 過期時間)
+    # 注意：與 OAuth callback 返回的資料結構保持一致
     return MeResponse(
         user={
             "id": str(user.id),
             "email": user.email,
             "name": user.name,
             "display_name": user.display_name,
-            "avatar_url": user.avatar_url,  # 加入頭像 URL
+            "avatar_url": user.avatar_url,  # 使用者上傳的頭像（優先）
             "oauth_provider": user.oauth_provider,
-            "profile_picture_url": user.profile_picture_url,
+            "profile_picture_url": user.profile_picture_url,  # Google OAuth 頭像
             "karma_score": user.karma_score,
             "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
             "faction_alignment": user.faction_alignment,
@@ -489,7 +493,11 @@ async def get_current_user(
             "is_verified": user.is_verified,
             "is_active": user.is_active,
             "is_admin": user.is_admin if hasattr(user, 'is_admin') else False,
-            "created_at": user.created_at.isoformat() if user.created_at else None
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            # 新增：與 OAuth callback 一致的統計欄位
+            "total_readings": user.total_readings or 0,
+            "experience_level": user.experience_level,
+            "favorite_card_suit": user.favorite_card_suit,
         },
         statistics=statistics,
         token_expires_at=payload.get("exp")  # 返回 JWT exp timestamp
@@ -808,6 +816,105 @@ class TrackLoginResponse(BaseModel):
     is_new_day: bool
     consecutive_days: int
     loyalty_check_triggered: bool
+
+
+class DailyCheckInResponse(BaseModel):
+    """每日簽到回應"""
+    success: bool
+    is_first_check_in_today: bool
+    login_date: str
+    message: str
+    task_updated: bool = False
+    consecutive_days: int = 0
+
+
+@router.post("/daily-check-in", response_model=DailyCheckInResponse)
+async def daily_check_in(
+    current_user: User = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    每日簽到 - 用於更新 daily_login 任務進度
+
+    此 endpoint 應該在前端 app 載入時自動調用（例如在 Dashboard 或 App root component）
+
+    功能：
+    - 檢查今天是否已簽到
+    - 如果是今天第一次訪問，更新 daily_login 任務進度
+    - 追蹤連續登入天數
+
+    與 /track-login 的區別：
+    - /track-login: 僅追蹤登入歷史，用於 token 延長計算
+    - /daily-check-in: 追蹤登入歷史 + 更新任務進度
+
+    Args:
+        current_user: 當前已認證的使用者
+        background_tasks: 背景任務處理器
+        db: 資料庫 session
+
+    Returns:
+        DailyCheckInResponse: 簽到結果
+    """
+    from app.services.token_extension_service import TokenExtensionService
+    from datetime import date
+
+    # 提取 user_id，避免在 except block 中訪問 current_user.id
+    user_id = getattr(current_user, 'id', None)
+
+    try:
+        if not user_id:
+            raise ValueError("Invalid user object: missing id attribute")
+
+        # 追蹤今日登入
+        token_service = TokenExtensionService(db)
+        login_result = await token_service.track_daily_login(user_id)
+
+        is_first_check_in_today = login_result.get('is_new_day', False)
+        consecutive_days = login_result.get('consecutive_days', 0)
+
+        logger.info(f"📊 [Daily Check-in] user={user_id}, is_new_day={is_first_check_in_today}, consecutive_days={consecutive_days}")
+
+        # 每次簽到都更新 daily_login 任務進度
+        # update_task_progress 會自動處理重複更新（已完成的任務不會再增加）
+        task_keys_to_update = ['daily_login']
+
+        # ✅ 移除 weekly_streak 即時更新邏輯
+        # weekly 任務進度現在從原始資料動態計算，無需即時更新
+
+        logger.info(f"🔄 [Background Task] Scheduling task updates: {task_keys_to_update}")
+
+        background_tasks.add_task(
+            schedule_task_progress_update,
+            user_id=user_id,
+            task_keys=task_keys_to_update,
+            increment=1
+        )
+
+        if is_first_check_in_today:
+            logger.info(f"✅ [Daily Check-in] First check-in today: Triggered daily_login update for user {user_id}")
+        else:
+            logger.info(f"ℹ️ [Daily Check-in] Already checked in today: Ensured daily_login task is updated for user {user_id}")
+
+        return DailyCheckInResponse(
+            success=True,
+            is_first_check_in_today=is_first_check_in_today,
+            login_date=login_result.get('login_date', date.today().isoformat()),
+            message="每日簽到成功" if is_first_check_in_today else "今日已簽到",
+            task_updated=True,  # 每次簽到都會嘗試更新任務
+            consecutive_days=login_result.get('consecutive_days', 0)
+        )
+
+    except Exception as e:
+        logger.error(f"Daily check-in failed for user {user_id}: {str(e)}", exc_info=True)
+        return DailyCheckInResponse(
+            success=False,
+            is_first_check_in_today=False,
+            login_date=date.today().isoformat(),
+            message=f"簽到失敗：{str(e)}",
+            task_updated=False,
+            consecutive_days=0
+        )
 
 
 @router.post("/extend-token", response_model=ExtendTokenResponse)
@@ -1285,6 +1392,29 @@ class UnlinkOAuthResponse(BaseModel):
     has_oauth: bool = False
 
 
+class OAuthLoginRequest(BaseModel):
+    """OAuth 登入請求"""
+    redirect_url: str = Field(..., description="OAuth 認證成功後的回調 URL")
+
+
+class OAuthLoginResponse(BaseModel):
+    """OAuth 登入回應"""
+    authorization_url: str = Field(..., description="Google OAuth 授權 URL")
+
+
+class OAuthCallbackRequest(BaseModel):
+    """OAuth 回調請求"""
+    code: str = Field(..., description="Google 授權碼")
+    state: Optional[str] = Field(None, description="CSRF 保護 state 參數")
+
+
+class OAuthCallbackResponse(BaseModel):
+    """OAuth 回調回應"""
+    user: Dict[str, Any]
+    token_expires_at: int = Field(..., description="JWT token 過期時間（Unix timestamp，秒）")
+    message: str = "OAuth 登入成功"
+
+
 @router.post("/set-password", response_model=SetPasswordResponse)
 async def set_password(
     request: SetPasswordRequest,
@@ -1561,4 +1691,230 @@ async def unlink_oauth(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="移除 OAuth 連結失敗，請稍後再試"
+        )
+
+
+@router.post("/oauth/google/login", response_model=OAuthLoginResponse)
+async def oauth_google_login(
+    request: OAuthLoginRequest,
+    supabase: Client = Depends(get_supabase_client)
+):
+    """
+    啟動 Google OAuth 登入流程
+    
+    生成 Google OAuth 授權 URL，前端將用戶重導向到該 URL 進行認證。
+    
+    流程：
+    1. 前端呼叫此端點，傳遞 redirect_url
+    2. 後端使用 Supabase SDK 生成 OAuth URL
+    3. 前端將用戶重導向到該 URL
+    4. 用戶在 Google 頁面完成認證
+    5. Google 將用戶重導向到 redirect_url，並附帶授權碼
+    
+    Args:
+        request: 包含 redirect_url 的請求
+        supabase: Supabase 客戶端（自動注入）
+        
+    Returns:
+        OAuthLoginResponse: 包含 authorization_url
+        
+    Raises:
+        HTTPException: 500 - 生成 OAuth URL 失敗
+    """
+    try:
+        logger.info(f"啟動 Google OAuth 流程，redirect_url: {request.redirect_url}")
+        
+        # 使用 Supabase SDK 生成 OAuth URL
+        # provider='google' 指定使用 Google OAuth
+        # redirect_to 是用戶完成認證後的回調 URL
+        auth_response = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": request.redirect_url
+            }
+        })
+        
+        authorization_url = auth_response.url
+        
+        if not authorization_url:
+            raise Exception("Supabase 未返回授權 URL")
+        
+        logger.info(f"✅ 成功生成 Google OAuth URL")
+        
+        return OAuthLoginResponse(
+            authorization_url=authorization_url
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ 生成 OAuth URL 失敗: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"無法啟動 Google 登入: {str(e)}"
+        )
+
+
+@router.post("/oauth/callback", response_model=OAuthCallbackResponse)
+async def oauth_callback(
+    request: OAuthCallbackRequest,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    supabase: Client = Depends(get_supabase_client),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    處理 OAuth 回調
+    
+    接收 Google 授權碼，完成以下流程：
+    1. 使用 Supabase SDK 交換授權碼取得 session
+    2. 從 session 提取用戶資料
+    3. 在資料庫中創建或更新用戶記錄
+    4. 生成 JWT tokens 並設定 httpOnly cookies
+    5. 返回用戶資料和 token 過期時間
+    
+    Args:
+        request: 包含授權碼和 state 的請求
+        response: FastAPI Response 物件（用於設定 cookies）
+        background_tasks: 背景任務（用於追蹤登入記錄）
+        supabase: Supabase 客戶端（自動注入）
+        db: 資料庫 session（自動注入）
+        
+    Returns:
+        OAuthCallbackResponse: 包含用戶資料和 token_expires_at
+        
+    Raises:
+        HTTPException: 401 - 授權碼無效或過期
+        HTTPException: 500 - 處理回調失敗
+    """
+    try:
+        logger.info(f"處理 OAuth callback，code: {request.code[:10]}...")
+        
+        # Step 1: 使用 Supabase SDK 交換授權碼取得 session
+        # exchange_code_for_session 會自動驗證授權碼並返回用戶 session
+        auth_response = supabase.auth.exchange_code_for_session({
+            "auth_code": request.code
+        })
+        
+        if not auth_response or not auth_response.user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="無效的授權碼或 session"
+            )
+        
+        supabase_user = auth_response.user
+        logger.info(f"✅ 成功交換授權碼，Supabase user ID: {supabase_user.id}")
+        
+        # Step 2: 從 session 提取用戶資料
+        email = supabase_user.email
+        oauth_provider = "google"  # 目前只支援 Google
+        oauth_id = supabase_user.id  # Supabase user ID
+        
+        # 從 user_metadata 提取 Google 個人資料
+        user_metadata = supabase_user.user_metadata or {}
+        name = user_metadata.get("full_name") or user_metadata.get("name") or email.split("@")[0]
+        profile_picture_url = user_metadata.get("avatar_url") or user_metadata.get("picture")
+        
+        logger.info(f"提取用戶資料 - Email: {email}, Name: {name}, Provider: {oauth_provider}")
+        
+        # Step 3: 在資料庫中創建或更新用戶記錄
+        user_service = UserService(db)
+        
+        # 檢查用戶是否已存在（根據 email）
+        existing_user = await user_service.get_user_by_email(email)
+        
+        if existing_user:
+            # 用戶已存在，更新 OAuth 資訊
+            logger.info(f"用戶已存在，更新 OAuth 資訊: {email}")
+            
+            # 更新 OAuth 相關欄位
+            existing_user.oauth_provider = oauth_provider
+            existing_user.oauth_id = oauth_id
+            existing_user.profile_picture_url = profile_picture_url
+            existing_user.is_active = True  # 確保帳號啟用
+            
+            # 如果原本沒有名稱，更新名稱
+            if not existing_user.name:
+                existing_user.name = name
+            
+            await db.commit()
+            await db.refresh(existing_user)
+            
+            user = existing_user
+        else:
+            # 新用戶，創建記錄
+            logger.info(f"創建新的 OAuth 用戶: {email}")
+            
+            user = await user_service.create_oauth_user(
+                email=email,
+                name=name,
+                oauth_provider=oauth_provider,
+                oauth_id=oauth_id,
+                profile_picture_url=profile_picture_url
+            )
+        
+        # Step 4: 生成 JWT tokens
+        token_data = {"sub": str(user.id), "email": user.email}
+        access_token = create_access_token(data=token_data)
+        refresh_token = create_refresh_token(data=token_data)
+        
+        # 計算 token 過期時間（與 security.py 中的邏輯一致）
+        from app.config import settings
+        from app.core.security import get_current_timestamp
+        token_expires_at = get_current_timestamp() + (settings.access_token_expire_minutes * 60)
+        
+        # 設定 httpOnly cookies
+        access_cookie_settings = get_access_token_cookie_settings()
+        refresh_cookie_settings = get_refresh_token_cookie_settings()
+        
+        response.set_cookie(
+            **access_cookie_settings,
+            value=access_token
+        )
+        response.set_cookie(
+            **refresh_cookie_settings,
+            value=refresh_token
+        )
+        
+        logger.info(f"✅ 已設定 httpOnly cookies，token 過期時間: {token_expires_at}")
+
+        # Step 5: 背景檢查成就解鎖（包含登入追蹤）
+        background_tasks.add_task(
+            schedule_achievement_check,
+            user_id=user.id,
+            trigger_event='login',
+            event_context={
+                'login_time': datetime.utcnow().isoformat()
+            }
+        )
+
+        # Step 6: 返回用戶資料
+        return OAuthCallbackResponse(
+            user={
+                "id": str(user.id),
+                "email": user.email,
+                "name": user.name,
+                "display_name": user.display_name,
+                "avatar_url": user.avatar_url,  # 使用者上傳的頭像（優先）
+                "oauth_provider": user.oauth_provider,
+                "profile_picture_url": user.profile_picture_url,  # Google OAuth 頭像
+                "karma_score": user.karma_score,
+                "karma_alignment": user.karma_alignment.value if hasattr(user.karma_alignment, 'value') else str(user.karma_alignment),
+                "faction_alignment": user.faction_alignment,
+                "wasteland_location": user.wasteland_location,
+                "total_readings": user.total_readings,
+                "experience_level": user.experience_level,
+                "favorite_card_suit": user.favorite_card_suit,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
+                "is_oauth_user": True,
+            },
+            token_expires_at=token_expires_at,
+            message="OAuth 登入成功"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ OAuth callback 處理失敗: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"OAuth 認證失敗: {str(e)}"
         )

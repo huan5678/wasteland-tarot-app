@@ -21,7 +21,7 @@ import { PixelIcon } from '@/components/ui/icons';
 
 /**
  * 試聽範例文字（簡短且富有角色特色）
- */
+ */import { Button } from "@/components/ui/button";
 const PREVIEW_TEXTS: Record<CharacterVoice, string> = {
   pip_boy: '系統初始化完成。歡迎使用廢土塔羅系統。',
   vault_dweller: '哇！外面的世界真是太令人興奮了！',
@@ -36,7 +36,7 @@ const PREVIEW_TEXTS: Record<CharacterVoice, string> = {
   legion_centurion: '軍團的榮耀高於一切！服從命令！',
   minuteman: '人民的安全是我們的責任。',
   railroad_agent: '保持低調，不要引起懷疑。',
-  institute_scientist: '科學研究顯示，這個結果十分有趣。',
+  institute_scientist: '科學研究顯示，這個結果十分有趣。'
 };
 
 export function VoiceSelector() {
@@ -104,7 +104,7 @@ export function VoiceSelector() {
       },
       onError: () => {
         setIsPreviewing(false);
-      },
+      }
     });
   };
 
@@ -137,8 +137,11 @@ export function VoiceSelector() {
                      rounded text-pip-boy-green hover:border-pip-boy-green
                      focus:outline-none focus:ring-2 focus:ring-pip-boy-green/50
                      transition-colors"
-          aria-label="選擇角色語音"
-        >
+
+
+
+          aria-label="選擇角色語音">
+
           {/* 通用角色 */}
           <optgroup label="通用角色">
             <option value="pip_boy">Pip-Boy</option>
@@ -196,35 +199,35 @@ export function VoiceSelector() {
       </div>
 
       {/* 系統語音資訊 */}
-      {isInitialized && (
-        <div className="p-2 bg-black/50 rounded border border-pip-boy-green/20 text-xs">
+      {isInitialized &&
+      <div className="p-2 bg-black/50 rounded border border-pip-boy-green/20 text-xs">
           <div className="flex items-center gap-1 text-pip-boy-green/60 mb-1">
             <PixelIcon name="settings" sizePreset="xs" variant="muted" decorative />
             <span>系統語音：</span>
           </div>
           <p className="text-pip-boy-green/80 ml-4">{selectedSystemVoice}</p>
         </div>
-      )}
+      }
 
       {/* 預覽按鈕 */}
-      <button
-        onClick={handlePreview}
-        disabled={!isInitialized}
-        className="w-full px-4 py-2 bg-pip-boy-green/10 border border-pip-boy-green/50
-                   rounded text-pip-boy-green hover:bg-pip-boy-green/20
-                   hover:border-pip-boy-green disabled:opacity-50 disabled:cursor-not-allowed
-                   transition-all flex items-center justify-center gap-2"
-        aria-label={isPreviewing ? '停止試聽' : '試聽語音'}
-      >
+      <Button size="icon" variant="outline"
+      onClick={handlePreview}
+      disabled={!isInitialized}
+      className="w-full px-4 py-2 border rounded disabled:opacity-50 disabled:cursor-not-allowed\n transition-all flex items-center justify-center gap-2"
+
+
+
+      aria-label={isPreviewing ? '停止試聽' : '試聽語音'}>
+
         <PixelIcon
           name={isPreviewing ? 'stop' : 'play'}
           sizePreset="xs"
           variant="primary"
           animation={isPreviewing ? 'pulse' : undefined}
-          decorative
-        />
+          decorative />
+
         <span>{isPreviewing ? '停止試聽' : '試聽語音'}</span>
-      </button>
-    </div>
-  );
+      </Button>
+    </div>);
+
 }

@@ -1,0 +1,19 @@
+{
+  "name": "unified-karma-system",
+  "version": "2.0",
+  "status": "implementation",
+  "created_at": "2025-11-03T14:55:00Z",
+  "updated_at": "2025-11-03T15:10:00Z",
+  "phases": {
+    "requirements": "approved",
+    "design": "approved",
+    "tasks": "approved",
+    "implementation": "in_progress"
+  },
+  "current_task": 1,
+  "completed_tasks": [],
+  "description": "統一 Karma 與遊戲化系統 - 重構資料模型、建立等級系統與任務系統",
+  "priority": "P0",
+  "estimated_hours": 60,
+  "dependencies": []
+}

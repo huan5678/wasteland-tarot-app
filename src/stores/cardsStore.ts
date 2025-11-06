@@ -250,7 +250,28 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
 
     try {
       // 包含 include_story=true 參數以取得故事內容和音頻 URLs
-      const card = await apiRequest<TarotCard>(`/api/v1/cards/${cardId}?include_story=true`)
+      const response = await apiRequest<any>(`/api/v1/cards/${cardId}?include_story=true`)
+
+      // 🔄 欄位映射：將後端巢狀結構轉換為前端扁平結構
+      const card: TarotCard = {
+        ...response,
+        // 映射 metadata.radiation_level → radiation_factor
+        radiation_factor: response.metadata?.radiation_level ?? response.radiation_factor ?? 0,
+        // 映射 visuals.image_url → image_url
+        image_url: response.visuals?.image_url ?? response.image_url ?? '',
+        // 映射 character_voices key 名稱
+        character_voices: response.character_voices ? {
+          pip_boy: response.character_voices.pip_boy_analysis ?? response.character_voices.pip_boy,
+          vault_dweller: response.character_voices.vault_dweller_perspective ?? response.character_voices.vault_dweller,
+          wasteland_trader: response.character_voices.wasteland_trader_wisdom ?? response.character_voices.wasteland_trader,
+          super_mutant: response.character_voices.super_mutant_simplicity ?? response.character_voices.super_mutant,
+          codsworth: response.character_voices.codsworth_analysis ?? response.character_voices.codsworth,
+        } : {},
+        // 保留其他欄位
+        fallout_reference: response.fallout_reference ?? response.fallout_easter_egg,
+        vault_reference: response.metadata?.vault_number ?? response.vault_reference,
+        threat_level: response.metadata?.threat_level ?? response.threat_level,
+      }
 
       set({
         isLoading: false,

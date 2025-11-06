@@ -113,6 +113,16 @@ export function AsciiNukaColaAnimation({
     const shouldUseWebGL = useWebGL && !useFallback;
 
     if (shouldUseWebGL) {
+      // Pre-check WebGL support before attempting to create renderer
+      const testCanvas = document.createElement('canvas');
+      const hasWebGL = !!(testCanvas.getContext('webgl2') || testCanvas.getContext('webgl'));
+      
+      if (!hasWebGL) {
+        console.warn('[AsciiNukaColaAnimation] WebGL not available, using CPU fallback');
+        setUseFallback(true);
+        return;
+      }
+
       try {
         webglRendererRef.current = new WebGLQuadNukaColaRenderer(finalConfig);
         const canvas = webglRendererRef.current.getCanvas();

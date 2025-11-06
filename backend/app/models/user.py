@@ -93,6 +93,14 @@ class User(BaseModel):
     journals = relationship("ReadingJournal", back_populates="user", cascade="all, delete-orphan")
     wishes = relationship("Wishlist", back_populates="user", cascade="all, delete-orphan")
 
+    # Dashboard Gamification Relationships
+    karma_logs = relationship("KarmaLog", back_populates="user", cascade="all, delete-orphan")
+    karma = relationship("UserKarma", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    daily_tasks = relationship("UserDailyTask", back_populates="user", cascade="all, delete-orphan")
+    weekly_tasks = relationship("UserWeeklyTask", back_populates="user", cascade="all, delete-orphan")
+    activity_stats = relationship("UserActivityStats", back_populates="user", cascade="all, delete-orphan")
+    login_streak = relationship("UserLoginStreak", back_populates="user", uselist=False, cascade="all, delete-orphan")
+
     def __repr__(self):
         return f"<User(name='{self.name}', email='{self.email}', faction='{self.faction_alignment}', karma={self.karma_score})>"
 
@@ -276,6 +284,10 @@ class UserProfile(BaseModel):
     badges_earned = Column(JSON, default=list)
     milestone_dates = Column(JSON, default={})
 
+    # Titles (稱號系統)
+    current_title = Column(String(100), nullable=True, default=None)
+    unlocked_titles = Column(JSON, default=list)
+
     # Social Stats
     friends_count = Column(Integer, default=0)
     readings_shared = Column(Integer, default=0)
@@ -340,6 +352,8 @@ class UserProfile(BaseModel):
             "achievements": self.achievements,
             "badges_earned": self.badges_earned,
             "milestone_dates": self.milestone_dates,
+            "current_title": self.current_title,
+            "unlocked_titles": self.unlocked_titles,
             "friends_count": self.friends_count,
             "readings_shared": self.readings_shared,
             "community_contributions": self.community_contributions

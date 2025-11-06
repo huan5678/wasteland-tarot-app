@@ -21,7 +21,7 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 // Types
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 export interface PlaylistListProps {
   /** 當點擊播放按鈕時的回調 */
   onPlayPlaylist?: (playlistId: string) => void;
@@ -60,7 +60,7 @@ export function PlaylistList({
   onPlayPlaylist,
   onEditPlaylist,
   onDeletePlaylist,
-  className,
+  className
 }: PlaylistListProps) {
   // ========== Hooks ==========
   const playlists = usePlaylistStore((state) => state.playlists);
@@ -133,7 +133,7 @@ export function PlaylistList({
     try {
       return formatDistanceToNow(date, {
         addSuffix: true,
-        locale: zhTW,
+        locale: zhTW
       });
     } catch (error) {
       logger.warn('[PlaylistList] Failed to format date', { error });
@@ -149,12 +149,12 @@ export function PlaylistList({
           'flex flex-col items-center justify-center h-full',
           'text-pip-boy-green/50 text-center',
           className
-        )}
-      >
+        )}>
+
         <p className="text-sm mb-2">尚無播放清單</p>
         <p className="text-xs">點擊「新增播放清單」建立第一個播放清單</p>
-      </div>
-    );
+      </div>);
+
   }
 
   // ========== Render ==========
@@ -163,8 +163,8 @@ export function PlaylistList({
       className={cn('space-y-4', className)}
       role="list"
       aria-label="播放清單列表"
-      data-testid="playlist-list"
-    >
+      data-testid="playlist-list">
+
       <AnimatePresence mode="popLayout">
         {playlists.map((playlist) => {
           const isCurrentPlaylist = playlist.id === currentPlaylist;
@@ -185,26 +185,26 @@ export function PlaylistList({
                 // Pip-Boy Theme
                 'bg-black/60',
                 // Current Playlist Highlight
-                isCurrentPlaylist
-                  ? 'border-pip-boy-green shadow-[0_0_15px_rgba(0,255,136,0.5)]'
-                  : 'border-pip-boy-green/30 hover:border-pip-boy-green/60',
+                isCurrentPlaylist ?
+                'border-pip-boy-green shadow-[0_0_15px_rgba(0,255,136,0.5)]' :
+                'border-pip-boy-green/30 hover:border-pip-boy-green/60',
                 // Deleting State
                 isDeleting && 'opacity-50 pointer-events-none',
                 // Hover Effect
                 !isCurrentPlaylist && 'hover:shadow-[0_0_10px_rgba(0,255,136,0.3)]'
               )}
               role="listitem"
-              data-testid={`playlist-item-${playlist.id}`}
-            >
+              data-testid={`playlist-item-${playlist.id}`}>
+
               {/* Current Playlist Indicator */}
-              {isCurrentPlaylist && (
-                <motion.div
-                  layoutId="current-playlist-indicator"
-                  className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-3/4 bg-pip-boy-green rounded-r-full"
-                  initial={false}
-                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                />
-              )}
+              {isCurrentPlaylist &&
+              <motion.div
+                layoutId="current-playlist-indicator"
+                className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-3/4 bg-pip-boy-green rounded-r-full"
+                initial={false}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }} />
+
+              }
 
               {/* Playlist Info */}
               <div className="flex items-start justify-between gap-4">
@@ -214,8 +214,8 @@ export function PlaylistList({
                     className={cn(
                       'text-base font-semibold truncate',
                       isCurrentPlaylist ? 'text-pip-boy-green' : 'text-pip-boy-green/80'
-                    )}
-                  >
+                    )}>
+
                     {playlist.name}
                   </h3>
 
@@ -230,63 +230,63 @@ export function PlaylistList({
                 {/* Action Buttons */}
                 <div className="flex items-center gap-2">
                   {/* Play Button */}
-                  <button
-                    onClick={() => handlePlay(playlist.id)}
-                    className={cn(
-                      'p-2 rounded transition-all duration-200',
-                      'border border-pip-boy-green/30',
-                      'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
-                      'focus:outline-none focus:ring-2 focus:ring-pip-boy-green',
-                      'disabled:opacity-30 disabled:cursor-not-allowed'
-                    )}
-                    aria-label={`播放 ${playlist.name}`}
-                    data-testid={`play-playlist-${playlist.id}`}
-                    disabled={isDeleting}
-                  >
+                  <Button size="icon" variant="default"
+                  onClick={() => handlePlay(playlist.id)}
+                  className="{expression}"
+
+
+
+
+
+
+                  aria-label={`播放 ${playlist.name}`}
+                  data-testid={`play-playlist-${playlist.id}`}
+                  disabled={isDeleting}>
+
                     <PixelIcon name="play" sizePreset="xs" variant="primary" decorative />
-                  </button>
+                  </Button>
 
                   {/* Edit Button */}
-                  <button
-                    onClick={() => handleEdit(playlist.id)}
-                    className={cn(
-                      'p-2 rounded transition-all duration-200',
-                      'border border-pip-boy-green/30',
-                      'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
-                      'focus:outline-none focus:ring-2 focus:ring-pip-boy-green',
-                      'disabled:opacity-30 disabled:cursor-not-allowed'
-                    )}
-                    aria-label={`編輯 ${playlist.name}`}
-                    data-testid={`edit-playlist-${playlist.id}`}
-                    disabled={isDeleting}
-                  >
+                  <Button size="icon" variant="default"
+                  onClick={() => handleEdit(playlist.id)}
+                  className="{expression}"
+
+
+
+
+
+
+                  aria-label={`編輯 ${playlist.name}`}
+                  data-testid={`edit-playlist-${playlist.id}`}
+                  disabled={isDeleting}>
+
                     <PixelIcon name="edit" sizePreset="xs" variant="primary" decorative />
-                  </button>
+                  </Button>
 
                   {/* Delete Button */}
-                  <button
-                    onClick={() => handleDelete(playlist.id)}
-                    className={cn(
-                      'p-2 rounded transition-all duration-200',
-                      'border border-red-500/30',
-                      'hover:border-red-500 hover:bg-red-500/10',
-                      'focus:outline-none focus:ring-2 focus:ring-red-500',
-                      'disabled:opacity-30 disabled:cursor-not-allowed'
-                    )}
-                    aria-label={`刪除 ${playlist.name}`}
-                    data-testid={`delete-playlist-${playlist.id}`}
-                    disabled={isDeleting}
-                  >
+                  <Button size="icon" variant="default"
+                  onClick={() => handleDelete(playlist.id)}
+                  className="{expression}"
+
+
+
+
+
+
+                  aria-label={`刪除 ${playlist.name}`}
+                  data-testid={`delete-playlist-${playlist.id}`}
+                  disabled={isDeleting}>
+
                     <PixelIcon name="delete" sizePreset="xs" variant="error" decorative />
-                  </button>
+                  </Button>
                 </div>
               </div>
-            </motion.div>
-          );
+            </motion.div>);
+
         })}
       </AnimatePresence>
-    </div>
-  );
+    </div>);
+
 }
 
 PlaylistList.displayName = 'PlaylistList';

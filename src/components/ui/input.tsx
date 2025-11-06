@@ -1,96 +1,55 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-
-import { cn } from "@/lib/utils"
-
 /**
- * Input component variants using class-variance-authority.
- *
- * Variants:
- * - default: Standard input field with terminal styling
- * - error: Error state with red border and aria-invalid
- * - success: Success state with green border
- *
- * Sizes:
- * - sm: 32px height (small)
- * - default: 36px height (standard)
- * - lg: 40px height (large)
+ * Input Component - Pip-Boy Style
+ * With error state support from PipBoyInput
  */
-const inputVariants = cva(
-  "input-terminal flex w-full rounded-md border px-3 py-1 text-base shadow-sm file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-input-fg disabled:cursor-not-allowed disabled:opacity-50 md:text-sm transition-all duration-200 outline-none focus:outline-2 focus:outline-offset-1 focus:shadow-[0_0_0_3px_var(--color-input-focus-ring)] bg-[var(--color-input-bg)] text-[var(--color-input-fg)]",
-  {
-    variants: {
-      variant: {
-        default: "border-[var(--color-input-border)] focus:border-[var(--color-input-border-focus)]",
-        error: "border-[var(--color-error)] focus:border-[var(--color-error)]",
-        success: "border-[var(--color-success)] focus:border-[var(--color-success)]",
-      },
-      inputSize: {
-        sm: "h-8 text-sm",
-        default: "h-9",
-        lg: "h-10 text-base",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      inputSize: "default",
-    },
-  }
-)
 
-export interface InputProps
-  extends Omit<React.ComponentProps<"input">, "size">,
-    VariantProps<typeof inputVariants> {
+import * as React from "react";
+import { cn } from "@/lib/utils";
+
+export interface InputProps extends React.ComponentProps<"input"> {
   /**
-   * Helper text to display below the input
+   * Error message (displays below input)
    */
-  helperText?: string
-  /**
-   * Error message to display (automatically sets variant to "error")
-   */
-  errorMessage?: string
+  error?: string;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, variant, inputSize, helperText, errorMessage, ...props }, ref) => {
-    const id = props.id || React.useId()
-    const helperId = `${id}-helper`
-    const errorId = `${id}-error`
-
-    // Automatically set variant to error if errorMessage is provided
-    const computedVariant = errorMessage ? "error" : variant
-
+  ({ className, type, error, ...props }, ref) => {
     return (
       <div className="w-full">
         <input
-          id={id}
           type={type}
-          className={cn(inputVariants({ variant: computedVariant, inputSize, className }))}
+          className={cn(
+            "flex h-10 w-full rounded-md border-2 px-3 py-2 text-base transition-colors",
+            "bg-background text-foreground",
+            "ring-offset-background",
+            "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+            "placeholder:text-muted-foreground",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            "md:text-sm",
+            // Error state
+            error ? "border-destructive focus-visible:ring-destructive" : "border-input",
+            className,
+          )}
           ref={ref}
-          aria-invalid={computedVariant === "error" ? "true" : undefined}
-          aria-describedby={
-            errorMessage
-              ? errorId
-              : helperText
-              ? helperId
-              : undefined
-          }
+          aria-invalid={error ? "true" : "false"}
+          aria-describedby={error ? `${props.id}-error` : undefined}
           {...props}
         />
-        {helperText && !errorMessage && (
-          <p id={helperId} className="mt-1.5 text-sm text-text-muted">
-            {helperText}
-          </p>
-        )}
-        {errorMessage && (
-          <p id={errorId} className="mt-1.5 text-sm text-error" role="alert">
-            {errorMessage}
+        {error && (
+          <p
+            id={`${props.id}-error`}
+            className="mt-2 text-sm text-destructive"
+            role="alert"
+          >
+            {error}
           </p>
         )}
       </div>
-    )
-  }
-)
-Input.displayName = "Input"
+    );
+  },
+);
+Input.displayName = "Input";
 
-export { Input, inputVariants }
+export { Input };

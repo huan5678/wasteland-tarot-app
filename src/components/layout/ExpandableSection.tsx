@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 /**
  * Expandable Section Props
  * 可展開章節元件屬性
- */
+ */import { Button } from "@/components/ui/button";
 export interface ExpandableSectionProps {
   /** Section title (章節標題) */
   title: string;
@@ -60,7 +60,7 @@ export default function ExpandableSection({
   id,
   defaultExpanded = false,
   headingLevel = 'h3',
-  className = '',
+  className = ''
 }: ExpandableSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ export default function ExpandableSection({
       setTimeout(() => {
         sectionRef.current?.scrollIntoView({
           behavior: 'smooth',
-          block: 'start',
+          block: 'start'
         });
       }, 300);
     }
@@ -120,18 +120,18 @@ export default function ExpandableSection({
     <section
       ref={sectionRef}
       id={id}
-      className={`border-b-2 border-green-900 last:border-b-0 ${className}`}
-    >
+      className={`border-b-2 border-green-900 last:border-b-0 ${className}`}>
+
       {/* Section Header */}
       <HeadingTag className="m-0">
-        <button
-          type="button"
-          onClick={handleToggle}
-          onKeyDown={handleKeyDown}
-          aria-expanded={isExpanded}
-          aria-controls={`section-content-${id}`}
-          className="flex w-full items-center justify-between gap-3 px-4 py-4 text-left transition-colors hover:bg-green-950/30 focus:bg-green-950/30 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-offset-2 focus:ring-offset-black"
-        >
+        <Button size="icon" variant="outline"
+        type="button"
+        onClick={handleToggle}
+        onKeyDown={handleKeyDown}
+        aria-expanded={isExpanded}
+        aria-controls={`section-content-${id}`}
+        className="flex w-full items-center justify-between gap-3 px-4 py-4 transition-colors">
+
           {/* Title */}
           <span className="flex-1 text-base font-bold text-green-500 sm:text-lg">
             {title}
@@ -140,11 +140,11 @@ export default function ExpandableSection({
           {/* Expand/Collapse Indicator */}
           <span
             className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded border-2 border-green-700 text-green-600 transition-all duration-200"
-            aria-hidden="true"
-          >
+            aria-hidden="true">
+
             {isExpanded ? '−' : '+'}
           </span>
-        </button>
+        </Button>
       </HeadingTag>
 
       {/* Section Content (Collapsible) */}
@@ -154,12 +154,12 @@ export default function ExpandableSection({
         role="region"
         aria-labelledby={id}
         className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ height: isExpanded ? height : 0 }}
-      >
+        style={{ height: isExpanded ? height : 0 }}>
+
         <div className="border-t border-green-900 px-4 py-6 text-green-500">
           {children}
         </div>
       </div>
-    </section>
-  );
+    </section>);
+
 }

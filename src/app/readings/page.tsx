@@ -1,76 +1,38 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import Link from 'next/link'
-import { useAuthStore } from '@/lib/authStore'
-import { useReadingsStore } from '@/lib/readingsStore'
-import { PixelIcon } from '@/components/ui/icons'
-import { ReadingHistory } from '@/components/readings/ReadingHistory'
-import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard'
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { AuthLoading } from '@/components/auth/AuthLoading';
+import { useReadingsStore } from '@/lib/readingsStore';
+import { PixelIcon } from '@/components/ui/icons';
+import { ReadingHistory } from '@/components/readings/ReadingHistory';
+import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard';
+import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs';
+import { Button } from '@/components/ui/button';
 
 export default function ReadingsPage() {
-  const user = useAuthStore(s => s.user)
-  const isLoading = useReadingsStore(s => s.isLoading)
-  const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history')
+  // ✅ 統一認證檢查（自動處理初始化、重導向、日誌）
+  const { isReady, user } = useRequireAuth();
+  const isLoading = useReadingsStore((s) => s.isLoading);
+  const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history');
 
   // CRITICAL FIX: Always fetch readings when page mounts OR when navigating back
   // This ensures we see newly created readings immediately
   useEffect(() => {
+    // ✅ 等待認證就緒後才載入資料
+    if (!isReady) return;
+
     const fetch = async () => {
-      if (!user?.id) return
-      console.log('[ReadingsPage] Fetching readings for user:', user.id)
-      await useReadingsStore.getState().fetchUserReadings(user.id, true) // force = true
-    }
-    fetch()
-  }, [user])
+      console.log('[ReadingsPage] Fetching readings for user:', user!.id);
+      await useReadingsStore.getState().fetchUserReadings(user!.id, true); // force = true
+    };
+    fetch();
+  }, [isReady, user]);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center">
-          <PixelIcon name="lock" size={64} className="mb-4 mx-auto text-pip-boy-green" decorative />
-          <h1 className="text-2xl font-bold text-pip-boy-green mb-4">
-            ACCESS DENIED
-          </h1>
-          <p className="text-pip-boy-green/70 mb-6">
-            你必須登入才能查看你的占卜記錄
-          </p>
-          <Link
-            href="/auth/login"
-            className="px-6 py-3 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
-          >
-登入 Pip-Boy
-          </Link>
-        </div>
-      </div>
-    )
-  }
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-pip-boy-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-pip-boy-green">載入占卜記錄中...</p>
-        </div>
-      </div>
-    )
-  }
-
-  const tabs = [
-    { id: 'history', label: '占卜記錄', icon: 'file-list' },
-    { id: 'stats', label: '數據統計', icon: 'bar-chart' },
-  ] as const
-
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'history':
-        return <ReadingHistory />
-      case 'stats':
-        return <ReadingStatsDashboard />
-      default:
-        return <ReadingHistory />
-    }
+  // ✅ 統一載入畫面（認證驗證 + 資料載入）
+  if (!isReady || isLoading) {
+    return <AuthLoading isVerifying={!isReady} />;
   }
 
   return (
@@ -78,49 +40,45 @@ export default function ReadingsPage() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 md:p-6 mb-6">
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold text-pip-boy-green">
                 塔羅管理中心
               </h1>
               <p className="text-pip-boy-green/70 text-sm">個人占卜記錄與數據分析</p>
             </div>
-            <Link
-              href="/readings/new"
-              className="px-4 py-2 bg-pip-boy-green text-wasteland-dark font-bold hover:bg-pip-boy-green/80 transition-colors"
+            <Button
+              size="default"
+              variant="default"
+              onClick={() => window.location.href = '/readings/new'}
+              className="flex items-center gap-2"
             >
-+ 新占卜
-            </Link>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex gap-1">
-            {tabs.map(tab => {
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-4 py-2 text-sm border transition-colors flex items-center gap-2 ${
-                    isActive
-                      ? 'border-pip-boy-green bg-pip-boy-green/20 text-pip-boy-green'
-                      : 'border-pip-boy-green/30 text-pip-boy-green/70 hover:border-pip-boy-green/60'
-                  }`}
-                  aria-label={tab.label}
-                >
-                  <PixelIcon name={tab.icon as any} size={16} decorative />
-                  {tab.label}
-                </button>
-              )
-            })}
+              <PixelIcon name="plus" sizePreset="xs" decorative />
+              新占卜
+            </Button>
           </div>
         </div>
 
-        {/* Tab Content */}
-        <div className="min-h-[600px]">
-          {renderTabContent()}
-        </div>
+        {/* Tabs */}
+        <PipBoyTabs defaultValue="history">
+          <PipBoyTabsList>
+            <PipBoyTabsTrigger value="history" icon="file-list">
+              占卜記錄
+            </PipBoyTabsTrigger>
+            <PipBoyTabsTrigger value="stats" icon="bar-chart">
+              數據統計
+            </PipBoyTabsTrigger>
+          </PipBoyTabsList>
+
+          <PipBoyTabsContent value="history">
+            <ReadingHistory />
+          </PipBoyTabsContent>
+
+          <PipBoyTabsContent value="stats">
+            <ReadingStatsDashboard />
+          </PipBoyTabsContent>
+        </PipBoyTabs>
       </div>
-    </div>
-  )
+    </div>);
+
 }

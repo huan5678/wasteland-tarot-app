@@ -2,10 +2,12 @@
  * PlaylistStore - 播放清單狀態管理
  * Task 6.1-6.5: 建立 playlistStore 與播放清單管理
  * Requirements: 3, 6, 16-19
+ * ✅ Refactored to use unified API Client
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '@/lib/apiClient';
 
 /**
  * 音樂參數 (來自 LLM 解析)
@@ -116,11 +118,6 @@ export interface PlaylistState {
 const STORAGE_KEY = 'wasteland-tarot-playlists';
 
 /**
- * API Base URL
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
-
-/**
  * PlaylistStore - 播放清單狀態管理
  */
 export const usePlaylistStore = create<PlaylistState>()(
@@ -139,21 +136,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name, description }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '建立播放清單失敗');
-          }
-
-          const newPlaylist = await response.json();
+          const newPlaylist = await api.post<Playlist>('/playlists', { name, description });
 
           // 樂觀更新
           set((state) => ({
@@ -171,15 +154,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '刪除播放清單失敗');
-          }
+          await api.delete(`/playlists/${playlistId}`);
 
           // 樂觀更新
           set((state) => ({
@@ -199,21 +174,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name: newName }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '重新命名失敗');
-          }
-
-          const updatedPlaylist = await response.json();
+          const updatedPlaylist = await api.patch<Playlist>(`/playlists/${playlistId}`, { name: newName });
 
           // 樂觀更新
           set((state) => ({
@@ -237,19 +198,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/tracks`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ track_id: trackId }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '加入音樂失敗');
-          }
+          await api.post(`/playlists/${playlistId}/tracks`, { track_id: trackId });
 
           // 重新載入播放清單
           await get().fetchPlaylists();
@@ -264,18 +213,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(
-            `${API_BASE_URL}/playlists/${playlistId}/tracks/${trackId}`,
-            {
-              method: 'DELETE',
-              credentials: 'include',
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '移除音樂失敗');
-          }
+          await api.delete(`/playlists/${playlistId}/tracks/${trackId}`);
 
           // 重新載入播放清單
           await get().fetchPlaylists();
@@ -290,19 +228,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${playlistId}/tracks/reorder`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ track_ids: trackIds }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '重新排序失敗');
-          }
+          await api.patch(`/playlists/${playlistId}/tracks/reorder`, { track_ids: trackIds });
 
           // 重新載入播放清單
           await get().fetchPlaylists();
@@ -318,15 +244,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/music`, {
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            throw new Error('載入音樂庫失敗');
-          }
-
-          const data = await response.json();
+          const data = await api.get<{ data: MusicTrack[] }>('/music');
           const tracks: MusicTrack[] = data.data || [];
 
           // 分離系統音樂和使用者音樂
@@ -348,15 +266,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/playlists`, {
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            throw new Error('載入播放清單失敗');
-          }
-
-          const playlists: Playlist[] = await response.json();
+          const playlists = await api.get<Playlist[]>('/playlists');
           set({ playlists, isLoading: false });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : '載入播放清單失敗';
@@ -368,21 +278,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/music`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(music),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '儲存音樂失敗');
-          }
-
-          const savedTrack = await response.json();
+          const savedTrack = await api.post<{ id: string }>('/music', music);
           const trackId: string = savedTrack.id;
 
           // 重新載入音樂庫
@@ -401,15 +297,7 @@ export const usePlaylistStore = create<PlaylistState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/music/${trackId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '刪除音樂失敗');
-          }
+          await api.delete(`/music/${trackId}`);
 
           // 樂觀更新
           set((state) => ({
@@ -425,11 +313,67 @@ export const usePlaylistStore = create<PlaylistState>()(
 
       // === Actions: Realtime 同步 ===
       subscribeToPlaylistChanges: () => {
-        // TODO: Implement Supabase Realtime subscription
-        // Requirements 18: 跨裝置即時同步
-        console.log('[PlaylistStore] Realtime subscription not yet implemented');
+        /**
+         * 實作 Requirements 18: 跨裝置即時同步（5 秒內完成）
+         *
+         * 實作策略：輕量級輪詢（Polling）
+         * - 每 5 秒輪詢一次 fetchPlaylists API
+         * - 當 tab 不可見時暫停輪詢（節省電池和流量）
+         * - 靜默更新（不觸發 loading 狀態，避免 UI 閃爍）
+         *
+         * 為何選擇輪詢而非 WebSocket/SSE：
+         * 1. P3 優先級，避免過度工程化（符合 CLAUDE.md 原則）
+         * 2. 5 秒延遲足夠滿足需求（非即時聊天，不需毫秒級同步）
+         * 3. 實作簡單，無需後端 WebSocket 基礎設施
+         * 4. 未來可升級為 WebSocket（保持介面相容）
+         */
+
+        const SYNC_INTERVAL = 5000; // 5 秒（符合 Requirements 18）
+
+        // 靜默同步函式（不觸發 loading 狀態）
+        const silentSync = async () => {
+          try {
+            // 只在 tab 可見時同步（省電）
+            if (document.visibilityState === 'hidden') {
+              return;
+            }
+
+            const playlists = await api.get<Playlist[]>('/playlists');
+
+            // 只更新 playlists，不觸發 loading/error 狀態
+            // 比較是否有變化（避免不必要的 re-render）
+            const currentPlaylists = get().playlists;
+            const hasChanges = JSON.stringify(currentPlaylists) !== JSON.stringify(playlists);
+
+            if (hasChanges) {
+              set({ playlists });
+              console.log('[PlaylistStore] Synced playlists from server (changes detected)');
+            }
+          } catch (error) {
+            // 靜默失敗（不干擾使用者體驗）
+            console.warn('[PlaylistStore] Silent sync failed:', error);
+          }
+        };
+
+        // 啟動輪詢
+        const intervalId = setInterval(silentSync, SYNC_INTERVAL);
+
+        // 監聽 visibility change（tab 切換時立即同步）
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            silentSync();
+          }
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        console.log('[PlaylistStore] Realtime sync started (polling every 5s)');
+
+        // 返回取消訂閱函式
         return () => {
-          console.log('[PlaylistStore] Unsubscribed from Realtime');
+          clearInterval(intervalId);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          console.log('[PlaylistStore] Realtime sync stopped');
         };
       },
 

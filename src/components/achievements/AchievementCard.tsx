@@ -1,16 +1,23 @@
 'use client'
 
 import React from 'react'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  PipBoyCard,
+  PipBoyCardContent,
+  PipBoyCardDescription,
+  PipBoyCardFooter,
+  PipBoyCardHeader,
+  PipBoyCardTitle
+} from '@/components/ui/pipboy'
 import { PixelIcon } from '@/components/ui/icons'
 import { SimpleProgressBar } from '@/components/ui/ProgressBar'
-import { Button } from '@/components/ui/button'
+import { PipBoyButton } from '@/components/ui/pipboy'
 import { cn } from '@/lib/utils'
 import {
-  UserAchievementProgress,
-  AchievementStatus,
-  AchievementRarity,
-  AchievementCategory
+  type UserAchievementProgress,
+  type AchievementRarity,
+  type AchievementCategory,
+  type AchievementStatus,
 } from '@/lib/stores/achievementStore'
 
 // ============================================================================
@@ -45,13 +52,6 @@ const getRarityConfig = (rarity: AchievementRarity): {
         bgColor: 'bg-gray-900/50',
         label: '普通',
         glow: 'shadow-[0_0_5px_rgba(156,163,175,0.3)]'
-      }
-    case 'UNCOMMON':
-      return {
-        color: 'text-green-400',
-        bgColor: 'bg-green-900/50',
-        label: '罕見',
-        glow: 'shadow-[0_0_8px_rgba(74,222,128,0.4)]'
       }
     case 'RARE':
       return {
@@ -89,15 +89,15 @@ const getRarityConfig = (rarity: AchievementRarity): {
  */
 const getCategoryIcon = (category: AchievementCategory): string => {
   switch (category) {
-    case AchievementCategory.READING:
+    case 'READING':
       return 'book'
-    case AchievementCategory.SOCIAL:
+    case 'SOCIAL':
       return 'users'
-    case AchievementCategory.BINGO:
+    case 'BINGO':
       return 'grid'
-    case AchievementCategory.KARMA:
+    case 'KARMA':
       return 'zap'
-    case AchievementCategory.EXPLORATION:
+    case 'EXPLORATION':
       return 'compass'
     default:
       return 'trophy'
@@ -113,19 +113,19 @@ const getStatusConfig = (status: AchievementStatus): {
   icon: string
 } => {
   switch (status) {
-    case AchievementStatus.IN_PROGRESS:
+    case 'IN_PROGRESS':
       return {
         label: '進行中',
         color: 'text-yellow-400',
         icon: 'clock'
       }
-    case AchievementStatus.UNLOCKED:
+    case 'UNLOCKED':
       return {
         label: '已解鎖',
         color: 'text-pip-boy-green',
         icon: 'unlock'
       }
-    case AchievementStatus.CLAIMED:
+    case 'CLAIMED':
       return {
         label: '已領取',
         color: 'text-green-400',
@@ -156,9 +156,9 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   const statusConfig = getStatusConfig(status)
   const categoryIcon = getCategoryIcon(achievementDef.category)
 
-  const isUnlocked = status === AchievementStatus.UNLOCKED
-  const isClaimed = status === AchievementStatus.CLAIMED
-  const isInProgress = status === AchievementStatus.IN_PROGRESS
+  const isUnlocked = status === 'UNLOCKED'
+  const isClaimed = status === 'CLAIMED'
+  const isInProgress = status === 'IN_PROGRESS'
 
   const handleClaim = () => {
     if (isUnlocked && onClaim) {
@@ -173,15 +173,17 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
   }
 
   return (
-    <Card
+    <PipBoyCard
       variant={isUnlocked ? 'elevated' : 'default'}
       padding="sm"
+      glowEffect={isUnlocked}
       onClick={handleCardClick}
       className={cn(
         'relative overflow-hidden transition-all duration-300',
+        'bg-gray-900/80 backdrop-blur-sm',
         rarityConfig.glow,
         isUnlocked && 'border-pip-boy-green/50',
-        isClaimed && 'opacity-75',
+        isClaimed && 'opacity-50',
         onClick && 'cursor-pointer hover:scale-105',
         className
       )}
@@ -195,7 +197,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
         {rarityConfig.label}
       </div>
 
-      <CardHeader className="pb-3">
+      <PipBoyCardHeader className="pb-3" bordered={false}>
         {/* 圖示和類別 */}
         <div className="flex items-start gap-3 mb-2">
           <div className={cn(
@@ -218,12 +220,12 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
           </div>
 
           <div className="flex-1 mt-1">
-            <CardTitle className={cn(
+            <PipBoyCardTitle className={cn(
               'text-base mb-1',
               isClaimed && 'text-text-secondary'
             )}>
               {achievementDef.name}
-            </CardTitle>
+            </PipBoyCardTitle>
             <div className="flex items-center gap-2 text-xs text-text-secondary">
               <PixelIcon
                 name={statusConfig.icon}
@@ -236,12 +238,12 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
           </div>
         </div>
 
-        <CardDescription className="text-sm line-clamp-2">
+        <PipBoyCardDescription className="text-sm line-clamp-2">
           {achievementDef.description}
-        </CardDescription>
-      </CardHeader>
+        </PipBoyCardDescription>
+      </PipBoyCardHeader>
 
-      <CardContent className="py-3">
+      <PipBoyCardContent className="py-3">
         {/* 進度條（進行中狀態顯示） */}
         {isInProgress && (
           <div className="space-y-2">
@@ -279,12 +281,12 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
             </div>
           </div>
         )}
-      </CardContent>
+      </PipBoyCardContent>
 
       {/* 領取按鈕（已解鎖狀態） */}
       {isUnlocked && onClaim && (
-        <CardFooter className="pt-3">
-          <Button
+        <PipBoyCardFooter className="pt-3" bordered={false}>
+          <PipBoyButton
             onClick={handleClaim}
             disabled={isClaiming}
             className="w-full"
@@ -302,20 +304,20 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({
                 <span className="ml-2">領取獎勵</span>
               </>
             )}
-          </Button>
-        </CardFooter>
+          </PipBoyButton>
+        </PipBoyCardFooter>
       )}
 
       {/* 已領取時間 */}
       {isClaimed && achievement.claimed_at && (
-        <CardFooter className="pt-3 text-xs text-text-secondary">
+        <PipBoyCardFooter className="pt-3 text-xs text-text-secondary" bordered={false}>
           <PixelIcon name="check" sizePreset="xs" variant="success" decorative />
           <span className="ml-2">
             已於 {new Date(achievement.claimed_at).toLocaleDateString('zh-TW')} 領取
           </span>
-        </CardFooter>
+        </PipBoyCardFooter>
       )}
-    </Card>
+    </PipBoyCard>
   )
 }
 

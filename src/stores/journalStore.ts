@@ -132,21 +132,14 @@ interface JournalStore {
 // ============================================================================
 
 /**
- * 取得認證 Token
- */
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('pip-boy-token')
-}
-
-/**
  * 建立認證 Headers
+ *
+ * 重要：專案使用 httpOnly cookies 進行認證，token 會自動附加到請求中
+ * 不需要手動從 localStorage 讀取 token
  */
 const createAuthHeaders = (): HeadersInit => {
-  const token = getAuthToken()
   return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    'Content-Type': 'application/json'
   }
 }
 
@@ -162,6 +155,7 @@ async function apiRequest<T>(
   try {
     const response = await fetch(url, {
       ...options,
+      credentials: 'include',  // ✅ 啟用 httpOnly cookies 傳送
       headers: {
         ...createAuthHeaders(),
         ...options.headers,

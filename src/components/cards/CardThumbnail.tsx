@@ -1,18 +1,17 @@
 /**
- * CardThumbnail Component
- * 卡牌縮圖元件
+ * CardThumbnail Component (Unified)
+ * 卡牌縮圖元件 - 統一靜態與翻牌模式
  *
  * 特色:
- * - 顯示卡牌圖片、名稱與花色
- * - 支援延遲載入
- * - 錯誤處理與 fallback 圖片
- * - 懸停效果
+ * - 支援靜態 Link 模式（瀏覽頁面）
+ * - 支援翻牌動畫模式（抽牌情境）
+ * - 3D 傾斜效果
  * - 完整的無障礙性支援
  */
 
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
@@ -23,6 +22,8 @@ import { getCardImageUrl, getCardImageAlt, getFallbackImageUrl } from '@/lib/uti
 import { getSuitDisplayName, convertApiToRouteSuit, SuitType } from '@/types/suits'
 import { use3DTilt } from '@/hooks/tilt/use3DTilt'
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
+import { CardBackPixelEffect } from '@/components/cards/CardBackPixelEffect'
+import { useAudioEffect } from '@/hooks/audio/useAudioEffect'
 
 export interface CardThumbnailProps {
   /**
@@ -39,6 +40,11 @@ export interface CardThumbnailProps {
    * 是否優先載入(用於首屏卡牌)
    */
   priority?: boolean
+
+  /**
+   * 卡片尺寸
+   */
+  size?: 'small' | 'medium' | 'large'
 
   /**
    * 啟用 3D 傾斜效果（預設：true）
@@ -64,44 +70,139 @@ export interface CardThumbnailProps {
    * 啟用光澤效果（預設：true）
    */
   enableGloss?: boolean
+
+  // ========== 翻牌模式專用 props ==========
+  /**
+   * 啟用翻牌模式（預設：false）
+   * 當為 true 時，卡片可以從卡背翻到卡面
+   */
+  flippable?: boolean
+
+  /**
+   * 是否已翻開（需要 flippable=true）
+   */
+  isRevealed?: boolean
+
+  /**
+   * 卡牌正逆位（需要 flippable=true）
+   */
+  position?: 'upright' | 'reversed'
+
+  /**
+   * 卡背圖片 URL（需要 flippable=true）
+   */
+  cardBackUrl?: string
+
+  /**
+   * 翻牌動畫完成的回調（需要 flippable=true）
+   */
+  onFlipComplete?: () => void
+
+  /**
+   * 位置標籤（如：「過去」、「現在」、「未來」）（需要 flippable=true）
+   */
+  positionLabel?: string
+
+  /**
+   * 動畫延遲（ms）
+   */
+  animationDelay?: number
+
+  // ========== 互動 ==========
+  /**
+   * 點擊回調
+   * - 靜態模式：不使用（由 Link 處理）
+   * - 翻牌模式：點擊已翻開的卡片時觸發
+   */
+  onClick?: (card: TarotCard) => void
+}
+
+const sizeClasses = {
+  small: 'w-32 h-48',   // 128×192px (2:3)
+  medium: 'w-40 h-60',  // 160×240px (2:3)
+  large: 'w-48 h-72'    // 192×288px (2:3)
 }
 
 /**
- * CardThumbnail 元件
+ * CardThumbnail 元件（統一版本）
  *
  * @example
+ * 靜態模式（瀏覽頁面）
  * ```tsx
  * <CardThumbnail card={card} />
+ * ```
+ *
+ * @example
+ * 翻牌模式（抽牌情境）
+ * ```tsx
+ * <CardThumbnail
+ *   card={card}
+ *   flippable
+ *   isRevealed={false}
+ *   position="upright"
+ *   cardBackUrl="/assets/cards/card-backs/01.png"
+ *   onClick={(card) => setSelectedCard(card)}
+ * />
  * ```
  */
 export function CardThumbnail({
   card,
   className,
   priority = false,
+  size = 'medium',
   enable3DTilt = true,
   tiltMaxAngle = 15,
   tiltTransitionDuration = 400,
   enableGyroscope = true,
-  enableGloss = true
+  enableGloss = true,
+  flippable = false,
+  isRevealed = true,
+  position = 'upright',
+  cardBackUrl = '/assets/cards/card-backs/01.png',
+  onFlipComplete,
+  positionLabel,
+  animationDelay = 0,
+  onClick
 }: CardThumbnailProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
+  const [isFlipping, setIsFlipping] = useState(false)
+  const [previousRevealed, setPreviousRevealed] = useState(isRevealed)
+  const { playSound } = useAudioEffect()
 
-  // 3D 傾斜效果（縮圖使用 small 尺寸，自動減少角度至 60%）
+  // 3D 傾斜效果
   const {
     tiltRef,
     tiltHandlers,
     tiltStyle,
     tiltState
   } = use3DTilt({
-    enable3DTilt,
+    enable3DTilt: enable3DTilt && !isFlipping,
     tiltMaxAngle,
     tiltTransitionDuration,
     enableGyroscope,
     enableGloss,
-    size: 'small', // 縮圖使用 small 尺寸
+    size: flippable ? size : 'small', // 靜態模式使用 small（縮圖）
     loading: !imageLoaded
   })
+
+  // 處理翻牌動畫（僅 flippable 模式）
+  useEffect(() => {
+    if (!flippable) return
+
+    if (previousRevealed !== isRevealed) {
+      setIsFlipping(true)
+      playSound('card-flip')
+
+      const timer = setTimeout(() => {
+        setIsFlipping(false)
+        setPreviousRevealed(isRevealed)
+        onFlipComplete?.()
+      }, 700) // 翻牌動畫時長
+
+      return () => clearTimeout(timer)
+    }
+  }, [flippable, isRevealed, previousRevealed, playSound, onFlipComplete])
 
   // 取得圖片路徑
   const imageUrl = imageError ? getFallbackImageUrl() : getCardImageUrl(card)
@@ -114,20 +215,26 @@ export function CardThumbnail({
   const routeSuit = convertApiToRouteSuit(card.suit as SuitType)
 
   // 處理圖片載入錯誤
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
     console.warn(`[CardThumbnail] Image load failed for card: ${card.id}`)
     setImageError(true)
-  }
+  }, [card.id])
 
-  // 處理圖片載入成功（圖片完全渲染後才觸發）
-  const handleImageLoadingComplete = () => {
-    // 使用 setTimeout 確保渲染完成後才隱藏 loading
+  // 處理圖片載入成功
+  const handleImageLoadingComplete = useCallback(() => {
     setTimeout(() => {
       setImageLoaded(true)
     }, 100)
-  }
+  }, [])
 
-  // 處理鍵盤事件
+  // 處理點擊事件
+  const handleClick = useCallback(() => {
+    if (flippable && isRevealed && onClick) {
+      onClick(card)
+    }
+  }, [flippable, isRevealed, onClick, card])
+
+  // 處理鍵盤事件（靜態模式）
   const handleKeyDown = (event: React.KeyboardEvent<HTMLAnchorElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault()
@@ -135,6 +242,210 @@ export function CardThumbnail({
     }
   }
 
+  // ========== 渲染：翻牌模式 ==========
+  if (flippable) {
+    return (
+      <div className={cn('flex flex-col items-center gap-3', className)}>
+        {/* 翻牌容器 */}
+        <div
+          ref={tiltRef}
+          className={cn(
+            sizeClasses[size],
+            'relative cursor-pointer [perspective:1200px]',
+            isFlipping && 'pointer-events-none'
+          )}
+          onClick={handleClick}
+          onMouseEnter={tiltHandlers.onMouseEnter}
+          onMouseMove={tiltHandlers.onMouseMove}
+          onMouseLeave={tiltHandlers.onMouseLeave}
+          style={{
+            ...tiltStyle,
+            animationDelay: `${animationDelay}ms`
+          }}
+        >
+          {/* 3D Tilt Visual Effects */}
+          {tiltState.isTilted && (
+            <TiltVisualEffects
+              tiltState={tiltState}
+              enableGloss={enableGloss}
+            />
+          )}
+
+          {/* 翻牌內層 - 3D 旋轉容器 */}
+          <div
+            className={cn(
+              'relative w-full h-full [transform-style:preserve-3d]',
+              'transition-transform duration-700 ease-out',
+              isRevealed ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'
+            )}
+          >
+            {/* 卡背 */}
+            <div className="absolute inset-0 w-full h-full [backface-visibility:hidden]">
+              <PipBoyCard
+                padding="none"
+                className="h-full overflow-hidden relative"
+              >
+                {/* 卡背圖片 */}
+                <div className="relative w-full h-full bg-black">
+                  <img
+                    src={cardBackUrl}
+                    alt="Wasteland Tarot Card Back"
+                    className="w-full h-full object-cover"
+                  />
+                  {/* Pixel hover effect */}
+                  <CardBackPixelEffect
+                    isHovered={tiltState.isTilted}
+                    gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
+                    speed={35}
+                  />
+                </div>
+
+                {/* 卡背提示文字 */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center text-pip-boy-green">
+                    <PixelIcon
+                      name="sparkles"
+                      size={size === 'small' ? 24 : size === 'medium' ? 32 : 40}
+                      className="mb-2 mx-auto"
+                      decorative
+                    />
+                    <div className={cn(
+                      'font-bold',
+                      size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                    )}>
+                      點擊翻牌
+                    </div>
+                  </div>
+                </div>
+              </PipBoyCard>
+            </div>
+
+            {/* 卡面 - 需要先旋轉 180 度，這樣外層翻轉時才會正面朝前 */}
+            <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
+              <PipBoyCard
+                isClickable={!!onClick}
+                padding="none"
+                className="h-full overflow-hidden transition-all duration-300 relative"
+              >
+                {/* 卡牌圖片容器 - 逆位時旋轉 180 度 */}
+                <div className={cn(
+                  "relative aspect-[2/3] bg-black overflow-hidden",
+                  position === 'reversed' && 'rotate-180'
+                )}>
+                  {/* 載入中骨架屏 */}
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
+                      <PixelIcon
+                        name="image"
+                        size={32}
+                        className="text-pip-boy-green/50"
+                        decorative
+                      />
+                    </div>
+                  )}
+
+                  {/* 載入中旋轉圖示（中央） */}
+                  {!imageLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10">
+                      <PixelIcon
+                        name="loader"
+                        animation="spin"
+                        variant="primary"
+                        sizePreset="lg"
+                        decorative
+                      />
+                    </div>
+                  )}
+
+                  {/* 卡牌圖片 */}
+                  <Image
+                    src={imageUrl}
+                    alt={imageAlt}
+                    fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    className={cn(
+                      'object-cover transition-all duration-300',
+                      onClick && 'group-hover:scale-110',
+                      !imageLoaded && 'opacity-0'
+                    )}
+                    loading={priority ? undefined : 'lazy'}
+                    priority={priority}
+                    onError={handleImageError}
+                    onLoadingComplete={handleImageLoadingComplete}
+                  />
+
+                  {/* 黑色半透明覆蓋層 (hover 時淡化) */}
+                  {onClick && (
+                    <div
+                      className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-300 pointer-events-none"
+                      aria-hidden="true"
+                    />
+                  )}
+
+                  {/* 圖片發光效果(懸停時) */}
+                  {onClick && (
+                    <div
+                      className="absolute inset-0 bg-pip-boy-green/0 group-hover:bg-pip-boy-green/10 transition-colors duration-300 pointer-events-none"
+                      aria-hidden="true"
+                    />
+                  )}
+                </div>
+
+                {/* 卡牌資訊 */}
+                <div className="p-3 space-y-2">
+                  {/* 卡牌名稱 */}
+                  <h4 className={cn(
+                    'font-semibold text-pip-boy-green uppercase tracking-wide line-clamp-2',
+                    onClick && 'group-hover:text-pip-boy-green-bright transition-colors',
+                    size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                  )}>
+                    {card.name}
+                  </h4>
+
+                  {/* 花色與編號 */}
+                  <div className="flex items-center justify-between text-xs text-pip-boy-green/70">
+                    <span>{suitName}</span>
+                    {card.number !== null && card.number !== undefined && (
+                      <span className="font-semibold">#{String(card.number).padStart(2, '0')}</span>
+                    )}
+                  </div>
+
+                  {/* 正逆位指示 */}
+                  <div className={cn(
+                    'text-center text-pip-boy-green/60',
+                    size === 'small' ? 'text-[10px]' : 'text-xs'
+                  )}>
+                    {position === 'upright' ? '正位' : '逆位'}
+                  </div>
+                </div>
+
+                {/* 懸停邊框效果 */}
+                {onClick && (
+                  <div
+                    className="absolute inset-0 border-2 border-transparent group-hover:border-pip-boy-green/50 rounded-sm pointer-events-none transition-colors duration-300"
+                    aria-hidden="true"
+                  />
+                )}
+              </PipBoyCard>
+            </div>
+          </div>
+        </div>
+
+        {/* 位置標籤 */}
+        {positionLabel && (
+          <div className={cn(
+            'text-center text-pip-boy-green transition-all duration-300',
+            size === 'small' ? 'text-xs' : 'text-sm',
+            isRevealed ? 'opacity-100' : 'opacity-50'
+          )}>
+            {positionLabel}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ========== 渲染：靜態 Link 模式 ==========
   return (
     <Link
       ref={tiltRef}
@@ -151,7 +462,7 @@ export function CardThumbnail({
       style={tiltStyle}
     >
       <PipBoyCard
-        interactive
+        isClickable
         padding="none"
         className="h-full overflow-hidden transition-all duration-300 relative"
       >
@@ -237,7 +548,7 @@ export function CardThumbnail({
 
         {/* 懸停邊框效果 */}
         <div
-          className="absolute inset-0 border-2 border-transparent group-hover:border-pip-boy-green/50 pointer-events-none transition-colors duration-300"
+          className="absolute inset-0 border-2 border-transparent group-hover:border-pip-boy-green/50 rounded-sm pointer-events-none transition-colors duration-300"
           aria-hidden="true"
         />
       </PipBoyCard>

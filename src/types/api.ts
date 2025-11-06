@@ -19,12 +19,27 @@ export const CardMetadataSchema = z.object({
 export type CardMetadata = z.infer<typeof CardMetadataSchema>
 
 // 嵌套物件：Character Voices
+// ✅ 完整的 14 個角色解讀欄位
 export const CharacterVoicesSchema = z.object({
+  // 基礎角色（5）
   pip_boy_analysis: z.string().optional().nullable(),
   vault_dweller_perspective: z.string().optional().nullable(),
   wasteland_trader_wisdom: z.string().optional().nullable(),
   super_mutant_simplicity: z.string().optional().nullable(),
   codsworth_analysis: z.string().optional().nullable(),
+  
+  // 已有角色（3）
+  brotherhood_scribe_commentary: z.string().optional().nullable(),
+  ghoul_survivor_insight: z.string().optional().nullable(),
+  raider_chaos_reading: z.string().optional().nullable(),
+  
+  // 新增角色（6）
+  brotherhood_paladin_combat_wisdom: z.string().optional().nullable(),
+  ncr_ranger_tactical_analysis: z.string().optional().nullable(),
+  legion_centurion_command: z.string().optional().nullable(),
+  minuteman_hope_message: z.string().optional().nullable(),
+  railroad_agent_liberation_view: z.string().optional().nullable(),
+  institute_scientist_research_notes: z.string().optional().nullable(),
 })
 
 export type CharacterVoices = z.infer<typeof CharacterVoicesSchema>
@@ -215,6 +230,7 @@ export const ReadingSessionSchema = z.object({
   ai_interpretation_requested: z.boolean().optional().nullable(),
   ai_interpretation_at: z.string().optional().nullable(),
   ai_interpretation_provider: z.string().optional().nullable(),
+  interpretation_audio_url: z.string().optional().nullable(),
 
   // Session metadata
   session_duration: z.number().optional().nullable(),

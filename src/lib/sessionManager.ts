@@ -1,22 +1,17 @@
 /**
- * Session Manager - Supabase 會話管理工具
- * 處理 token 刷新和會話驗證
+ * Session Manager V2 - Backend API 會話管理工具
+ * 使用後端 API 處理 token 刷新和會話驗證
  *
- * @deprecated 此檔案直接使用 Supabase 客戶端進行 session 管理，違反前後端分離原則
+ * 改進：
+ * - ✅ 不再直接呼叫 Supabase Auth API
+ * - ✅ 完全使用後端 API (/api/v1/auth/refresh, /api/v1/auth/me)
+ * - ✅ 符合前後端分離原則
+ * - ✅ 提升安全性（token 由 httpOnly cookie 管理）
  *
- * 問題：
- * - 前端直接呼叫 Supabase Auth API 進行 session 刷新和驗證
- * - 應該改為透過後端 API (/api/v1/auth/refresh, /api/v1/auth/verify) 進行
- *
- * TODO: 重構為使用後端 API
- * - refreshSession() → 呼叫 /api/v1/auth/refresh
- * - validateSession() → 呼叫 /api/v1/auth/verify
- * - setupAuthListener() → 移除 Supabase 監聽，改用 API 輪詢或 WebSocket
- *
- * 目前保留此檔案以維持向後相容性，但新功能不應使用此檔案
+ * @version 2.0.0
+ * @since 2025-10-31
  */
 
-import { createClient } from '@/utils/supabase/client'
 import { useAuthStore } from './authStore'
 
 interface SessionStatus {
@@ -25,23 +20,60 @@ interface SessionStatus {
   needsRefresh: boolean
 }
 
+interface UserInfo {
+  id: string
+  email: string
+  name: string
+  display_name?: string
+  avatar_url?: string
+  oauth_provider?: string
+  profile_picture_url?: string
+  karma_score: number
+  karma_alignment: string
+  faction_alignment?: string
+  wasteland_location?: string
+  is_oauth_user: boolean
+  is_verified: boolean
+  is_active: boolean
+  is_admin: boolean
+  created_at?: string
+}
+
+interface MeResponse {
+  user: UserInfo
+  statistics?: Record<string, any>
+  token_expires_at?: number
+}
+
 /**
- * 刷新 Supabase 會話
- * 使用 Supabase 客戶端執行會話刷新
+ * 刷新會話 - 使用後端 API
+ * 呼叫 /api/v1/auth/refresh 刷新 access token
+ *
+ * 後端會：
+ * 1. 從 cookie 讀取 refresh_token
+ * 2. 驗證 refresh_token
+ * 3. 生成新的 access_token 和 refresh_token
+ * 4. 設定新的 httpOnly cookies
  */
 export async function refreshSession(): Promise<boolean> {
   try {
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.refreshSession()
+    const response = await fetch('/api/v1/auth/refresh', {
+      method: 'POST',
+      credentials: 'include', // 必須帶 httpOnly cookie
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
-    if (error || !data.session) {
-      console.error('[SessionManager] ❌ Session refresh failed:', error)
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Session refresh failed' }))
+      console.error('[SessionManagerV2] ❌ Session refresh failed:', error)
 
-      // 🔍 監控日誌：追蹤 Session 刷新失敗導致的登出
-      console.warn('[SessionManager] 🚫 Session refresh failed - Logging out', {
+      // 監控日誌：追蹤 Session 刷新失敗導致的登出
+      console.warn('[SessionManagerV2] 🚫 Session refresh failed - Logging out', {
         timestamp: new Date().toISOString(),
-        error: error?.message,
-        hasSession: !!data.session
+        status: response.status,
+        error: error.detail,
       })
 
       // 清除會話並重導向登入
@@ -52,30 +84,37 @@ export async function refreshSession(): Promise<boolean> {
       return false
     }
 
-    // 更新 auth store 的會話資料（如果使用者是 OAuth 使用者）
-    const { user, session } = data
-    const authState = useAuthStore.getState()
+    const data = await response.json()
 
-    if (authState.isOAuthUser && user) {
-      // 只更新使用者資料，token 由後端 httpOnly cookie 管理
-      authState.setOAuthUser({
-        ...authState.user!,
-        id: user.id,
-        email: user.email!,
-        name: authState.user?.name || user.user_metadata?.name || user.email!.split('@')[0],
-        oauthProvider: authState.oauthProvider,
-        profilePicture: authState.profilePicture,
-      })
+    // 成功刷新，token 已由後端設定在 httpOnly cookie 中
+    console.log('[SessionManagerV2] ✅ Session refreshed successfully', {
+      timestamp: new Date().toISOString(),
+      expiresAt: data.expires_at,
+    })
+
+    // 可選：如果後端返回使用者資訊，更新 auth store
+    if (data.user) {
+      const authState = useAuthStore.getState()
+      if (authState.isOAuthUser) {
+        authState.setOAuthUser({
+          ...authState.user!,
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name || authState.user?.name!,
+          oauthProvider: data.user.oauth_provider || authState.oauthProvider,
+          profilePicture: data.user.avatar_url || authState.profilePicture,
+        })
+      }
     }
 
     return true
   } catch (error) {
-    console.error('[SessionManager] ❌ Session refresh error:', error)
+    console.error('[SessionManagerV2] ❌ Session refresh error:', error)
 
-    // 🔍 監控日誌：追蹤 Session 刷新異常導致的登出
-    console.warn('[SessionManager] 🚫 Exception during session refresh - Logging out', {
+    // 監控日誌：追蹤 Session 刷新異常導致的登出
+    console.warn('[SessionManagerV2] 🚫 Exception during session refresh - Logging out', {
       timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : String(error)
+      error: error instanceof Error ? error.message : String(error),
     })
 
     useAuthStore.getState().logout()
@@ -84,30 +123,70 @@ export async function refreshSession(): Promise<boolean> {
 }
 
 /**
- * 驗證當前會話有效性
- * 檢查會話是否即將過期（< 5 分鐘），若是則自動刷新
+ * 驗證當前會話有效性 - 使用後端 API
+ * 呼叫 /api/v1/auth/me 驗證 access token 並取得使用者資訊
+ *
+ * 後端會：
+ * 1. 從 cookie 讀取 access_token
+ * 2. 驗證 access_token
+ * 3. 返回使用者資訊和 token 過期時間
  */
 export async function validateSession(): Promise<SessionStatus> {
   try {
-    const supabase = createClient()
-    const { data: { session }, error } = await supabase.auth.getSession()
+    const response = await fetch('/api/v1/auth/me', {
+      method: 'GET',
+      credentials: 'include', // 必須帶 httpOnly cookie
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
 
-    if (error || !session) {
+    if (!response.ok) {
+      console.warn('[SessionManagerV2] ⚠️ Session validation failed:', response.status)
       return {
         isValid: false,
         needsRefresh: false,
       }
     }
 
+    const data: MeResponse = await response.json()
+
+    // 更新 auth store 的使用者資訊
+    const authState = useAuthStore.getState()
+    if (data.user) {
+      // 如果是 OAuth 使用者，更新資訊
+      if (data.user.is_oauth_user && data.user.oauth_provider) {
+        authState.setOAuthUser({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+          oauthProvider: data.user.oauth_provider as 'google',
+          profilePicture: data.user.avatar_url || null,
+        })
+      } else if (authState.user) {
+        // 更新一般使用者資訊
+        authState.setUser({
+          ...authState.user,
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.name,
+        })
+      }
+    }
+
     // 檢查 token 過期時間
-    const expiresAt = session.expires_at ? session.expires_at * 1000 : 0
+    const expiresAt = data.token_expires_at ? data.token_expires_at * 1000 : 0
     const now = Date.now()
     const fiveMinutes = 5 * 60 * 1000
 
     // 如果 token 即將在 5 分鐘內過期，標記為需要刷新
-    const needsRefresh = expiresAt - now < fiveMinutes
+    const needsRefresh = expiresAt > 0 && (expiresAt - now < fiveMinutes)
 
     if (needsRefresh) {
+      console.log('[SessionManagerV2] ⏰ Token expiring soon, auto-refreshing...', {
+        expiresAt: new Date(expiresAt).toISOString(),
+        timeLeft: Math.round((expiresAt - now) / 1000) + 's',
+      })
       // 自動刷新
       await refreshSession()
     }
@@ -118,7 +197,7 @@ export async function validateSession(): Promise<SessionStatus> {
       needsRefresh,
     }
   } catch (error) {
-    console.error('Session validation error:', error)
+    console.error('[SessionManagerV2] ❌ Session validation error:', error)
     return {
       isValid: false,
       needsRefresh: false,
@@ -154,7 +233,10 @@ export function setupAutoRefresh(): () => void {
         clearTimeout(refreshTimer)
       }
 
+      console.log('[SessionManagerV2] 📅 Next refresh scheduled in:', Math.round(refreshTime / 1000) + 's')
+
       refreshTimer = setTimeout(async () => {
+        console.log('[SessionManagerV2] 🔄 Auto-refreshing session...')
         await refreshSession()
         scheduleRefresh() // 遞迴排程下次刷新
       }, refreshTime)
@@ -174,63 +256,40 @@ export function setupAutoRefresh(): () => void {
 }
 
 /**
- * 監聽 Supabase 認證狀態變化
- * 當使用者登入/登出時自動同步 auth store
+ * 監聽認證狀態變化 - 使用 API 輪詢
+ * 每分鐘檢查一次會話狀態
+ *
+ * 注意：不再使用 Supabase realtime，改用輪詢機制
  */
 export function setupAuthListener(): () => void {
-  const supabase = createClient()
+  let intervalId: NodeJS.Timeout | null = null
 
-  const { data: { subscription } } = supabase.auth.onAuthStateChange(
-    async (event, session) => {
+  // 每分鐘檢查一次會話狀態
+  intervalId = setInterval(async () => {
+    const status = await validateSession()
+
+    if (!status.isValid) {
+      // 會話無效，清除 auth store
       const authStore = useAuthStore.getState()
-
-      switch (event) {
-        case 'SIGNED_IN':
-          if (session?.user) {
-            // OAuth 登入事件
-            const user = session.user
-            if (user.app_metadata?.provider === 'google') {
-              authStore.setOAuthUser({
-                id: user.id,
-                email: user.email!,
-                name: user.user_metadata?.name || user.email!.split('@')[0],
-                oauthProvider: 'google',
-                profilePicture: user.user_metadata?.avatar_url || null,
-              })
-            }
-          }
-          break
-
-        case 'SIGNED_OUT':
-          // 確保清除 auth store
-          authStore.logout()
-          break
-
-        case 'TOKEN_REFRESHED':
-          // Token 已刷新，更新 store（如果是 OAuth 使用者）
-          if (session && authStore.isOAuthUser) {
-            await refreshSession()
-          }
-          break
-
-        case 'USER_UPDATED':
-          // 使用者資料更新
-          if (session?.user && authStore.isOAuthUser) {
-            const user = session.user
-            authStore.setOAuthUser({
-              ...authStore.user!,
-              name: user.user_metadata?.name || authStore.user?.name!,
-              profilePicture: user.user_metadata?.avatar_url || authStore.profilePicture,
-            })
-          }
-          break
+      if (authStore.user) {
+        console.warn('[SessionManagerV2] 🚫 Session invalid - Logging out')
+        authStore.logout()
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login'
+        }
       }
     }
-  )
+  }, 60 * 1000) // 每 60 秒檢查一次
+
+  // 初始檢查
+  validateSession()
 
   // 返回清理函式
   return () => {
-    subscription.unsubscribe()
+    if (intervalId) {
+      clearInterval(intervalId)
+      intervalId = null
+    }
   }
 }
 
@@ -239,11 +298,14 @@ export function setupAuthListener(): () => void {
  * 啟動自動刷新和認證監聽
  */
 export function initializeSessionManager(): () => void {
+  console.log('[SessionManagerV2] 🚀 Initializing session manager...')
+
   const cleanupAutoRefresh = setupAutoRefresh()
   const cleanupAuthListener = setupAuthListener()
 
   // 返回組合的清理函式
   return () => {
+    console.log('[SessionManagerV2] 🛑 Cleaning up session manager...')
     cleanupAutoRefresh()
     cleanupAuthListener()
   }

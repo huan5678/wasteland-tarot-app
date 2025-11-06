@@ -211,6 +211,8 @@ class TokenExtensionService:
         Returns:
             Dict with login tracking info
         """
+        from sqlalchemy.exc import IntegrityError
+
         if login_date is None:
             login_date = date.today()
 
@@ -229,17 +231,36 @@ class TokenExtensionService:
             existing.login_count += 1
             existing.updated_at = datetime.utcnow()
             is_new_day = False
+            await self.db.commit()
         else:
-            # Create new record
-            existing = UserLoginHistory(
-                user_id=user_id,
-                login_date=login_date,
-                login_count=1
-            )
-            self.db.add(existing)
-            is_new_day = True
+            # Try to create new record
+            try:
+                existing = UserLoginHistory(
+                    user_id=user_id,
+                    login_date=login_date,
+                    login_count=1
+                )
+                self.db.add(existing)
+                is_new_day = True
+                await self.db.commit()
+            except IntegrityError:
+                # Record was created by another request (race condition)
+                # Rollback and fetch the existing record
+                await self.db.rollback()
 
-        await self.db.commit()
+                # Re-fetch the record
+                result = await self.db.execute(stmt)
+                existing = result.scalar_one_or_none()
+
+                if existing:
+                    # Increment login count
+                    existing.login_count += 1
+                    existing.updated_at = datetime.utcnow()
+                    is_new_day = False
+                    await self.db.commit()
+                else:
+                    # This should never happen, but handle gracefully
+                    raise RuntimeError(f"Failed to create or fetch login history for user {user_id}")
 
         # Calculate consecutive days
         consecutive_days = await self._calculate_consecutive_days(user_id, login_date)

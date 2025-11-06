@@ -411,10 +411,10 @@ class PlaylistService:
                     detail="音樂不在此播放清單中",
                 )
 
-            # TODO: 重新計算 position（需要複雜的 SQL 或多次請求）
-            # 目前先不實作，前端可以容忍 position 不連續
+            # 重新計算剩餘音樂的 position（保持連續）
+            await self._reorder_playlist_positions(playlist_id)
 
-            logger.info(f"[PlaylistService] 音樂已從播放清單移除: {track_id} <- {playlist_id}")
+            logger.info(f"[PlaylistService] 音樂已從播放清單移除並重新排序: {track_id} <- {playlist_id}")
 
         except HTTPException:
             raise
@@ -482,3 +482,58 @@ class PlaylistService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="調整順序失敗",
             )
+
+    async def _reorder_playlist_positions(self, playlist_id: UUID) -> None:
+        """
+        重新計算播放清單中所有音樂的 position，使其保持連續。
+
+        當音樂從播放清單中移除後，剩餘音樂的 position 可能不連續（例如 1, 2, 4, 5）。
+        此方法會將所有剩餘音樂的 position 重新編號為連續的數字（1, 2, 3, 4）。
+
+        Args:
+            playlist_id: 播放清單 ID
+
+        Raises:
+            Exception: 重新排序失敗時拋出
+        """
+        try:
+            # 獲取播放清單中所有音樂（按 position 排序）
+            tracks_response = self.supabase.table("playlist_tracks") \
+                .select("id, track_id, position") \
+                .eq("playlist_id", str(playlist_id)) \
+                .order("position") \
+                .execute()
+
+            tracks = tracks_response.data
+            if not tracks:
+                # 播放清單為空，無需重新排序
+                return
+
+            # 批次更新每個 track 的 position
+            # position 從 1 開始（而非 0）
+            for idx, track in enumerate(tracks, start=1):
+                current_position = track.get("position")
+
+                # 只更新 position 不正確的 track（優化效能）
+                if current_position != idx:
+                    update_response = self.supabase.table("playlist_tracks") \
+                        .update({"position": idx}) \
+                        .eq("playlist_id", str(playlist_id)) \
+                        .eq("track_id", track["track_id"]) \
+                        .execute()
+
+                    if not update_response.data:
+                        logger.warning(
+                            f"[PlaylistService] 重新計算 position 失敗: "
+                            f"track_id={track['track_id']}, new_position={idx}"
+                        )
+
+            logger.debug(
+                f"[PlaylistService] 播放清單 position 已重新計算: {playlist_id}, "
+                f"total_tracks={len(tracks)}"
+            )
+
+        except Exception as e:
+            logger.error(f"[PlaylistService] 重新計算 position 失敗: {str(e)}")
+            # 不拋出異常，避免影響主要的刪除操作
+            # 前端可以容忍 position 不連續

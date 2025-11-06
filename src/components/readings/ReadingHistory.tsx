@@ -1,256 +1,284 @@
-'use client'
-import React, { useMemo, useState, useCallback, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useReadingsStore } from '@/lib/readingsStore'
-import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore'
-import { PixelIcon } from '@/components/ui/icons'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { toDisplay } from '@/lib/spreadMapping'
+'use client';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useReadingsStore } from '@/lib/readingsStore';
+import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore';
+import { PixelIcon } from '@/components/ui/icons';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { toDisplay } from '@/lib/spreadMapping';
+import { Button } from '@/components/ui/button';
+import { PaginationControls } from '@/components/cards/PaginationControls';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu';
 
-interface Props { onSelect?: (id: string) => void }
+interface Props {onSelect?: (id: string) => void;}
 
 export function ReadingHistory({ onSelect }: Props) {
-  const router = useRouter()
-  const readings = useReadingsStore(s => s.readings)
-  const toggleFavorite = useReadingsStore(s => s.toggleFavorite)
-  const deleteReading = useReadingsStore(s => s.deleteReading)
-  const { templates, byId: templatesById, fetchAll } = useSpreadTemplatesStore()
-  const [filter, setFilter] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'date' | 'question'>('date')
-  const [search, setSearch] = useState('')
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [readingToDelete, setReadingToDelete] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const router = useRouter();
+  const readings = useReadingsStore((s) => s.readings);
+  const toggleFavorite = useReadingsStore((s) => s.toggleFavorite);
+  const deleteReading = useReadingsStore((s) => s.deleteReading);
+  const { templates, byId: templatesById, fetchAll } = useSpreadTemplatesStore();
+  const [filter, setFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'date' | 'question'>('date');
+  const [search, setSearch] = useState('');
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [readingToDelete, setReadingToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
 
   // Fetch spread templates on mount
   useEffect(() => {
-    fetchAll()
-  }, [fetchAll])
+    fetchAll();
+  }, [fetchAll]);
 
   // 動態生成所有可用的牌陣類型選項
   const availableSpreadTypes = useMemo(() => {
-    const types = new Set<string>()
-    readings.forEach(r => {
-      if (r.spread_type) types.add(r.spread_type)
-    })
-    return Array.from(types).sort()
-  }, [readings])
+    const types = new Set<string>();
+    readings.forEach((r) => {
+      if (r.spread_type) types.add(r.spread_type);
+    });
+    return Array.from(types).sort();
+  }, [readings]);
 
   // 輔助函式：取得牌陣顯示名稱
   const getSpreadDisplayName = useCallback((reading: any) => {
     // 格式化顯示名稱的輔助函式，匹配 SpreadSelector 的格式
     const formatDisplayName = (template: any) => {
-      const baseName = template.display_name || template.name || '牌陣'
-      const cardCount = template.card_count
-      const difficulty = template.difficulty_level
+      const baseName = template.display_name || template.name || '牌陣';
+      const cardCount = template.card_count;
+      const difficulty = template.difficulty_level;
 
-      let displayName = baseName
+      let displayName = baseName;
       if (cardCount) {
-        displayName += ` (${cardCount}張)`
+        displayName += ` (${cardCount}張)`;
       }
       if (difficulty) {
-        displayName += ` [${difficulty}]`
+        displayName += ` [${difficulty}]`;
       }
-      return displayName
-    }
+      return displayName;
+    };
 
     // 1. 如果 reading 包含 spread_template 物件，檢查是否為 placeholder
     if (reading.spread_template) {
-      const template = reading.spread_template
+      const template = reading.spread_template;
 
       // 如果是 placeholder 或 id 為 "unknown"，嘗試根據卡牌數量匹配真實的 template
       if (template.id === 'unknown' || template.name === 'placeholder' || template.display_name === 'Placeholder Spread') {
-        const cardCount = (reading.card_positions || reading.cards_drawn || reading.cards || []).length
+        const cardCount = (reading.card_positions || reading.cards_drawn || reading.cards || []).length;
 
         // 嘗試從本地 templates 中找到相同卡牌數量的 template
-        const matchingTemplate = templates.find(t => t.card_count === cardCount)
+        const matchingTemplate = templates.find((t) => t.card_count === cardCount);
         if (matchingTemplate) {
-          return formatDisplayName(matchingTemplate)
+          return formatDisplayName(matchingTemplate);
         }
 
         // 如果找不到，顯示為「未知牌陣 (X張)」
         if (cardCount > 0) {
-          return `未知牌陣 (${cardCount}張)`
+          return `未知牌陣 (${cardCount}張)`;
         }
-        return '未知牌陣'
+        return '未知牌陣';
       }
 
       // 正常的 spread_template，直接格式化
-      return formatDisplayName(template)
+      return formatDisplayName(template);
     }
 
     // 2. 使用 spread_template_id 查找本地 templates
     if (reading.spread_template_id && templatesById[reading.spread_template_id]) {
-      return formatDisplayName(templatesById[reading.spread_template_id])
+      return formatDisplayName(templatesById[reading.spread_template_id]);
     }
 
     // 3. 使用 spread_type 匹配本地 templates
     if (reading.spread_type) {
-      const matchingTemplate = templates.find(t => t.spread_type === reading.spread_type)
+      const matchingTemplate = templates.find((t) => t.spread_type === reading.spread_type);
       if (matchingTemplate) {
-        return formatDisplayName(matchingTemplate)
+        return formatDisplayName(matchingTemplate);
       }
       // 使用 spreadMapping 取得顯示名稱
-      return toDisplay(reading.spread_type)
+      return toDisplay(reading.spread_type);
     }
 
     // 4. 根據卡牌數量生成名稱
-    const cardCount = (reading.card_positions || reading.cards_drawn || reading.cards || []).length
+    const cardCount = (reading.card_positions || reading.cards_drawn || reading.cards || []).length;
     if (cardCount > 0) {
-      return `未知牌陣 (${cardCount}張)`
+      return `未知牌陣 (${cardCount}張)`;
     }
 
     // 5. 完全找不到資訊時的預設值（可能是測試資料或未完成的占卜）
-    return '未完成的占卜'
-  }, [templatesById, templates])
+    return '未完成的占卜';
+  }, [templatesById, templates]);
 
   // 輔助函式：取得牌陣圖示
   const getSpreadIcons = useCallback((reading: any) => {
     // 支援多種資料格式
-    const cards = reading.card_positions || reading.cards_drawn || reading.cards || []
-    const cardCount = cards.length
+    const cards = reading.card_positions || reading.cards_drawn || reading.cards || [];
+    const cardCount = cards.length;
 
     // 取得第一張卡牌的花色作為圖示（如果有的話）
     // card_positions 結構：{ card: { suit, name, ... }, ... }
-    const firstCard = cards[0]?.card || cards[0]
-    const firstCardSuit = firstCard?.suit
+    const firstCard = cards[0]?.card || cards[0];
+    const firstCardSuit = firstCard?.suit;
 
     // 根據花色映射圖示名稱（使用 RemixIcon 中實際存在的圖示）
     const getSuitIcon = (suit?: string): string => {
-      if (!suit) return 'contacts'  // 預設圖示
+      if (!suit) return 'contacts'; // 預設圖示
 
-      const suitLower = suit.toLowerCase()
+      const suitLower = suit.toLowerCase();
 
       // Major Arcana - 使用星星圖示
       if (suitLower.includes('major') || suitLower.includes('arcana')) {
-        return 'star'
+        return 'star';
       }
 
       // Nuka-Cola Bottles (聖杯 Cups) - 使用杯子圖示
       if (suitLower.includes('nuka') || suitLower.includes('bottles') || suitLower.includes('cups') || suitLower.includes('聖杯')) {
-        return 'drop'
+        return 'drop';
       }
 
       // Combat Weapons (寶劍 Swords) - 使用刀劍圖示
       if (suitLower.includes('combat') || suitLower.includes('weapons') || suitLower.includes('swords') || suitLower.includes('寶劍')) {
-        return 'sword'
+        return 'sword';
       }
 
       // Bottle Caps (錢幣 Pentacles) - 使用錢幣圖示
       if (suitLower.includes('caps') || suitLower.includes('pentacles') || suitLower.includes('coins') || suitLower.includes('錢幣')) {
-        return 'coin'
+        return 'coin';
       }
 
       // Radiation Rods (權杖 Wands) - 使用魔杖/閃電圖示
       if (suitLower.includes('radiation') || suitLower.includes('rods') || suitLower.includes('wands') || suitLower.includes('權杖')) {
-        return 'earthquake'
+        return 'earthquake';
       }
 
       // 預設為卡牌圖示
-      return 'contacts'
-    }
+      return 'contacts';
+    };
 
-    const iconName = getSuitIcon(firstCardSuit)
+    const iconName = getSuitIcon(firstCardSuit);
 
     // 根據卡牌數量渲染對應數量的圖示
     if (cardCount === 1) {
-      return <PixelIcon name={iconName} className="w-5 h-5" />
+      return <PixelIcon name={iconName} className="w-5 h-5" />;
     } else if (cardCount <= 3) {
       return (
         <div className="flex gap-0.5">
-          {Array.from({ length: cardCount }).map((_, i) => (
-            <PixelIcon key={i} name={iconName} className="w-4 h-4" />
-          ))}
-        </div>
-      )
+          {Array.from({ length: cardCount }).map((_, i) =>
+          <PixelIcon key={i} name={iconName} className="w-4 h-4" />
+          )}
+        </div>);
+
     } else {
       // 超過 3 張：顯示 3 個圖示 + 數字
       return (
         <div className="flex items-center gap-1">
           <div className="flex gap-0.5">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <PixelIcon key={i} name={iconName} className="w-4 h-4" />
-            ))}
+            {Array.from({ length: 3 }).map((_, i) =>
+            <PixelIcon key={i} name={iconName} className="w-4 h-4" />
+            )}
           </div>
           <span className="text-xs text-pip-boy-green/70">+{cardCount - 3}</span>
-        </div>
-      )
+        </div>);
+
     }
-  }, [])
+  }, []);
 
   const filtered = useMemo(() => {
-    return readings
-      .filter(r => {
-        if (filter === 'favorites') return r.is_favorite
-        if (filter === 'all') return true
-        return r.spread_type === filter
-      })
-      .filter(r => {
-        if (!search.trim()) return true
-        const q = search.toLowerCase()
-        // 支援多種 interpretation 欄位名稱
-        const interpretation = (r as any).overall_interpretation || (r as any).interpretation || ''
-        return r.question.toLowerCase().includes(q) || interpretation.toLowerCase().includes(q)
-      })
-      .sort((a, b) => {
-        if (sortBy === 'date') return new Date((b as any).created_at || (b as any).date).getTime() - new Date((a as any).created_at || (a as any).date).getTime()
-        return a.question.localeCompare(b.question)
-      })
-  }, [readings, filter, sortBy, search])
+    return readings.
+    filter((r) => {
+      if (filter === 'favorites') return r.is_favorite;
+      if (filter === 'all') return true;
+      return r.spread_type === filter;
+    }).
+    filter((r) => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      // 支援多種 interpretation 欄位名稱
+      const interpretation = (r as any).overall_interpretation || (r as any).interpretation || '';
+      return r.question.toLowerCase().includes(q) || interpretation.toLowerCase().includes(q);
+    }).
+    sort((a, b) => {
+      if (sortBy === 'date') return new Date((b as any).created_at || (b as any).date).getTime() - new Date((a as any).created_at || (a as any).date).getTime();
+      return a.question.localeCompare(b.question);
+    });
+  }, [readings, filter, sortBy, search]);
 
-  const formatDate = (d: string) => new Date(d).toLocaleString()
+  // Pagination calculations
+  const totalPages = Math.ceil(filtered.length / itemsPerPage);
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filtered.slice(startIndex, endIndex);
+  }, [filtered, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filter/search/sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, search, sortBy]);
+
+  const formatDate = (d: string) => new Date(d).toLocaleString();
 
   // 打開刪除確認對話框
   const handleDeleteClick = (e: React.MouseEvent, readingId: string) => {
-    e.stopPropagation() // 防止觸發卡片點擊
-    setReadingToDelete(readingId)
-    setDeleteDialogOpen(true)
-  }
+    e.stopPropagation(); // 防止觸發卡片點擊
+    setReadingToDelete(readingId);
+    setDeleteDialogOpen(true);
+  };
 
   // 確認刪除
   const confirmDelete = async () => {
-    if (!readingToDelete) return
+    if (!readingToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const success = await deleteReading(readingToDelete)
+      const success = await deleteReading(readingToDelete);
       if (success) {
         // 成功刪除後的追蹤
-        import('@/lib/actionTracker').then(m => m.track('reading:delete', { id: readingToDelete }))
+        import('@/lib/actionTracker').then((m) => m.track('reading:delete', { id: readingToDelete }));
       }
     } catch (error) {
-      console.error('Delete error:', error)
+      console.error('Delete error:', error);
     } finally {
-      setIsDeleting(false)
-      setReadingToDelete(null)
+      setIsDeleting(false);
+      setReadingToDelete(null);
     }
-  }
+  };
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <input placeholder="搜尋問題/解讀..." value={search} onChange={e=>setSearch(e.target.value)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm" />
-        <select value={filter} onChange={e=>setFilter(e.target.value)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm">
+        <input placeholder="搜尋問題/解讀..." value={search} onChange={(e) => setSearch(e.target.value)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm" />
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm">
           <option value="all">全部</option>
-          {availableSpreadTypes.map(type => {
+          {availableSpreadTypes.map((type) => {
             // 嘗試從 templates 中找到對應的顯示名稱
-            const template = templates.find(t => t.spread_type === type)
-            const displayName = template?.display_name || template?.name || type
+            const template = templates.find((t) => t.spread_type === type);
+            const displayName = template?.display_name || template?.name || type;
             return (
-              <option key={type} value={type}>{displayName}</option>
-            )
+              <option key={type} value={type}>{displayName}</option>);
+
           })}
           <option value="favorites">最愛</option>
         </select>
-        <select value={sortBy} onChange={e=>setSortBy(e.target.value as any)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm">
+        <select value={sortBy} onChange={(e) => setSortBy(e.target.value as any)} className="px-3 py-2 bg-black border border-pip-boy-green text-pip-boy-green text-sm">
           <option value="date">日期</option>
           <option value="question">問題</option>
         </select>
-        <div className="flex items-center text-xs text-pip-boy-green/70">顯示 <span className="numeric tabular-nums mx-1">{filtered.length}</span> 筆</div>
+        <div className="flex items-center text-xs text-pip-boy-green/70">
+          共 <span className="numeric tabular-nums mx-1">{filtered.length}</span> 筆
+        </div>
       </div>
       <div className="space-y-3">
-        {filtered.map(r => (
-          <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={()=>{ router.push(`/readings/${r.id}`); import('@/lib/actionTracker').then(m=>m.track('reading:view_detail',{id:r.id})) }}>
+        {paginatedData.map((r) =>
+        <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={() => {router.push(`/readings/${r.id}`);import('@/lib/actionTracker').then((m) => m.track('reading:view_detail', { id: r.id }));}}>
             <div className="flex justify-between items-start">
               <div className="flex items-center gap-3">
                 <div className="text-2xl">{getSpreadIcons(r)}</div>
@@ -260,24 +288,144 @@ export function ReadingHistory({ onSelect }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={(e)=>{e.stopPropagation(); toggleFavorite(r.id).then(()=>import('@/lib/actionTracker').then(m=>m.track('reading:toggle_favorite',{id:r.id,value:!r.is_favorite})))}} className={"text-xs "+(r.is_favorite ? 'text-yellow-400' : 'text-pip-boy-green/40 hover:text-yellow-400') } title={r.is_favorite ? '取消收藏' : '加入收藏'}>< PixelIcon name="star" className="w-4 h-4" /></button>
-                <button onClick={(e)=>{e.stopPropagation(); const blob=new Blob([JSON.stringify(r,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`reading-${r.id}.json`; a.click(); }} className="text-pip-boy-green/60 hover:text-pip-boy-green" title="匯出 JSON">< PixelIcon name="save" className="w-4 h-4" /></button>
-                <button onClick={(e) => handleDeleteClick(e, r.id)} className="text-red-400/60 hover:text-red-400" title="刪除占卜">< PixelIcon name="trash" className="w-4 h-4" /></button>
+                <Button
+                  size="icon-sm"
+                  variant={r.is_favorite ? 'default' : 'ghost'}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(r.id).then(() =>
+                      import('@/lib/actionTracker').then((m) =>
+                        m.track('reading:toggle_favorite', { id: r.id, value: !r.is_favorite })
+                      )
+                    );
+                  }}
+                  title={r.is_favorite ? '取消收藏' : '加入收藏'}
+                >
+                  <PixelIcon name="star" className="w-4 h-4" />
+                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      onClick={(e) => e.stopPropagation()}
+                      title="更多操作"
+                    >
+                      <PixelIcon name="more-2" className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="bg-wasteland-dark border-2 border-pip-boy-green/30"
+                  >
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/readings/${r.id}`);
+                      }}
+                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                    >
+                      <PixelIcon name="eye" className="w-4 h-4 mr-2" />
+                      查看詳情
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+                        const a = document.createElement('a');
+                        a.href = URL.createObjectURL(blob);
+                        a.download = `reading-${r.id}.json`;
+                        a.click();
+                      }}
+                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                    >
+                      <PixelIcon name="save" className="w-4 h-4 mr-2" />
+                      匯出 JSON
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-pip-boy-green/30" />
+                    <DropdownMenuItem
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteClick(e, r.id);
+                      }}
+                      className="text-red-400 hover:bg-red-400/10 hover:text-red-300 cursor-pointer"
+                    >
+                      <PixelIcon name="trash" className="w-4 h-4 mr-2" />
+                      刪除占卜
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
             {/* 使用者的問題 */}
             <p className="mt-2 text-pip-boy-green/80 text-sm italic">
               "{r.question}"
             </p>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center py-12 border-2 border-pip-boy-green/30">
-            < PixelIcon name="contacts" className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
+            {/* AI 解讀標示 */}
+            {r.ai_interpretation_requested &&
+          <div className="mt-2 flex items-center gap-2">
+                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                  <PixelIcon name="cpu" sizePreset="xs" variant="primary" decorative />
+                  <span className="font-bold uppercase tracking-wider">AI 已解讀</span>
+                </div>
+                {(r as any).interpretation_audio_url &&
+            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                    <PixelIcon name="volume-up" sizePreset="xs" variant="primary" decorative />
+                    <span className="font-bold uppercase tracking-wider">語音朗讀</span>
+                  </div>
+            }
+              </div>
+          }
           </div>
         )}
+        {paginatedData.length === 0 && filtered.length === 0 &&
+        <div className="text-center py-12 border-2 border-pip-boy-green/30">
+            <PixelIcon name="contacts" className="w-10 h-10 mx-auto mb-3 opacity-50" />
+            <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
+          </div>
+        }
       </div>
+
+      {/* Pagination Controls */}
+      {filtered.length > 0 && totalPages > 1 && (
+        <div className="mt-6 pt-4 border-t border-pip-boy-green/30">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            {/* Items per page selector */}
+            <div className="flex items-center gap-2 text-sm text-pip-boy-green/70">
+              <span>每頁顯示</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                className="px-2 py-1 bg-black border border-pip-boy-green/50 text-pip-boy-green text-sm"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span>筆</span>
+            </div>
+
+            {/* Page info */}
+            <div className="text-xs text-pip-boy-green/70">
+              第 <span className="numeric tabular-nums">{currentPage}</span> / <span className="numeric tabular-nums">{totalPages}</span> 頁
+            </div>
+          </div>
+
+          {/* Pagination Component */}
+          <PaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            baseUrl="/readings"
+            onPageChange={setCurrentPage}
+            clientSideNavigation={true}
+          />
+        </div>
+      )}
 
       {/* 刪除確認對話框 */}
       <ConfirmDialog
@@ -289,8 +437,8 @@ export function ReadingHistory({ onSelect }: Props) {
         confirmText="刪除"
         cancelText="取消"
         variant="destructive"
-        isLoading={isDeleting}
-      />
-    </div>
-  )
+        isLoading={isDeleting} />
+
+    </div>);
+
 }

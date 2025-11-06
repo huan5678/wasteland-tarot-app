@@ -58,66 +58,58 @@ export function SuitCard({ suit, className }: SuitCardProps) {
     <Link
       href={`/cards/${routeSuit}`}
       className={cn(
-        'block focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2 focus-visible:ring-offset-black rounded-sm',
+        'flex flex-col items-center gap-4 p-6',
+        'border-2 border-pip-boy-green/30 bg-pip-boy-green/5',
+        'hover:border-pip-boy-green hover:bg-pip-boy-green/10',
+        'transition-all duration-200',
+        'focus:outline-none focus-visible:ring-2 focus-visible:ring-pip-boy-green focus-visible:ring-offset-2 focus-visible:ring-offset-black',
+        'group',
         className
       )}
       aria-label={`瀏覽 ${metadata.name_zh_tw} (${metadata.name_en}),共 ${metadata.card_count} 張卡牌`}
       onKeyDown={handleKeyDown}
     >
-      <PipBoyCard
-        interactive
-        glowEffect
-        padding="md"
-        className="h-full transition-all duration-300"
-      >
-        {/* 花色圖示 */}
-        <div className="flex items-center justify-center mb-4">
-          <div className="transition-transform duration-300 group-hover:scale-110">
-            <SuitIcon
-              iconName={metadata.iconName}
-              size="lg"
-              ariaHidden
-            />
-          </div>
-        </div>
-
-        {/* 花色名稱 */}
-        <div className="text-center space-y-2">
-          {/* 中文名稱(主標題) */}
-          <h3 className="text-xl md:text-2xl font-bold uppercase tracking-wider text-pip-boy-green">
-            {metadata.name_zh_tw}
-          </h3>
-
-          {/* 英文名稱(副標題) */}
-          <p className="text-sm md:text-base text-pip-boy-green/70 uppercase tracking-wide">
-            {metadata.name_en}
-          </p>
-        </div>
-
-        {/* 描述 */}
-        <p className="text-xs md:text-sm text-pip-boy-green/60 text-center mt-3 mb-4 px-2">
-          {metadata.description}
-        </p>
-
-        {/* 卡牌數量指示器 */}
-        <div className="flex items-center justify-center gap-2 mt-auto pt-4 border-t border-pip-boy-green/30">
-          <PixelIcon
-            name="stack-line"
-            size={20}
-            className="text-pip-boy-green"
-            decorative
+      {/* 花色圖示 */}
+      <div className="flex items-center justify-center">
+        <div className="transition-transform duration-300 group-hover:scale-110">
+          <SuitIcon
+            iconName={metadata.iconName}
+            size="lg"
+            ariaHidden
           />
-          <span className="text-sm md:text-base font-semibold text-pip-boy-green">
-            {metadata.card_count} 張卡牌
-          </span>
         </div>
+      </div>
 
-        {/* 懸停提示(視覺上) */}
-        <div
-          className="absolute inset-0 border-2 border-transparent hover:border-pip-boy-green/50 rounded-sm pointer-events-none transition-colors duration-300"
-          aria-hidden="true"
+      {/* 花色名稱 */}
+      <div className="text-center space-y-1">
+        {/* 中文名稱(主標題) */}
+        <h3 className="text-lg md:text-xl font-bold uppercase tracking-wider text-pip-boy-green">
+          {metadata.name_zh_tw}
+        </h3>
+
+        {/* 英文名稱(副標題) */}
+        <p className="text-xs md:text-sm text-pip-boy-green/70 uppercase tracking-wide">
+          {metadata.name_en}
+        </p>
+      </div>
+
+      {/* 描述 */}
+      <p className="text-xs text-pip-boy-green/60 text-center">
+        {metadata.description}
+      </p>
+
+      {/* 卡牌數量指示器 */}
+      <div className="flex items-center justify-center gap-2 pt-3 border-t border-pip-boy-green/30 w-full">
+        <PixelIcon
+          name="stack-line"
+          size={16}
+          className="text-pip-boy-green"
+          decorative
         />
-      </PipBoyCard>
+        <span className="text-xs md:text-sm font-semibold text-pip-boy-green">
+          {metadata.card_count} 張卡牌
+        </span>
+      </div>
     </Link>
   )
 }

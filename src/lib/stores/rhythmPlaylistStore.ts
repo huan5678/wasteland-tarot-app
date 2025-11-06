@@ -4,10 +4,12 @@
  * Task 4.4: 整合訪客與註冊使用者狀態同步
  * Feature: playlist-music-player
  * Requirements: 需求 28.1-28.7, 需求 33.1, 需求 34.1-34.2
+ * ✅ Refactored to use unified API Client
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '@/lib/apiClient';
 import { guestPlaylistManager } from '../localStorage/guestPlaylistManager';
 
 /**
@@ -115,24 +117,14 @@ export interface RhythmPlaylistState {
 const STORAGE_KEY = 'wasteland-tarot-rhythm-playlists';
 
 /**
- * API Base URL
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-
-/**
- * 取得 Supabase session 檢查是否為訪客
+ * 檢查是否為訪客
+ * 注意：初始值為 true（訪客模式）
+ * 組件應使用 useAuthStore 檢查用戶狀態並調用 _setIsGuest() 更新此值
  */
 const checkIsGuest = (): boolean => {
-  // TODO: 整合 Supabase session 檢查
-  // 暫時使用 localStorage 模擬
-  if (typeof window === 'undefined') return true;
-
-  try {
-    const session = localStorage.getItem('supabase.auth.token');
-    return !session;
-  } catch {
-    return true;
-  }
+  // 初始化時預設為訪客模式
+  // 實際的用戶狀態應由組件通過 useAuthStore 檢查並更新
+  return true;
 };
 
 /**
@@ -161,26 +153,14 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             return;
           }
 
-          const response = await fetch(`${API_BASE_URL}/playlists`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              // 未登入，設定為訪客模式
-              set({ isGuest: true, playlists: [], isLoading: false });
-              return;
-            }
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '載入播放清單失敗');
+          try {
+            const playlists = await api.get<Playlist[]>('/playlists');
+            set({ playlists, isLoading: false });
+          } catch (apiError) {
+            // API 錯誤（包含 401），切換為訪客模式
+            set({ isGuest: true, playlists: [], isLoading: false });
+            return;
           }
-
-          const playlists: Playlist[] = await response.json();
-          set({ playlists, isLoading: false });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : '載入播放清單失敗';
           set({ error: errorMessage, isLoading: false });
@@ -196,21 +176,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('訪客無法建立播放清單，請先註冊');
           }
 
-          const response = await fetch(`${API_BASE_URL}/playlists`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ name, description }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '建立播放清單失敗');
-          }
-
-          const newPlaylist = await response.json();
+          const newPlaylist = await api.post<Playlist>('/playlists', { name, description });
 
           // 樂觀更新
           set((state) => ({
@@ -232,15 +198,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('訪客無法刪除播放清單');
           }
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${id}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '刪除播放清單失敗');
-          }
+          await api.delete(`/playlists/${id}`);
 
           // 樂觀更新
           set((state) => ({
@@ -263,20 +221,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('訪客無法載入播放清單');
           }
 
-          const response = await fetch(`${API_BASE_URL}/playlists/${id}`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '載入播放清單失敗');
-          }
-
-          const playlist: Playlist = await response.json();
+          const playlist = await api.get<Playlist>(`/playlists/${id}`);
           set({ currentPlaylist: playlist, isLoading: false });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : '載入播放清單失敗';
@@ -294,18 +239,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
           set({ isLoading: true, error: null });
 
           // 從後端 API 載入系統預設 Pattern
-          const response = await fetch(`${API_BASE_URL}/music/presets/public`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to load system presets: ${response.statusText}`);
-          }
-
-          const data = await response.json();
+          const data = await api.get<{ system_presets: any[] }>('/music/presets/public', false);
           const systemPresets: UserRhythmPreset[] = data.system_presets.map((p: any) => ({
             id: p.id,
             userId: p.user_id || null,
@@ -344,22 +278,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('請先選擇播放清單');
           }
 
-          const response = await fetch(
-            `${API_BASE_URL}/playlists/${currentPlaylist.id}/patterns`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({ pattern_id: patternId }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '加入 Pattern 失敗');
-          }
+          await api.post(`/playlists/${currentPlaylist.id}/patterns`, { pattern_id: patternId });
 
           // 重新載入播放清單
           await get().loadPlaylist(currentPlaylist.id);
@@ -384,18 +303,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('請先選擇播放清單');
           }
 
-          const response = await fetch(
-            `${API_BASE_URL}/playlists/${currentPlaylist.id}/patterns/${patternId}`,
-            {
-              method: 'DELETE',
-              credentials: 'include',
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '移除 Pattern 失敗');
-          }
+          await api.delete(`/playlists/${currentPlaylist.id}/patterns/${patternId}`);
 
           // 重新載入播放清單
           await get().loadPlaylist(currentPlaylist.id);
@@ -420,22 +328,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
             throw new Error('請先選擇播放清單');
           }
 
-          const response = await fetch(
-            `${API_BASE_URL}/playlists/${currentPlaylist.id}/patterns/${patternId}/position`,
-            {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({ position: newPosition }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '調整順序失敗');
-          }
+          await api.put(`/playlists/${currentPlaylist.id}/patterns/${patternId}/position`, { position: newPosition });
 
           // 重新載入播放清單
           await get().loadPlaylist(currentPlaylist.id);
@@ -512,23 +405,7 @@ export const useRhythmPlaylistStore = create<RhythmPlaylistState>()(
           }
 
           // 呼叫匯入 API
-          const response = await fetch(`${API_BASE_URL}/playlists/import-guest`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              guestPlaylist: exportData,
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '匯入失敗');
-          }
-
-          const data = await response.json();
+          const data = await api.post<{ playlistId: string; patternCount: number }>('/playlists/import-guest', { guestPlaylist: exportData });
           const { playlistId, patternCount } = data;
 
           // 清除 localStorage

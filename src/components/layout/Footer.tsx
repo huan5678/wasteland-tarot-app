@@ -1,34 +1,37 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
-import { PixelIcon } from '@/components/ui/icons'
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
 
 export function Footer() {
-  const [currentYear, setCurrentYear] = useState<number | null>(null)
+  const router = useRouter();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   // Set year only on client side to avoid potential hydration mismatch
   useEffect(() => {
-    setCurrentYear(new Date().getFullYear())
-  }, [])
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   const footerLinks = [
-    { href: '/about', label: '關於我們' },
-    { href: '/privacy', label: '隱私政策' },
-    { href: '/terms', label: '服務條款' },
-    { href: '/contact', label: '聯絡支援' },
-  ]
+  { href: '/about', label: '關於我們' },
+  { href: '/faq', label: '常見問題' },
+  { href: '/privacy', label: '隱私政策' },
+  { href: '/terms', label: '服務條款' },
+  { href: '/contact', label: '聯絡支援' }];
+
 
   const socialLinks = [
-    { href: 'https://github.com', label: 'GitHub', icon: 'github', ariaLabel: 'GitHub' },
-    { href: 'https://twitter.com', label: 'Twitter', icon: 'external-link', ariaLabel: 'Twitter' },
-    { href: 'https://discord.com', label: 'Discord', icon: 'message', ariaLabel: 'Discord' },
-  ]
+  { href: 'https://github.com', label: 'GitHub', icon: 'github', ariaLabel: 'GitHub' },
+  { href: 'https://twitter.com', label: 'Twitter', icon: 'external-link', ariaLabel: 'Twitter' },
+  { href: 'https://discord.com', label: 'Discord', icon: 'message', ariaLabel: 'Discord' }];
+
 
   return (
     <footer
       className="border-t-2 border-pip-boy-green"
-      style={{backgroundColor: 'var(--color-wasteland-dark)'}}
-    >
+      style={{ backgroundColor: 'var(--color-wasteland-dark)' }}>
+
       {/* Main Footer Content */}
       <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
@@ -41,8 +44,8 @@ export function Footer() {
                 className="w-10 h-10"
                 style={{
                   filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
-                }}
-              />
+                }} />
+
               <div>
                 <h3 className="text-lg font-bold text-pip-boy-green text-glow-green">廢土塔羅</h3>
                 <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜</p>
@@ -59,13 +62,23 @@ export function Footer() {
             <h4 className="text-sm font-bold text-pip-boy-green mb-4">快速存取</h4>
             <nav className="space-y-2">
               {footerLinks.map((link) => (
-                <button
+                <a
                   key={link.href}
-                  onClick={() => window.location.href = link.href}
-                  className="block text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 cursor-pointer text-left"
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    router.push(link.href);
+                  }}
+                  className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200 cursor-pointer"
                 >
-                  {link.label}
-                </button>
+                  <PixelIcon
+                    name="chevron-right"
+                    size={16}
+                    className="w-4 h-4"
+                    decorative
+                  />
+                  <span>{link.label}</span>
+                </a>
               ))}
             </nav>
           </div>
@@ -74,23 +87,23 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-bold text-pip-boy-green mb-4">社群</h4>
             <div className="space-y-2">
-              {socialLinks.map((link) => (
-                <a
-                  key={link.href}
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200"
-                >
+              {socialLinks.map((link) =>
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-pip-boy-green/70 hover:text-pip-boy-green hover:translate-x-1 transition-all duration-200">
+
                   <PixelIcon
-                    name={link.icon}
-                    size={16}
-                    className="w-4 h-4"
-                    aria-label={link.ariaLabel}
-                  />
+                  name={link.icon}
+                  size={16}
+                  className="w-4 h-4"
+                  aria-label={link.ariaLabel} />
+
                   <span>{link.label}</span>
                 </a>
-              ))}
+              )}
             </div>
 
             {/* Emergency Info */}
@@ -129,6 +142,6 @@ export function Footer() {
 
       {/* Terminal Border */}
       <div className="h-2 bg-gradient-to-r from-pip-boy-green/20 via-pip-boy-green to-pip-boy-green/20"></div>
-    </footer>
-  )
+    </footer>);
+
 }

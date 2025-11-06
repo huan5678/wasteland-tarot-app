@@ -26,16 +26,17 @@ dependencies = [
     "anthropic>=0.39.0",
     "openai>=1.54.0",
     "google-generativeai>=0.8.0",
-    "google-cloud-texttospeech>=2.16.0",
+    "google-cloud-texttospeech>=2.33.0",
     "apscheduler>=3.10.0",
     "pytz>=2024.1",
     "python-dateutil>=2.8.0",
     "webauthn>=2.4.0",
     "psycopg2-binary>=2.9.10",
-    "edge-tts>=7.2.3",
-    "gtts>=2.5.4",
+    # "edge-tts>=7.2.3",  # ❌ Removed: Not used (only Google Cloud TTS is used)
+    # "gtts>=2.5.4",  # ❌ Removed: Not used (only Google Cloud TTS is used)
     "slowapi>=0.1.9",
     "itsdangerous>=2.2.0",
+    "prometheus-client>=0.20.0",
 ]
 
 [project.optional-dependencies]

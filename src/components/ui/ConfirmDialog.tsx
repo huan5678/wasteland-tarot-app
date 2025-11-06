@@ -1,3 +1,15 @@
+/**
+ * @deprecated Consider migrating to PipBoyDialog for enhanced Pip-Boy styling.
+ *
+ * Migration Suggestion:
+ * - Use PipBoyDialog components directly for more flexible confirmation dialogs
+ * - Or keep this wrapper if you prefer the simplified API
+ *
+ * Note: This component is still functional and maintained, but PipBoyDialog
+ * provides a more consistent Pip-Boy themed experience.
+ * Last updated: 2025-10-30
+ */
+
 'use client'
 
 import {

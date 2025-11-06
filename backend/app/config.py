@@ -21,7 +21,10 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = Field(..., env="SECRET_KEY")
     algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    # 修改：延長 access token 過期時間從 30 分鐘改為 7 天
+    # 避免使用者重啟瀏覽器後需要頻繁重新登入
+    access_token_expire_minutes: int = Field(10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days = 7*24*60 = 10080 minutes
+    refresh_token_expire_days: int = Field(30, env="REFRESH_TOKEN_EXPIRE_DAYS")  # 延長為 30 天
 
     # Supabase Configuration
     supabase_url: str = Field(..., env="SUPABASE_URL")
@@ -67,6 +70,30 @@ class Settings(BaseSettings):
     google_tts_voice_name: Optional[str] = Field("zh-TW-Standard-A", env="GOOGLE_TTS_VOICE_NAME")
     supabase_storage_bucket: str = Field("audio-files", env="SUPABASE_STORAGE_BUCKET")
 
+    # Chirp 3:HD Feature Flags
+    chirp3_enabled: bool = Field(
+        default=False,
+        env="CHIRP3_ENABLED",
+        description="Enable Chirp 3:HD globally"
+    )
+    chirp3_rollout_percentage: int = Field(
+        default=0,
+        ge=0,
+        le=100,
+        env="CHIRP3_ROLLOUT_PERCENTAGE",
+        description="Percentage of requests using Chirp 3:HD (0-100)"
+    )
+    chirp3_enabled_characters: str = Field(
+        default="",
+        env="CHIRP3_ENABLED_CHARACTERS",
+        description="Comma-separated list of characters to enable Chirp 3:HD for (empty = all characters)"
+    )
+    chirp3_fallback_to_wavenet: bool = Field(
+        default=True,
+        env="CHIRP3_FALLBACK_TO_WAVENET",
+        description="Fallback to WaveNet on Chirp 3:HD failure"
+    )
+
     # Logging
     log_level: str = Field("INFO", env="LOG_LEVEL")
     enable_json_logging: bool = Field(False, env="ENABLE_JSON_LOGGING")
@@ -108,10 +135,14 @@ class Settings(BaseSettings):
     ai_cache_ttl: int = Field(3600, env="AI_CACHE_TTL")  # 1 hour
     ai_fallback_to_template: bool = Field(True, env="AI_FALLBACK_TO_TEMPLATE")
 
-    # Performance Settings
-    database_pool_size: int = 20
-    database_max_overflow: int = 0
+    # Performance Settings - Optimized for lower memory usage
+    database_pool_size: int = Field(3, env="DATABASE_POOL_SIZE")  # Further reduced from 5 (saves more memory)
+    database_max_overflow: int = Field(5, env="DATABASE_MAX_OVERFLOW")  # Allow some overflow for bursts
     cache_expire_seconds: int = 3600  # 1 hour
+    
+    # Feature Flags - Memory Optimization (disable non-critical startup tasks)
+    enable_bingo_cold_start_check: bool = Field(False, env="ENABLE_BINGO_COLD_START_CHECK")  # Disable to save ~10MB at startup
+    enable_scheduler: bool = Field(True, env="ENABLE_SCHEDULER")  # Can disable if not using bingo/cron jobs
 
     @validator("backend_cors_origins", pre=True)
     def assemble_cors_origins(cls, v):
@@ -121,6 +152,16 @@ class Settings(BaseSettings):
         elif isinstance(v, (list, str)):
             return v
         raise ValueError(v)
+
+    @validator("chirp3_enabled_characters", pre=True)
+    def parse_chirp3_enabled_characters(cls, v):
+        """Parse comma-separated character list."""
+        if isinstance(v, str):
+            # Return as-is, parsing will be done in VoiceModelRouter
+            return v.strip()
+        elif isinstance(v, list):
+            return ",".join(str(i).strip() for i in v)
+        return v or ""
 
     @validator("database_url", pre=True)
     def validate_database_url(cls, v: str, values: dict) -> str:

@@ -5,13 +5,13 @@ Achievement Checker Service
 
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
-from sqlalchemy import select, func, and_, desc
+from sqlalchemy import select, func, and_, or_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
 from app.models.achievement import Achievement, UserAchievementProgress, AchievementStatus
 from app.models.user_analytics import UserAnalytics
-from app.models.reading_enhanced import CompletedReading
+from app.models.reading_enhanced import CompletedReading, SpreadTemplate
 from app.models.social_features import UserFriendship, FriendshipStatus
 from app.models.bingo import UserBingoCard, UserNumberClaim, DailyBingoNumber
 
@@ -94,10 +94,14 @@ class AchievementChecker:
 
         # 套用篩選條件
         if 'spread_type' in filters:
-            query = query.where(CompletedReading.spread_type == filters['spread_type'])
+            # ✅ 修復：CompletedReading 沒有 spread_type，需要 join SpreadTemplate
+            query = query.join(
+                SpreadTemplate,
+                CompletedReading.spread_template_id == SpreadTemplate.id
+            ).where(SpreadTemplate.spread_type == filters['spread_type'])
 
         if 'character_voice' in filters:
-            query = query.where(CompletedReading.character_voice == filters['character_voice'])
+            query = query.where(CompletedReading.character_voice_used == filters['character_voice'])
 
         if 'start_date' in filters:
             start = datetime.fromisoformat(filters['start_date'])
@@ -274,16 +278,19 @@ class AchievementChecker:
     ) -> int:
         """
         檢查播放清單建立數量
+
+        ⚠️ 暫時返回 0：Playlist model 尚未實作
         """
-        from app.models.music import Playlist
+        # TODO: 實作 Playlist model 後啟用
+        # from app.models.music import Playlist
+        # query = select(func.count(Playlist.id)).where(
+        #     Playlist.user_id == user_id
+        # )
+        # result = await self.db.execute(query)
+        # count = result.scalar_one()
+        # return count
 
-        query = select(func.count(Playlist.id)).where(
-            Playlist.user_id == user_id
-        )
-
-        result = await self.db.execute(query)
-        count = result.scalar_one()
-        return count
+        return 0  # 暫時返回 0，直到 Playlist 功能實作
 
     async def _check_time_based(
         self,

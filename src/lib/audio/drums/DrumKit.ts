@@ -15,6 +15,7 @@
 import { KickDrum, KickDrumOptions } from './KickDrum';
 import { SnareDrum, SnareDrumOptions } from './SnareDrum';
 import { HiHat, HiHatOptions } from './HiHat';
+import { EffectsProcessor } from '../effects/EffectsProcessor';
 
 export type DrumType = 'kick' | 'snare' | 'hihat';
 
@@ -33,6 +34,12 @@ export class DrumKit {
   private masterGain: GainNode;
   private drumBus: GainNode;
 
+  // P2.3: 效果處理器
+  private effectsProcessor: EffectsProcessor;
+  private gatedReverbChain: { input: AudioNode; output: AudioNode } | null = null;
+  private tapeSaturationChain: { input: AudioNode; output: AudioNode } | null = null;
+  private snareBus: GainNode; // Snare 專用 bus（用於 Gated Reverb）
+
   private options: Required<DrumKitOptions>;
 
   constructor(audioContext: AudioContext, options: DrumKitOptions = {}) {
@@ -50,14 +57,85 @@ export class DrumKit {
     this.snareDrum = new SnareDrum(audioContext);
     this.hiHat = new HiHat(audioContext);
 
+    // P2.3: 建立效果處理器
+    this.effectsProcessor = new EffectsProcessor(audioContext);
+
     // 建立音訊節點
     this.drumBus = audioContext.createGain();
+    this.snareBus = audioContext.createGain(); // Snare 專用 bus
     this.masterGain = audioContext.createGain();
     this.masterGain.gain.value = this.options.masterVolume;
 
-    // 連接：drumBus → masterGain → destination
-    this.drumBus.connect(this.masterGain);
-    this.masterGain.connect(audioContext.destination);
+    // P2.3: 根據選項初始化效果鏈
+    this._updateAudioGraph();
+  }
+
+  /**
+   * P2.3: 更新音訊圖連接（效果鏈）
+   * 根據 synthwaveMode 和 lofiMode 動態重新連接音訊圖
+   */
+  private _updateAudioGraph(): void {
+    // 斷開所有現有連接
+    this.drumBus.disconnect();
+    this.snareBus.disconnect();
+    if (this.gatedReverbChain) {
+      this.gatedReverbChain.input.disconnect();
+      this.gatedReverbChain.output.disconnect();
+    }
+    if (this.tapeSaturationChain) {
+      this.tapeSaturationChain.input.disconnect();
+      this.tapeSaturationChain.output.disconnect();
+    }
+
+    // 預設連接：drumBus -> masterGain
+    let drumBusOutput: AudioNode = this.drumBus;
+    let snareBusOutput: AudioNode = this.snareBus;
+
+    // 1. Synthwave 模式：Snare 使用 Gated Reverb
+    if (this.options.synthwaveMode) {
+      if (!this.gatedReverbChain) {
+        this.gatedReverbChain = this.effectsProcessor.createGatedReverb({
+          roomSize: 0.8,
+          decay: 0.5,
+          gateThreshold: -40,
+          gateRelease: 0.05,
+          mix: 0.4,
+        });
+      }
+      // 路由：snareBus -> gatedReverb -> drumBus
+      this.snareBus.connect(this.gatedReverbChain.input);
+      this.gatedReverbChain.output.connect(this.drumBus);
+      snareBusOutput = this.snareBus; // Snare 專用
+    } else {
+      // 不使用 Gated Reverb：snareBus -> drumBus
+      this.snareBus.connect(this.drumBus);
+    }
+
+    // 2. Lofi 模式：整體 drumBus 使用 Tape Saturation
+    if (this.options.lofiMode) {
+      if (!this.tapeSaturationChain) {
+        this.tapeSaturationChain = this.effectsProcessor.createTapeSaturation({
+          drive: 3,
+          bias: 0.5,
+          tone: 0.3,
+          mix: 0.6,
+        });
+      }
+      // 路由：drumBus -> tapeSaturation -> masterGain
+      this.drumBus.connect(this.tapeSaturationChain.input);
+      this.tapeSaturationChain.output.connect(this.masterGain);
+      drumBusOutput = this.tapeSaturationChain.output;
+
+      // 降低鼓組音量（需求 11.7）
+      this.drumBus.gain.value = 0.6;
+    } else {
+      // 不使用 Tape Saturation：drumBus -> masterGain
+      this.drumBus.connect(this.masterGain);
+      this.drumBus.gain.value = 1.0;
+    }
+
+    // 3. Master 輸出到 destination
+    this.masterGain.connect(this.audioContext.destination);
   }
 
   /**
@@ -91,14 +169,10 @@ export class DrumKit {
     const volume = (options.volume ?? 1.0) * velocity;
     const effectiveOptions = { ...options, volume };
 
-    // Synthwave 模式：在 Snare 上套用 Gated Reverb
-    // 需求 11.6
-    if (this.options.synthwaveMode) {
-      // TODO: 實作 Gated Reverb（未來由 EffectsProcessor 提供）
-      // 目前使用標準 Snare
-    }
-
-    this.snareDrum.trigger(effectiveOptions, this.drumBus, startTime);
+    // P2.3: Synthwave 模式：在 Snare 上套用 Gated Reverb（需求 11.6）
+    // 輸出到 snareBus（會被 Gated Reverb 處理）
+    const targetBus = this.options.synthwaveMode ? this.snareBus : this.drumBus;
+    this.snareDrum.trigger(effectiveOptions, targetBus, startTime);
   }
 
   /**
@@ -180,26 +254,24 @@ export class DrumKit {
 
   /**
    * 啟用/停用 Synthwave 模式
-   * 需求 11.6 - Synthwave 模式在 Snare 上套用 Gated Reverb
+   * P2.3: 需求 11.6 - Synthwave 模式在 Snare 上套用 Gated Reverb
    */
   setSynthwaveMode(enabled: boolean): void {
+    if (this.options.synthwaveMode === enabled) return; // 避免重複更新
+
     this.options.synthwaveMode = enabled;
+    this._updateAudioGraph(); // 重新連接音訊圖
   }
 
   /**
    * 啟用/停用 Lofi 模式
-   * 需求 11.7 - Lofi 模式降低鼓組音量並增加 Tape Saturation
+   * P2.3: 需求 11.7 - Lofi 模式降低鼓組音量並增加 Tape Saturation
    */
   setLofiMode(enabled: boolean): void {
-    this.options.lofiMode = enabled;
+    if (this.options.lofiMode === enabled) return; // 避免重複更新
 
-    if (enabled) {
-      // 降低鼓組音量 -3 到 -6dB（約 0.5-0.7 倍）
-      this.drumBus.gain.value = 0.6;
-      // TODO: 增加 Tape Saturation（未來由 EffectsProcessor 提供）
-    } else {
-      this.drumBus.gain.value = 1.0;
-    }
+    this.options.lofiMode = enabled;
+    this._updateAudioGraph(); // 重新連接音訊圖
   }
 
   /**
@@ -222,6 +294,17 @@ export class DrumKit {
    */
   dispose(): void {
     this.drumBus.disconnect();
+    this.snareBus.disconnect();
     this.masterGain.disconnect();
+
+    // P2.3: 清理效果鏈
+    if (this.gatedReverbChain) {
+      this.gatedReverbChain.input.disconnect();
+      this.gatedReverbChain.output.disconnect();
+    }
+    if (this.tapeSaturationChain) {
+      this.tapeSaturationChain.input.disconnect();
+      this.tapeSaturationChain.output.disconnect();
+    }
   }
 }

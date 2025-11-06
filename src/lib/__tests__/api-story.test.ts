@@ -47,7 +47,7 @@ describe('Story API Client', () => {
         image_url: '/images/cards/fool.png',
         radiation_factor: 0.5,
         karma_alignment: 'NEUTRAL',
-        character_voice_interpretations: {},
+        character_voices: {},
         rarity_level: 'common',
         is_active: true,
         is_complete: true,

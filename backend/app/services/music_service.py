@@ -3,6 +3,7 @@
 import logging
 from typing import List, Optional, Dict, Any
 from uuid import UUID
+from datetime import datetime, timedelta, timezone
 
 from supabase import Client
 from fastapi import HTTPException, status
@@ -13,6 +14,8 @@ from app.models.music import (
     MusicTrackUpdate,
     MusicListResponse,
 )
+from app.schemas.music import Pattern, AIGenerateRhythmResponse, QuotaResponse
+from app.services.pattern_generator import PatternGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -259,4 +262,208 @@ class MusicService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="刪除音樂失敗",
+            )
+
+    async def generate_rhythm(
+        self,
+        user_id: UUID,
+        prompt: str,
+    ) -> AIGenerateRhythmResponse:
+        """
+        AI 生成節奏 Pattern（每日 20 次配額）
+
+        邏輯:
+        1. 檢查配額（每日 20 次）
+        2. 使用 PatternGenerator 生成節奏
+        3. 更新配額使用量
+        4. 回傳 Pattern 和剩餘配額
+
+        Args:
+            user_id: 使用者 ID
+            prompt: 生成提示（1-200 字元）
+
+        Returns:
+            AIGenerateRhythmResponse: 生成的 Pattern 和剩餘配額
+
+        Raises:
+            HTTPException: 配額用盡或生成失敗時拋出
+        """
+        try:
+            # Step 1: 查詢配額
+            quota_response = self.supabase.table("user_ai_quotas") \
+                .select("*") \
+                .eq("user_id", str(user_id)) \
+                .execute()
+
+            # 若無記錄則建立
+            if not quota_response.data:
+                today = datetime.now(timezone.utc).date()
+                tomorrow = today + timedelta(days=1)
+                reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
+
+                self.supabase.table("user_ai_quotas").insert({
+                    "user_id": str(user_id),
+                    "rhythm_quota_used": 0,
+                    "rhythm_quota_limit": 20,
+                    "last_reset_at": reset_at.isoformat(),
+                }).execute()
+
+                quota_data = {
+                    "rhythm_quota_used": 0,
+                    "rhythm_quota_limit": 20,
+                    "last_reset_at": reset_at.isoformat(),
+                }
+            else:
+                quota_data = quota_response.data[0]
+
+            # Step 2: 檢查配額是否需要重置
+            reset_at = datetime.fromisoformat(quota_data["last_reset_at"].replace('Z', '+00:00'))
+            if reset_at <= datetime.now(timezone.utc):
+                # 重置配額
+                tomorrow = datetime.now(timezone.utc).date() + timedelta(days=1)
+                new_reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
+
+                self.supabase.table("user_ai_quotas") \
+                    .update({
+                        "rhythm_quota_used": 0,
+                        "last_reset_at": new_reset_at.isoformat(),
+                    }) \
+                    .eq("user_id", str(user_id)) \
+                    .execute()
+
+                quota_data["rhythm_quota_used"] = 0
+                quota_data["rhythm_quota_limit"] = 20
+                quota_data["last_reset_at"] = new_reset_at.isoformat()
+
+            # Step 3: 檢查配額是否用盡
+            quota_used = quota_data["rhythm_quota_used"]
+            quota_limit = quota_data["rhythm_quota_limit"]
+
+            if quota_used >= quota_limit:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail={
+                        "error": "Daily quota exceeded",
+                        "message": f"今日 AI 生成配額已用完（{quota_used}/{quota_limit}），明日重置",
+                        "quota_limit": quota_limit,
+                        "quota_used": quota_used,
+                        "reset_at": quota_data["last_reset_at"],
+                    }
+                )
+
+            # Step 4: 使用 PatternGenerator 生成節奏
+            generator = PatternGenerator()
+            generated_pattern = generator.generate(prompt)
+
+            # Step 5: 更新配額
+            self.supabase.table("user_ai_quotas") \
+                .update({"rhythm_quota_used": quota_used + 1}) \
+                .eq("user_id", str(user_id)) \
+                .execute()
+
+            quota_remaining = quota_limit - quota_used - 1
+
+            logger.info(f"[MusicService] AI 節奏已生成: user_id={user_id}, quota_remaining={quota_remaining}")
+
+            return AIGenerateRhythmResponse(
+                pattern=generated_pattern,
+                quota_remaining=quota_remaining,
+            )
+
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"[MusicService] AI 生成節奏失敗: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="AI 生成節奏失敗",
+            )
+
+    async def get_rhythm_quota(
+        self,
+        user_id: UUID,
+    ) -> QuotaResponse:
+        """
+        查詢使用者 AI 節奏生成配額
+
+        邏輯:
+        - 查詢 user_ai_quotas 表
+        - 若無記錄則自動建立（quotaUsed = 0）
+        - 回傳配額狀態
+
+        Args:
+            user_id: 使用者 ID
+
+        Returns:
+            QuotaResponse: 配額狀態
+
+        Raises:
+            HTTPException: 查詢失敗時拋出
+        """
+        try:
+            # 查詢配額
+            quota_response = self.supabase.table("user_ai_quotas") \
+                .select("*") \
+                .eq("user_id", str(user_id)) \
+                .execute()
+
+            # 若無記錄則建立
+            if not quota_response.data:
+                today = datetime.now(timezone.utc).date()
+                tomorrow = today + timedelta(days=1)
+                reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
+
+                self.supabase.table("user_ai_quotas").insert({
+                    "user_id": str(user_id),
+                    "rhythm_quota_used": 0,
+                    "rhythm_quota_limit": 20,
+                    "last_reset_at": reset_at.isoformat(),
+                }).execute()
+
+                return QuotaResponse(
+                    quota_limit=20,
+                    quota_used=0,
+                    quota_remaining=20,
+                    reset_at=reset_at,
+                )
+
+            quota_data = quota_response.data[0]
+
+            # 檢查是否需要重置
+            reset_at = datetime.fromisoformat(quota_data["last_reset_at"].replace('Z', '+00:00'))
+            if reset_at <= datetime.now(timezone.utc):
+                # 重置配額
+                tomorrow = datetime.now(timezone.utc).date() + timedelta(days=1)
+                new_reset_at = datetime.combine(tomorrow, datetime.min.time(), tzinfo=timezone.utc)
+
+                self.supabase.table("user_ai_quotas") \
+                    .update({
+                        "rhythm_quota_used": 0,
+                        "last_reset_at": new_reset_at.isoformat(),
+                    }) \
+                    .eq("user_id", str(user_id)) \
+                    .execute()
+
+                return QuotaResponse(
+                    quota_limit=20,
+                    quota_used=0,
+                    quota_remaining=20,
+                    reset_at=new_reset_at,
+                )
+
+            quota_used = quota_data["rhythm_quota_used"]
+            quota_limit = quota_data["rhythm_quota_limit"]
+
+            return QuotaResponse(
+                quota_limit=quota_limit,
+                quota_used=quota_used,
+                quota_remaining=quota_limit - quota_used,
+                reset_at=reset_at,
+            )
+
+        except Exception as e:
+            logger.error(f"[MusicService] 查詢配額失敗: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="查詢配額失敗",
             )

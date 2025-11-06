@@ -2,6 +2,10 @@ import type { NextConfig } from 'next'
 import path from 'path'
 
 const nextConfig: NextConfig = {
+  // Zeabur Deployment: Standalone output for optimized deployment
+  // Reduces deployment size by 90% (~500MB → ~50MB)
+  output: 'standalone',
+
   // Performance optimizations
   // 註：swcMinify 在 Next.js 13+ 已預設啟用，不需要手動設定
   compiler: {
@@ -70,7 +74,8 @@ const nextConfig: NextConfig = {
       '@radix-ui/react-select',
     ],
     // 實驗性功能：更積極的 code splitting
-    optimizeCss: true,
+    // 已停用：需要 critters 模組且在開發環境可能造成問題
+    // optimizeCss: true,
   },
 
   typescript: {

@@ -3,10 +3,12 @@
  * Task 4.2: 建立 rhythmEditorStore（節奏編輯器狀態管理）
  * Feature: playlist-music-player
  * Requirements: 需求 21.8, 需求 22.1-22.8, 需求 24.2
+ * ✅ Refactored to use unified API Client
  */
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { api } from '@/lib/apiClient';
 import type { Pattern, UserRhythmPreset } from './rhythmPlaylistStore';
 
 /**
@@ -33,6 +35,7 @@ export interface RhythmEditorState {
   tempo: number;           // BPM（60-180，預設 120）
   isPlaying: boolean;
   currentStep: number;     // 當前步驟（0-15）
+  loop: boolean;           // 循環播放（預設 true）
 
   // === Preset 狀態 ===
   systemPresets: UserRhythmPreset[];
@@ -55,6 +58,7 @@ export interface RhythmEditorState {
   pause: () => void;
   stop: () => void;
   setCurrentStep: (step: number) => void;
+  setLoop: (loop: boolean) => void;
 
   // === Actions: Preset 管理 ===
   loadPreset: (preset: UserRhythmPreset) => void;
@@ -83,11 +87,6 @@ export interface RhythmEditorState {
  * localStorage 儲存鍵值
  */
 const STORAGE_KEY = 'wasteland-tarot-rhythm-editor';
-
-/**
- * API Base URL
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
 
 /**
  * 建立空白 Pattern
@@ -129,6 +128,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
       tempo: 120,
       isPlaying: false,
       currentStep: 0,
+      loop: true,
       systemPresets: [],
       userPresets: [],
       aiQuota: null,
@@ -177,6 +177,10 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
         set({ currentStep: step });
       },
 
+      setLoop: (loop: boolean) => {
+        set({ loop });
+      },
+
       // === Actions: Preset 管理 ===
       loadPreset: (preset: UserRhythmPreset) => {
         if (!isValidPattern(preset.pattern)) {
@@ -216,24 +220,12 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             throw new Error('描述不得超過 200 字元');
           }
 
-          const response = await fetch(`${API_BASE_URL}/music/presets`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              name,
-              description,
-              pattern,
-              is_public: isPublic,
-            }),
+          await api.post('/music/presets', {
+            name,
+            description,
+            pattern,
+            is_public: isPublic,
           });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '儲存 Preset 失敗');
-          }
 
           // 重新載入使用者 Presets
           await get().fetchUserPresets();
@@ -250,15 +242,7 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/music/presets/${presetId}`, {
-            method: 'DELETE',
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || '刪除 Preset 失敗');
-          }
+          await api.delete(`/music/presets/${presetId}`);
 
           // 樂觀更新
           set((state) => ({
@@ -277,25 +261,14 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
           set({ isLoading: true, error: null });
 
           // 系統 Presets 可以訪客存取
-          const response = await fetch(`${API_BASE_URL}/music/presets/public`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
-          if (!response.ok) {
-            throw new Error('載入系統 Presets 失敗');
-          }
-
-          const data = await response.json();
+          const data = await api.get<{ systemPresets: UserRhythmPreset[] }>('/music/presets/public', false);
           const systemPresets: UserRhythmPreset[] = data.systemPresets || [];
 
           set({ systemPresets, isLoading: false });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : '載入系統 Presets 失敗';
-          set({ error: errorMessage, isLoading: false });
-          console.error('[RhythmEditorStore]', error);
+          // 網路錯誤，靜默失敗，不顯示錯誤訊息
+          console.warn('[RhythmEditorStore] Failed to fetch system presets:', error);
+          set({ systemPresets: [], isLoading: false, error: null });
         }
       },
 
@@ -303,29 +276,29 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
         try {
           set({ isLoading: true, error: null });
 
-          const response = await fetch(`${API_BASE_URL}/music/presets`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
+          const allPresetsRaw = await api.get<any[]>('/music/presets');
 
-          if (!response.ok) {
-            if (response.status === 401) {
-              // 未登入，不載入使用者 Presets
-              set({ userPresets: [], isLoading: false });
-              return;
-            }
-            throw new Error('載入使用者 Presets 失敗');
-          }
+          // 轉換欄位名稱並分離系統預設和使用者預設
+          const allPresets: UserRhythmPreset[] = allPresetsRaw.map((p) => ({
+            id: p.id,
+            userId: p.user_id,
+            name: p.name,
+            description: p.description,
+            pattern: p.pattern,
+            isSystemPreset: p.is_system_preset,
+            isPublic: p.is_public,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at,
+          }));
 
-          const userPresets: UserRhythmPreset[] = await response.json();
-          set({ userPresets, isLoading: false });
+          const systemPresets = allPresets.filter(p => p.isSystemPreset === true);
+          const userPresets = allPresets.filter(p => p.isSystemPreset !== true);
+
+          set({ systemPresets, userPresets, isLoading: false });
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : '載入使用者 Presets 失敗';
-          set({ error: errorMessage, isLoading: false });
-          console.error('[RhythmEditorStore]', error);
+          // 網路錯誤，靜默失敗，不顯示錯誤訊息
+          console.warn('[RhythmEditorStore] Failed to fetch user presets:', error);
+          set({ userPresets: [], systemPresets: [], isLoading: false, error: null });
         }
       },
 
@@ -343,53 +316,22 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
             throw new Error('提示不得超過 200 字元');
           }
 
-          // 檢查配額
-          const { aiQuota } = get();
-          if (aiQuota && aiQuota.used >= aiQuota.limit) {
-            throw new Error(`今日配額已用完（${aiQuota.used}/${aiQuota.limit}），明日重置`);
-          }
-
-          const response = await fetch(`${API_BASE_URL}/music/generate-rhythm`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ prompt }),
-          });
-
-          if (!response.ok) {
-            if (response.status === 400) {
-              const errorData = await response.json();
-              // 配額用盡
-              if (errorData.error === 'Daily quota exceeded') {
-                const quota: AIQuota = {
-                  limit: errorData.quotaLimit || 20,
-                  used: errorData.quotaUsed || 20,
-                  remaining: 0,
-                  resetAt: errorData.resetAt || new Date().toISOString(),
-                };
-                set({ aiQuota: quota });
-                throw new Error(`今日配額已用完（${quota.used}/${quota.limit}），明日重置`);
-              }
-            }
-            const errorData = await response.json();
-            throw new Error(errorData.detail || 'AI 生成失敗');
-          }
-
-          const data = await response.json();
-          const pattern: Pattern = data.pattern;
-          const quotaRemaining = data.quotaRemaining || 0;
+          // 呼叫後端 API（使用 httpOnly cookies 認證）
+          const data = await api.post<{
+            pattern: Pattern;
+            quota_remaining?: number;
+            quotaRemaining?: number;
+          }>('/music/generate-rhythm', { prompt });
+          const pattern = data.pattern;
 
           // 驗證生成的 Pattern
           if (!isValidPattern(pattern)) {
-            throw new Error('AI 生成的 Pattern 格式錯誤');
+            throw new Error('生成的節奏格式錯誤');
           }
 
-          // 更新 Pattern
-          set({ pattern, isLoading: false });
-
           // 更新配額
+          const quotaRemaining = data.quota_remaining ?? data.quotaRemaining ?? 0;
+          const { aiQuota } = get();
           if (aiQuota) {
             set({
               aiQuota: {
@@ -398,14 +340,14 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
                 remaining: quotaRemaining,
               },
             });
-          } else {
-            // 如果還沒有配額資訊，重新載入
-            await get().fetchQuota();
           }
+
+          // 更新 Pattern
+          set({ pattern, isLoading: false });
 
           return pattern;
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'AI 生成失敗';
+          const errorMessage = error instanceof Error ? error.message : '生成失敗';
           set({ error: errorMessage, isLoading: false });
           throw error;
         }
@@ -413,35 +355,29 @@ export const useRhythmEditorStore = create<RhythmEditorState>()(
 
       fetchQuota: async () => {
         try {
-          const response = await fetch(`${API_BASE_URL}/music/quota`, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-          });
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              // 未登入，不載入配額
-              set({ aiQuota: null });
-              return;
-            }
-            throw new Error('載入配額失敗');
-          }
-
-          const data = await response.json();
+          const data = await api.get<{
+            quota_limit?: number;
+            quotaLimit?: number;
+            quota_used?: number;
+            quotaUsed?: number;
+            quota_remaining?: number;
+            quotaRemaining?: number;
+            remaining?: number;
+            reset_at?: string;
+            resetAt?: string;
+          }>('/music/quota');
           const quota: AIQuota = {
-            limit: data.quotaLimit || data.quota_limit || 20,
-            used: data.quotaUsed || data.quota_used || 0,
-            remaining: data.quotaRemaining || data.remaining || 20,
-            resetAt: data.resetAt || data.reset_at || new Date().toISOString(),
+            limit: data.quota_limit ?? data.quotaLimit ?? 20,
+            used: data.quota_used ?? data.quotaUsed ?? 0,
+            remaining: data.quota_remaining ?? data.quotaRemaining ?? data.remaining ?? 20,
+            resetAt: data.reset_at ?? data.resetAt ?? new Date().toISOString(),
           };
 
           set({ aiQuota: quota });
         } catch (error) {
-          console.error('[RhythmEditorStore] Failed to fetch quota:', error);
-          // 不設定錯誤狀態，配額載入失敗不影響其他功能
+          // 網路錯誤，靜默失敗，不影響其他功能
+          console.warn('[RhythmEditorStore] Failed to fetch quota:', error);
+          set({ aiQuota: null });
         }
       },
 

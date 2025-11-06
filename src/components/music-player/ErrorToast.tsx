@@ -8,7 +8,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons/PixelIcon';
 import { MusicPlayerError, MusicPlayerErrorType } from '@/lib/audio/errorHandler';
 import { logger } from '@/lib/logger';
@@ -16,7 +16,7 @@ import { logger } from '@/lib/logger';
 // ============================================================================
 // Types & Interfaces
 // ============================================================================
-
+import { Button } from "@/components/ui/button";
 export interface ErrorToastProps {
   error: MusicPlayerError | Error | null;
   onRetry?: () => void;
@@ -36,7 +36,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
   error,
   onRetry,
   onDismiss,
-  autoDismissMs = 5000,
+  autoDismissMs = 5000
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -45,7 +45,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
     if (error) {
       setIsVisible(true);
       logger.info('[ErrorToast] Displaying error toast', {
-        errorType: error instanceof MusicPlayerError ? error.type : 'generic',
+        errorType: error instanceof MusicPlayerError ? error.type : 'generic'
       });
     } else {
       setIsVisible(false);
@@ -101,7 +101,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
         [MusicPlayerErrorType.MODE_LOAD_FAILED]: '載入失敗',
         [MusicPlayerErrorType.AUDIO_CONTEXT_SUSPENDED]: '音訊已暫停',
         [MusicPlayerErrorType.STORAGE_WRITE_FAILED]: '儲存失敗',
-        [MusicPlayerErrorType.PLAYLIST_CORRUPTED]: '播放清單損壞',
+        [MusicPlayerErrorType.PLAYLIST_CORRUPTED]: '播放清單損壞'
       };
 
       return titles[error.type] || '錯誤';
@@ -123,17 +123,17 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
 
   return (
     <AnimatePresence>
-      {isVisible && error && (
-        <motion.div
-          initial={{ opacity: 0, y: 50, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.95 }}
-          transition={{ duration: 0.3, ease: 'easeOut' }}
-          className="fixed bottom-24 right-6 z-[9999] max-w-md"
-          role="alert"
-          aria-live="assertive"
-          aria-atomic="true"
-        >
+      {isVisible && error &&
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 20, scale: 0.95 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="fixed bottom-24 right-6 z-[9999] max-w-md"
+        role="alert"
+        aria-live="assertive"
+        aria-atomic="true">
+
           {/* Toast Container */}
           <div className="relative rounded-md border-2 border-pip-boy-green bg-black/95 p-4 shadow-pip-boy-green backdrop-blur-sm">
             {/* Scanline Effect */}
@@ -159,47 +159,47 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                 </div>
 
                 {/* Actions */}
-                {(isRetryable() || onRetry) && (
-                  <div className="mt-3 flex gap-2">
+                {(isRetryable() || onRetry) &&
+              <div className="mt-3 flex gap-2">
                     {/* Retry Button */}
-                    {onRetry && (
-                      <button
-                        onClick={handleRetry}
-                        className="flex items-center gap-1.5 rounded border border-pip-boy-green bg-pip-boy-green/10 px-3 py-1.5 text-xs font-medium text-pip-boy-green transition-all hover:bg-pip-boy-green hover:text-black active:scale-95"
-                        aria-label="重試"
-                      >
+                    {onRetry &&
+                <Button size="xs" variant="outline"
+                onClick={handleRetry}
+                className="flex items-center gap-1.5 rounded border px-3 py-1.5 font-medium transition-all"
+                aria-label="重試">
+
                         <PixelIcon name="refresh" sizePreset="xs" aria-label="重試圖示" />
                         <span>重試</span>
-                      </button>
-                    )}
+                      </Button>
+                }
                   </div>
-                )}
+              }
               </div>
 
               {/* Close Button */}
-              <button
-                onClick={handleDismiss}
-                className="flex-shrink-0 rounded p-1 text-pip-boy-green/60 transition-colors hover:bg-pip-boy-green/10 hover:text-pip-boy-green"
-                aria-label="關閉錯誤提示"
-              >
+              <Button size="icon" variant="link"
+            onClick={handleDismiss}
+            className="flex-shrink-0 rounded p-1 transition-colors"
+            aria-label="關閉錯誤提示">
+
                 <PixelIcon name="close" sizePreset="xs" decorative />
-              </button>
+              </Button>
             </div>
 
             {/* Auto-dismiss Progress Bar */}
-            {autoDismissMs > 0 && (
-              <motion.div
-                initial={{ width: '100%' }}
-                animate={{ width: '0%' }}
-                transition={{ duration: autoDismissMs / 1000, ease: 'linear' }}
-                className="absolute bottom-0 left-0 h-0.5 bg-pip-boy-green"
-              />
-            )}
+            {autoDismissMs > 0 &&
+          <motion.div
+            initial={{ width: '100%' }}
+            animate={{ width: '0%' }}
+            transition={{ duration: autoDismissMs / 1000, ease: 'linear' }}
+            className="absolute bottom-0 left-0 h-0.5 bg-pip-boy-green" />
+
+          }
           </div>
         </motion.div>
-      )}
-    </AnimatePresence>
-  );
+      }
+    </AnimatePresence>);
+
 };
 
 /**
@@ -213,9 +213,9 @@ export function useErrorToast() {
   const [retryCallback, setRetryCallback] = useState<(() => void) | undefined>(undefined);
 
   const showError = (
-    err: MusicPlayerError | Error,
-    onRetry?: () => void
-  ) => {
+  err: MusicPlayerError | Error,
+  onRetry?: () => void) =>
+  {
     setError(err);
     if (onRetry) {
       setRetryCallback(() => onRetry);
@@ -232,6 +232,6 @@ export function useErrorToast() {
     showError,
     dismissError,
     retryCallback,
-    setRetryCallback,
+    setRetryCallback
   };
 }

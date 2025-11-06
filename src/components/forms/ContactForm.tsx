@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 export default function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
     register,
@@ -54,6 +55,7 @@ export default function ContactForm() {
   const onSubmit = async (data: ContactFormData) => {
     setIsSubmitting(true);
     setSubmitSuccess(false);
+    setSubmitError(null);
 
     try {
       // Simulate API call (replace with actual API endpoint)
@@ -72,7 +74,13 @@ export default function ContactForm() {
       }, 3000);
     } catch (error) {
       console.error('Form submission error:', error);
-      // TODO: Add error handling UI
+      const errorMessage = error instanceof Error ? error.message : '傳送失敗，請稍後再試';
+      setSubmitError(errorMessage);
+
+      // Auto-hide error after 5 seconds
+      setTimeout(() => {
+        setSubmitError(null);
+      }, 5000);
     } finally {
       setIsSubmitting(false);
     }
@@ -100,6 +108,30 @@ export default function ContactForm() {
           </p>
           <p className="mt-2 text-xs text-green-700">
             &gt;&gt; Signal strength: 100% | Encryption: AES-256
+          </p>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {submitError && (
+        <div
+          className="mb-6 border-2 border-red-600 bg-red-950/50 p-4 animate-pulse"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="mb-2 flex items-center text-red-400">
+            <span className="mr-2 text-xl" aria-hidden="true">
+              ✗
+            </span>
+            <span className="font-bold">
+              [TRANSMISSION FAILED]
+            </span>
+          </div>
+          <p className="text-sm text-red-500">
+            {submitError}
+          </p>
+          <p className="mt-2 text-xs text-red-700">
+            &gt;&gt; System error detected | Please retry
           </p>
         </div>
       )}
@@ -141,7 +173,7 @@ export default function ContactForm() {
             id="contact-name"
             type="text"
             placeholder="請輸入您的姓名"
-            errorMessage={errors.name?.message}
+            error={errors.name?.message}
             disabled={isSubmitting}
             {...register('name')}
           />
@@ -165,7 +197,7 @@ export default function ContactForm() {
             id="contact-email"
             type="email"
             placeholder="your.email@wasteland.vault"
-            errorMessage={errors.email?.message}
+            error={errors.email?.message}
             disabled={isSubmitting}
             {...register('email')}
           />
@@ -235,10 +267,21 @@ export default function ContactForm() {
             id="contact-message"
             placeholder="請輸入您的問題或建議（至少 20 個字元）..."
             rows={6}
-            errorMessage={errors.message?.message}
             disabled={isSubmitting}
+            className={errors.message ? 'border-destructive focus-visible:ring-destructive' : ''}
+            aria-invalid={errors.message ? 'true' : 'false'}
+            aria-describedby={errors.message ? 'contact-message-error' : undefined}
             {...register('message')}
           />
+          {errors.message && (
+            <p
+              id="contact-message-error"
+              className="mt-2 text-sm text-destructive"
+              role="alert"
+            >
+              {errors.message.message}
+            </p>
+          )}
           <p className="text-xs text-green-700">
             <span aria-hidden="true">&gt;</span> 最少 20 字元，最多
             1000 字元

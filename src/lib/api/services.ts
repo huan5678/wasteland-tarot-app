@@ -114,11 +114,42 @@ export const readingsAPI = {
   },
 
   /**
-   * 獲取用戶的占卜記錄
+   * 獲取用戶的占卜記錄（分頁格式）
    */
-  async getUserReadings(userId: string): Promise<Reading[]> {
-    const data = await apiClient.get(`/api/v1/readings/user/${userId}`)
-    return validateResponse<Reading[]>(data, ReadingArraySchema)
+  async getUserReadings(userId: string): Promise<{
+    readings: Reading[]
+    total_count: number
+    page: number
+    page_size: number
+    has_more: boolean
+  }> {
+    const data = await apiClient.get(`/api/v1/readings/?page=1&page_size=100&sort_by=created_at&sort_order=desc`)
+    return data as {
+      readings: Reading[]
+      total_count: number
+      page: number
+      page_size: number
+      has_more: boolean
+    }
+  },
+
+  /**
+   * 獲取個人占卜統計（後端計算）
+   */
+  async getPersonalStats(): Promise<{
+    total_readings: number
+    readings_this_month: number
+    readings_this_week: number
+    average_satisfaction: number
+    favorite_character_voice: string
+    favorite_spread: string
+    total_cards_drawn: number
+    karma_distribution: Record<string, number>
+    recent_readings_count: number
+    consecutive_days: number
+  }> {
+    const data = await apiClient.get('/api/v1/readings/stats/personal')
+    return data as any
   },
 
   /**
@@ -320,6 +351,37 @@ export const healthAPI = {
   async check(): Promise<HealthCheck> {
     const data = await apiClient.get('/health')
     return validateResponse<HealthCheck>(data, HealthCheckSchema)
+  },
+}
+
+// ============================================================================
+// Analytics API
+// ============================================================================
+
+export const analyticsAPI = {
+  /**
+   * 取得用戶分析資料（包含最常抽到的卡片、收藏等）
+   */
+  async getUserAnalytics(): Promise<{
+    user_analytics: {
+      id: string
+      user_id: string
+      most_drawn_cards: string[] // 最常抽到的卡片 ID 陣列
+      favorited_cards: string[] // 收藏的卡片 ID 陣列
+      readings_count: number
+      shares_count: number
+      notes_count: number
+      exports_count: number
+      favorite_spread_type: string | null
+      favorite_character_voice: string | null
+      [key: string]: any
+    }
+    recent_events: any[]
+    patterns: any[]
+    recommendations: any[]
+  }> {
+    const data = await apiClient.get('/api/v1/analytics/user')
+    return data as any
   },
 }
 

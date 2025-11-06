@@ -14,10 +14,13 @@ from app.schemas.cards import KarmaAlignment, FactionAlignment
 
 class SpreadType(str, Enum):
     """廢土塔羅系統中可用的牌陣類型"""
-    SINGLE_WASTELAND = "single_wasteland"  # 單卡廢土占卜
-    VAULT_TEC_SPREAD = "vault_tec_spread"  # 3 張牌：過去/現在/未來
-    WASTELAND_SURVIVAL = "wasteland_survival"  # 5 張牌
-    BROTHERHOOD_COUNCIL = "brotherhood_council"  # 7 張牌
+    SINGLE_WASTELAND = "single_wasteland"  # 單卡廢土占卜（1張）
+    VAULT_TEC_SPREAD = "vault_tec_spread"  # 避難所科技三牌陣（3張）
+    RAIDER_CHAOS = "raider_chaos"  # 掠奪者混沌陣（4張）
+    WASTELAND_SURVIVAL = "wasteland_survival"  # 廢土生存五牌陣（5張）
+    NCR_STRATEGIC = "ncr_strategic"  # NCR戰略陣（6張）
+    BROTHERHOOD_COUNCIL = "brotherhood_council"  # 兄弟會議會（7張）
+    CELTIC_CROSS = "celtic_cross"  # 十字路口抉擇陣（10張）
     CUSTOM_SPREAD = "custom_spread"  # 自訂牌陣
 
 

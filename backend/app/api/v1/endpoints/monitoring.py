@@ -4,8 +4,11 @@ Provides access to logs, metrics, and error aggregation
 """
 
 from fastapi import APIRouter, HTTPException, Query
+from fastapi.responses import PlainTextResponse
 from typing import Optional
 from datetime import datetime, timedelta
+
+from prometheus_client import generate_latest
 
 from app.core.logging_config import error_aggregator, get_logger
 from app.monitoring.performance import performance_monitor, generate_performance_report
@@ -25,10 +28,56 @@ async def health_check():
     }
 
 
+@router.get("/metrics/memory")
+async def get_memory_metrics():
+    """
+    Get detailed memory usage metrics
+    
+    Returns memory usage for the current process including:
+    - RSS (Resident Set Size): Actual physical memory used
+    - VMS (Virtual Memory Size): Total virtual memory allocated
+    - Memory percentage
+    - CPU usage
+    - Thread and connection counts
+    """
+    try:
+        import psutil
+        import os
+        
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        
+        # Get cache stats
+        from app.core.cache import get_cache_stats
+        cache_stats = get_cache_stats()
+        
+        return {
+            "status": "success",
+            "timestamp": datetime.utcnow().isoformat(),
+            "memory": {
+                "rss_mb": round(memory_info.rss / 1024 / 1024, 2),
+                "vms_mb": round(memory_info.vms / 1024 / 1024, 2),
+                "percent": round(process.memory_percent(), 2)
+            },
+            "cpu": {
+                "percent": round(process.cpu_percent(interval=0.1), 2)
+            },
+            "process": {
+                "num_threads": process.num_threads(),
+                "num_connections": len(process.connections()) if hasattr(process, 'connections') else 0,
+                "num_fds": process.num_fds() if hasattr(process, 'num_fds') else 0
+            },
+            "cache": cache_stats
+        }
+    except Exception as e:
+        logger.error(f"Failed to get memory metrics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve memory metrics")
+
+
 @router.get("/metrics")
 async def get_metrics():
     """
-    Get current performance metrics
+    Get current performance metrics (JSON format)
     """
     try:
         summary = performance_monitor.get_performance_summary()
@@ -39,6 +88,24 @@ async def get_metrics():
     except Exception as e:
         logger.error(f"Failed to get metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve metrics")
+
+
+@router.get("/metrics/prometheus", response_class=PlainTextResponse)
+async def get_prometheus_metrics():
+    """
+    Export Prometheus metrics in Prometheus format
+
+    This endpoint exports all Prometheus metrics including TTS synthesis metrics,
+    performance metrics, and system metrics in Prometheus exposition format.
+
+    Returns:
+        Plain text response with Prometheus metrics format
+    """
+    try:
+        return generate_latest().decode('utf-8')
+    except Exception as e:
+        logger.error(f"Failed to generate Prometheus metrics: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve Prometheus metrics")
 
 
 @router.get("/metrics/averages")

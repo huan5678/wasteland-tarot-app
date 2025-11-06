@@ -84,6 +84,11 @@ class WastelandCard(BaseModel):
     name = Column(String(100), nullable=False)
     suit = Column(String(50), nullable=False)
     number = Column(Integer, nullable=True)  # None for Major Arcana
+    
+    # Standard Tarot Mapping (for AI interpretation)
+    standard_tarot_name = Column(String(100), nullable=True)  # e.g., "Six of Swords"
+    standard_tarot_name_zh = Column(String(100), nullable=True)  # e.g., "寶劍六"
+    standard_suit = Column(String(50), nullable=True)  # "Major Arcana", "Cups", "Swords", "Pentacles", "Wands"
 
     # Fallout-specific Attributes
     radiation_level = Column(Float, default=0.0)  # 0.0 to 1.0
@@ -99,12 +104,23 @@ class WastelandCard(BaseModel):
     neutral_karma_interpretation = Column(Text)
     evil_karma_interpretation = Column(Text)
 
-    # Character Voice Interpretations
+    # Character Voice Interpretations (基礎角色)
     pip_boy_analysis = Column(Text)
     vault_dweller_perspective = Column(Text)
     wasteland_trader_wisdom = Column(Text)
     super_mutant_simplicity = Column(Text)
     codsworth_analysis = Column(Text)
+    
+    # Character Voice Interpretations (擴展角色)
+    brotherhood_scribe_analysis = Column(Text)
+    brotherhood_paladin_combat_wisdom = Column(Text)
+    ghoul_perspective = Column(Text)
+    raider_perspective = Column(Text)
+    ncr_ranger_tactical_analysis = Column(Text)
+    legion_centurion_command = Column(Text)
+    minuteman_hope_message = Column(Text)
+    railroad_agent_liberation_view = Column(Text)
+    institute_scientist_research_notes = Column(Text)
 
     # Faction Alignments
     brotherhood_significance = Column(Text)
@@ -291,7 +307,13 @@ class WastelandCard(BaseModel):
             "name": self.name,
             "suit": self.suit,
             "number": self.number,
-            "rank": "Jack" if self.number == 11 else "Queen" if self.number == 12 else "King" if self.number == 13 else None,
+            "rank": "Page" if self.number == 11 else "Knight" if self.number == 12 else "Queen" if self.number == 13 else "King" if self.number == 14 else None,
+            
+            # Standard Tarot mapping
+            "standard_tarot_name": self.standard_tarot_name,
+            "standard_tarot_name_zh": self.standard_tarot_name_zh,
+            "standard_suit": self.standard_suit,
+            
             "upright_meaning": self.upright_meaning,
             "reversed_meaning": self.reversed_meaning,
 
@@ -307,13 +329,24 @@ class WastelandCard(BaseModel):
             "neutral_karma_interpretation": self.neutral_karma_interpretation,
             "evil_karma_interpretation": self.evil_karma_interpretation,
 
-            # Character voices
+            # Character voices (使用 CharacterVoice enum 的值作為 key)
             "character_voices": {
-                "pip_boy_analysis": self.pip_boy_analysis,
-                "vault_dweller_perspective": self.vault_dweller_perspective,
-                "wasteland_trader_wisdom": self.wasteland_trader_wisdom,
-                "super_mutant_simplicity": self.super_mutant_simplicity,
-                "codsworth_analysis": self.codsworth_analysis,
+                # 基礎角色
+                CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
+                CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
+                CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
+                CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
+                CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
+                # 擴展角色
+                CharacterVoice.BROTHERHOOD_SCRIBE.value: self.brotherhood_scribe_analysis,
+                CharacterVoice.BROTHERHOOD_PALADIN.value: self.brotherhood_paladin_combat_wisdom,
+                CharacterVoice.GHOUL.value: self.ghoul_perspective,
+                CharacterVoice.RAIDER.value: self.raider_perspective,
+                CharacterVoice.NCR_RANGER.value: self.ncr_ranger_tactical_analysis,
+                CharacterVoice.LEGION_CENTURION.value: self.legion_centurion_command,
+                CharacterVoice.MINUTEMAN.value: self.minuteman_hope_message,
+                CharacterVoice.RAILROAD_AGENT.value: self.railroad_agent_liberation_view,
+                CharacterVoice.INSTITUTE_SCIENTIST.value: self.institute_scientist_research_notes,
             },
 
             # Faction meanings

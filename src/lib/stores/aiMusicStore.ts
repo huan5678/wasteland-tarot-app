@@ -2,9 +2,11 @@
  * AIMusicStore - AI 音樂生成狀態管理
  * Task 7.1-7.3: 建立 aiMusicStore 與 AI 音樂生成
  * Requirements: 13-15, 17
+ * ✅ Refactored to use unified API Client
  */
 
 import { create } from 'zustand';
+import { api } from '@/lib/apiClient';
 import type { MusicParameters } from './playlistStore';
 
 /**
@@ -73,11 +75,6 @@ export interface AIMusicState {
 }
 
 /**
- * API Base URL
- */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
-
-/**
  * AIMusicStore - AI 音樂生成狀態管理
  */
 export const useAIMusicStore = create<AIMusicState>((set, get) => ({
@@ -115,28 +112,13 @@ export const useAIMusicStore = create<AIMusicState>((set, get) => ({
 
       // 呼叫 AI 生成 API
       // Requirements 14: LLM Provider 整合與管理
-      const response = await fetch(`${API_BASE_URL}/ai/generate-music`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ prompt }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          throw new Error('請先登入以使用 AI 音樂生成功能');
-        }
-        if (response.status === 403) {
-          throw new Error('本月配額已用完，下月 1 日重置');
-        }
-
-        const errorData = await response.json();
-        throw new Error(errorData.detail || 'AI 生成失敗');
-      }
-
-      const data = await response.json();
+      const data = await api.post<{
+        data: {
+          parameters: MusicParameters;
+          provider: LLMProvider;
+          quotaRemaining: number;
+        };
+      }>('/ai/generate-music', { prompt });
       const result: GenerationResult = {
         parameters: data.data.parameters,
         provider: data.data.provider,
@@ -174,20 +156,17 @@ export const useAIMusicStore = create<AIMusicState>((set, get) => ({
   // === Actions: 配額管理 ===
   fetchQuotaInfo: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/ai/quota`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // 未登入時不顯示錯誤，只是不載入配額資訊
-          set({ quotaInfo: null });
-          return;
-        }
-        throw new Error('載入配額資訊失敗');
-      }
-
-      const data = await response.json();
+      const data = await api.get<{
+        quota_limit?: number;
+        quotaLimit?: number;
+        quota_used?: number;
+        quotaUsed?: number;
+        used_count?: number;
+        usedCount?: number;
+        remaining: number;
+        reset_at?: string;
+        resetAt?: string;
+      }>('/ai/quota');
       const quotaInfo: QuotaInfo = {
         quotaLimit: data.quota_limit || data.quotaLimit,
         usedCount: data.used_count || data.usedCount,
@@ -197,8 +176,9 @@ export const useAIMusicStore = create<AIMusicState>((set, get) => ({
 
       set({ quotaInfo });
     } catch (error) {
+      // 未登入或其他錯誤，靜默失敗
       console.error('[AIMusicStore] Failed to fetch quota info:', error);
-      // 不設定錯誤狀態，配額載入失敗不影響其他功能
+      set({ quotaInfo: null });
     }
   },
 

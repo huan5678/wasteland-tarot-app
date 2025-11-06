@@ -1,0 +1,341 @@
+{
+  "dashboard": {
+    "title": "Chirp 3:HD TTS System Monitoring",
+    "description": "Comprehensive monitoring dashboard for Chirp 3:HD TTS system",
+    "tags": ["tts", "chirp3", "audio", "monitoring"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Synthesis Success Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_synthesis_total{status=\"success\"}[5m])) / sum(rate(tts_synthesis_total[5m])) * 100",
+            "legendFormat": "Success Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Average Synthesis Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "rate(tts_synthesis_duration_seconds_sum[5m]) / rate(tts_synthesis_duration_seconds_count[5m])",
+            "legendFormat": "Avg Time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "min": 0,
+            "max": 5,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 2, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0}
+      },
+      {
+        "id": 3,
+        "title": "P95 Synthesis Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(tts_synthesis_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95 Time",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "min": 0,
+            "max": 5,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 2, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0}
+      },
+      {
+        "id": 4,
+        "title": "Fallback Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_chirp3_fallback_total[5m])) / sum(rate(tts_synthesis_total{voice_model=\"chirp3-hd\"}[5m])) * 100",
+            "legendFormat": "Fallback Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 20,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0}
+      },
+      {
+        "id": 5,
+        "title": "Voice Model Distribution",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_synthesis_total[5m])) by (voice_model)",
+            "legendFormat": "{{voice_model}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4}
+      },
+      {
+        "id": 6,
+        "title": "Synthesis Time by Model",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(tts_synthesis_duration_seconds_sum[5m]) / rate(tts_synthesis_duration_seconds_count[5m]) by (voice_model)",
+            "legendFormat": "{{voice_model}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4}
+      },
+      {
+        "id": 7,
+        "title": "Requests by Character",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_requests_by_character_total[5m])) by (character_key)",
+            "legendFormat": "{{character_key}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12}
+      },
+      {
+        "id": 8,
+        "title": "Synthesis Time by Character",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "rate(tts_synthesis_duration_seconds_sum[5m]) / rate(tts_synthesis_duration_seconds_count[5m]) by (character_key)",
+            "legendFormat": "{{character_key}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12}
+      },
+      {
+        "id": 9,
+        "title": "Cache Hit Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "(sum(rate(tts_cache_hits_total{source=\"redis\"}[5m])) + sum(rate(tts_cache_hits_total{source=\"db\"}[5m]))) / sum(rate(tts_cache_hits_total[5m])) * 100",
+            "legendFormat": "Hit Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 90, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20}
+      },
+      {
+        "id": 10,
+        "title": "Cache Hits by Source",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_cache_hits_total[5m])) by (source)",
+            "legendFormat": "{{source}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 6, "y": 20}
+      },
+      {
+        "id": 11,
+        "title": "Error Rate",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_synthesis_total{status=\"error\"}[5m])) / sum(rate(tts_synthesis_total[5m])) * 100",
+            "legendFormat": "Error Rate",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 18, "y": 20}
+      },
+      {
+        "id": 12,
+        "title": "Fallback by Error Type",
+        "type": "barchart",
+        "targets": [
+          {
+            "expr": "sum(rate(tts_chirp3_fallback_total[5m])) by (error_type)",
+            "legendFormat": "{{error_type}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28}
+      },
+      {
+        "id": 13,
+        "title": "Audio File Size Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "rate(tts_audio_file_size_bytes_bucket[5m])",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28}
+      },
+      {
+        "id": 14,
+        "title": "Text Length Distribution",
+        "type": "histogram",
+        "targets": [
+          {
+            "expr": "rate(tts_text_length_characters_bucket[5m])",
+            "legendFormat": "{{le}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 36}
+      },
+      {
+        "id": 15,
+        "title": "Synthesis Latency Percentiles",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, rate(tts_synthesis_duration_seconds_bucket[5m]))",
+            "legendFormat": "P50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(tts_synthesis_duration_seconds_bucket[5m]))",
+            "legendFormat": "P95",
+            "refId": "B"
+          },
+          {
+            "expr": "histogram_quantile(0.99, rate(tts_synthesis_duration_seconds_bucket[5m]))",
+            "legendFormat": "P99",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth"
+            }
+          }
+        },
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 36}
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    }
+  }
+}

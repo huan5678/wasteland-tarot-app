@@ -123,6 +123,85 @@ class UserService:
 
         return user
 
+    async def create_oauth_user(
+        self,
+        email: str,
+        name: str,
+        oauth_provider: str,
+        oauth_id: str,
+        profile_picture_url: Optional[str] = None,
+        **kwargs
+    ) -> User:
+        """
+        建立 OAuth 使用者（不需要密碼）
+
+        用於 Google OAuth 登入時建立新用戶。
+
+        Args:
+            email: 使用者 email（必須唯一）
+            name: 使用者名稱（1-50 字元）
+            oauth_provider: OAuth 提供者（如 'google'）
+            oauth_id: OAuth 提供者的用戶 ID
+            profile_picture_url: OAuth 提供的頭像 URL（可選）
+            **kwargs: 其他選填欄位
+
+        Returns:
+            User: 建立的使用者物件
+
+        Raises:
+            ValueError: email 格式無效、name 長度無效
+            UserAlreadyExistsError: Email 已存在
+        """
+        import re
+
+        # 驗證 email 格式
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not email or not re.match(email_pattern, email):
+            raise ValueError(f"無效的 email 格式: {email}")
+
+        # 驗證 name 長度（1-50 字元）
+        if not name or len(name) < 1 or len(name) > 50:
+            raise ValueError(f"name 長度必須在 1-50 字元之間，目前長度: {len(name)}")
+
+        # 檢查 email 是否已存在
+        existing_email = await self.db.execute(
+            select(User).where(User.email == email)
+        )
+        if existing_email.scalar_one_or_none():
+            raise UserAlreadyExistsError(f"Email '{email}' 已被使用")
+
+        # 建立 OAuth 使用者（不需要密碼）
+        user = User(
+            email=email,
+            name=name,
+            password_hash=None,  # OAuth 用戶沒有密碼
+            oauth_provider=oauth_provider,
+            oauth_id=oauth_id,
+            profile_picture_url=profile_picture_url,
+            display_name=kwargs.get("display_name", name),
+            faction_alignment=kwargs.get("faction_alignment", FactionAlignment.VAULT_DWELLER.value),
+            karma_score=kwargs.get("karma_score", 50),
+            wasteland_location=kwargs.get("wasteland_location"),
+            is_active=True,
+            is_verified=True  # OAuth 用戶視為已驗證（email 由 OAuth 提供者驗證）
+        )
+
+        self.db.add(user)
+        await self.db.commit()
+        await self.db.refresh(user)
+
+        # Create default profile and preferences for new user
+        try:
+            await self._create_default_profile(user.id)
+            await self._create_default_preferences(user.id)
+            await self.db.commit()
+        except Exception as e:
+            logger.error(f"Failed to create default profile/preferences for user {user.id}: {e}")
+            # Don't fail registration if profile creation fails
+            pass
+
+        return user
+
     async def get_user_by_id(self, user_id: str) -> User:
         """Get user by ID with relationships"""
         result = await self.db.execute(

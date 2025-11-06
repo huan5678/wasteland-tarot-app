@@ -20,7 +20,7 @@ const mockCard = {
   upright_meaning: 'New beginnings, innocence, potential, fresh start in the wasteland',
   reversed_meaning: 'Recklessness, naivety, poor judgment, unpreparedness for the wasteland',
   fallout_reference: 'Represents the player character leaving Vault 111',
-  character_voice_interpretations: {
+  character_voices: {
     'PIP_BOY': 'New adventure detected! Your journey begins now, user.',
     'SUPER_MUTANT': 'TINY HUMAN LEAVE METAL CAVE. WASTELAND TEACH TINY HUMAN HARD LESSONS.',
     'GHOUL': 'Fresh meat stepping into the sun. Hope you got more luck than sense, smoothskin.',
@@ -202,7 +202,7 @@ describe('WastelandCard', () => {
         />
       )
 
-      expect(screen.getByText(mockCard.character_voice_interpretations.PIP_BOY)).toBeInTheDocument()
+      expect(screen.getByText(mockCard.character_voices.PIP_BOY)).toBeInTheDocument()
       expect(screen.getByText(/pip-boy says/i)).toBeInTheDocument()
     })
 
@@ -215,7 +215,7 @@ describe('WastelandCard', () => {
         />
       )
 
-      expect(screen.getByText(mockCard.character_voice_interpretations.GHOUL)).toBeInTheDocument()
+      expect(screen.getByText(mockCard.character_voices.GHOUL)).toBeInTheDocument()
 
       rerender(
         <WastelandCard
@@ -225,7 +225,7 @@ describe('WastelandCard', () => {
         />
       )
 
-      expect(screen.getByText(mockCard.character_voice_interpretations.SUPER_MUTANT)).toBeInTheDocument()
+      expect(screen.getByText(mockCard.character_voices.SUPER_MUTANT)).toBeInTheDocument()
     })
   })
 

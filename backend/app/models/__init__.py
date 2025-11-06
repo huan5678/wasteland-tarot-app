@@ -85,6 +85,16 @@ from .reading_journal import (
 from .wishlist import (
     Wishlist,
 )
+from .gamification import (
+    KarmaLog,
+    UserKarma,
+    DailyTask,
+    UserDailyTask,
+    WeeklyTask,
+    UserWeeklyTask,
+    UserActivityStats,
+    UserLoginStreak,
+)
 
 __all__ = [
     "Base",
@@ -106,6 +116,8 @@ __all__ = [
     "UserPreferences",
     "UserLoginHistory",
     "TokenExtensionHistory",
+    "UserKarma",
+    "UserKarma",
     # Enhanced Reading Models (Completed Readings)
     "SpreadTemplate",
     "InterpretationTemplate",
@@ -156,4 +168,13 @@ __all__ = [
     "ReadingJournal",
     # Wishlist Models
     "Wishlist",
+    # Dashboard Gamification Models
+    "KarmaLog",
+    "UserKarma",
+    "DailyTask",
+    "UserDailyTask",
+    "WeeklyTask",
+    "UserWeeklyTask",
+    "UserActivityStats",
+    "UserLoginStreak",
 ]

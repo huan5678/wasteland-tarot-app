@@ -1,71 +1,71 @@
-'use client'
+'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { animated } from '@react-spring/web'
-import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
-import { PixelIcon } from '@/components/ui/icons'
-import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
-import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators'
-import { use3DTilt } from '@/hooks/tilt/use3DTilt'
-import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects'
-import { useGyroscopePermission } from '@/hooks/tilt/useGyroscopePermission'
-import { PipBoyButton } from '@/components/ui/pipboy'
-import { CardBackPixelEffect } from '@/components/cards/CardBackPixelEffect'
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { animated } from '@react-spring/web';
+import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
+import { PixelIcon } from '@/components/ui/icons';
+import { useAdvancedGestures, useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures';
+import { CardStateIndicators, CardProgressIndicator, CardLoadingShimmer, type CardState } from '@/components/common/CardStateIndicators';
+import { use3DTilt } from '@/hooks/tilt/use3DTilt';
+import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects';
+import { useGyroscopePermission } from '@/hooks/tilt/useGyroscopePermission';
+import { PipBoyButton } from '@/components/ui/pipboy';
+import { CardBackPixelEffect } from '@/components/cards/CardBackPixelEffect';import { Button } from "@/components/ui/button";
 
 interface TarotCard {
-  id: number
-  name: string
-  suit: string
-  number?: number
-  meaning_upright: string
-  meaning_reversed: string
-  image_url: string
-  keywords: string[]
+  id: number;
+  name: string;
+  suit: string;
+  number?: number;
+  meaning_upright: string;
+  meaning_reversed: string;
+  image_url: string;
+  keywords: string[];
 }
 
 interface MobileTarotCardProps {
-  card: TarotCard
-  isRevealed: boolean
-  position: 'upright' | 'reversed'
-  size?: 'small' | 'medium' | 'large' | 'fullscreen'
-  loading?: boolean
-  showKeywords?: boolean
-  onClick?: (card: TarotCard) => void
-  onLongPress?: (card: TarotCard) => void
-  onSwipe?: (direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => void
-  onDoubleTap?: (card: TarotCard) => void
-  flipStyle?: 'default' | 'kokonut' | 'mobile'
-  isSelectable?: boolean
-  isSelected?: boolean
-  animationDelay?: number
-  showGlow?: boolean
-  enableHaptic?: boolean
-  cardIndex?: number
-  totalCards?: number
-  showProgress?: boolean
-  enableZoom?: boolean
-  enableRotation?: boolean
-  className?: string
+  card: TarotCard;
+  isRevealed: boolean;
+  position: 'upright' | 'reversed';
+  size?: 'small' | 'medium' | 'large' | 'fullscreen';
+  loading?: boolean;
+  showKeywords?: boolean;
+  onClick?: (card: TarotCard) => void;
+  onLongPress?: (card: TarotCard) => void;
+  onSwipe?: (direction: 'left' | 'right' | 'up' | 'down', card: TarotCard) => void;
+  onDoubleTap?: (card: TarotCard) => void;
+  flipStyle?: 'default' | 'kokonut' | 'mobile';
+  isSelectable?: boolean;
+  isSelected?: boolean;
+  animationDelay?: number;
+  showGlow?: boolean;
+  enableHaptic?: boolean;
+  cardIndex?: number;
+  totalCards?: number;
+  showProgress?: boolean;
+  enableZoom?: boolean;
+  enableRotation?: boolean;
+  className?: string;
   /**
    * 啟用 3D 傾斜效果（預設：true）
    */
-  enable3DTilt?: boolean
+  enable3DTilt?: boolean;
   /**
    * 3D 傾斜最大角度（預設：15）
    */
-  tiltMaxAngle?: number
+  tiltMaxAngle?: number;
   /**
    * 3D 傾斜過渡動畫時間，單位 ms（預設：400）
    */
-  tiltTransitionDuration?: number
+  tiltTransitionDuration?: number;
   /**
    * 啟用陀螺儀傾斜（行動裝置）（預設：true）
    */
-  enableGyroscope?: boolean
+  enableGyroscope?: boolean;
   /**
    * 啟用光澤效果（預設：true）
    */
-  enableGloss?: boolean
+  enableGloss?: boolean;
 }
 
 const mobileSizeClasses = {
@@ -73,7 +73,7 @@ const mobileSizeClasses = {
   medium: 'w-28 h-42 min-w-[112px] min-h-[168px]',
   large: 'w-40 h-60 min-w-[160px] min-h-[240px]',
   fullscreen: 'w-full h-full max-w-sm max-h-[70vh]'
-}
+};
 
 export function MobileTarotCard({
   card,
@@ -104,20 +104,20 @@ export function MobileTarotCard({
   enableGyroscope = true,
   enableGloss = true
 }: MobileTarotCardProps) {
-  const [isFlipping, setIsFlipping] = useState(false)
-  const [imageError, setImageError] = useState(false)
-  const [previousRevealed, setPreviousRevealed] = useState(isRevealed)
-  const [cardState, setCardState] = useState<CardState>('idle')
-  const [isZoomed, setIsZoomed] = useState(false)
-  const [showControls, setShowControls] = useState(false)
-  const [rotation, setRotation] = useState(0)
-  const [isHovered, setIsHovered] = useState(false)
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [imageError, setImageError] = useState(false);
+  const [previousRevealed, setPreviousRevealed] = useState(isRevealed);
+  const [cardState, setCardState] = useState<CardState>('idle');
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [showControls, setShowControls] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  const cardRef = useRef<HTMLDivElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const cardRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const { isTouchDevice, prefersReducedMotion, screenSize, isIOS } = useAdvancedDeviceCapabilities()
+  const { isTouchDevice, prefersReducedMotion, screenSize, isIOS } = useAdvancedDeviceCapabilities();
 
   // 3D 傾斜效果（行動裝置優先使用陀螺儀）
   const {
@@ -135,69 +135,69 @@ export function MobileTarotCard({
     size: size === 'fullscreen' ? 'large' : size,
     isFlipping,
     loading
-  })
+  });
 
   // Advanced gesture handlers
   const gestureHandlers = {
     onTap: useCallback((event: any) => {
       // Trigger hover effect on tap (for pixel animation)
-      setIsHovered(true)
-      setTimeout(() => setIsHovered(false), 300)
+      setIsHovered(true);
+      setTimeout(() => setIsHovered(false), 300);
 
       if (onClick && (isRevealed || isSelectable)) {
-        onClick(card)
+        onClick(card);
       }
       // Show/hide controls on tap for fullscreen mode
       if (size === 'fullscreen') {
-        setShowControls(prev => !prev)
+        setShowControls((prev) => !prev);
         // Auto-hide controls after 3 seconds
         if (controlsTimeoutRef.current) {
-          clearTimeout(controlsTimeoutRef.current)
+          clearTimeout(controlsTimeoutRef.current);
         }
         controlsTimeoutRef.current = setTimeout(() => {
-          setShowControls(false)
-        }, 3000)
+          setShowControls(false);
+        }, 3000);
       }
     }, [onClick, card, isRevealed, isSelectable, size]),
 
     onDoubleTap: useCallback((event: any) => {
       if (onDoubleTap) {
-        onDoubleTap(card)
+        onDoubleTap(card);
       } else if (enableZoom && size === 'fullscreen') {
         // Toggle zoom on double tap
-        setIsZoomed(prev => !prev)
+        setIsZoomed((prev) => !prev);
       }
     }, [onDoubleTap, card, enableZoom, size]),
 
     onLongPress: useCallback((event: any) => {
       // Trigger hover effect on long press
-      setIsHovered(true)
-      setTimeout(() => setIsHovered(false), 600)
+      setIsHovered(true);
+      setTimeout(() => setIsHovered(false), 600);
 
       if (onLongPress) {
-        onLongPress(card)
+        onLongPress(card);
       } else {
         // Default long press: show card details or flip
         if (!isRevealed && isSelectable) {
-          onClick?.(card)
+          onClick?.(card);
         }
       }
     }, [onLongPress, card, isRevealed, isSelectable, onClick]),
 
     onSwipe: useCallback((direction: 'left' | 'right' | 'up' | 'down', event: any) => {
-      event.preventDefault()
+      event.preventDefault();
 
       if (onSwipe) {
-        onSwipe(direction, card)
+        onSwipe(direction, card);
       } else {
         // Default swipe behaviors
         if (direction === 'up' && !isRevealed && isSelectable) {
           // Swipe up to reveal card
-          onClick?.(card)
+          onClick?.(card);
         } else if (direction === 'left' || direction === 'right') {
           // Swipe left/right to rotate (if enabled)
           if (enableRotation) {
-            setRotation(prev => prev + (direction === 'right' ? 90 : -90))
+            setRotation((prev) => prev + (direction === 'right' ? 90 : -90));
           }
         }
       }
@@ -205,10 +205,10 @@ export function MobileTarotCard({
 
     onPinch: useCallback((scale: number, event: any) => {
       if (enableZoom && size === 'fullscreen') {
-        setIsZoomed(scale > 1.2)
+        setIsZoomed(scale > 1.2);
       }
     }, [enableZoom, size])
-  }
+  };
 
   const {
     bind,
@@ -225,55 +225,55 @@ export function MobileTarotCard({
     swipeThreshold: 30,
     longPressDelay: 500,
     preventScroll: size === 'fullscreen'
-  })
+  });
 
   // Handle flip animation when isRevealed changes
   useEffect(() => {
     if (previousRevealed !== isRevealed) {
-      setCardState('revealing')
-      setIsFlipping(true)
+      setCardState('revealing');
+      setIsFlipping(true);
 
       const timer = setTimeout(() => {
-        setIsFlipping(false)
-        setCardState(isRevealed ? 'revealed' : 'idle')
-      }, 600)
+        setIsFlipping(false);
+        setCardState(isRevealed ? 'revealed' : 'idle');
+      }, 600);
 
-      setPreviousRevealed(isRevealed)
-      return () => clearTimeout(timer)
+      setPreviousRevealed(isRevealed);
+      return () => clearTimeout(timer);
     }
-  }, [isRevealed, previousRevealed])
+  }, [isRevealed, previousRevealed]);
 
   // Handle animation delay for sequential reveals
   useEffect(() => {
     if (animationDelay > 0) {
-      setCardState('animating')
+      setCardState('animating');
       timeoutRef.current = setTimeout(() => {
-        setCardState('idle')
-      }, animationDelay)
+        setCardState('idle');
+      }, animationDelay);
     }
 
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+        clearTimeout(timeoutRef.current);
       }
-    }
-  }, [animationDelay])
+    };
+  }, [animationDelay]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+        clearTimeout(timeoutRef.current);
       }
       if (controlsTimeoutRef.current) {
-        clearTimeout(controlsTimeoutRef.current)
+        clearTimeout(controlsTimeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const handleImageError = useCallback(() => {
-    setImageError(true)
-  }, [])
+    setImageError(true);
+  }, []);
 
   // Mobile-specific loading skeleton
   if (loading) {
@@ -281,35 +281,35 @@ export function MobileTarotCard({
       <div
         data-testid="mobile-card-skeleton"
         className={`${mobileSizeClasses[size]} bg-gradient-to-br from-wasteland-dark to-black rounded-lg
-          flex items-center justify-center relative border-2 border-pip-boy-green/30 ${className}`}
-      >
+          flex items-center justify-center relative border-2 border-pip-boy-green/30 ${className}`}>
+
         <CardLoadingShimmer />
         <div className="w-6 h-6 border-2 border-pip-boy-green border-t-transparent rounded-full animate-spin" />
         <CardStateIndicators state="loading" size={size === 'fullscreen' ? 'large' : 'medium'} />
-        {showProgress && totalCards > 1 && (
-          <CardProgressIndicator
-            current={cardIndex + 1}
-            total={totalCards}
-            size={size === 'fullscreen' ? 'large' : 'medium'}
-          />
-        )}
-      </div>
-    )
+        {showProgress && totalCards > 1 &&
+        <CardProgressIndicator
+          current={cardIndex + 1}
+          total={totalCards}
+          size={size === 'fullscreen' ? 'large' : 'medium'} />
+
+        }
+      </div>);
+
   }
 
-  const cardContent = (
-    <animated.div
-      ref={(el) => {
-        // Merge refs: cardRef and tiltRef
-        if (el) {
-          cardRef.current = el
-          if (tiltRef) {
-            ;(tiltRef as React.MutableRefObject<HTMLDivElement | null>).current = el
-          }
+  const cardContent =
+  <animated.div
+    ref={(el) => {
+      // Merge refs: cardRef and tiltRef
+      if (el) {
+        cardRef.current = el;
+        if (tiltRef) {
+          ;(tiltRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
         }
-      }}
-      data-testid="mobile-tarot-card"
-      className={`
+      }
+    }}
+    data-testid="mobile-tarot-card"
+    className={`
         ${mobileSizeClasses[size]} relative group
         ${position === 'reversed' ? 'reversed' : ''}
         ${isFlipping ? 'animate-card-flip' : ''}
@@ -319,91 +319,91 @@ export function MobileTarotCard({
         ${size === 'fullscreen' ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
         ${className}
       `}
-      {...(isTouchDevice ? { ...bind(), ...touchHandlers } : bind())}
-      style={{
-        ...animations,
-        ...tiltStyle,
-        transformStyle: 'preserve-3d',
-        perspective: '1000px',
-        animationDelay: `${animationDelay}ms`,
-        touchAction: size === 'fullscreen' ? 'none' : 'manipulation',
-        transform: `${animations.x ? `translateX(${animations.x}px)` : ''}
+    {...isTouchDevice ? { ...bind(), ...touchHandlers } : bind()}
+    style={{
+      ...animations,
+      ...tiltStyle,
+      transformStyle: 'preserve-3d',
+      perspective: '1000px',
+      animationDelay: `${animationDelay}ms`,
+      touchAction: size === 'fullscreen' ? 'none' : 'manipulation',
+      transform: `${animations.x ? `translateX(${animations.x}px)` : ''}
                    ${animations.y ? `translateY(${animations.y}px)` : ''}
                    ${animations.scale ? `scale(${animations.scale})` : ''}
                    ${rotation ? `rotate(${rotation}deg)` : ''}`
-      }}
-    >
+    }}>
+
       {/* 陀螺儀權限提示（僅 iOS 顯示） */}
-      {enableGyroscope && gyroscopePermission.status === 'prompt' && isIOS && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+      {enableGyroscope && gyroscopePermission.status === 'prompt' && isIOS &&
+    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
           <div className="max-w-sm space-y-4 text-center">
             <div className="text-pip-boy-green text-sm">
               啟用陀螺儀以體驗 3D 傾斜效果
             </div>
             <PipBoyButton
-              onClick={gyroscopePermission.requestPermission}
-              variant="primary"
-              size="md"
-            >
+          onClick={gyroscopePermission.requestPermission}
+          variant="primary"
+          size="md">
+
               啟用陀螺儀
             </PipBoyButton>
-            {gyroscopePermission.error && (
-              <div className="text-xs text-red-500">
+            {gyroscopePermission.error &&
+        <div className="text-xs text-red-500">
                 {gyroscopePermission.error}
               </div>
-            )}
+        }
           </div>
         </div>
-      )}
+    }
 
       {/* 3D Tilt Visual Effects */}
-      {tiltState.isTilted && (
-        <TiltVisualEffects
-          tiltState={tiltState}
-          enableGloss={enableGloss}
-        />
-      )}
+      {tiltState.isTilted &&
+    <TiltVisualEffects
+      tiltState={tiltState}
+      enableGloss={enableGloss} />
+
+    }
 
       {/* State indicators */}
       <CardStateIndicators
-        state={cardState}
-        size={size === 'fullscreen' ? 'large' : 'medium'}
-        animate={!prefersReducedMotion}
-      />
+      state={cardState}
+      size={size === 'fullscreen' ? 'large' : 'medium'}
+      animate={!prefersReducedMotion} />
+
 
       {/* Progress indicator */}
-      {showProgress && totalCards > 1 && (
-        <CardProgressIndicator
-          current={cardIndex + 1}
-          total={totalCards}
-          size={size === 'fullscreen' ? 'large' : 'medium'}
-        />
-      )}
+      {showProgress && totalCards > 1 &&
+    <CardProgressIndicator
+      current={cardIndex + 1}
+      total={totalCards}
+      size={size === 'fullscreen' ? 'large' : 'medium'} />
+
+    }
 
       {/* Mobile controls overlay for fullscreen */}
-      {size === 'fullscreen' && showControls && (
-        <div className={`
+      {size === 'fullscreen' && showControls &&
+    <div className={`
           absolute top-4 right-4 flex flex-col gap-2 z-20
           transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}
         `}>
-          <button
-            onClick={() => reset()}
-            className="p-2 bg-black/80 text-pip-boy-green border border-pip-boy-green/50 rounded-full"
-            aria-label="重置位置"
-          >
+          <Button size="icon" variant="outline"
+      onClick={() => reset()}
+      className="p-2 border"
+      aria-label="重置位置">
+
             <PixelIcon name="reload" size={16} aria-hidden="true" />
-          </button>
-          {enableRotation && (
-            <button
-              onClick={() => setRotation(prev => prev + 90)}
-              className="p-2 bg-black/80 text-pip-boy-green border border-pip-boy-green/50 rounded-full"
-              aria-label="旋转卡牌"
-            >
+          </Button>
+          {enableRotation &&
+      <Button size="icon" variant="outline"
+      onClick={() => setRotation((prev) => prev + 90)}
+      className="p-2 border"
+      aria-label="旋转卡牌">
+
               <PixelIcon name="reload" size={16} aria-hidden="true" />
-            </button>
-          )}
+            </Button>
+      }
         </div>
-      )}
+    }
 
       <div className={`
         relative w-full h-full [perspective:1200px] overflow-hidden
@@ -423,28 +423,28 @@ export function MobileTarotCard({
           `}>
             <div className="text-center text-pip-boy-green relative z-10">
               <PixelIcon
-                name="cards"
-                size={size === 'small' ? 16 : size === 'medium' ? 24 : size === 'fullscreen' ? 32 : 32}
-                className="mb-2 mx-auto"
-                aria-hidden="true"
-              />
+              name="cards"
+              size={size === 'small' ? 16 : size === 'medium' ? 24 : size === 'fullscreen' ? 32 : 32}
+              className="mb-2 mx-auto"
+              aria-hidden="true" />
+
               <div className={`${size === 'small' ? 'text-[8px]' : size === 'medium' ? 'text-[10px]' : 'text-sm'}`}>
                 WASTELAND
               </div>
-              {size === 'fullscreen' && (
-                <div className="text-xs opacity-60 mt-2">
+              {size === 'fullscreen' &&
+            <div className="text-xs opacity-60 mt-2">
                   {isTouchDevice ? '長按查看詳情' : '點擊查看'}
                 </div>
-              )}
+            }
             </div>
             {/* Pixel hover effect for card back */}
-            {!isRevealed && (
-              <CardBackPixelEffect
-                isHovered={isHovered}
-                gap={size === 'small' ? 12 : size === 'medium' ? 10 : size === 'large' ? 8 : 6}
-                speed={35}
-              />
-            )}
+            {!isRevealed &&
+          <CardBackPixelEffect
+            isHovered={isHovered}
+            gap={size === 'small' ? 12 : size === 'medium' ? 10 : size === 'large' ? 8 : 6}
+            speed={35} />
+
+          }
           </div>
 
           {/* Card Front */}
@@ -455,48 +455,48 @@ export function MobileTarotCard({
             transition-all duration-300
           `}>
             {/* Enhanced indicators */}
-            {(onClick || isSelectable) && (
-              <div className={`
+            {(onClick || isSelectable) &&
+          <div className={`
                 absolute top-1 right-1 flex items-center gap-1 z-10
                 transition-all duration-200
               `}>
                 <div className="w-2 h-2 bg-pip-boy-green/70 rounded-full animate-pulse"></div>
-                {isSelected && (
-                  <PixelIcon name="zap" size={12} className="text-pip-boy-green animate-pulse" aria-hidden="true" />
-                )}
+                {isSelected &&
+            <PixelIcon name="zap" size={12} className="text-pip-boy-green animate-pulse" aria-hidden="true" />
+            }
               </div>
-            )}
+          }
 
             {/* Shimmer effect for special states */}
-            {showGlow && (
-              <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer"></div>
-            )}
+            {showGlow &&
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer"></div>
+          }
 
             {/* Card Image */}
             <div className="flex-1 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full relative overflow-hidden">
-              {imageError ? (
-                <div className="text-pip-boy-green/60 text-center">
+              {imageError ?
+            <div className="text-pip-boy-green/60 text-center">
                   <PixelIcon
-                    name="image"
-                    size={size === 'small' ? 24 : 32}
-                    className="mb-2 mx-auto"
-                    aria-hidden="true"
-                  />
+                name="image"
+                size={size === 'small' ? 24 : 32}
+                className="mb-2 mx-auto"
+                aria-hidden="true" />
+
                   <div className={`${size === 'small' ? 'text-[8px]' : 'text-xs'}`}>無圖</div>
-                </div>
-              ) : (
-                <img
-                  src={card.image_url}
-                  alt={card.name}
-                  onError={handleImageError}
-                  className={`
+                </div> :
+
+            <img
+              src={card.image_url}
+              alt={card.name}
+              onError={handleImageError}
+              className={`
                     object-contain max-h-full max-w-full
                     ${size === 'fullscreen' ? 'transition-transform duration-300' : ''}
                     ${isZoomed && size === 'fullscreen' ? 'scale-150' : ''}
                   `}
-                  loading={size === 'fullscreen' ? 'eager' : 'lazy'}
-                />
-              )}
+              loading={size === 'fullscreen' ? 'eager' : 'lazy'} />
+
+            }
             </div>
 
             {/* Card Info */}
@@ -518,35 +518,35 @@ export function MobileTarotCard({
               </div>
 
               {/* Keywords for larger sizes */}
-              {showKeywords && card.keywords && size !== 'small' && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {card.keywords.slice(0, size === 'fullscreen' ? 10 : 3).map((keyword, index) => (
-                    <span
-                      key={index}
-                      className={`
+              {showKeywords && card.keywords && size !== 'small' &&
+            <div className="flex flex-wrap gap-1 mt-2">
+                  {card.keywords.slice(0, size === 'fullscreen' ? 10 : 3).map((keyword, index) =>
+              <span
+                key={index}
+                className={`
                         bg-pip-boy-green/20 text-pip-boy-green px-1 rounded
                         ${size === 'fullscreen' ? 'text-xs' : 'text-[8px]'}
-                      `}
-                    >
+                      `}>
+
                       {keyword}
                     </span>
-                  ))}
-                </div>
               )}
+                </div>
+            }
 
               {/* Mobile gesture hints for fullscreen */}
-              {size === 'fullscreen' && isTouchDevice && (
-                <div className="mt-2 text-center text-pip-boy-green/50 text-xs">
+              {size === 'fullscreen' && isTouchDevice &&
+            <div className="mt-2 text-center text-pip-boy-green/50 text-xs">
                   <div>雙擊：{enableZoom ? '縮放' : '詳情'} • 長按：選項</div>
                   <div>滑動：{enableRotation ? '旋轉' : '導航'}</div>
                 </div>
-              )}
+            }
             </div>
           </div>
         </div>
       </div>
-    </animated.div>
-  )
+    </animated.div>;
+
 
   // Wrap with zoom functionality for fullscreen mode
   if (size === 'fullscreen' && enableZoom) {
@@ -561,16 +561,16 @@ export function MobileTarotCard({
         pinch={{ step: 5 }}
         doubleClick={{ disabled: true }} // We handle double click ourselves
         panning={{ disabled: false }}
-        className="w-full h-full"
-      >
+        className="w-full h-full">
+
         <TransformComponent wrapperClass="w-full h-full">
           {cardContent}
         </TransformComponent>
-      </TransformWrapper>
-    )
+      </TransformWrapper>);
+
   }
 
-  return cardContent
+  return cardContent;
 }
 
 // Export enhanced MobileTarotCard component with advanced gesture support

@@ -79,11 +79,14 @@ export interface CardDraw {
  * AI interpretation generation progress
  */
 export interface InterpretationProgress {
-  current_card: number
-  total_cards: number
-  cards_interpreted: Record<number, string> // position -> interpretation text
+  started: boolean
+  completed: boolean
+  text?: string
+  current_card?: number
+  total_cards?: number
+  cards_interpreted?: Record<number, string> // position -> interpretation text
   overall_synthesis?: string
-  is_streaming: boolean
+  is_streaming?: boolean
   stream_position?: number
   estimated_completion?: string
 }

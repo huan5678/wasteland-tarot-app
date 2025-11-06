@@ -22,7 +22,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '天王星 - 突破與革新',
     radiation_factor: 0.1,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '檢測到新冒險！你的旅程現在開始，使用者。',
       'SUPER_MUTANT': '小人類離開金屬洞穴。廢土會教小人類艱難的課程。',
       'GHOUL': '又一個新鮮肉體踏入陽光。希望你的運氣比理智多，光滑皮膚。',
@@ -46,7 +46,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '水星 - 溝通與技術',
     radiation_factor: 0.3,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '技術專精檢測。建議：運用你的技能和知識。',
       'SUPER_MUTANT': '聰明的小人類！會修理發光的盒子！',
       'GHOUL': '又一個認為自己很聰明的修理工。至少他知道哪邊是核電池的正極。',
@@ -70,7 +70,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '白羊座 - 領導與權威',
     radiation_factor: 0.2,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '檢測到權威人物。建議遵守避難所規則。',
       'SUPER_MUTANT': '金屬洞穴的老大人類。所有小人類都聽老大的話。',
       'GHOUL': '每個避難所都需要一個發號司令的大人物。',
@@ -94,7 +94,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '月亮 - 直覺與神秘',
     radiation_factor: 0.4,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '商人檢測。物品交換機會。建議：相信直覺進行交易。',
       'SUPER_MUTANT': '神秘的小商人！有好東西！小人類要用亮晶晶的換！',
       'GHOUL': '老神秘總是在你最需要的時候出現。價格公道...大部分時候。',
@@ -118,7 +118,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '金星 - 價值與財富',
     radiation_factor: 0.2,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '檢測到貨幣。價值：重要。可用交易機會。',
       'SUPER_MUTANT': '亮晶晶的金屬圓片！小人類喜歡亮晶晶的東西！',
       'GHOUL': '全能的瓶蓋。讓世界轉動，即使在它停止旋轉之後。',
@@ -142,7 +142,7 @@ export const enhancedWastelandCards: DetailedTarotCard[] = [
     astrological_association: '天蝎座 - 轉化與重生',
     radiation_factor: 0.6,
     karma_alignment: 'NEUTRAL',
-    character_voice_interpretations: {
+    character_voices: {
       'PIP_BOY': '檢測到變異昆蟲。威脅等級：極小。生存本能：最大。',
       'SUPER_MUTANT': '噁心的蟲子東西！很難壓扁！小人類怕蟲子！',
       'GHOUL': '蟑螂比大多數生物都更能存活下來。必須尊重這一點。',
@@ -187,7 +187,7 @@ export function enhanceCardWithWastelandData(basicCard: any): DetailedTarotCard 
     radiation_factor: Math.random() * 0.8,
     karma_alignment: 'NEUTRAL' as const,
     fallout_reference: `這張卡牌在廢土世界中代表著${uprightMeaning}的重要性。`,
-    character_voice_interpretations: generateCharacterVoices(basicCard)
+    character_voices: generateCharacterVoices(basicCard)
   }
 }
 

@@ -96,6 +96,7 @@ export class WebGLQuadNukaColaRenderer {
     });
 
     if (!contextResult) {
+      // Don't throw error here - let the caller handle graceful fallback
       throw new Error('[WebGLQuadNukaColaRenderer] WebGL is not supported');
     }
 

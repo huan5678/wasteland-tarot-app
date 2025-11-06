@@ -2,6 +2,105 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { useErrorStore } from '@/lib/errorStore'
 import { timedFetch } from '@/lib/metrics'
+import { z } from 'zod'
+
+// ============================================================================
+// Inline Zod Schemas (避免模組載入問題)
+// ============================================================================
+
+// Enum Schemas
+const AchievementCategorySchema = z.enum([
+  'READING',
+  'SOCIAL',
+  'BINGO',
+  'KARMA',
+  'EXPLORATION'
+])
+
+const AchievementRaritySchema = z.enum([
+  'COMMON',
+  'RARE',
+  'EPIC',
+  'LEGENDARY'
+])
+
+const AchievementStatusSchema = z.enum([
+  'IN_PROGRESS',
+  'UNLOCKED',
+  'CLAIMED'
+])
+
+// Main Schemas
+const AchievementSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string(),
+  description: z.string(),
+  category: AchievementCategorySchema,
+  rarity: AchievementRaritySchema,
+  icon_name: z.string(),
+  icon_image_url: z.string().nullable().optional(),
+  criteria: z.record(z.any()),
+  rewards: z.record(z.any()),
+  is_hidden: z.boolean(),
+  display_order: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+const UserAchievementProgressSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  achievement_id: z.string(),
+  achievement: AchievementSchema.nullable().optional(),
+  current_progress: z.number(),
+  target_progress: z.number(),
+  progress_percentage: z.number(),
+  status: AchievementStatusSchema,
+  unlocked_at: z.string().nullable().optional(),
+  claimed_at: z.string().nullable().optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+const AchievementListResponseSchema = z.object({
+  achievements: z.array(AchievementSchema),
+  total: z.number(),
+  category_filter: AchievementCategorySchema.nullable().optional(),
+})
+
+const UserProgressSummaryResponseSchema = z.object({
+  user_id: z.string(),
+  total_achievements: z.number(),
+  unlocked_count: z.number(),
+  claimed_count: z.number(),
+  in_progress_count: z.number(),
+  completion_percentage: z.number(),
+  achievements: z.array(UserAchievementProgressSchema),
+  category_summary: z.record(z.object({
+    total: z.number(),
+    unlocked: z.number(),
+    claimed: z.number(),
+  })).optional(),
+})
+
+const ClaimRewardResponseSchema = z.object({
+  success: z.boolean(),
+  achievement_code: z.string(),
+  rewards: z.record(z.any()),
+  message: z.string(), // ← 添加缺少的 message 欄位
+  claimed_at: z.string(),
+})
+
+// Type Exports
+export type AchievementCategory = z.infer<typeof AchievementCategorySchema>
+export type AchievementStatus = z.infer<typeof AchievementStatusSchema>
+export type AchievementRarity = z.infer<typeof AchievementRaritySchema>
+export type Achievement = z.infer<typeof AchievementSchema>
+export type UserAchievementProgress = z.infer<typeof UserAchievementProgressSchema>
+export type AchievementListResponse = z.infer<typeof AchievementListResponseSchema>
+export type UserProgressSummaryResponse = z.infer<typeof UserProgressSummaryResponseSchema>
+export type ClaimRewardResponse = z.infer<typeof ClaimRewardResponseSchema>
 
 // 使用環境變數或預設值
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
@@ -10,101 +109,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8
 // Types & Interfaces
 // ============================================================================
 
-/**
- * 成就類別
- */
-export enum AchievementCategory {
-  READING = 'READING',
-  SOCIAL = 'SOCIAL',
-  BINGO = 'BINGO',
-  KARMA = 'KARMA',
-  EXPLORATION = 'EXPLORATION'
-}
-
-/**
- * 成就狀態
- */
-export enum AchievementStatus {
-  IN_PROGRESS = 'IN_PROGRESS',
-  UNLOCKED = 'UNLOCKED',
-  CLAIMED = 'CLAIMED'
-}
-
-/**
- * 成就稀有度
- */
-export type AchievementRarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'EPIC' | 'LEGENDARY'
-
-/**
- * 成就定義介面
- */
-export interface Achievement {
-  id: string
-  code: string
-  name: string
-  description: string
-  category: AchievementCategory
-  rarity: AchievementRarity
-  icon_name: string
-  icon_image_url?: string | null
-  criteria: Record<string, any>
-  rewards: Record<string, any>
-  is_hidden: boolean
-  display_order: number
-  created_at: string
-  updated_at: string
-}
-
-/**
- * 使用者成就進度介面
- */
-export interface UserAchievementProgress {
-  id: string
-  user_id: string
-  achievement_id: string
-  achievement: Achievement
-  current_progress: number
-  target_progress: number
-  progress_percentage: number
-  status: AchievementStatus
-  unlocked_at: string | null
-  claimed_at: string | null
-  created_at: string
-  updated_at: string
-}
-
-/**
- * 成就列表回應
- */
-interface AchievementListResponse {
-  achievements: Achievement[]
-  total: number
-  category_filter: AchievementCategory | null
-}
-
-/**
- * 使用者進度總覽回應
- */
-interface UserProgressSummaryResponse {
-  user_id: string
-  total_achievements: number
-  unlocked_count: number
-  claimed_count: number
-  in_progress_count: number
-  completion_percentage: number
-  achievements: UserAchievementProgress[]
-}
-
-/**
- * 領取獎勵回應
- */
-interface ClaimRewardResponse {
-  success: boolean
-  achievement_code: string
-  rewards: Record<string, any>
-  message: string
-  claimed_at: string
-}
+// ⚠️ 注意：核心型別已從 @/types/achievement 匯入
+// 只保留 Store 特定的內部型別
 
 /**
  * 成就總覽統計
@@ -298,13 +304,20 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     // 處理其他錯誤
     if (!response.ok) {
       const errorData: APIError = await response.json().catch(() => ({ detail: '未知錯誤' }))
-      const errorMessage = typeof errorData.detail === 'string'
-        ? errorData.detail
-        : `HTTP ${response.status}`
 
-      console.error(`[AchievementStore] API Error: ${endpoint}`, {
+      // 解析錯誤訊息：支援 FastAPI 標準格式 {error, message, detail}
+      let errorMessage: string
+      if (typeof errorData.detail === 'string') {
+        errorMessage = errorData.detail
+      } else if (typeof errorData.detail === 'object' && errorData.detail?.message) {
+        errorMessage = errorData.detail.message
+      } else {
+        errorMessage = `HTTP ${response.status}`
+      }
+
+      console.error(`[AchievementStore] API Error: ${endpoint}`, errorMessage, {
         status: response.status,
-        message: errorMessage,
+        errorData,  // 加入完整錯誤資料供除錯
         endpoint,
         method: options.method || 'GET',
         timestamp: new Date().toISOString(),
@@ -326,7 +339,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     return response.json()
   } catch (err: any) {
     // 捕獲所有錯誤（包括網路錯誤、ReferenceError 等）
-    console.error(`[AchievementStore] API Error: ${endpoint}`, {
+    console.error(`[AchievementStore] API Error: ${endpoint}`, err?.message || '未知錯誤', {
       error: err?.message || '未知錯誤',
       stack: err?.stack,
       endpoint,
@@ -375,16 +388,35 @@ export const useAchievementStore = create<AchievementStore>()(
 
     try {
       const params = category ? `?category=${category}` : ''
-      const response = await apiRequest<AchievementListResponse>(
+      const rawResponse = await apiRequest<unknown>(
         `/api/v1/achievements${params}`
       )
 
+      console.log('[AchievementStore] Raw API Response:', rawResponse)
+
+      // ✅ Zod v3 Runtime validation
+      const parseResult = AchievementListResponseSchema.safeParse(rawResponse)
+
+      if (!parseResult.success) {
+        console.error('[AchievementStore] Zod Validation Failed:', parseResult.error.issues)
+        console.error('[AchievementStore] Raw Response:', JSON.stringify(rawResponse, null, 2))
+
+        set({
+          error: `資料格式錯誤: ${parseResult.error.issues[0]?.message || '未知錯誤'}`,
+          isLoading: false,
+        })
+        return
+      }
+
+      const validated = parseResult.data
+
       set({
-        achievements: response.achievements,
+        achievements: validated.achievements,
         isLoading: false,
         error: null,
       })
     } catch (err: any) {
+      console.error('[AchievementStore] fetchAchievements Error:', err)
       set({
         error: err.message || '載入成就列表失敗',
         isLoading: false,
@@ -400,29 +432,47 @@ export const useAchievementStore = create<AchievementStore>()(
 
     try {
       const params = category ? `?category=${category}` : ''
-      const response = await apiRequest<UserProgressSummaryResponse>(
+      const rawResponse = await apiRequest<unknown>(
         `/api/v1/achievements/progress${params}`
       )
 
+      console.log('[AchievementStore] fetchUserProgress Raw Response:', rawResponse)
+
+      // ✅ Zod v3 Runtime validation
+      const parseResult = UserProgressSummaryResponseSchema.safeParse(rawResponse)
+
+      if (!parseResult.success) {
+        console.error('[AchievementStore] Zod Validation Failed for UserProgress:', parseResult.error.issues)
+        console.error('[AchievementStore] Raw Response:', JSON.stringify(rawResponse, null, 2))
+
+        set({
+          error: `資料格式錯誤: ${parseResult.error.issues[0]?.message || '未知錯誤'}`,
+          isLoading: false,
+        })
+        return
+      }
+
+      const validated = parseResult.data
+
       // 檢測新解鎖的成就（與上次比對）
       const previousProgress = get().userProgress
-      const newlyUnlocked = response.achievements.filter(achievement => {
+      const newlyUnlocked = validated.achievements.filter(achievement => {
         const previous = previousProgress.find(p => p.achievement_id === achievement.achievement_id)
         return (
-          achievement.status === AchievementStatus.UNLOCKED &&
-          (!previous || previous.status === AchievementStatus.IN_PROGRESS)
+          achievement.status === 'UNLOCKED' &&
+          (!previous || previous.status === 'IN_PROGRESS')
         )
       })
 
       set({
-        userProgress: response.achievements,
+        userProgress: validated.achievements,
         summary: {
-          total_achievements: response.total_achievements,
-          unlocked_count: response.unlocked_count,
-          claimed_count: response.claimed_count,
-          in_progress_count: response.in_progress_count,
-          completion_percentage: response.completion_percentage,
-          by_category: {},
+          total_achievements: validated.total_achievements,
+          unlocked_count: validated.unlocked_count,
+          claimed_count: validated.claimed_count,
+          in_progress_count: validated.in_progress_count,
+          completion_percentage: validated.completion_percentage,
+          by_category: validated.category_summary || {},
         },
         newlyUnlockedAchievements: [
           ...get().newlyUnlockedAchievements,
@@ -431,7 +481,12 @@ export const useAchievementStore = create<AchievementStore>()(
         isLoading: false,
         error: null,
       })
+
+      console.log('[AchievementStore] ✅ 用戶成就進度載入成功，數量:', validated.achievements.length)
+
+      return validated.achievements
     } catch (err: any) {
+      console.error('[AchievementStore] fetchUserProgress Error:', err)
       set({
         error: err.message || '載入使用者進度失敗',
         isLoading: false,
@@ -446,6 +501,7 @@ export const useAchievementStore = create<AchievementStore>()(
     set({ isLoading: true, error: null })
 
     try {
+      console.log('[AchievementStore] 📡 呼叫 /api/v1/achievements/summary...')
       const response = await apiRequest<{
         user_id: string
         overall: {
@@ -463,14 +519,20 @@ export const useAchievementStore = create<AchievementStore>()(
         }>
       }>('/api/v1/achievements/summary')
 
+      console.log('[AchievementStore] ✅ 成就摘要載入成功:', response)
+
+      const summaryData = {
+        ...response.overall,
+        by_category: response.by_category,
+      }
+
       set({
-        summary: {
-          ...response.overall,
-          by_category: response.by_category,
-        },
+        summary: summaryData,
         isLoading: false,
         error: null,
       })
+
+      return summaryData
     } catch (err: any) {
       set({
         error: err.message || '載入成就總覽失敗',
@@ -486,20 +548,38 @@ export const useAchievementStore = create<AchievementStore>()(
     set({ isClaiming: true, error: null })
 
     try {
-      const response = await apiRequest<ClaimRewardResponse>(
+      const rawResponse = await apiRequest<unknown>(
         `/api/v1/achievements/${code}/claim`,
         {
           method: 'POST',
         }
       )
 
+      console.log('[AchievementStore] claimReward Raw Response:', rawResponse)
+
+      // ✅ Zod v3 Runtime validation
+      const parseResult = ClaimRewardResponseSchema.safeParse(rawResponse)
+
+      if (!parseResult.success) {
+        console.error('[AchievementStore] Zod Validation Failed for ClaimReward:', parseResult.error.issues)
+        console.error('[AchievementStore] Raw Response:', JSON.stringify(rawResponse, null, 2))
+
+        set({
+          error: `資料格式錯誤: ${parseResult.error.issues[0]?.message || '未知錯誤'}`,
+          isClaiming: false,
+        })
+        return null
+      }
+
+      const validated = parseResult.data
+
       // 更新本地進度狀態
       const updatedProgress = get().userProgress.map(progress => {
-        if (progress.achievement.code === code) {
+        if (progress.achievement && progress.achievement.code === code) {
           return {
             ...progress,
-            status: AchievementStatus.CLAIMED,
-            claimed_at: response.claimed_at,
+            status: 'CLAIMED' as const,
+            claimed_at: validated.claimed_at,
           }
         }
         return progress
@@ -514,8 +594,9 @@ export const useAchievementStore = create<AchievementStore>()(
       // 重新載入總覽統計
       await get().fetchSummary()
 
-      return response
+      return validated
     } catch (err: any) {
+      console.error('[AchievementStore] claimReward Error:', err)
       set({
         error: err.message || '領取獎勵失敗',
         isClaiming: false,
@@ -598,10 +679,13 @@ export const useAchievementStore = create<AchievementStore>()(
 )
 
 // ============================================================================
-// Export Types
+// Export Types (Re-export for convenience)
 // ============================================================================
 
 export type {
+  AchievementCategory,
+  AchievementStatus,
+  AchievementRarity,
   Achievement,
   UserAchievementProgress,
   AchievementListResponse,

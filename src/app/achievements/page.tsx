@@ -1,16 +1,16 @@
-'use client'
+'use client';
 
-import { useEffect, useState, useMemo } from 'react'
-import { useAuthStore } from '@/lib/authStore'
-import { useAchievementStore, AchievementCategory, UserAchievementProgress } from '@/lib/stores/achievementStore'
-import { motion } from 'motion/react'
-import { useRouter } from 'next/navigation'
-import { PixelIcon } from '@/components/ui/icons'
+import { useEffect, useState, useMemo } from 'react';
+import { useAuthStore } from '@/lib/authStore';
+import { useAchievementStore, AchievementCategory, UserAchievementProgress } from '@/lib/stores/achievementStore';
+import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
+import { PixelIcon } from '@/components/ui/icons';
 import {
   AchievementCategoryFilter,
   AchievementGrid,
-  AchievementDetailModal,
-} from '@/components/achievements'
+  AchievementDetailModal } from
+'@/components/achievements';
 
 /**
  * 成就系統主頁面
@@ -23,10 +23,10 @@ import {
  * - 統計總覽
  *
  * 設計風格: Fallout/Wasteland
- */
+ */import { Button } from "@/components/ui/button";
 export default function AchievementsPage() {
-  const router = useRouter()
-  const { user, isInitialized } = useAuthStore()
+  const router = useRouter();
+  const { user, isInitialized } = useAuthStore();
   const {
     userProgress,
     summary,
@@ -38,13 +38,13 @@ export default function AchievementsPage() {
     fetchSummary,
     setFilter,
     claimReward,
-    clearError,
-  } = useAchievementStore()
+    clearError
+  } = useAchievementStore();
 
-  const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null)
-  const [selectedAchievement, setSelectedAchievement] = useState<UserAchievementProgress | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [showSuccessMessage, setShowSuccessMessage] = useState<string | null>(null);
+  const [selectedAchievement, setSelectedAchievement] = useState<UserAchievementProgress | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // 認證檢查
   useEffect(() => {
@@ -56,59 +56,59 @@ export default function AchievementsPage() {
         to: '/auth/login',
         reason: 'User not authenticated',
         isInitialized
-      })
-      router.push('/auth/login')
+      });
+      router.push('/auth/login');
     }
-  }, [isInitialized, user, router])
+  }, [isInitialized, user, router]);
 
   // 載入成就資料
   useEffect(() => {
     if (user) {
-      fetchUserProgress()
-      fetchSummary()
+      fetchUserProgress();
+      fetchSummary();
     }
-  }, [user, fetchUserProgress, fetchSummary])
+  }, [user, fetchUserProgress, fetchSummary]);
 
   // 處理類別篩選變更
   const handleFilterChange = (category: AchievementCategory | null) => {
-    setFilter(category)
-  }
+    setFilter(category);
+  };
 
   // 處理領取獎勵
   const handleClaimReward = async (code: string) => {
-    const result = await claimReward(code)
+    const result = await claimReward(code);
     if (result) {
-      setShowSuccessMessage(result.message)
-      setTimeout(() => setShowSuccessMessage(null), 3000)
+      setShowSuccessMessage(result.message);
+      setTimeout(() => setShowSuccessMessage(null), 3000);
     }
-  }
+  };
 
   // 處理卡片點擊
   const handleCardClick = (achievement: UserAchievementProgress) => {
-    setSelectedAchievement(achievement)
-    setIsModalOpen(true)
-  }
+    setSelectedAchievement(achievement);
+    setIsModalOpen(true);
+  };
 
   // 處理 Modal 關閉
   const handleModalClose = () => {
-    setIsModalOpen(false)
-    setTimeout(() => setSelectedAchievement(null), 300) // 延遲清除以確保動畫完成
-  }
+    setIsModalOpen(false);
+    setTimeout(() => setSelectedAchievement(null), 300); // 延遲清除以確保動畫完成
+  };
 
   // 搜尋過濾
   const filteredAchievements = useMemo(() => {
-    if (!searchQuery.trim()) return userProgress
+    if (!searchQuery.trim()) return userProgress;
 
-    const query = searchQuery.toLowerCase().trim()
+    const query = searchQuery.toLowerCase().trim();
     return userProgress.filter((progress) => {
-      const { achievement } = progress
+      const { achievement } = progress;
       return (
         achievement.name.toLowerCase().includes(query) ||
         achievement.description.toLowerCase().includes(query) ||
-        achievement.code.toLowerCase().includes(query)
-      )
-    })
-  }, [userProgress, searchQuery])
+        achievement.code.toLowerCase().includes(query));
+
+    });
+  }, [userProgress, searchQuery]);
 
   // 等待認證初始化
   if (!isInitialized || !user) {
@@ -118,8 +118,8 @@ export default function AchievementsPage() {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pip-boy-green mx-auto mb-4" />
           <p className="text-pip-boy-green">載入中...</p>
         </div>
-      </div>
-    )
+      </div>);
+
   }
 
   return (
@@ -138,14 +138,14 @@ export default function AchievementsPage() {
         </header>
 
         {/* 統計總覽 */}
-        {summary && (
-          <div className="py-6">
+        {summary &&
+        <div className="py-6">
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="grid grid-cols-2 md:grid-cols-4 gap-4"
-          >
+            className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
             {/* 總成就數 */}
             <div className="card-wasteland p-4 text-center">
               <div className="flex items-center justify-center mb-2">
@@ -191,74 +191,83 @@ export default function AchievementsPage() {
             </div>
           </motion.div>
         </div>
-      )}
+        }
 
         {/* 搜尋欄 */}
         <div className="py-6">
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.15 }}
-          className="max-w-2xl mx-auto"
-        >
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="max-w-2xl mx-auto">
+
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <PixelIcon name="search" sizePreset="sm" variant="muted" decorative />
             </div>
             <input
-              type="text"
-              placeholder="搜尋成就名稱或描述..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="
+                type="text"
+                placeholder="搜尋成就名稱或描述..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="
                 w-full pl-10 pr-4 py-3
                 bg-wasteland-dark border-2 border-metal-gray-light
                 text-white placeholder:text-wasteland-lighter
                 rounded-md
                 focus:outline-none focus:border-pip-boy-green
                 transition-colors
-              "
-            />
+              " />
+
+
+
+
+
+
+
+
             {searchQuery && (
-              <button
+              <Button
+                size="icon-sm"
+                variant="ghost"
                 onClick={() => setSearchQuery('')}
                 className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 aria-label="清除搜尋"
               >
                 <PixelIcon name="close" sizePreset="xs" variant="muted" />
-              </button>
+              </Button>
             )}
           </div>
-          {searchQuery && (
+          {searchQuery &&
             <p className="mt-2 text-sm text-wasteland-lighter">
               找到 {filteredAchievements.length} 個結果
             </p>
-          )}
+            }
         </motion.div>
       </div>
 
         {/* 類別篩選 */}
         <div className="py-6">
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-        >
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}>
+
           <AchievementCategoryFilter
-            currentFilter={currentFilter}
-            onFilterChange={handleFilterChange}
-          />
+              currentFilter={currentFilter}
+              onFilterChange={handleFilterChange} />
+
         </motion.div>
       </div>
 
         {/* 成就網格 */}
         <div className="py-6">
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          {isLoading ? (
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}>
+
+          {isLoading ?
             <div className="flex items-center justify-center py-20">
               <div className="text-center">
                 <PixelIcon
@@ -266,12 +275,12 @@ export default function AchievementsPage() {
                   sizePreset="xl"
                   variant="primary"
                   animation="spin"
-                  decorative
-                />
+                  decorative />
+
                 <p className="text-pip-boy-green mt-4">載入成就資料中...</p>
               </div>
-            </div>
-          ) : error ? (
+            </div> :
+            error ?
             <div className="card-wasteland p-8 text-center">
               <PixelIcon
                 name="alert-triangle"
@@ -279,42 +288,42 @@ export default function AchievementsPage() {
                 variant="error"
                 animation="wiggle"
                 className="mx-auto mb-4"
-                decorative
-              />
+                decorative />
+
               <h3 className="text-lg font-semibold text-radiation-orange mb-2">
                 載入失敗
               </h3>
               <p className="text-wasteland-lighter mb-4">{error}</p>
-              <button
-                onClick={() => {
-                  clearError()
-                  fetchUserProgress()
-                }}
-                className="inline-flex items-center px-4 py-2 bg-pip-boy-green/20 border border-pip-boy-green rounded hover:bg-pip-boy-green/30 transition-colors"
-              >
+              <Button size="default" variant="outline"
+              onClick={() => {
+                clearError();
+                fetchUserProgress();
+              }}
+              className="inline-flex items-center px-4 py-2 border rounded transition-colors">
+
                 <PixelIcon name="refresh-cw" sizePreset="xs" decorative />
                 <span className="ml-2">重試</span>
-              </button>
-            </div>
-          ) : (
+              </Button>
+            </div> :
+
             <AchievementGrid
               achievements={filteredAchievements}
               onClaim={handleClaimReward}
               onCardClick={handleCardClick}
-              isClaiming={isClaiming}
-            />
-          )}
+              isClaiming={isClaiming} />
+
+            }
         </motion.div>
         </div>
 
         {/* 成功訊息提示 */}
-        {showSuccessMessage && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50"
-          >
+        {showSuccessMessage &&
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 50 }}
+          className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50">
+
             <div className="card-wasteland p-4 shadow-[0_0_20px_rgba(0,255,136,0.5)] border-pip-boy-green">
               <div className="flex items-center gap-3">
                 <PixelIcon name="check-circle" sizePreset="md" variant="success" decorative />
@@ -324,7 +333,7 @@ export default function AchievementsPage() {
               </div>
             </div>
           </motion.div>
-        )}
+        }
 
         {/* 成就詳細資訊 Modal */}
         <AchievementDetailModal
@@ -332,9 +341,9 @@ export default function AchievementsPage() {
           isOpen={isModalOpen}
           onClose={handleModalClose}
           onClaim={handleClaimReward}
-          isClaiming={isClaiming}
-        />
+          isClaiming={isClaiming} />
+
       </div>
-    </div>
-  )
+    </div>);
+
 }

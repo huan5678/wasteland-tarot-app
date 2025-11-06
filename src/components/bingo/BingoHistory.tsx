@@ -70,7 +70,7 @@ export default function BingoHistory() {
         result_preview: result ? {
           month_year: result.month_year,
           line_count: result.line_count,
-          has_reward: result.has_reward,
+          had_reward: result.had_reward,
           claimed_count: result.claimed_numbers?.length,
           card_data_exists: !!result.card_data,
         } : null,
@@ -246,8 +246,8 @@ export default function BingoHistory() {
               {/* 獎勵狀態 */}
               <div className="p-4 bg-wasteland-dark/50 border border-metal-gray-light rounded-lg text-center">
                 <p className="text-xs text-wasteland-lighter mb-1">獎勵狀態</p>
-                <p className={`text-lg font-bold flex items-center justify-center gap-2 ${historyData.has_reward ? 'text-green-400' : 'text-wasteland-light'}`}>
-                  {historyData.has_reward ? (
+                <p className={`text-lg font-bold flex items-center justify-center gap-2 ${historyData.had_reward ? 'text-green-400' : 'text-wasteland-light'}`}>
+                  {historyData.had_reward ? (
                     <>
                       <PixelIcon name="check" sizePreset="xs" variant="success" decorative />
                       已獲得
@@ -298,9 +298,9 @@ export default function BingoHistory() {
               </div>
             </div>
 
-            {/* 建立時間 */}
+            {/* 歷史記錄資訊 */}
             <div className="text-center text-xs text-wasteland-light">
-              賓果卡建立於: {new Date(historyData.created_at).toLocaleString('zh-TW')}
+              {historyData.month_year} 月份記錄
             </div>
           </motion.div>
         ) : hasQueried && !historyData && !error ? (
