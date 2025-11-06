@@ -70,13 +70,14 @@
   - _Requirements: 4.1, 4.4, 4.5, 5.2, 5.5, 6.1, 6.3_
   - **Completed**: WishlistService admin methods implemented including `get_admin_wishes()` (with filtering, sorting, pagination), `add_or_update_reply()`, and `toggle_hidden()`. All 3 admin method tests passing.
 
-- [ ] 3. 定義 Pydantic Schemas
+- [x] 3. 定義 Pydantic Schemas
   - 建立 `WishCreate` schema：content 欄位驗證（min_length=1, max_length=10000）
   - 建立 `WishUpdate` schema：content 欄位驗證
   - 建立 `AdminReplyRequest` schema：reply 欄位驗證（min_length=1, max_length=20000）
   - 建立 `WishResponse` schema：定義所有回應欄位（id, user_id, content, admin_reply, 時間戳記, 狀態欄位）
   - 建立 `AdminWishListResponse` schema：包含願望列表、總數、頁碼、每頁數量
   - _Requirements: 1.5, 2.1, 5.2_
+  - **Completed**: All 5 schemas created at `backend/app/schemas/wishlist.py` with comprehensive validation rules, JSON examples, and ORM support (from_attributes). Request schemas validate raw Markdown length (wish: 1-10000 chars, admin reply: 1-20000 chars). Response schemas support nested structures and pagination. Registered in `__init__.py` for import. Standalone validation tests confirm all schemas work correctly.
 
 - [ ] 3.1 實作使用者 API Endpoints
   - 建立 `/api/v1/wishlist` router，設定 tags=["wishlist"]
@@ -286,19 +287,19 @@
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 7/38 子任務，18% 完成)
+### 已完成任務 (✅ 8/38 子任務，21% 完成)
 - ✅ 資料層：Migration、Wishlist 模型、資料庫部署 (Tasks 1, 1.1, 1.2)
 - ✅ 後端業務邏輯：ContentValidator、TimezoneUtil、WishlistService 使用者方法、WishlistService 管理員方法 (Tasks 2, 2.1, 2.2, 2.3)
+- ✅ Pydantic Schemas：WishCreate、WishUpdate、AdminReplyRequest、WishResponse、AdminWishListResponse (Task 3)
 
 ### 下一步建議 (優先順序)
-1. **Task 3**: 定義 Pydantic Schemas - 建立 API 輸入輸出驗證結構
-2. **Task 3.1**: 實作使用者 API Endpoints - 連接前端與後端業務邏輯
-3. **Task 3.2**: 實作管理員 API Endpoints - 完成後端 API 層
-4. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
-5. **Task 5**: 建立 Zustand 願望狀態管理 - 前端狀態管理基礎
-6. **Task 6**: 實作 Markdown 編輯器元件 - 核心前端功能
+1. **Task 3.1**: 實作使用者 API Endpoints - 連接前端與後端業務邏輯
+2. **Task 3.2**: 實作管理員 API Endpoints - 完成後端 API 層
+3. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
+4. **Task 5**: 建立 Zustand 願望狀態管理 - 前端狀態管理基礎
+5. **Task 6**: 實作 Markdown 編輯器元件 - 核心前端功能
 
-**預估剩餘時數**: 42-62 小時 (31 個待完成子任務)
+**預估剩餘時數**: 40-58 小時 (30 個待完成子任務)
 **總預估時數**: 60-80 小時
 
 ---

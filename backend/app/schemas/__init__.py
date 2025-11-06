@@ -48,6 +48,13 @@ from .journal import (
     JournalResponse,
     JournalListResponse,
 )
+from .wishlist import (
+    WishCreate,
+    WishUpdate,
+    AdminReplyRequest,
+    WishResponse,
+    AdminWishListResponse,
+)
 
 __all__ = [
     "SessionCreateSchema",
@@ -91,4 +98,10 @@ __all__ = [
     "JournalUpdate",
     "JournalResponse",
     "JournalListResponse",
+    # Wishlist schemas
+    "WishCreate",
+    "WishUpdate",
+    "AdminReplyRequest",
+    "WishResponse",
+    "AdminWishListResponse",
 ]
