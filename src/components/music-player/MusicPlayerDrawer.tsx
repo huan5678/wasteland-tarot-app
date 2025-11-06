@@ -87,8 +87,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
   // 取得 analyserNode 供視覺化使用
   const analyserNodeForViz = synth?.getAnalyserNode() ?? null;
 
-  // 注意：synth 狀態現在由 useRhythmMusicEngine 通過 Zustand store 自動更新
-  // 不需要在這裡輪詢
+  // 注意：synth 狀態更新已由 useRhythmMusicEngine 處理，不需要在這裡重複輪詢
 
   // Store actions
   const setModeIndex = useMusicPlayerStore((state) => state.setModeIndex);

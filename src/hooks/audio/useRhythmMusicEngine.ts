@@ -67,14 +67,17 @@ export function useRhythmMusicEngine() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
-    // 如果已經初始化，跳過
-    if (isInitialized && synth) {
-      logger.info('[useRhythmMusicEngine] Already initialized, skipping');
+    if (systemPresets.length === 0) {
+      logger.warn('[useRhythmMusicEngine] No system presets loaded yet, waiting...');
       return;
     }
     
-    if (systemPresets.length === 0) {
-      logger.warn('[useRhythmMusicEngine] No system presets loaded yet, waiting...');
+    // 如果已經初始化，跳過
+    if (isInitialized && synth) {
+      logger.info('[useRhythmMusicEngine] Already initialized with synth, skipping', {
+        isInitialized,
+        hasSynth: !!synth
+      });
       return;
     }
 
@@ -155,6 +158,7 @@ export function useRhythmMusicEngine() {
         logger.info('[useRhythmMusicEngine] Initialized successfully');
       } catch (error) {
         logger.error('[useRhythmMusicEngine] Initialization failed', error);
+        initializationStarted = false; // 重置標記以允許重試
       }
     };
 
@@ -167,14 +171,19 @@ export function useRhythmMusicEngine() {
       // 清理 newSynth（如果創建了但未設置到 store）
       if (newSynth && newSynth !== synth) {
         logger.event('[useRhythmMusicEngine] Destroying newly created synth during cleanup');
-        newSynth.stop();
-        newSynth.destroy();
+        try {
+          newSynth.stop();
+          newSynth.destroy();
+        } catch (error) {
+          logger.error('[useRhythmMusicEngine] Error destroying synth during cleanup', error);
+        }
       }
     };
-  }, [systemPresets.length, isInitialized, synth]); // 添加依賴確保正確跳過
+  }, [systemPresets.length]); // 只依賴 systemPresets.length，避免重複初始化
 
   // 控制播放/暫停 - 只響應 isPlaying 變化
   useEffect(() => {
+    // 如果 synth 未就緒，嘗試強制初始化（用於自動播放情況）
     if (!synth || !isInitialized) {
       logger.warn('[useRhythmMusicEngine] Cannot control playback - synth not ready', {
         hasSynth: !!synth,
@@ -213,7 +222,11 @@ export function useRhythmMusicEngine() {
           logger.info('[useRhythmMusicEngine] Calling synth.play()');
           synth.play();
           logger.info('[useRhythmMusicEngine] Play() called successfully');
-          updateSynthState(); // 同步狀態到 store
+          
+          // 立即同步狀態
+          setTimeout(() => {
+            updateSynthState();
+          }, 50);
         } catch (error) {
           logger.error('[useRhythmMusicEngine] Play() failed', error);
         }
@@ -233,12 +246,16 @@ export function useRhythmMusicEngine() {
       try {
         synth.pause();
         logger.info('[useRhythmMusicEngine] Pause() called successfully');
-        updateSynthState(); // 同步狀態到 store
+        
+        // 立即同步狀態
+        setTimeout(() => {
+          updateSynthState();
+        }, 50);
       } catch (error) {
         logger.error('[useRhythmMusicEngine] Pause() failed', error);
       }
     }
-  }, [isPlaying]); // 只依賴 isPlaying，避免不必要的重複執行
+  }, [isPlaying, synth, isInitialized, audioContext]); // 添加必要的依賴
 
   // 控制音量（實時更新）
   useEffect(() => {
@@ -250,8 +267,13 @@ export function useRhythmMusicEngine() {
   }, [volume, isMuted, synth, isInitialized]);
 
   // 定期同步 synth 狀態到 store（用於 progress bar 更新）
+  // 只在播放時輪詢
   useEffect(() => {
     if (!synth || !isInitialized) return;
+    
+    // 檢查 synth 是否在播放
+    const synthState = synth.getState();
+    if (!synthState.isPlaying) return;
 
     const intervalId = setInterval(() => {
       updateSynthState(); // 每 100ms 同步一次狀態
@@ -260,7 +282,7 @@ export function useRhythmMusicEngine() {
     return () => {
       clearInterval(intervalId);
     };
-  }, [synth, isInitialized, updateSynthState]);
+  }, [synth, isInitialized, isPlaying, updateSynthState]);
 
   // 切換 Pattern (next/previous) - 實時切換不需要重建
   useEffect(() => {
@@ -294,12 +316,14 @@ export function useRhythmMusicEngine() {
   }, [synth, isInitialized, updateSynthState]);
 
   // 組件卸載時清理
-  useEffect(() => {
-    return () => {
-      logger.event('[useRhythmMusicEngine] Component unmounting, destroying synth');
-      destroySynth();
-    };
-  }, [destroySynth]);
+  // 注意：在 Strict Mode 下，這會導致 synth 被銷毀然後重新創建
+  // 我們不希望這樣，所以註解掉全域清理
+  // useEffect(() => {
+  //   return () => {
+  //     logger.event('[useRhythmMusicEngine] Component unmounting, destroying synth');
+  //     destroySynth();
+  //   };
+  // }, [destroySynth]);
 
   return {
     synth,
