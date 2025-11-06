@@ -34,6 +34,7 @@ from app.api.v1.endpoints import (
     tasks,
     levels,
     quests,
+    wishlist,
 )
 from app.api import oauth, webauthn
 
@@ -222,4 +223,11 @@ api_router.include_router(
 api_router.include_router(
     tasks.router,
     tags=["📋 Tasks"]
+)
+
+# Wishlist endpoints - 願望系統
+api_router.include_router(
+    wishlist.router,
+    prefix="/wishlist",
+    tags=["🌠 Wishlist"]
 )

@@ -88,11 +88,153 @@
 **為何重要**: Tasks 3.1-3.2 是前後端整合的關鍵橋樑。完成後，前端即可開始呼叫 API 進行願望提交、查詢、編輯等操作。
 
 **實作重點**:
-- 使用現有的 `get_current_user` 和 `get_current_admin_user` dependencies 進行身份驗證
+- 使用現有的 `get_current_user` dependency 進行使用者身份驗證
+- 管理員 endpoints 需手動檢查 `current_user.is_admin`（尚無 `get_current_admin_user` dependency）
 - 整合已完成的 `WishlistService` 業務邏輯
 - 使用已定義的 Pydantic schemas 進行請求/回應驗證
 - 遵循現有的錯誤處理模式（HTTPException）
-- 參考現有 API routers 的架構模式（如 `/backend/app/api/v1/users.py`）
+- 參考現有 API endpoints 的架構模式（如 `/backend/app/api/v1/endpoints/users.py`）
+
+#### 📝 實作前準備
+
+**檔案結構**:
+```
+backend/app/api/v1/
+├── api.py                    # 主 router 註冊檔案（需修改）
+└── endpoints/
+    ├── __init__.py           # 已存在
+    ├── users.py              # 參考此檔案的架構模式
+    ├── auth.py               # 參考錯誤處理模式
+    └── wishlist.py           # 👈 新建此檔案（Task 3.1-3.2）
+```
+
+**Router 註冊步驟**:
+1. 建立 `/backend/app/api/v1/endpoints/wishlist.py`
+2. 在 `/backend/app/api/v1/api.py` 最上方的 import 區塊新增: `from app.api.v1.endpoints import wishlist`
+3. 在 `api.py` 的 router 註冊區塊新增:
+   ```python
+   api_router.include_router(
+       wishlist.router,
+       prefix="/wishlist",
+       tags=["🌠 Wishlist"]
+   )
+   ```
+
+**基本程式碼架構**:
+```python
+"""
+願望功能 API 端點
+提供使用者願望提交、查詢、編輯及管理員管理功能
+"""
+
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.database import get_db
+from app.core.dependencies import get_current_user
+from app.models.user import User
+from app.schemas.wishlist import (
+    WishCreate,
+    WishUpdate,
+    WishResponse,
+    AdminReplyRequest,
+    AdminWishListResponse
+)
+from app.services.wishlist_service import WishlistService
+from app.services.content_validator import ContentEmptyError, ContentTooLongError
+from app.core.exceptions import (
+    AlreadySubmittedTodayError,
+    EditNotAllowedError,
+    WishNotFoundError,
+    UnauthorizedError
+)
+
+router = APIRouter()
+
+# ===== 使用者 Endpoints (Task 3.1) =====
+
+@router.get("", response_model=List[WishResponse])
+async def get_user_wishes(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """取得當前使用者的願望列表（未隱藏）"""
+    service = WishlistService(db)
+    wishes = await service.get_user_wishes(current_user.id)
+    return wishes
+
+# ... POST, PUT endpoints
+
+# ===== 管理員 Endpoints (Task 3.2) =====
+
+@router.get("/admin", response_model=AdminWishListResponse)
+async def get_admin_wishes(
+    filter_status: str = Query("all", description="篩選狀態: all, replied, unreplied"),
+    sort_order: str = Query("newest", description="排序: newest, oldest"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """取得所有願望列表（管理員專用，支援篩選、排序、分頁）"""
+    # 管理員權限檢查
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要管理員權限才能執行此操作"
+        )
+
+    service = WishlistService(db)
+    result = await service.get_admin_wishes(
+        filter_status=filter_status,
+        sort_order=sort_order,
+        page=page,
+        page_size=page_size
+    )
+    return result
+
+# ... 其他管理員 endpoints
+```
+
+**錯誤處理範例**:
+```python
+@router.post("", response_model=WishResponse, status_code=status.HTTP_201_CREATED)
+async def create_wish(
+    wish_create: WishCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """提交新願望"""
+    service = WishlistService(db)
+
+    try:
+        wish = await service.create_wish(current_user.id, wish_create.content)
+        return wish
+    except AlreadySubmittedTodayError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="今日已提交願望，明日再來許願吧"
+        )
+    except ContentTooLongError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except ContentEmptyError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="願望內容不可為空"
+        )
+```
+
+**常見陷阱提醒**:
+- ⚠️ **管理員權限檢查**: 目前沒有 `get_current_admin_user` dependency，需手動檢查 `if not current_user.is_admin: raise HTTPException(403)`
+- ⚠️ **POST endpoint 狀態碼**: 建立資源時需設定 `status_code=status.HTTP_201_CREATED`
+- ⚠️ **Async/Await**: 所有 service 方法呼叫都必須使用 `await`
+- ⚠️ **例外匯入**: ContentEmptyError 和 ContentTooLongError 來自 `content_validator.py`，其他來自 `core/exceptions.py`
+- ⚠️ **Query 參數驗證**: 使用 FastAPI 的 `Query()` 進行驗證與文件化（如 `page: int = Query(1, ge=1)`）
+- ⚠️ **router prefix**: 在 `api.py` 註冊時已設定 `prefix="/wishlist"`，所以 endpoint 路徑直接寫 `@router.get("")` 即可
 
 **完成後解鎖**:
 - ✅ 後端測試 (Task 4)
@@ -101,21 +243,24 @@
 
 ---
 
-- [ ] 3.1 實作使用者 API Endpoints
+- [x] 3.1 實作使用者 API Endpoints
   - 建立 `/api/v1/wishlist` router，設定 tags=["wishlist"]
   - 實作 `GET /api/v1/wishlist`：使用 `get_current_user` dependency 取得當前使用者，呼叫 `WishlistService.get_user_wishes()`，回傳使用者願望列表
   - 實作 `POST /api/v1/wishlist`：接收 `WishCreate` schema，呼叫 `WishlistService.create_wish()`，回傳新願望（status_code=201）
   - 實作 `PUT /api/v1/wishlist/{wish_id}`：接收 `WishUpdate` schema，呼叫 `WishlistService.update_wish()`，回傳更新後的願望
   - 處理所有自訂例外（AlreadySubmittedTodayError, ContentTooLongError, EditNotAllowedError, WishNotFoundError）並回傳適當的 HTTP 狀態碼
   - _Requirements: 1.5, 1.7, 2.1, 3.5, 8.1_
+  - **Completed**: Created `/backend/app/api/v1/endpoints/wishlist.py` with all 3 user endpoints (GET, POST, PUT). All endpoints use get_current_user dependency, integrate WishlistService methods, and implement comprehensive error handling. Router registered in api.py with prefix="/wishlist" and tags=["🌠 Wishlist"].
 
-- [ ] 3.2 實作管理員 API Endpoints
-  - 實作 `GET /api/v1/admin/wishlist`：接收 query 參數（filter_status, sort_order, page, page_size），使用 `get_current_admin_user` dependency 驗證管理員權限，呼叫 `WishlistService.get_admin_wishes()`，回傳分頁願望列表與總數
-  - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/reply`：接收 `AdminReplyRequest` schema，呼叫 `WishlistService.add_or_update_reply()`，回傳更新後的願望
-  - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/hide`：呼叫 `WishlistService.toggle_hidden(is_hidden=True)`，回傳更新後的願望
-  - 實作 `PUT /api/v1/admin/wishlist/{wish_id}/unhide`：呼叫 `WishlistService.toggle_hidden(is_hidden=False)`，回傳更新後的願望
-  - 確保所有管理員 endpoints 使用 `get_current_admin_user` dependency 進行權限驗證
+- [x] 3.2 實作管理員 API Endpoints
+  - 實作 `GET /api/v1/wishlist/admin`：接收 query 參數（filter_status, sort_order, page, page_size），使用 `get_current_user` dependency 並手動檢查 `current_user.is_admin`，呼叫 `WishlistService.get_admin_wishes()`，回傳分頁願望列表與總數
+  - 實作 `PUT /api/v1/wishlist/admin/{wish_id}/reply`：接收 `AdminReplyRequest` schema，檢查管理員權限，呼叫 `WishlistService.add_or_update_reply()`，回傳更新後的願望
+  - 實作 `PUT /api/v1/wishlist/admin/{wish_id}/hide`：檢查管理員權限，呼叫 `WishlistService.toggle_hidden(is_hidden=True)`，回傳更新後的願望
+  - 實作 `PUT /api/v1/wishlist/admin/{wish_id}/unhide`：檢查管理員權限，呼叫 `WishlistService.toggle_hidden(is_hidden=False)`，回傳更新後的願望
+  - 確保所有管理員 endpoints 手動檢查 `if not current_user.is_admin: raise HTTPException(403)`
   - _Requirements: 4.1, 4.7, 5.1, 5.2, 5.7, 6.1, 6.3_
+  - **注意**: 管理員路徑為 `/api/v1/wishlist/admin` (router 已設定 prefix="/wishlist")
+  - **Completed**: Implemented all 4 admin endpoints (GET /admin, PUT /admin/{id}/reply, PUT /admin/{id}/hide, PUT /admin/{id}/unhide). All endpoints manually check is_admin permission and return 403 for non-admin users. Comprehensive error handling, logging, and validation implemented. Test file created at `/backend/tests/api/test_wishlist_endpoints.py` with 24 test cases covering all user and admin endpoints.
 
 - [ ] 4. 後端單元測試與整合測試
   - 建立 `test_wishlist_service.py`：測試 WishlistService 所有方法（每日限制、建立、更新、管理員操作）
@@ -309,32 +454,30 @@
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 8/38 子任務，21% 完成)
+### 已完成任務 (✅ 10/38 子任務，26% 完成)
 - ✅ 資料層：Migration、Wishlist 模型、資料庫部署 (Tasks 1, 1.1, 1.2)
 - ✅ 後端業務邏輯：ContentValidator、TimezoneUtil、WishlistService 使用者方法、WishlistService 管理員方法 (Tasks 2, 2.1, 2.2, 2.3)
 - ✅ Pydantic Schemas：WishCreate、WishUpdate、AdminReplyRequest、WishResponse、AdminWishListResponse (Task 3)
+- ✅ API Endpoints：使用者端點 (GET, POST, PUT)、管理員端點 (GET, PUT /admin/*) (Tasks 3.1, 3.2)
 
 ### 下一步建議 (優先順序)
 
-#### 🚀 立即執行：後端 API Endpoints (Tasks 3.1-3.2)
+#### ✅ 已完成：後端 API Endpoints (Tasks 3.1-3.2)
 
-**Task 3.1 - 使用者 API Endpoints** (預估 2-3 小時)
-- 建立 `/backend/app/api/v1/wishlist.py` router 檔案
-- 實作 3 個 endpoints：GET, POST, PUT `/api/v1/wishlist`
-- 整合 `WishlistService` 已完成的方法
-- 處理所有自訂例外並回傳適當 HTTP 狀態碼
-- 參考：`/backend/app/api/v1/users.py` 作為架構模板
+**Task 3.1 - 使用者 API Endpoints** ✅
+- ✅ 建立 `/backend/app/api/v1/endpoints/wishlist.py` router 檔案
+- ✅ 實作 3 個 endpoints：GET, POST, PUT `/api/v1/wishlist`
+- ✅ 整合 `WishlistService` 已完成的方法
+- ✅ 處理所有自訂例外並回傳適當 HTTP 狀態碼
+- ✅ 遵循 `/backend/app/api/v1/endpoints/users.py` 架構模板
 
-**Task 3.2 - 管理員 API Endpoints** (預估 2-3 小時)
-- 在同一 router 檔案添加管理員 endpoints
-- 實作 4 個 endpoints：GET, PUT (reply/hide/unhide)
-- 使用 `get_current_admin_user` dependency 驗證權限
-- 實作分頁、篩選、排序參數處理
-
-**執行命令**:
-```bash
-/kiro:spec-impl wishlist-feature 3.1 3.2
-```
+**Task 3.2 - 管理員 API Endpoints** ✅
+- ✅ 在同一 router 檔案添加管理員 endpoints
+- ✅ 實作 4 個 endpoints：GET, PUT (reply/hide/unhide)
+- ✅ 手動檢查 `current_user.is_admin` 驗證權限
+- ✅ 實作分頁、篩選、排序參數處理
+- ✅ Router 已註冊至 `/backend/app/api/v1/api.py`
+- ✅ 測試文件已建立：`/backend/tests/api/test_wishlist_endpoints.py` (24 個測試案例)
 
 #### 📋 後續階段
 3. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
@@ -356,55 +499,156 @@
 
 ### 使用者端 API (Task 3.1)
 
+**路徑前綴**: `/api/v1/wishlist`（在 api.py 註冊時設定）
+
 ```python
 # GET /api/v1/wishlist
 # 功能：取得當前使用者的願望列表（未隱藏）
 # 認證：get_current_user dependency
 # 回應：List[WishResponse]
+@router.get("", response_model=List[WishResponse])
+async def get_user_wishes(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = WishlistService(db)
+    wishes = await service.get_user_wishes(current_user.id)
+    return wishes
 
 # POST /api/v1/wishlist
 # 功能：提交新願望
 # 認證：get_current_user dependency
-# 請求體：WishCreate
+# 請求體：WishCreate { content: str }
 # 回應：WishResponse (status_code=201)
-# 錯誤：AlreadySubmittedTodayError (400), ContentTooLongError (400)
+# 錯誤：AlreadySubmittedTodayError (409), ContentTooLongError (400), ContentEmptyError (400)
+@router.post("", response_model=WishResponse, status_code=status.HTTP_201_CREATED)
+async def create_wish(
+    wish_create: WishCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = WishlistService(db)
+    try:
+        wish = await service.create_wish(current_user.id, wish_create.content)
+        return wish
+    except AlreadySubmittedTodayError:
+        raise HTTPException(status_code=409, detail="今日已提交願望，明日再來許願吧")
+    except ContentTooLongError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except ContentEmptyError:
+        raise HTTPException(status_code=400, detail="願望內容不可為空")
 
 # PUT /api/v1/wishlist/{wish_id}
-# 功能：編輯願望（需符合編輯條件）
+# 功能：編輯願望（需符合編輯條件：無管理員回覆且未編輯過）
 # 認證：get_current_user dependency
-# 請求體：WishUpdate
+# 請求體：WishUpdate { content: str }
 # 回應：WishResponse
-# 錯誤：EditNotAllowedError (403), WishNotFoundError (404)
+# 錯誤：EditNotAllowedError (403), WishNotFoundError (404), UnauthorizedError (403)
+@router.put("/{wish_id}", response_model=WishResponse)
+async def update_wish(
+    wish_id: str,
+    wish_update: WishUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = WishlistService(db)
+    try:
+        wish = await service.update_wish(wish_id, current_user.id, wish_update.content)
+        return wish
+    except EditNotAllowedError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except WishNotFoundError:
+        raise HTTPException(status_code=404, detail="願望未找到")
+    except UnauthorizedError:
+        raise HTTPException(status_code=403, detail="無權限編輯此願望")
 ```
 
 ### 管理員端 API (Task 3.2)
 
+**路徑前綴**: `/api/v1/wishlist/admin`
+
 ```python
-# GET /api/v1/admin/wishlist
+# GET /api/v1/wishlist/admin
 # 功能：取得所有願望列表（支援篩選、排序、分頁）
-# 認證：get_current_admin_user dependency
+# 認證：get_current_user + 手動檢查 is_admin
 # Query 參數：filter_status, sort_order, page, page_size
-# 回應：AdminWishListResponse
+# 回應：AdminWishListResponse { wishes: List[WishResponse], total: int, page: int, page_size: int }
+@router.get("/admin", response_model=AdminWishListResponse)
+async def get_admin_wishes(
+    filter_status: str = Query("all", description="篩選狀態: all, replied, unreplied"),
+    sort_order: str = Query("newest", description="排序: newest, oldest"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(50, ge=1, le=100),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="需要管理員權限")
 
-# PUT /api/v1/admin/wishlist/{wish_id}/reply
+    service = WishlistService(db)
+    result = await service.get_admin_wishes(filter_status, sort_order, page, page_size)
+    return result
+
+# PUT /api/v1/wishlist/admin/{wish_id}/reply
 # 功能：新增或編輯管理員回覆
-# 認證：get_current_admin_user dependency
-# 請求體：AdminReplyRequest
+# 認證：get_current_user + 手動檢查 is_admin
+# 請求體：AdminReplyRequest { reply: str }
 # 回應：WishResponse
+@router.put("/admin/{wish_id}/reply", response_model=WishResponse)
+async def add_admin_reply(
+    wish_id: str,
+    reply_request: AdminReplyRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="需要管理員權限")
 
-# PUT /api/v1/admin/wishlist/{wish_id}/hide
+    service = WishlistService(db)
+    try:
+        wish = await service.add_or_update_reply(wish_id, reply_request.reply)
+        return wish
+    except WishNotFoundError:
+        raise HTTPException(status_code=404, detail="願望未找到")
+
+# PUT /api/v1/wishlist/admin/{wish_id}/hide
 # 功能：隱藏願望
-# 認證：get_current_admin_user dependency
+# 認證：get_current_user + 手動檢查 is_admin
 # 回應：WishResponse
+@router.put("/admin/{wish_id}/hide", response_model=WishResponse)
+async def hide_wish(
+    wish_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="需要管理員權限")
 
-# PUT /api/v1/admin/wishlist/{wish_id}/unhide
+    service = WishlistService(db)
+    wish = await service.toggle_hidden(wish_id, is_hidden=True)
+    return wish
+
+# PUT /api/v1/wishlist/admin/{wish_id}/unhide
 # 功能：取消隱藏願望
-# 認證：get_current_admin_user dependency
+# 認證：get_current_user + 手動檢查 is_admin
 # 回應：WishResponse
+@router.put("/admin/{wish_id}/unhide", response_model=WishResponse)
+async def unhide_wish(
+    wish_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="需要管理員權限")
+
+    service = WishlistService(db)
+    wish = await service.toggle_hidden(wish_id, is_hidden=False)
+    return wish
 ```
 
-**實作檔案位置**: `/backend/app/api/v1/wishlist.py`
-**參考架構**: `/backend/app/api/v1/users.py`
+**實作檔案位置**: `/backend/app/api/v1/endpoints/wishlist.py`（注意是 endpoints/ 目錄）
+**參考架構**: `/backend/app/api/v1/endpoints/users.py`（類似的路由架構）
+**註冊位置**: `/backend/app/api/v1/api.py`（需在此檔案匯入並註冊 router）
 
 ---
 

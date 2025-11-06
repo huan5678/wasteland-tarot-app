@@ -143,6 +143,7 @@ async def test_engine(temp_db_url):
             UserAnalytics, AnalyticsEvent,
             UserBingoCard, DailyBingoNumber
         )
+        from app.models.wishlist import Wishlist
         from app.models.gamification import (
             KarmaLog, UserKarma,
             DailyTask, WeeklyTask, UserDailyTask, UserWeeklyTask,
