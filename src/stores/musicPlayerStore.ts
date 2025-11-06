@@ -214,10 +214,16 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
        * Requirements 2.2: 暫停音樂播放並保留播放位置
        */
       pause: () => {
+        const { isPlaying: currentlyPlaying } = get();
+        
+        // 防止重複暫停
+        if (!currentlyPlaying) {
+          logger.info('[musicPlayerStore] Already paused, skipping');
+          return;
+        }
+
         logger.info('[musicPlayerStore] Pausing music');
-
         useAudioStore.getState().setIsPlaying('music', false);
-
         set({ isPlaying: false });
       },
 
@@ -226,7 +232,13 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
        * Requirements 2.2: 繼續播放音樂
        */
       resume: () => {
-        const { currentMode, playMode } = get();
+        const { currentMode, playMode, isPlaying: currentlyPlaying } = get();
+
+        // 防止重複播放
+        if (currentlyPlaying) {
+          logger.info('[musicPlayerStore] Already playing, skipping');
+          return;
+        }
 
         // 如果沒有 currentMode，使用預設模式 'synthwave'
         if (!currentMode) {
@@ -236,24 +248,25 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
         }
 
         logger.info('[musicPlayerStore] Resuming music');
-
         useAudioStore.getState().setIsPlaying('music', true);
-
         set({ isPlaying: true });
       },
 
       /**
        * 停止播放
+       * Note: 停止播放但保留 currentMode，重置播放位置到開頭
        */
       stop: () => {
+        const { isPlaying: currentlyPlaying } = get();
+        
         logger.info('[musicPlayerStore] Stopping music');
-
+        
+        // 無論是否正在播放，都設為停止狀態
         useAudioStore.getState().setIsPlaying('music', false);
-        useAudioStore.getState().setCurrentMusicMode(null);
-
+        
         set({
           isPlaying: false,
-          currentMode: null,
+          // Note: 保留 currentMode，只是停止播放並重置位置
         });
       },
 
@@ -583,6 +596,12 @@ export const useMusicPlayerStore = create<MusicPlayerState>()(
         currentModeIndex: state.currentModeIndex,
         isDrawerMinimized: state.isDrawerMinimized,
       }),
+      // 頁面重新載入時，重置播放狀態
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.isPlaying = false;
+        }
+      },
     }
   )
 );

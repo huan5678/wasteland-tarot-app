@@ -6,7 +6,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { useMusicPlayer } from '@/hooks/useMusicPlayer';
@@ -15,12 +15,13 @@ import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useRhythmMusicEngine } from '@/hooks/audio/useRhythmMusicEngine';
 import { useMusicPlayerStore } from '@/stores/musicPlayerStore';
+import { useRhythmEngineStore } from '@/stores/rhythmEngineStore';
 import { PixelIcon } from '@/components/ui/icons';
 
 // Import all child components (will be created in following tasks)
 import { PlaybackControls } from './PlaybackControls';
 import { MusicModeSelector } from './MusicModeSelector';
-import { ProgressBar } from './ProgressBar';
+import { RhythmProgressBar } from './RhythmProgressBar';
 import { VolumeControl } from './VolumeControl';
 import { MusicVisualizer } from './MusicVisualizer';
 import { ShortcutHelp } from './ShortcutHelp';
@@ -48,6 +49,10 @@ export interface MusicPlayerDrawerProps {
 export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
   // ========== State ==========
   const [drawerHeight, setDrawerHeight] = useState<DrawerHeightState>('normal');
+  
+  // 從 Zustand store 獲取 synth 狀態
+  const synthCurrentStep = useRhythmEngineStore((state) => state.currentStep);
+  const synthCurrentLoop = useRhythmEngineStore((state) => state.currentLoop);
 
   // ========== Hooks ==========
   const {
@@ -61,6 +66,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
     playMode,
     pause,
     resume,
+    stop,
     next,
     previous,
     toggleShuffle,
@@ -76,7 +82,13 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
 
   // ========== Music Engine Integration ==========
   // Task: 整合 RhythmAudioSynthesizer 從資料庫播放 Pattern
-  const { synth, isReady, systemPresets } = useRhythmMusicEngine();
+  const { synth, isReady, systemPresets, stopAndReset } = useRhythmMusicEngine();
+  
+  // 取得 analyserNode 供視覺化使用
+  const analyserNodeForViz = synth?.getAnalyserNode() ?? null;
+
+  // 注意：synth 狀態現在由 useRhythmMusicEngine 通過 Zustand store 自動更新
+  // 不需要在這裡輪詢
 
   // Store actions
   const setModeIndex = useMusicPlayerStore((state) => state.setModeIndex);
@@ -126,23 +138,57 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
     }
   };
 
+  const handleStop = () => {
+    // 先重置播放位置，再停止播放
+    stopAndReset();
+    stop();
+    // 狀態會通過 Zustand store 自動同步
+  };
+
   return (
     <Drawer open={isDrawerOpen} onOpenChange={handleOpenChange}>
       {/* Floating Trigger Button - Fixed at bottom right */}
       <DrawerTrigger asChild>
-        <Button size="icon" variant="outline"
-        className="fixed bottom-6 right-6 z-40 flex items-center justify-center w-14 h-14 transition-all"
-        aria-label="開啟音樂播放器">
+        <button
+          className="
+            fixed bottom-6 right-6 z-40
+            w-14 h-14
+            rounded-full
+            bg-wasteland-dark
+            border-2 border-pip-boy-green
+            flex items-center justify-center
+            transition-all duration-300
+            hover:bg-pip-boy-green/10
+            hover:shadow-[0_0_20px_rgba(0,255,136,0.4)]
+            active:scale-95
+          "
+          aria-label="開啟音樂播放器"
+        >
+          {/* 外圈光暈效果（播放中時顯示） */}
+          {isPlaying && (
+            <>
+              <motion.div
+                className="absolute inset-0 rounded-full border-2 border-pip-boy-green"
+                animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0, 0.8] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+              <span className="absolute inset-0 rounded-full bg-pip-boy-green/20 animate-pulse" />
+            </>
+          )}
 
-          <PixelIcon name="music" sizePreset="sm" animation={isPlaying ? 'pulse' : undefined} aria-label="音樂" />
-          {isPlaying &&
-          <motion.div
-            className="absolute inset-0 rounded-full border-2 border-pip-boy-green"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.8, 0, 0.8] }}
-            transition={{ duration: 1.5, repeat: Infinity }} />
+          <PixelIcon
+            name="music"
+            sizePreset="sm"
+            variant="primary"
+            animation={isPlaying ? 'pulse' : undefined}
+            decorative
+          />
 
-          }
-        </Button>
+          {/* 播放狀態指示點 */}
+          {isPlaying && (
+            <span className="absolute -top-1 -right-1 w-2 h-2 bg-pip-boy-green rounded-full animate-ping" />
+          )}
+        </button>
       </DrawerTrigger>
 
       {/* Drawer Content */}
@@ -261,25 +307,28 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
 
                 </div>
 
-                {/* Playback Controls */}
-                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
-                  <PlaybackControls
-                  isPlaying={isPlaying}
-                  onPlay={resume}
-                  onPause={pause}
-                  onNext={next}
-                  onPrevious={previous}
-                  onToggleShuffle={toggleShuffle}
-                  onToggleRepeat={cycleRepeatMode}
-                  shuffleEnabled={shuffleEnabled}
-                  repeatMode={repeatMode} />
-
-                </div>
-
-                {/* Progress Bar */}
+                {/* Progress Bar + Playback Controls (整合) */}
                 <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
                   <h3 className="text-sm font-bold mb-3">播放進度</h3>
-                  <ProgressBar isPlaying={isPlaying} />
+                  <RhythmProgressBar 
+                    currentStep={synthCurrentStep}
+                    currentLoop={synthCurrentLoop}
+                  />
+                  
+                  <div className="mt-4 pt-4 border-t border-pip-boy-green/20">
+                    <PlaybackControls
+                      isPlaying={isPlaying}
+                      onPlay={resume}
+                      onPause={pause}
+                      onStop={handleStop}
+                      onNext={next}
+                      onPrevious={previous}
+                      onToggleShuffle={toggleShuffle}
+                      onToggleRepeat={cycleRepeatMode}
+                      shuffleEnabled={shuffleEnabled}
+                      repeatMode={repeatMode}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -291,7 +340,7 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                   <div className="h-48 sm:h-56">
                     <MusicVisualizer
                     isPlaying={isPlaying}
-                    analyserNode={synth?.getAnalyserNode() ?? null} />
+                    analyserNode={analyserNodeForViz} />
 
                   </div>
                 </div>

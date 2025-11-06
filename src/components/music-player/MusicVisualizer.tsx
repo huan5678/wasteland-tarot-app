@@ -33,6 +33,7 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
   const animationFrameIdRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+  const warmupFramesRef = useRef<number>(0);
 
   // ========== Initialize Audio Analyser ==========
   // P3.4: 使用傳入的 AnalyserNode（從 RhythmAudioSynthesizer 或 ProceduralMusicEngine）
@@ -44,20 +45,19 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
       const bufferLength = analyserNode.frequencyBinCount;
       dataArrayRef.current = new Uint8Array(bufferLength);
 
-      console.log('[MusicVisualizer] Connected to AnalyserNode', {
-        fftSize: analyserNode.fftSize,
-        frequencyBinCount: bufferLength,
-      });
+      // 重置預熱計數器
+      warmupFramesRef.current = 0;
     } else {
       // 沒有 AnalyserNode 時清空
       analyserRef.current = null;
       dataArrayRef.current = null;
+      warmupFramesRef.current = 0;
     }
 
     // 清理函數：不 disconnect，因為 analyserNode 由外部管理
     return () => {
-      // 清空參考，但不 disconnect
       dataArrayRef.current = null;
+      warmupFramesRef.current = 0;
     };
   }, [analyserNode]);
 
@@ -83,9 +83,16 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
 
     // P3.4: 從 AnalyserNode 取得真實頻率數據
     let frequencyData: Uint8Array | null = null;
-    if (analyserRef.current && dataArrayRef.current && isPlaying) {
+
+    // 移除 isPlaying 檢查，只要有 analyserNode 就讀取數據
+    if (analyserRef.current && dataArrayRef.current) {
       analyserRef.current.getByteFrequencyData(dataArrayRef.current);
       frequencyData = dataArrayRef.current;
+
+      // 累積預熱幀數
+      if (warmupFramesRef.current < 60) {
+        warmupFramesRef.current++;
+      }
     }
 
     for (let i = 0; i < barCount; i++) {
@@ -93,14 +100,11 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
 
       if (frequencyData) {
         // 使用真實的頻率數據（取樣 bins）
-        // frequencyBinCount = 32 (fftSize/2), 取每 2 個 bin 平均得到 16 個柱狀圖
         const binIndex = Math.floor((i * frequencyData.length) / barCount);
         value = frequencyData[binIndex] || 0;
       } else {
-        // 降級：使用模擬數據（當沒有 AnalyserNode 或暫停時）
-        value = isPlaying
-          ? Math.random() * 255 * (0.5 + Math.sin(Date.now() / 1000 + i) * 0.5)
-          : 0;
+        // 無數據時顯示靜態最小值
+        value = 0;
       }
 
       const barHeight = (value / 255) * height * 0.8;
@@ -157,15 +161,17 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
     window.addEventListener('resize', updateCanvasSize);
 
     // 動畫循環 (60 FPS)
+    // 重要：只要有 analyserNode 就持續繪製，不管是否播放
     const animate = () => {
       drawVisualizer();
       animationFrameIdRef.current = requestAnimationFrame(animate);
     };
 
-    if (isPlaying) {
+    // 只要有 analyserNode 就開始動畫循環
+    if (analyserRef.current) {
       animate();
     } else {
-      // 暫停時顯示靜態波形
+      // 沒有 analyserNode 時顯示靜態空白
       drawVisualizer();
     }
 
@@ -176,7 +182,7 @@ export const MusicVisualizer = React.memo(function MusicVisualizer({
         animationFrameIdRef.current = null;
       }
     };
-  }, [isPlaying, drawVisualizer]);
+  }, [analyserNode, drawVisualizer]);
 
   // ========== Render ==========
   return (

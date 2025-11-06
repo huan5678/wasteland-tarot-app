@@ -18,6 +18,7 @@ export interface PlaybackControlsProps {
   isPlaying: boolean;
   onPlay: () => void;
   onPause: () => void;
+  onStop: () => void;
   onNext: () => void;
   onPrevious: () => void;
   onToggleShuffle: () => void;
@@ -35,6 +36,7 @@ export const PlaybackControls = React.memo(function PlaybackControls({
   isPlaying,
   onPlay,
   onPause,
+  onStop,
   onNext,
   onPrevious,
   onToggleShuffle,
@@ -65,6 +67,12 @@ export const PlaybackControls = React.memo(function PlaybackControls({
     playSound('ui-hover', { volume: 0.3 });
     onPrevious();
   }, [onPrevious, playSound]);
+
+  const handleStop = useCallback(() => {
+    playSound('button-click', { volume: 0.3 });
+    // 停止播放並重置播放位置到開頭
+    onStop();
+  }, [onStop, playSound]);
 
   const handleToggleShuffle = useCallback(() => {
     playSound('button-click', { volume: 0.3 });
@@ -97,6 +105,13 @@ export const PlaybackControls = React.memo(function PlaybackControls({
           e.preventDefault();
           handleNext();
           break;
+        case 's':
+        case 'S':
+          if (e.ctrlKey || e.metaKey) {
+            e.preventDefault();
+            handleStop();
+          }
+          break;
         default:
           break;
       }
@@ -104,7 +119,7 @@ export const PlaybackControls = React.memo(function PlaybackControls({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handlePlayPause, handleNext, handlePrevious]);
+  }, [handlePlayPause, handleNext, handlePrevious, handleStop]);
 
   // ========== Render ==========
 
@@ -112,39 +127,68 @@ export const PlaybackControls = React.memo(function PlaybackControls({
     <div className={`flex flex-col gap-4 ${className || ''}`}>
       {/* Main Playback Controls */}
       <div
-        className="flex items-center justify-center gap-4"
+        className="flex items-center justify-center gap-2"
         role="group"
         aria-label="播放控制">
 
         {/* Previous Button */}
-        <Button size="icon" variant="outline"
-        onClick={handlePrevious}
-        className="flex items-center justify-center w-10 h-10 transition-all"
-        aria-label="上一首">
-
-          <PixelIcon name="skip-back" sizePreset="sm" aria-label="上一首" />
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={handlePrevious}
+          className="w-10 h-10"
+          aria-label="上一首"
+        >
+          <PixelIcon name="skip-back" sizePreset="sm" decorative />
         </Button>
 
-        {/* Play/Pause Button */}
-        <Button size="icon" variant="outline"
-        onClick={handlePlayPause}
-        className="flex items-center justify-center w-14 h-14 transition-all"
-        aria-label={isPlaying ? '暫停' : '播放'}>
+        {/* 播放中：顯示暫停 + 停止 */}
+        {isPlaying ? (
+          <>
+            {/* Pause Button */}
+            <Button
+              size="icon"
+              variant="default"
+              onClick={handlePlayPause}
+              className="w-10 h-10 bg-radiation-orange/20 hover:bg-radiation-orange/30 border border-radiation-orange"
+              aria-label="暫停"
+            >
+              <PixelIcon name="pause" sizePreset="sm" variant="secondary" decorative />
+            </Button>
 
-          {isPlaying ?
-          <PixelIcon name="pause" sizePreset="sm" aria-label="暫停" /> :
-
-          <PixelIcon name="play" sizePreset="sm" aria-label="播放" />
-          }
-        </Button>
+            {/* Stop Button */}
+            <Button
+              size="icon"
+              variant="default"
+              onClick={handleStop}
+              className="w-10 h-10 bg-red-900/20 hover:bg-red-900/30 border border-red-500"
+              aria-label="停止"
+            >
+              <PixelIcon name="stop" sizePreset="sm" variant="error" decorative />
+            </Button>
+          </>
+        ) : (
+          /* 暫停/停止狀態：顯示播放 */
+          <Button
+            size="icon"
+            variant="default"
+            onClick={handlePlayPause}
+            className="w-10 h-10 bg-pip-boy-green/20 hover:bg-pip-boy-green/30 border border-pip-boy-green"
+            aria-label="播放"
+          >
+            <PixelIcon name="play" sizePreset="sm" variant="primary" decorative />
+          </Button>
+        )}
 
         {/* Next Button */}
-        <Button size="icon" variant="outline"
-        onClick={handleNext}
-        className="flex items-center justify-center w-10 h-10 transition-all"
-        aria-label="下一首">
-
-          <PixelIcon name="skip-forward" sizePreset="sm" aria-label="下一首" />
+        <Button
+          size="icon"
+          variant="outline"
+          onClick={handleNext}
+          className="w-10 h-10"
+          aria-label="下一首"
+        >
+          <PixelIcon name="skip-forward" sizePreset="sm" decorative />
         </Button>
       </div>
 
@@ -157,9 +201,12 @@ export const PlaybackControls = React.memo(function PlaybackControls({
         {/* Shuffle Button */}
         <Button
           size="icon"
-          variant={shuffleEnabled ? 'default' : 'ghost'}
+          variant="ghost"
           onClick={handleToggleShuffle}
-          className="flex items-center justify-center w-10 h-10 transition-all"
+          className={`
+            flex items-center justify-center w-10 h-10 transition-all
+            ${shuffleEnabled ? 'bg-pip-boy-green/20 hover:bg-pip-boy-green/30' : 'hover:bg-pip-boy-green/10'}
+          `}
           aria-label={shuffleEnabled ? '停用隨機播放' : '啟用隨機播放'}
           aria-pressed={shuffleEnabled}
         >
@@ -174,9 +221,12 @@ export const PlaybackControls = React.memo(function PlaybackControls({
         {/* Repeat Button */}
         <Button
           size="icon"
-          variant={repeatMode !== 'off' ? 'default' : 'ghost'}
+          variant="ghost"
           onClick={handleToggleRepeat}
-          className="flex items-center justify-center w-10 h-10 transition-all"
+          className={`
+            flex items-center justify-center w-10 h-10 transition-all
+            ${repeatMode !== 'off' ? 'bg-pip-boy-green/20 hover:bg-pip-boy-green/30' : 'hover:bg-pip-boy-green/10'}
+          `}
           aria-label={
             repeatMode === 'off'
               ? '啟用循環播放'
