@@ -262,13 +262,14 @@ async def create_wish(
   - **注意**: 管理員路徑為 `/api/v1/wishlist/admin` (router 已設定 prefix="/wishlist")
   - **Completed**: Implemented all 4 admin endpoints (GET /admin, PUT /admin/{id}/reply, PUT /admin/{id}/hide, PUT /admin/{id}/unhide). All endpoints manually check is_admin permission and return 403 for non-admin users. Comprehensive error handling, logging, and validation implemented. Test file created at `/backend/tests/api/test_wishlist_endpoints.py` with 24 test cases covering all user and admin endpoints.
 
-- [ ] 4. 後端單元測試與整合測試
-  - 建立 `test_wishlist_service.py`：測試 WishlistService 所有方法（每日限制、建立、更新、管理員操作）
-  - 建立 `test_content_validator.py`：測試 ContentValidator 的字數計算與驗證邏輯（包含各種 Markdown 語法）
-  - 建立 `test_timezone_utils.py`：測試時區轉換邏輯與邊界情況
-  - 建立 `test_wishlist_endpoints.py`：測試所有 API endpoints（使用 pytest-httpx mock）
-  - 測試錯誤處理場景：每日限制違反、編輯權限檢查、管理員權限驗證、內容長度超限
+- [x] 4. 後端單元測試與整合測試
+  - 建立 `test_wishlist_service.py`：測試 WishlistService 所有方法（每日限制、建立、更新、管理員操作）✅ **35 tests passing**
+  - 建立 `test_content_validator.py`：測試 ContentValidator 的字數計算與驗證邏輯（包含各種 Markdown 語法）✅ **40 tests (已存在)**
+  - 建立 `test_timezone_utils.py`：測試時區轉換邏輯與邊界情況 ✅ **8 tests (已存在)**
+  - 建立 `test_wishlist_endpoints.py`：測試所有 API endpoints（使用 pytest-httpx mock）✅ **24 tests (已存在)**
+  - 測試錯誤處理場景：每日限制違反、編輯權限檢查、管理員權限驗證、內容長度超限 ✅
   - _Requirements: 1.7, 3.7, 5.7, 8.1, 9.3, 9.4_
+  - **Completed**: All 107 tests passing. Comprehensive test coverage for WishlistService (user and admin methods), ContentValidator (Markdown stripping and validation), TimezoneUtil (UTC+8 boundary cases), and all API endpoints (user and admin operations). Test infrastructure uses SQLite in-memory database for fast, isolated unit tests.
 
 ---
 
