@@ -76,7 +76,13 @@ export function useRhythmMusicEngine() {
       return;
     }
     
-    // 如果已經初始化，跳過
+    // 防止重複初始化
+    if (isInitializing.current) {
+      logger.warn('[useRhythmMusicEngine] Already initializing, skipping');
+      return;
+    }
+    
+    // 如果已經初始化且 synth 存在，跳過
     if (isInitialized && synth) {
       logger.info('[useRhythmMusicEngine] Already initialized with synth, skipping', {
         isInitialized,
@@ -89,12 +95,6 @@ export function useRhythmMusicEngine() {
     let newSynth: RhythmAudioSynthesizer | null = null;
 
     const initSynth = async () => {
-      // 防止重複初始化
-      if (isInitializing.current) {
-        logger.warn('[useRhythmMusicEngine] Already initializing, skipping');
-        return;
-      }
-      
       isInitializing.current = true;
       
       try {
