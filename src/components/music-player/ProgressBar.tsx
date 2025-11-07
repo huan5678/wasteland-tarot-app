@@ -32,15 +32,21 @@ export const ProgressBar = React.memo(function ProgressBar({
         {/* Animated Progress Bar */}
         <motion.div
           className="absolute left-0 top-0 h-full bg-gradient-to-r from-pip-boy-green-dark to-pip-boy-green rounded-full shadow-[0_0_8px_rgba(0,255,136,0.5)]"
+          initial={{ width: '0%' }}
           animate={
             isPlaying
-              ? { width: ['0%', '100%'] }
-              : { width: '0%' }
+              ? { width: '100%' }
+              : {}  // 暫停時不改變寬度，保持當前位置
           }
           transition={
             isPlaying
-              ? { duration: 30, repeat: Infinity, ease: 'linear' }
-              : { duration: 0.3 }
+              ? { 
+                  duration: 30, 
+                  repeat: Infinity, 
+                  ease: 'linear',
+                  repeatType: 'loop'
+                }
+              : { duration: 0 }  // 暫停時立即停止動畫
           }
         />
 
@@ -48,11 +54,13 @@ export const ProgressBar = React.memo(function ProgressBar({
         {isPlaying && (
           <motion.div
             className="absolute left-0 top-0 h-full w-1 bg-pip-boy-green-bright shadow-[0_0_6px_rgba(0,255,65,0.8)]"
-            animate={{ left: ['0%', '100%'] }}
+            initial={{ left: '0%' }}
+            animate={{ left: '100%' }}
             transition={{
               duration: 30,
               repeat: Infinity,
               ease: 'linear',
+              repeatType: 'loop'
             }}
           />
         )}

@@ -8,7 +8,7 @@ from supabase import Client
 from fastapi import HTTPException, status
 
 from app.models.music import QuotaResponse, MusicParameters
-from app.providers import LLMProviderFactory
+from app.providers.factory import LLMProviderFactory
 
 logger = logging.getLogger(__name__)
 

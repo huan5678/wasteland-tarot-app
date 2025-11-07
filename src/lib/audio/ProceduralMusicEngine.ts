@@ -246,6 +246,12 @@ export class ProceduralMusicEngine {
   // 追蹤音樂循環的 timeout ID，用於清理
   private loopTimeoutId: number | null = null;
 
+  // 循環完成回調（每次循環結束時觸發）
+  private onLoopComplete: (() => void) | null = null;
+
+  // Repeat mode - 控制循環行為
+  private repeatEnabled: boolean = true;
+
   constructor(
     audioContext: AudioContext,
     destination: AudioNode,
@@ -274,7 +280,7 @@ export class ProceduralMusicEngine {
     // 插入在 masterGain 和 destination 之間
     this.analyserNode = audioContext.createAnalyser();
     this.analyserNode.fftSize = 64; // 產生 32 個頻率 bins (適合 16 個柱狀圖)
-    this.analyserNode.smoothingTimeConstant = 0.8; // 平滑度 (0-1)
+    this.analyserNode.smoothingTimeConstant = 0.4; // 平滑度：降低以快速回應節奏變化
     this.analyserNode.minDecibels = -90;
     this.analyserNode.maxDecibels = -10;
 
@@ -404,10 +410,27 @@ export class ProceduralMusicEngine {
 
     console.log('[ProceduralMusicEngine] Loop scheduled, next loop in', loopDuration, 'seconds');
 
+    // 觸發循環完成回調
+    if (this.onLoopComplete) {
+      setTimeout(() => {
+        if (this.onLoopComplete) {
+          this.onLoopComplete();
+        }
+      }, loopDuration * 1000);
+    }
+
     // 儲存 timeout ID 以便後續清理
-    this.loopTimeoutId = setTimeout(() => {
-      this.scheduleChordLoop();
-    }, loopDuration * 1000) as unknown as number;
+    // 只有在 repeatEnabled 為 true 時才自動循環
+    if (this.repeatEnabled) {
+      this.loopTimeoutId = setTimeout(() => {
+        this.scheduleChordLoop();
+      }, loopDuration * 1000) as unknown as number;
+    } else {
+      // 如果不循環，設定 timeout 在循環結束後停止播放
+      this.loopTimeoutId = setTimeout(() => {
+        this.stop();
+      }, loopDuration * 1000) as unknown as number;
+    }
   }
 
   /**
@@ -632,6 +655,23 @@ export class ProceduralMusicEngine {
    */
   getAnalyserNode(): AnalyserNode | null {
     return this.analyserNode;
+  }
+
+  /**
+   * 設定循環完成回調
+   * @param callback - 每次循環完成時觸發的回調函數
+   */
+  setOnLoopComplete(callback: (() => void) | null): void {
+    this.onLoopComplete = callback;
+  }
+
+  /**
+   * 設定是否啟用自動循環
+   * @param enabled - true: 自動循環播放; false: 播放一次後停止
+   */
+  setRepeatEnabled(enabled: boolean): void {
+    this.repeatEnabled = enabled;
+    logger.info(`[ProceduralMusicEngine] Repeat ${enabled ? 'enabled' : 'disabled'}`);
   }
 
   /**

@@ -136,9 +136,13 @@ class Settings(BaseSettings):
     ai_fallback_to_template: bool = Field(True, env="AI_FALLBACK_TO_TEMPLATE")
 
     # Performance Settings - Optimized for lower memory usage
-    database_pool_size: int = 5  # Reduced from 20 (saves ~150MB)
-    database_max_overflow: int = 5  # Allow some overflow for bursts
+    database_pool_size: int = Field(3, env="DATABASE_POOL_SIZE")  # Further reduced from 5 (saves more memory)
+    database_max_overflow: int = Field(5, env="DATABASE_MAX_OVERFLOW")  # Allow some overflow for bursts
     cache_expire_seconds: int = 3600  # 1 hour
+    
+    # Feature Flags - Memory Optimization (disable non-critical startup tasks)
+    enable_bingo_cold_start_check: bool = Field(False, env="ENABLE_BINGO_COLD_START_CHECK")  # Disable to save ~10MB at startup
+    enable_scheduler: bool = Field(True, env="ENABLE_SCHEDULER")  # Can disable if not using bingo/cron jobs
 
     @validator("backend_cors_origins", pre=True)
     def assemble_cors_origins(cls, v):

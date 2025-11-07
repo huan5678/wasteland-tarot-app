@@ -48,12 +48,18 @@ export interface RhythmAudioSynthesizerState {
   currentPatternIndex: number;
   currentStep: number;      // 0-15
   currentLoop: number;      // 1-4
+  patternsCount: number;    // 已載入的 patterns 數量
 }
 
 /**
  * Pattern 完成回呼函式（4 次循環後觸發）
  */
 export type OnPatternCompleteCallback = () => void;
+
+/**
+ * 狀態更新回呼函式（每步觸發）
+ */
+export type OnStateUpdateCallback = (state: { currentStep: number; currentLoop: number }) => void;
 
 /**
  * RhythmAudioSynthesizer 類別
@@ -93,6 +99,7 @@ export class RhythmAudioSynthesizer {
 
   // 回呼函式
   private onPatternComplete: OnPatternCompleteCallback | null = null;
+  private onStateUpdate: OnStateUpdateCallback | null = null;
 
   /**
    * 建構子
@@ -120,7 +127,7 @@ export class RhythmAudioSynthesizer {
     // 插入在 masterGainNode 和 destination 之間
     this.analyserNode = this.audioContext.createAnalyser();
     this.analyserNode.fftSize = 64; // 產生 32 個頻率 bins (適合 16 個柱狀圖)
-    this.analyserNode.smoothingTimeConstant = 0.8; // 平滑度 (0-1)
+    this.analyserNode.smoothingTimeConstant = 0.4; // 平滑度：降低以快速回應節奏變化
     this.analyserNode.minDecibels = -90;
     this.analyserNode.maxDecibels = -10;
 
@@ -141,6 +148,14 @@ export class RhythmAudioSynthesizer {
   }
 
   /**
+   * 設定狀態更新回呼
+   * @param callback - 回呼函式
+   */
+  public setOnStateUpdate(callback: OnStateUpdateCallback): void {
+    this.onStateUpdate = callback;
+  }
+
+  /**
    * 獲取當前狀態
    * @returns 當前狀態物件
    */
@@ -150,6 +165,7 @@ export class RhythmAudioSynthesizer {
       currentPatternIndex: this.currentPatternIndex,
       currentStep: this.currentStep,
       currentLoop: this.currentLoop,
+      patternsCount: this.patterns.length,
     };
   }
 
@@ -488,6 +504,14 @@ export class RhythmAudioSynthesizer {
           this.handlePatternComplete();
         }
       }
+
+      // 觸發狀態更新回呼
+      if (this.onStateUpdate) {
+        this.onStateUpdate({
+          currentStep: this.currentStep,
+          currentLoop: this.currentLoop
+        });
+      }
     }
 
     // 繼續排程下一輪（使用 setTimeout 避免阻塞主執行緒）
@@ -524,8 +548,31 @@ export class RhythmAudioSynthesizer {
    * 開始播放
    */
   public play(): void {
-    if (this.isPlaying) return;
-    if (this.patterns.length === 0) return;
+    if (this.isPlaying) {
+      logger.warn('[RhythmAudioSynthesizer] Already playing, ignoring play() call');
+      return;
+    }
+    
+    if (this.patterns.length === 0) {
+      logger.error('[RhythmAudioSynthesizer] No patterns loaded, cannot play');
+      return;
+    }
+
+    // 確保之前的排程已被取消
+    if (this.timerID !== null) {
+      logger.warn('[RhythmAudioSynthesizer] Previous timer still active, clearing it');
+      globalThis.clearTimeout(this.timerID);
+      this.timerID = null;
+    }
+
+    logger.info('[RhythmAudioSynthesizer] Starting playback', {
+      patternsCount: this.patterns.length,
+      currentPatternIndex: this.currentPatternIndex,
+      currentStep: this.currentStep,
+      currentLoop: this.currentLoop,
+      tempo: this.tempo,
+      volume: this.currentVolume,
+    });
 
     this.isPlaying = true;
 
@@ -540,6 +587,16 @@ export class RhythmAudioSynthesizer {
    * 暫停播放（保留位置）
    */
   public pause(): void {
+    if (!this.isPlaying) {
+      logger.warn('[RhythmAudioSynthesizer] Not playing, ignoring pause() call');
+      return;
+    }
+
+    logger.info('[RhythmAudioSynthesizer] Pausing playback', {
+      currentStep: this.currentStep,
+      currentLoop: this.currentLoop,
+    });
+
     this.isPlaying = false;
 
     // 取消排程 timer
@@ -555,6 +612,12 @@ export class RhythmAudioSynthesizer {
    * 停止播放（重置到步驟 0）
    */
   public stop(): void {
+    logger.info('[RhythmAudioSynthesizer] Stopping playback', {
+      currentStep: this.currentStep,
+      currentLoop: this.currentLoop,
+      wasPlaying: this.isPlaying,
+    });
+
     this.isPlaying = false;
 
     // 取消排程 timer
@@ -566,6 +629,8 @@ export class RhythmAudioSynthesizer {
     // 重置位置
     this.currentStep = 0;
     this.currentLoop = 1;
+
+    logger.info('[RhythmAudioSynthesizer] Stopped and reset to step 0, loop 1');
   }
 
   /**
