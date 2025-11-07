@@ -2,18 +2,22 @@
  * MobileBottomNav - Native App-Style Bottom Navigation
  * Spec: mobile-native-app-layout
  * Phase 1: Bottom Navigation Integration
+ * Phase 2: Haptic Feedback & Gesture Support
  * 
- * iOS/Android compliant bottom tab bar with safe area support
+ * iOS/Android compliant bottom tab bar with safe area support,
+ * haptic feedback, and swipe gesture navigation
  */
 
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { animated, useSpring } from '@react-spring/web';
+import { useDrag } from '@use-gesture/react';
 import { PixelIcon } from '@/components/ui/icons';
 import type { IconName } from '@/components/ui/icons';
 import { usePlatform } from '@/hooks/usePlatform';
 import { useSafeArea } from '@/hooks/useSafeArea';
+import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { cn } from '@/lib/utils';
 
 interface NavigationItem {
@@ -48,8 +52,15 @@ export function MobileBottomNav({
 
   const platform = usePlatform();
   const safeArea = useSafeArea();
+  const { triggerHaptic } = useHapticFeedback();
   const isIOS = platform === 'ios';
   const isAndroid = platform === 'android';
+
+  // Find current tab index
+  const currentIndex = navigationItems.findIndex(item => 
+    item.href === currentPath || 
+    (item.href !== '/' && currentPath.startsWith(item.href))
+  );
 
   // Auto-hide navigation on scroll (optional, currently disabled)
   useEffect(() => {
@@ -79,6 +90,9 @@ export function MobileBottomNav({
   });
 
   const handleNavigation = (path: string) => {
+    // Trigger haptic feedback
+    triggerHaptic('light');
+    
     if (onNavigate) {
       onNavigate(path);
     }
@@ -89,8 +103,44 @@ export function MobileBottomNav({
     }
   };
 
+  // Gesture handling for swipe navigation
+  const bind = useDrag(
+    ({ movement: [mx], velocity: [vx], direction: [dx], cancel }) => {
+      // Only handle horizontal swipes
+      if (Math.abs(mx) < 50) return;
+      
+      const swipeThreshold = 50;
+      const velocityThreshold = 0.5;
+      
+      // Swipe left (next tab)
+      if (dx < 0 && (Math.abs(mx) > swipeThreshold || Math.abs(vx) > velocityThreshold)) {
+        const nextIndex = currentIndex + 1;
+        if (nextIndex < navigationItems.length) {
+          cancel();
+          triggerHaptic('light');
+          handleNavigation(navigationItems[nextIndex].href);
+        }
+      }
+      // Swipe right (previous tab)
+      else if (dx > 0 && (Math.abs(mx) > swipeThreshold || Math.abs(vx) > velocityThreshold)) {
+        const prevIndex = currentIndex - 1;
+        if (prevIndex >= 0) {
+          cancel();
+          triggerHaptic('light');
+          handleNavigation(navigationItems[prevIndex].href);
+        }
+      }
+    },
+    {
+      axis: 'x',
+      filterTaps: true,
+      pointer: { touch: true }
+    }
+  );
+
   return (
     <animated.nav
+      {...bind()}
       style={navSpring}
       role="navigation"
       aria-label="主要導航"
