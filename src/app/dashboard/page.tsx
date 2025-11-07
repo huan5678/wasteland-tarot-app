@@ -14,7 +14,10 @@ import { KarmaDisplay } from '@/components/dashboard/KarmaDisplay/KarmaDisplay';
 import { KarmaProgressBar } from '@/components/dashboard/KarmaProgressBar';
 import { KarmaLog } from '@/components/dashboard/KarmaLog/KarmaLog';
 import { TasksPanel } from '@/components/dashboard/TasksPanel';
-import { getLocaleDetector } from '@/lib/utils/localeDetector';import { Button } from "@/components/ui/button";
+import { getLocaleDetector } from '@/lib/utils/localeDetector';
+import { Button } from "@/components/ui/button";
+import { PullToRefresh } from '@/components/mobile';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface Reading {
   id: string;
@@ -39,6 +42,7 @@ export default function DashboardPage() {
   const { isActive, activeTime, progress } = useActivityTracker();
   const { userProgress, fetchUserProgress } = useAchievementStore();
   const { fetchSummary, fetchLogs } = useKarmaStore();
+  const isMobile = useIsMobile();
   const [recentReadings, setRecentReadings] = useState<Reading[]>([]);
   const [stats, setStats] = useState({
     totalReadings: 0,
@@ -305,7 +309,50 @@ export default function DashboardPage() {
     return detector.formatDate(dateString);
   };
 
-  return (
+  // Pull-to-refresh handler for mobile
+  const handleRefresh = async () => {
+    if (!user?.id) return;
+    
+    try {
+      // Reload all dashboard data
+      const [readingsResponse, favCardData, analyticsData] = await Promise.all([
+        readingsAPI.getUserReadings(user.id).catch(() => ({ readings: [], total_count: 0 })),
+        cardsAPI.getUserFavoriteCard(user.id).catch(() => null),
+        analyticsAPI.getUserAnalytics(user.id).catch(() => ({ days_in_vault: 0 }))
+      ]);
+
+      // Update state
+      const transformedReadings = readingsResponse.readings.map((reading: any) => ({
+        id: reading.id,
+        date: reading.created_at,
+        question: reading.question,
+        cards: reading.cards_drawn || [],
+        spread_type: reading.spread_type,
+        spread_template: reading.spread_template,
+        interpretation: reading.interpretation || ''
+      }));
+
+      setRecentReadings(transformedReadings);
+      setStats(prev => ({
+        ...prev,
+        totalReadings: readingsResponse.total_count,
+        favoriteCard: favCardData?.card || null,
+        favoriteCardDrawCount: favCardData?.count || 0,
+        daysInVault: analyticsData?.days_in_vault || 0
+      }));
+
+      // Refresh other data
+      await Promise.all([
+        fetchUserProgress(),
+        fetchSummary(),
+        fetchLogs(1)
+      ]);
+    } catch (error) {
+      console.error('[Dashboard] Refresh failed:', error);
+    }
+  };
+
+  const dashboardContent = (
     <div className="min-h-screen bg-transparent p-4 md:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Dashboard Header */}
@@ -598,6 +645,13 @@ export default function DashboardPage() {
           <IncompleteSessionsList />
         </div>
       </div>
-    </div>);
+    </div>
+  );
 
+  // Wrap with PullToRefresh on mobile
+  return isMobile ? (
+    <PullToRefresh onRefresh={handleRefresh}>
+      {dashboardContent}
+    </PullToRefresh>
+  ) : dashboardContent;
 }

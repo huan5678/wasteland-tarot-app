@@ -18,7 +18,10 @@ import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from
 import { OverviewTab } from '@/components/profile/tabs/OverviewTab';
 import { AchievementsTab } from '@/components/profile/tabs/AchievementsTab';
 import { SettingsTab } from '@/components/profile/tabs/SettingsTab';
-import { AccountTab } from '@/components/profile/tabs/AccountTab';import { Button } from "@/components/ui/button";
+import { AccountTab } from '@/components/profile/tabs/AccountTab';
+import { Button } from "@/components/ui/button";
+import { PullToRefresh } from '@/components/mobile';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 interface UserProfile {
   username: string;
@@ -54,6 +57,7 @@ export default function ProfilePage() {
   const oauthProvider = useAuthStore((s) => s.oauthProvider);
   const profilePicture = useAuthStore((s) => s.profilePicture);
   const updateAvatarUrl = useAuthStore((s) => s.updateAvatarUrl);
+  const isMobile = useIsMobile();
 
   // 音效系統狀態
   const sfxVolume = useAudioStore((s) => s.volumes.sfx);
@@ -285,6 +289,58 @@ export default function ProfilePage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
+  // Pull-to-refresh handler for mobile
+  const handleRefresh = async () => {
+    if (!user?.id) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Reload all profile data
+      const [analytics, stats] = await Promise.all([
+        analyticsAPI.getUserAnalytics().catch(() => null),
+        readingsAPI.getPersonalStats().catch(() => null)
+      ]);
+
+      let favoriteCardName = '無';
+      let favoritedCount = 0;
+      
+      if (analytics) {
+        const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
+        favoritedCount = (analytics.user_analytics.favorited_cards || []).length;
+        
+        if (mostDrawnCards.length > 0) {
+          try {
+            const card = await cardsAPI.getById(mostDrawnCards[0]);
+            favoriteCardName = card.name;
+          } catch {}
+        }
+      }
+
+      const totalReadingsCount = stats?.total_readings || 0;
+      const monthlyReadings = stats?.readings_this_month || 0;
+
+      const updatedProfile: UserProfile = {
+        ...profile!,
+        totalReadings: totalReadingsCount,
+        monthlyReadings,
+        favoriteCardName,
+        favoritedCount
+      };
+
+      setProfile(updatedProfile);
+
+      // Refresh achievements
+      await Promise.all([
+        fetchSummary(),
+        fetchUserProgress()
+      ]);
+    } catch (error) {
+      console.error('[Profile] Refresh failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -319,7 +375,7 @@ export default function ProfilePage() {
 
   }
 
-  return (
+  const profileContent = (
     <div className="min-h-screen bg-transparent p-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
@@ -402,6 +458,13 @@ export default function ProfilePage() {
           </PipBoyTabsContent>
         </PipBoyTabs>
       </div>
-    </div>);
+    </div>
+  );
 
+  // Wrap with PullToRefresh on mobile
+  return isMobile ? (
+    <PullToRefresh onRefresh={handleRefresh}>
+      {profileContent}
+    </PullToRefresh>
+  ) : profileContent;
 }

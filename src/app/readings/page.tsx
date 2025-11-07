@@ -10,11 +10,14 @@ import { ReadingHistory } from '@/components/readings/ReadingHistory';
 import { ReadingStatsDashboard } from '@/components/readings/ReadingStatsDashboard';
 import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from '@/components/ui/pipboy-tabs';
 import { Button } from '@/components/ui/button';
+import { PullToRefresh } from '@/components/mobile';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 export default function ReadingsPage() {
   // ✅ 統一認證檢查（自動處理初始化、重導向、日誌）
   const { isReady, user } = useRequireAuth();
   const isLoading = useReadingsStore((s) => s.isLoading);
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history');
 
   // CRITICAL FIX: Always fetch readings when page mounts OR when navigating back
@@ -35,7 +38,13 @@ export default function ReadingsPage() {
     return <AuthLoading isVerifying={!isReady} />;
   }
 
-  return (
+  // Pull-to-refresh handler for mobile
+  const handleRefresh = async () => {
+    if (!user?.id) return;
+    await useReadingsStore.getState().fetchUserReadings(user.id, true);
+  };
+
+  const readingsContent = (
     <div className="min-h-screen p-4 md:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -79,6 +88,13 @@ export default function ReadingsPage() {
           </PipBoyTabsContent>
         </PipBoyTabs>
       </div>
-    </div>);
+    </div>
+  );
 
+  // Wrap with PullToRefresh on mobile
+  return isMobile ? (
+    <PullToRefresh onRefresh={handleRefresh}>
+      {readingsContent}
+    </PullToRefresh>
+  ) : readingsContent;
 }
