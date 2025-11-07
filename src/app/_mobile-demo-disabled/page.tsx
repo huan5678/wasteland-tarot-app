@@ -1,9 +1,12 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import React, { useState, useEffect } from 'react';
 import { MobileTarotCard } from '@/components/mobile/MobileTarotCard';
 import { MobileReadingInterface } from '@/components/mobile/MobileReadingInterface';
-import { MobileNavigation, MobileTabBar, PullToRefresh } from '@/components/mobile/MobileNavigation';
+import { MobileBottomNav } from '@/components/mobile/MobileBottomNav';
+import { MobileTabBar, PullToRefresh } from '@/components/mobile/MobileNavigation';
 import { MobileSpreadSelector } from '@/components/mobile/MobileSpreadSelector';
 import { ResponsiveContainer, MobileGrid, MobileCard, SafeAreaView } from '@/components/layout/ResponsiveContainer';
 import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures';
