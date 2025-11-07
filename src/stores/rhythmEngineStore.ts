@@ -43,6 +43,19 @@ export const useRhythmEngineStore = create<RhythmEngineState>((set, get) => ({
 
   // Set synth instance
   setSynth: (synth) => {
+    const { synth: existingSynth } = get();
+    
+    // 如果已經有 synth 且不是同一個實例，先清理
+    if (existingSynth && existingSynth !== synth) {
+      logger.warn('[RhythmEngineStore] Cleaning up existing synth before setting new one');
+      try {
+        existingSynth.stop();
+        existingSynth.destroy();
+      } catch (error) {
+        logger.error('[RhythmEngineStore] Error cleaning up existing synth', error);
+      }
+    }
+    
     logger.info('[RhythmEngineStore] Setting synth instance', { hasValue: !!synth });
     set({ synth });
     

@@ -37,6 +37,10 @@ export function useRhythmMusicEngine() {
   const currentPatternIndex = useMusicPlayerStore((state) => state.currentModeIndex);
   const loadSystemPresets = useRhythmPlaylistStore((state) => state.loadSystemPresets);
 
+  // ========== Initialization Lock ==========
+  // 使用 ref 追蹤初始化狀態，防止重複初始化
+  const isInitializing = useRef(false);
+  
   // Debug: Log when hook is called
   logger.info('[useRhythmMusicEngine] Hook called', {
     presetsCount: systemPresets.length,
@@ -85,6 +89,14 @@ export function useRhythmMusicEngine() {
     let newSynth: RhythmAudioSynthesizer | null = null;
 
     const initSynth = async () => {
+      // 防止重複初始化
+      if (isInitializing.current) {
+        logger.warn('[useRhythmMusicEngine] Already initializing, skipping');
+        return;
+      }
+      
+      isInitializing.current = true;
+      
       try {
         logger.info('[useRhythmMusicEngine] Initializing RhythmAudioSynthesizer', {
           presetsCount: systemPresets.length,
@@ -158,7 +170,8 @@ export function useRhythmMusicEngine() {
         logger.info('[useRhythmMusicEngine] Initialized successfully');
       } catch (error) {
         logger.error('[useRhythmMusicEngine] Initialization failed', error);
-        initializationStarted = false; // 重置標記以允許重試
+      } finally {
+        isInitializing.current = false;
       }
     };
 
