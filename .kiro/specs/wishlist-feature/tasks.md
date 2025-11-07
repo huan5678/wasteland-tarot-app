@@ -2,9 +2,9 @@
 
 ## 概述
 
-本實作計畫將願望功能分為 4 個主要階段：**資料層建置**、**後端業務邏輯**、**前端介面實作**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
+本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 資料層、後端業務邏輯、Pydantic Schemas 已完成 (Tasks 1-3, 8/38 完成, 21%)。接下來進入後端 API Endpoints 實作階段 (Tasks 3.1-3.2)，隨後展開前端開發。
+**當前進度**: 後端完整實作已完成 (Tasks 1-4, 10/38 完成, 26%)。資料層、業務邏輯、API Endpoints、後端測試全數通過。接下來進入前端開發階段，優先實作 Zustand 狀態管理與 Markdown 編輯器核心元件。
 
 ---
 
@@ -81,165 +81,82 @@
 
 ---
 
-### 🎯 當前實作階段：後端 API Endpoints
+### ✅ 後端開發完成總結
 
-**階段目標**: 建立完整的 RESTful API endpoints，連接前端與後端業務邏輯層。
+**已完成階段**: 資料層、後端業務邏輯、API Endpoints、後端測試（Tasks 1-4）
 
-**為何重要**: Tasks 3.1-3.2 是前後端整合的關鍵橋樑。完成後，前端即可開始呼叫 API 進行願望提交、查詢、編輯等操作。
+**完成內容**:
+- ✅ **資料層** (Tasks 1-1.2): Wishlist 資料表、SQLAlchemy 模型、Migration 檔案
+- ✅ **業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
+- ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
+- ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
+- ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
+
+**測試覆蓋率**:
+- ContentValidator: 40 tests ✅
+- TimezoneUtil: 8 tests ✅
+- WishlistService: 35 tests ✅
+- API Endpoints: 24 tests ✅
+- **總計**: 107 tests passing 🎉
+
+**API 文件**:
+- Swagger UI: `http://localhost:8000/docs`
+- API 路徑: `/api/v1/wishlist` (使用者端)、`/api/v1/wishlist/admin` (管理員端)
+- 完整 API 範例參考文件末尾「📖 API Endpoints 快速參考」章節
+
+---
+
+### 🎯 當前實作階段：前端核心元件
+
+**階段目標**: 建立前端狀態管理與 Markdown 編輯器，實作使用者願望提交與歷史查詢功能。
+
+**為何重要**: Tasks 5-9 是使用者介面的核心，完成後使用者即可透過彈窗提交願望、查看歷史記錄並進行編輯。
 
 **實作重點**:
-- 使用現有的 `get_current_user` dependency 進行使用者身份驗證
-- 管理員 endpoints 需手動檢查 `current_user.is_admin`（尚無 `get_current_admin_user` dependency）
-- 整合已完成的 `WishlistService` 業務邏輯
-- 使用已定義的 Pydantic schemas 進行請求/回應驗證
-- 遵循現有的錯誤處理模式（HTTPException）
-- 參考現有 API endpoints 的架構模式（如 `/backend/app/api/v1/endpoints/users.py`）
+- **Task 5**: 建立 Zustand 願望狀態管理（遵循 `authStore` 模式）
+- **Task 6**: 實作 Markdown 編輯器元件（上下兩欄：編輯區 + 預覽區）
+- **Task 7**: 實作願望歷史列表元件（顯示願望卡片與管理員回覆）
+- **Task 8**: 實作願望彈窗主容器（整合編輯器與歷史列表）
+- **Task 9**: 整合至 `/profile` 頁面
 
-#### 📝 實作前準備
+**前端技術棧提醒**:
+- **狀態管理**: Zustand（禁止 Redux 或 Context API 用於此功能）
+- **圖示系統**: **PixelIcon 元件**（**嚴格禁止** `lucide-react`）
+- **字體**: Cubic 11 自動繼承（不需手動設定 `font-cubic` className）
+- **Markdown 渲染**: `react-markdown` + `rehype-sanitize` + `rehype-highlight`
+- **字數統計**: 使用 `strip-markdown` 計算渲染後純文字長度
 
-**檔案結構**:
-```
-backend/app/api/v1/
-├── api.py                    # 主 router 註冊檔案（需修改）
-└── endpoints/
-    ├── __init__.py           # 已存在
-    ├── users.py              # 參考此檔案的架構模式
-    ├── auth.py               # 參考錯誤處理模式
-    └── wishlist.py           # 👈 新建此檔案（Task 3.1-3.2）
-```
+**必要前端依賴** (需使用 `bun add` 安裝):
+```bash
+# Markdown 支援
+bun add react-markdown rehype-sanitize rehype-highlight remark-gfm strip-markdown
 
-**Router 註冊步驟**:
-1. 建立 `/backend/app/api/v1/endpoints/wishlist.py`
-2. 在 `/backend/app/api/v1/api.py` 最上方的 import 區塊新增: `from app.api.v1.endpoints import wishlist`
-3. 在 `api.py` 的 router 註冊區塊新增:
-   ```python
-   api_router.include_router(
-       wishlist.router,
-       prefix="/wishlist",
-       tags=["🌠 Wishlist"]
-   )
-   ```
-
-**基本程式碼架構**:
-```python
-"""
-願望功能 API 端點
-提供使用者願望提交、查詢、編輯及管理員管理功能
-"""
-
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.database import get_db
-from app.core.dependencies import get_current_user
-from app.models.user import User
-from app.schemas.wishlist import (
-    WishCreate,
-    WishUpdate,
-    WishResponse,
-    AdminReplyRequest,
-    AdminWishListResponse
-)
-from app.services.wishlist_service import WishlistService
-from app.services.content_validator import ContentEmptyError, ContentTooLongError
-from app.core.exceptions import (
-    AlreadySubmittedTodayError,
-    EditNotAllowedError,
-    WishNotFoundError,
-    UnauthorizedError
-)
-
-router = APIRouter()
-
-# ===== 使用者 Endpoints (Task 3.1) =====
-
-@router.get("", response_model=List[WishResponse])
-async def get_user_wishes(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """取得當前使用者的願望列表（未隱藏）"""
-    service = WishlistService(db)
-    wishes = await service.get_user_wishes(current_user.id)
-    return wishes
-
-# ... POST, PUT endpoints
-
-# ===== 管理員 Endpoints (Task 3.2) =====
-
-@router.get("/admin", response_model=AdminWishListResponse)
-async def get_admin_wishes(
-    filter_status: str = Query("all", description="篩選狀態: all, replied, unreplied"),
-    sort_order: str = Query("newest", description="排序: newest, oldest"),
-    page: int = Query(1, ge=1),
-    page_size: int = Query(50, ge=1, le=100),
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """取得所有願望列表（管理員專用，支援篩選、排序、分頁）"""
-    # 管理員權限檢查
-    if not current_user.is_admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="需要管理員權限才能執行此操作"
-        )
-
-    service = WishlistService(db)
-    result = await service.get_admin_wishes(
-        filter_status=filter_status,
-        sort_order=sort_order,
-        page=page,
-        page_size=page_size
-    )
-    return result
-
-# ... 其他管理員 endpoints
+# 類型定義
+bun add -D @types/react-markdown
 ```
 
-**錯誤處理範例**:
-```python
-@router.post("", response_model=WishResponse, status_code=status.HTTP_201_CREATED)
-async def create_wish(
-    wish_create: WishCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
-):
-    """提交新願望"""
-    service = WishlistService(db)
+**PixelIcon 使用範例**:
+```tsx
+import { PixelIcon } from '@/components/ui/icons'
 
-    try:
-        wish = await service.create_wish(current_user.id, wish_create.content)
-        return wish
-    except AlreadySubmittedTodayError:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="今日已提交願望，明日再來許願吧"
-        )
-    except ContentTooLongError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except ContentEmptyError:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="願望內容不可為空"
-        )
+// 願望彈窗標題圖示
+<PixelIcon name="heart" sizePreset="md" variant="primary" />
+
+// Markdown 工具列
+<PixelIcon name="bold" sizePreset="sm" aria-label="粗體" />
+<PixelIcon name="italic" sizePreset="sm" aria-label="斜體" />
+<PixelIcon name="list-unordered" sizePreset="sm" aria-label="清單" />
+<PixelIcon name="code-box-line" sizePreset="sm" aria-label="程式碼" />
+
+// 載入指示器
+<PixelIcon name="loader" animation="spin" variant="primary" decorative />
 ```
-
-**常見陷阱提醒**:
-- ⚠️ **管理員權限檢查**: 目前沒有 `get_current_admin_user` dependency，需手動檢查 `if not current_user.is_admin: raise HTTPException(403)`
-- ⚠️ **POST endpoint 狀態碼**: 建立資源時需設定 `status_code=status.HTTP_201_CREATED`
-- ⚠️ **Async/Await**: 所有 service 方法呼叫都必須使用 `await`
-- ⚠️ **例外匯入**: ContentEmptyError 和 ContentTooLongError 來自 `content_validator.py`，其他來自 `core/exceptions.py`
-- ⚠️ **Query 參數驗證**: 使用 FastAPI 的 `Query()` 進行驗證與文件化（如 `page: int = Query(1, ge=1)`）
-- ⚠️ **router prefix**: 在 `api.py` 註冊時已設定 `prefix="/wishlist"`，所以 endpoint 路徑直接寫 `@router.get("")` 即可
 
 **完成後解鎖**:
-- ✅ 後端測試 (Task 4)
-- ✅ 前端 Zustand store 實作 (Task 5)
-- ✅ 前端 UI 元件開發 (Tasks 6-9)
+- ✅ 使用者可在 `/profile` 頁面提交願望
+- ✅ 使用者可查看願望歷史與管理員回覆
+- ✅ 使用者可編輯未回覆的願望（一次機會）
+- 🔜 管理員介面開發 (Tasks 10-10.4)
 
 ---
 
@@ -456,38 +373,52 @@ async def create_wish(
 ## 實作進度總結
 
 ### 已完成任務 (✅ 10/38 子任務，26% 完成)
-- ✅ 資料層：Migration、Wishlist 模型、資料庫部署 (Tasks 1, 1.1, 1.2)
-- ✅ 後端業務邏輯：ContentValidator、TimezoneUtil、WishlistService 使用者方法、WishlistService 管理員方法 (Tasks 2, 2.1, 2.2, 2.3)
-- ✅ Pydantic Schemas：WishCreate、WishUpdate、AdminReplyRequest、WishResponse、AdminWishListResponse (Task 3)
-- ✅ API Endpoints：使用者端點 (GET, POST, PUT)、管理員端點 (GET, PUT /admin/*) (Tasks 3.1, 3.2)
+- ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
+- ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
+- ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
+- ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
+- ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
 
-### 下一步建議 (優先順序)
+### 後端開發完成 🎉
 
-#### ✅ 已完成：後端 API Endpoints (Tasks 3.1-3.2)
+**已完成**: Tasks 1-4（資料層、業務邏輯、API、測試）
+**測試狀態**: 107/107 tests passing ✅
+**API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整
 
-**Task 3.1 - 使用者 API Endpoints** ✅
-- ✅ 建立 `/backend/app/api/v1/endpoints/wishlist.py` router 檔案
-- ✅ 實作 3 個 endpoints：GET, POST, PUT `/api/v1/wishlist`
-- ✅ 整合 `WishlistService` 已完成的方法
-- ✅ 處理所有自訂例外並回傳適當 HTTP 狀態碼
-- ✅ 遵循 `/backend/app/api/v1/endpoints/users.py` 架構模板
+### 下一步建議：前端開發階段 (優先順序)
 
-**Task 3.2 - 管理員 API Endpoints** ✅
-- ✅ 在同一 router 檔案添加管理員 endpoints
-- ✅ 實作 4 個 endpoints：GET, PUT (reply/hide/unhide)
-- ✅ 手動檢查 `current_user.is_admin` 驗證權限
-- ✅ 實作分頁、篩選、排序參數處理
-- ✅ Router 已註冊至 `/backend/app/api/v1/api.py`
-- ✅ 測試文件已建立：`/backend/tests/api/test_wishlist_endpoints.py` (24 個測試案例)
+#### 🎯 Task 5: 建立 Zustand 願望狀態管理（1-2 小時）
+**目標**: 建立前端狀態管理基礎，整合後端 API
+**輸出**:
+- `src/stores/wishlistStore.ts`（遵循 `authStore.ts` 模式）
+- 定義 `Wish` 介面、狀態欄位、使用者與管理員操作方法
+- 實作 `fetchUserWishes()`、`submitWish()`、`updateWish()` 方法
+- 實作 `fetchAdminWishes()`、`submitReply()`、`toggleHidden()` 方法
 
-#### 📋 後續階段
-3. **Task 4**: 後端單元測試與整合測試 - 驗證後端功能正確性
-4. **Task 5**: 建立 Zustand 願望狀態管理 - 前端狀態管理基礎
-5. **Task 6**: 實作 Markdown 編輯器元件 - 核心前端功能
+**為何重要**: 所有前端元件都依賴此 store 進行狀態管理與 API 呼叫
 
-**預估剩餘時數**: 40-58 小時 (30 個待完成子任務)
+#### 🎯 Task 6: 實作 Markdown 編輯器元件（3-4 小時）
+**目標**: 建立願望與回覆的編輯器核心元件
+**輸出**:
+- `src/components/wishlist/MarkdownEditor.tsx`（上下兩欄：編輯區 + 預覽區）
+- Markdown 工具列（使用 **PixelIcon**：bold、italic、list、code-box-line）
+- 即時預覽（`react-markdown` + `rehype-sanitize` + `rehype-highlight`）
+- 字數統計（使用 `strip-markdown` 計算純文字長度）
+
+**為何重要**: 編輯器是使用者與管理員編寫內容的核心介面
+
+#### 🎯 Task 7: 實作願望歷史列表元件（2-3 小時）
+**目標**: 顯示使用者的願望歷史與管理員回覆
+**輸出**:
+- `src/components/wishlist/WishHistory.tsx`
+- `src/components/wishlist/WishCard.tsx`（顯示願望內容、時間、回覆、編輯按鈕）
+- 實作編輯模式切換與更新邏輯
+
+**依賴**: Task 5 (wishlistStore)、Task 6 (MarkdownEditor)
+
+**預估剩餘時數**: 35-50 小時（28 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 21% (8/38)
+**當前完成度**: 26% (10/38)
 
 ---
 
@@ -671,10 +602,10 @@ flowchart TD
     T2_3[Task 2.3: 實作管理員業務邏輯 ✅]
     T3[Task 3: 定義 Pydantic Schemas ✅]
 
-    %% Phase 2: Backend API (Next Step)
-    T3_1[Task 3.1: 實作使用者 API Endpoints]
-    T3_2[Task 3.2: 實作管理員 API Endpoints]
-    T4[Task 4: 後端單元測試與整合測試]
+    %% Phase 2: Backend API (Completed)
+    T3_1[Task 3.1: 實作使用者 API Endpoints ✅]
+    T3_2[Task 3.2: 實作管理員 API Endpoints ✅]
+    T4[Task 4: 後端單元測試與整合測試 ✅]
 
     %% Phase 3: Frontend Core (Can start after API ready)
     T5[Task 5: 建立 Zustand 願望狀態管理]
@@ -755,6 +686,7 @@ flowchart TD
     T13 --> T13_1
 
     %% Styling
+    %% Phase 1: Completed (Green)
     style T1 fill:#28a745,stroke:#1e7e34,color:#fff
     style T1_1 fill:#28a745,stroke:#1e7e34,color:#fff
     style T1_2 fill:#28a745,stroke:#1e7e34,color:#fff
@@ -764,14 +696,16 @@ flowchart TD
     style T2_3 fill:#28a745,stroke:#1e7e34,color:#fff
     style T3 fill:#28a745,stroke:#1e7e34,color:#fff
 
-    style T3_1 fill:#ffc107,stroke:#ff9800,color:#000
-    style T3_2 fill:#ffc107,stroke:#ff9800,color:#000
-    style T4 fill:#e1f5fe,stroke:#0288d1,color:#000
+    %% Phase 2: Completed (Green)
+    style T3_1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T3_2 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T4 fill:#28a745,stroke:#1e7e34,color:#fff
 
-    style T5 fill:#e1f5fe,stroke:#0288d1,color:#000
-    style T6 fill:#e1f5fe,stroke:#0288d1,color:#000
+    %% Phase 3: Next Steps (Yellow highlight)
+    style T5 fill:#ffc107,stroke:#ff9800,color:#000
+    style T6 fill:#ffc107,stroke:#ff9800,color:#000
     style T6_1 fill:#e1f5fe,stroke:#0288d1,color:#000
-    style T7 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T7 fill:#ffc107,stroke:#ff9800,color:#000
     style T7_1 fill:#e1f5fe,stroke:#0288d1,color:#000
     style T8 fill:#e1f5fe,stroke:#0288d1,color:#000
     style T8_1 fill:#e1f5fe,stroke:#0288d1,color:#000
@@ -793,9 +727,9 @@ flowchart TD
 
 ### 圖例說明
 
-- 🟢 **綠色 (已完成)**: Tasks 1-3 - 資料層與後端業務邏輯
-- 🟡 **黃色 (下一步)**: Tasks 3.1-3.2 - 後端 API Endpoints
-- 🔵 **藍色 (待實作)**: Tasks 4-9 - 後端測試與前端核心元件
+- 🟢 **綠色 (已完成)**: Tasks 1-4 - 資料層、後端業務邏輯、API、後端測試
+- 🟡 **黃色 (下一步)**: Tasks 5-7 - 前端狀態管理與核心元件
+- 🔵 **藍色 (待實作)**: Tasks 8-9, 6.1, 7.1, 8.1 - 前端整合與無障礙功能
 - 🟣 **紫色 (待實作)**: Tasks 10-10.4 - 管理員介面
 - 🟠 **橘色 (待實作)**: Tasks 11-13.1 - 測試與 QA
 
@@ -803,11 +737,12 @@ flowchart TD
 
 以下任務可以平行執行（需先完成依賴任務）：
 
-**階段 2A (當前):**
-- Task 3.1 與 Task 3.2 可以由不同開發者平行實作
+**階段 3A (當前 - 前端核心):**
+- Task 5 (Zustand store) **必須先完成**，其他任務依賴此 store
+- Task 5 完成後，Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) 可以平行開發
+- Task 6.1 與 7.1 可以在各自主任務完成後平行實作
 
-**階段 3 (API 完成後):**
-- Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) 可以平行開發
+**階段 4 (管理員介面):**
 - Task 10.1-10.4 (管理員功能) 可以在前端核心元件完成後平行開發
 
 **階段 5 (測試階段):**
