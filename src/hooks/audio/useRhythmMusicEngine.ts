@@ -280,13 +280,12 @@ export function useRhythmMusicEngine() {
   }, [volume, isMuted, synth, isInitialized]);
 
   // 定期同步 synth 狀態到 store（用於 progress bar 更新）
-  // 只在播放時輪詢
+  // 當 isPlaying 為 true 時啟動輪詢
   useEffect(() => {
-    if (!synth || !isInitialized) return;
-    
-    // 檢查 synth 是否在播放
-    const synthState = synth.getState();
-    if (!synthState.isPlaying) return;
+    if (!synth || !isInitialized || !isPlaying) return;
+
+    // 立即同步一次
+    updateSynthState();
 
     const intervalId = setInterval(() => {
       updateSynthState(); // 每 100ms 同步一次狀態
