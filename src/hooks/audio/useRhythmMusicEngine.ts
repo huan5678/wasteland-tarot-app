@@ -37,6 +37,13 @@ export function useRhythmMusicEngine() {
   const currentPatternIndex = useMusicPlayerStore((state) => state.currentModeIndex);
   const loadSystemPresets = useRhythmPlaylistStore((state) => state.loadSystemPresets);
 
+  // ========== Refs for latest values ==========
+  const isPlayingRef = useRef(isPlaying);
+  
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
+
   // ========== Initialization Lock ==========
   // 使用 ref 追蹤初始化狀態，防止重複初始化
   const isInitializing = useRef(false);
@@ -76,23 +83,27 @@ export function useRhythmMusicEngine() {
       return;
     }
     
-    // 防止重複初始化
-    if (isInitializing.current) {
-      logger.warn('[useRhythmMusicEngine] Already initializing, skipping');
+    // 如果 synth 已存在，跳過初始化
+    if (synth) {
+      logger.info('[useRhythmMusicEngine] Synth already exists, skipping initialization', {
+        isInitialized,
+        hasSynth: true
+      });
       return;
     }
     
-    // 如果已經初始化且 synth 存在，跳過
-    if (isInitialized && synth) {
-      logger.info('[useRhythmMusicEngine] Already initialized with synth, skipping', {
-        isInitialized,
-        hasSynth: !!synth
-      });
+    // 如果 isInitialized 是 true 但 synth 不存在（例如頁面重新載入），重置狀態
+    if (isInitialized && !synth) {
+      logger.warn('[useRhythmMusicEngine] State inconsistency: initialized but no synth, resetting...');
+      setInitialized(false);
+    }
+    
+    // 防止並發初始化
+    if (isInitializing.current) {
       return;
     }
 
     let isCancelled = false;
-    let newSynth: RhythmAudioSynthesizer | null = null;
 
     const initSynth = async () => {
       isInitializing.current = true;
@@ -108,6 +119,7 @@ export function useRhythmMusicEngine() {
         
         if (isCancelled) {
           logger.warn('[useRhythmMusicEngine] Initialization cancelled (cleanup called)');
+          isInitializing.current = false;
           return;
         }
 
@@ -115,6 +127,7 @@ export function useRhythmMusicEngine() {
 
         if (!context) {
           logger.error('[useRhythmMusicEngine] Failed to get AudioContext');
+          isInitializing.current = false;
           return;
         }
 
@@ -132,7 +145,7 @@ export function useRhythmMusicEngine() {
           index: currentPatternIndex,
         });
 
-        newSynth = new RhythmAudioSynthesizer(
+        const newSynth = new RhythmAudioSynthesizer(
           context,
           context.destination,
           {
@@ -154,6 +167,7 @@ export function useRhythmMusicEngine() {
           logger.warn('[useRhythmMusicEngine] Initialization completed but cancelled, cleaning up');
           newSynth.stop();
           newSynth.destroy();
+          isInitializing.current = false;
           return;
         }
 
@@ -164,10 +178,29 @@ export function useRhythmMusicEngine() {
           });
         });
 
+        // 設置到 store（這會觸發全域狀態更新）
         setSynth(newSynth);
         setInitialized(true);
 
-        logger.info('[useRhythmMusicEngine] Initialized successfully');
+        logger.info('[useRhythmMusicEngine] Initialized successfully', {
+          hasSynth: !!newSynth,
+          isInitialized: true,
+          shouldAutoPlay: isPlayingRef.current,
+        });
+
+        // 如果 store 狀態是 playing，自動開始播放（使用 ref 獲取最新值）
+        if (isPlayingRef.current && !isCancelled) {
+          logger.info('[useRhythmMusicEngine] Auto-starting playback after initialization');
+          // 確保 AudioContext 是 running
+          if (context.state === 'suspended') {
+            try {
+              await context.resume();
+            } catch (err) {
+              logger.error('[useRhythmMusicEngine] Failed to resume AudioContext', err);
+            }
+          }
+          newSynth.play();
+        }
       } catch (error) {
         logger.error('[useRhythmMusicEngine] Initialization failed', error);
       } finally {
@@ -178,49 +211,40 @@ export function useRhythmMusicEngine() {
     initSynth();
 
     return () => {
+      // 在 cleanup 時標記為 cancelled，但不要破壞已初始化的 synth
       isCancelled = true;
       logger.event('[useRhythmMusicEngine] Init cleanup triggered');
-      
-      // 清理 newSynth（如果創建了但未設置到 store）
-      if (newSynth && newSynth !== synth) {
-        logger.event('[useRhythmMusicEngine] Destroying newly created synth during cleanup');
-        try {
-          newSynth.stop();
-          newSynth.destroy();
-        } catch (error) {
-          logger.error('[useRhythmMusicEngine] Error destroying synth during cleanup', error);
-        }
-      }
     };
-  }, [systemPresets.length]); // 只依賴 systemPresets.length，避免重複初始化
+  }, [systemPresets.length]); // 移除 isInitialized 和 synth 依賴，避免死鎖
 
   // 控制播放/暫停 - 只響應 isPlaying 變化
   useEffect(() => {
-    // 如果 synth 未就緒，嘗試強制初始化（用於自動播放情況）
+    // 如果 synth 未就緒，只在用戶想播放時才需要等待初始化
     if (!synth || !isInitialized) {
-      logger.warn('[useRhythmMusicEngine] Cannot control playback - synth not ready', {
-        hasSynth: !!synth,
-        isInitialized,
-      });
+      if (isPlaying) {
+        // 用戶想播放但 synth 還沒初始化 - 等待初始化完成（初始化邏輯會自動開始播放）
+        logger.info('[useRhythmMusicEngine] Play requested but synth not ready, waiting for initialization', {
+          hasSynth: !!synth,
+          isInitialized,
+          isInitializing: isInitializing.current,
+        });
+      } else {
+        logger.info('[useRhythmMusicEngine] Synth not ready and not playing, skipping', {
+          hasSynth: !!synth,
+          isInitialized,
+        });
+      }
       return;
     }
 
     // 取得 synth 當前狀態
     const synthState = synth.getState();
-    
-    logger.info('[useRhythmMusicEngine] Play/Pause effect triggered', {
-      isPlaying,
-      synthIsPlaying: synthState.isPlaying,
-      currentStep: synthState.currentStep,
-      currentLoop: synthState.currentLoop,
-    });
 
     if (isPlaying) {
       // 用戶想要播放
       
       // 檢查 synth 是否已經在播放
       if (synthState.isPlaying) {
-        logger.info('[useRhythmMusicEngine] Already playing, skipping play() call');
         return;
       }
 
@@ -228,18 +252,13 @@ export function useRhythmMusicEngine() {
       const resumeAndPlay = async () => {
         try {
           if (audioContext && audioContext.state === 'suspended') {
-            logger.info('[useRhythmMusicEngine] Resuming AudioContext before playback');
             await audioContext.resume();
           }
 
-          logger.info('[useRhythmMusicEngine] Calling synth.play()');
           synth.play();
-          logger.info('[useRhythmMusicEngine] Play() called successfully');
           
           // 立即同步狀態
-          setTimeout(() => {
-            updateSynthState();
-          }, 50);
+          updateSynthState();
         } catch (error) {
           logger.error('[useRhythmMusicEngine] Play() failed', error);
         }
@@ -251,24 +270,19 @@ export function useRhythmMusicEngine() {
       
       // 檢查 synth 是否已經暫停
       if (!synthState.isPlaying) {
-        logger.info('[useRhythmMusicEngine] Already paused, skipping pause() call');
         return;
       }
 
-      logger.info('[useRhythmMusicEngine] Calling synth.pause()');
       try {
         synth.pause();
-        logger.info('[useRhythmMusicEngine] Pause() called successfully');
         
         // 立即同步狀態
-        setTimeout(() => {
-          updateSynthState();
-        }, 50);
+        updateSynthState();
       } catch (error) {
         logger.error('[useRhythmMusicEngine] Pause() failed', error);
       }
     }
-  }, [isPlaying, synth, isInitialized, audioContext]); // 添加必要的依賴
+  }, [isPlaying, synth, isInitialized, audioContext, updateSynthState, systemPresets, volume, isMuted, currentPatternIndex]); // 完整依賴
 
   // 控制音量（實時更新）
   useEffect(() => {
