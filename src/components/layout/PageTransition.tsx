@@ -11,7 +11,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigationState } from '@/hooks/useNavigationState';
-import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+import { usePrefersReducedMotion, useIsMobile } from '@/hooks/useMediaQuery';
 import { useAnimationQuality, useGPUAcceleration } from '@/hooks/useFrameRate';
 
 interface PageTransitionProps {
@@ -25,6 +25,7 @@ interface PageTransitionProps {
 export function PageTransition({ children }: PageTransitionProps) {
   const { direction, isTabSwitch, currentRoute } = useNavigationState();
   const prefersReducedMotion = usePrefersReducedMotion();
+  const isMobile = useIsMobile();
   const { quality, settings, shouldReduceMotion } = useAnimationQuality();
   const { getAccelerationStyles } = useGPUAcceleration();
   const [mounted, setMounted] = useState(false);
@@ -33,8 +34,8 @@ export function PageTransition({ children }: PageTransitionProps) {
     setMounted(true);
   }, []);
 
-  // Don't animate on initial mount or if reduced motion is preferred
-  if (!mounted || prefersReducedMotion || shouldReduceMotion) {
+  // Don't animate on initial mount, if reduced motion is preferred, or on desktop
+  if (!mounted || prefersReducedMotion || shouldReduceMotion || !isMobile) {
     return <>{children}</>;
   }
 

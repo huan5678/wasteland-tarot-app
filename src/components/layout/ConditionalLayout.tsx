@@ -40,8 +40,7 @@ interface ConditionalLayoutProps {
 export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const isMobile = useIsMobile()
-  
+
   // Enable scroll restoration for mobile
   useScrollRestoration()
 
@@ -60,36 +59,33 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
     router.push(path)
   }
 
-  // On mobile: show Header + MobileBottomNav, hide Footer, enable page transitions
-  // On desktop: show Header + Footer as usual
-  if (isMobile) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <Header className="flex-shrink-0" />
-        <DynamicMainContent className="flex-1 overflow-y-auto">
-          <div className="pb-[calc(104px+env(safe-area-inset-bottom))]">
-            <PageTransition>
-              {children}
-            </PageTransition>
-          </div>
-        </DynamicMainContent>
+  // Unified responsive layout
+  // Same structure, CSS controls mobile vs desktop display
+  return (
+    <div className="flex flex-col min-h-screen">
+      <Header />
+
+      <DynamicMainContent className="flex-1 overflow-y-auto">
+        {/* Bottom padding for MobileBottomNav on mobile, none on desktop */}
+        <div className="pb-[calc(104px+env(safe-area-inset-bottom))] sm:pb-0">
+          <PageTransition>
+            {children}
+          </PageTransition>
+        </div>
+      </DynamicMainContent>
+
+      {/* Mobile: MobileBottomNav (hidden on desktop with sm:hidden) */}
+      <div className="sm:hidden">
         <MobileBottomNav
           currentPath={pathname}
           onNavigate={handleMobileNavigate}
-          className="flex-shrink-0"
         />
       </div>
-    )
-  }
 
-  // Desktop layout (no transitions)
-  return (
-    <>
-      <Header />
-      <DynamicMainContent>
-        {children}
-      </DynamicMainContent>
-      <Footer />
-    </>
+      {/* Desktop: Footer (hidden on mobile with hidden sm:block) */}
+      <div className="hidden sm:block">
+        <Footer />
+      </div>
+    </div>
   )
 }

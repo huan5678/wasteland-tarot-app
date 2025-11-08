@@ -88,7 +88,7 @@ export function useMediaQuery(query: string): boolean {
 /**
  * useIsDesktop - 偵測是否為桌面裝置
  *
- * @returns boolean - 是否為桌面裝置 (>= 768px)
+ * @returns boolean - 是否為桌面裝置 (>= 640px, matches Tailwind 'sm' breakpoint)
  *
  * @example
  * ```tsx
@@ -100,13 +100,13 @@ export function useMediaQuery(query: string): boolean {
  * ```
  */
 export function useIsDesktop(): boolean {
-  return useMediaQuery('(min-width: 768px)');
+  return useMediaQuery('(min-width: 640px)');
 }
 
 /**
  * useIsMobile - 偵測是否為行動裝置
  *
- * @returns boolean - 是否為行動裝置 (< 768px)
+ * @returns boolean - 是否為行動裝置 (< 640px, matches Tailwind 'sm' breakpoint)
  *
  * @example
  * ```tsx
@@ -118,7 +118,7 @@ export function useIsDesktop(): boolean {
  * ```
  */
 export function useIsMobile(): boolean {
-  return useMediaQuery('(max-width: 767px)');
+  return useMediaQuery('(max-width: 639px)');
 }
 
 /**
