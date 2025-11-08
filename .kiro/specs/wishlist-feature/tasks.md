@@ -192,7 +192,7 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 第三階段：前端核心元件
 
-- [ ] 5. 建立 Zustand 願望狀態管理
+- [x] 5. 建立 Zustand 願望狀態管理
   - 建立 `wishlistStore.ts`，使用 Zustand 管理願望相關狀態
   - 定義 `Wish` 介面：對應後端 `WishResponse` schema 的所有欄位
   - 定義狀態欄位：wishes 陣列、isLoading 布林值、error 字串、hasSubmittedToday 布林值
@@ -201,6 +201,7 @@ import { PixelIcon } from '@/components/ui/icons'
   - 實作管理員操作方法：fetchAdminWishes()、setAdminFilter()、setAdminSort()、setAdminPage()、submitReply()、toggleHidden()
   - 實作 checkDailyLimit() 工具方法：檢查最新願望是否在今日（UTC+8）
   - _Requirements: 1.5, 2.1, 2.2, 4.4, 4.5_
+  - **Completed**: Wishlist store created at `/home/user/wasteland-tarot-app/src/stores/wishlistStore.ts` with all required state fields, user methods (fetchUserWishes, submitWish, updateWish), admin methods (fetchAdminWishes, setAdminFilter, setAdminSort, setAdminPage, submitReply, toggleHidden), and utility methods (checkDailyLimit, clearError, reset). Uses httpOnly cookies for authentication via credentials: 'include', integrates with errorStore for error handling, and implements comprehensive logging. Daily limit check correctly handles UTC+8 timezone by converting UTC timestamps to UTC+8 and comparing dates.
 
 - [ ] 6. 實作 Markdown 編輯器元件
   - 建立 `MarkdownEditor.tsx`，提供上下兩欄 Markdown 編輯與即時預覽
