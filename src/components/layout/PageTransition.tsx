@@ -12,6 +12,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigationState } from '@/hooks/useNavigationState';
 import { usePrefersReducedMotion } from '@/hooks/useMediaQuery';
+import { useAnimationQuality, useGPUAcceleration } from '@/hooks/useFrameRate';
 
 interface PageTransitionProps {
   children: React.ReactNode;
@@ -24,6 +25,8 @@ interface PageTransitionProps {
 export function PageTransition({ children }: PageTransitionProps) {
   const { direction, isTabSwitch, currentRoute } = useNavigationState();
   const prefersReducedMotion = usePrefersReducedMotion();
+  const { quality, settings, shouldReduceMotion } = useAnimationQuality();
+  const { getAccelerationStyles } = useGPUAcceleration();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -31,7 +34,7 @@ export function PageTransition({ children }: PageTransitionProps) {
   }, []);
 
   // Don't animate on initial mount or if reduced motion is preferred
-  if (!mounted || prefersReducedMotion) {
+  if (!mounted || prefersReducedMotion || shouldReduceMotion) {
     return <>{children}</>;
   }
 
@@ -73,19 +76,22 @@ export function PageTransition({ children }: PageTransitionProps) {
 
   const selectedVariant = variants[variant];
 
-  // Spring animation config
+  // Spring animation config - dynamic based on performance
   const transition = {
     type: 'spring',
-    stiffness: 300,
-    damping: 30,
+    stiffness: settings.stiffness,
+    damping: settings.damping,
     mass: 0.8
   };
 
   // For cross-fade, use simpler transition
   const fadeTransition = {
-    duration: 0.2,
+    duration: settings.duration,
     ease: 'easeOut'
   };
+
+  // GPU acceleration styles
+  const accelerationStyles = getAccelerationStyles();
 
   return (
     <AnimatePresence mode="wait" initial={false}>
@@ -96,6 +102,7 @@ export function PageTransition({ children }: PageTransitionProps) {
         exit={selectedVariant.exit}
         transition={variant === 'crossFade' ? fadeTransition : transition}
         className="page-transition"
+        style={accelerationStyles}
       >
         {children}
       </motion.div>

@@ -323,7 +323,7 @@ export function Header() {
             </div>
           </button>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation - Only visible on medium+ screens */}
           <nav className="hidden md:flex items-center gap-6">
             {/* 導航連結 */}
             {generalNavLinks.map((link) => (
@@ -365,16 +365,18 @@ export function Header() {
             }
           </nav>
 
-          {/* Mobile Menu - 統一在 Header 顯示 */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline"
-              className="md:hidden flex items-center justify-center p-2 transition-all duration-200"
-              aria-label="開啟選單">
+          {/* Desktop Menu - Only show on md and above (tablet/desktop) */}
+          {/* On small screens (<md), navigation handled by MobileBottomNav */}
+          <div className="hidden md:block">
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button size="icon" variant="outline"
+                className="flex items-center justify-center p-2 transition-all duration-200"
+                aria-label="開啟選單">
 
-                <PixelIcon name="menu" sizePreset="sm" variant="primary" decorative />
-              </Button>
-            </SheetTrigger>
+                  <PixelIcon name="menu" sizePreset="sm" variant="primary" decorative />
+                </Button>
+              </SheetTrigger>
             <SheetContent
               side="right"
               className="w-[280px] bg-wasteland-dark border-pip-boy-green/30 p-0 flex flex-col overflow-y-auto overflow-x-hidden"
@@ -498,6 +500,7 @@ export function Header() {
               </div>
             </SheetContent>
           </Sheet>
+          </div>
         </div>
       </div>
 

@@ -146,11 +146,15 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
 
   return (
     <Drawer open={isDrawerOpen} onOpenChange={handleOpenChange}>
-      {/* Floating Trigger Button - Fixed at bottom right */}
+      {/* Floating Trigger Button - Hidden on mobile (integrated into MobileBottomNav), visible on desktop */}
       <DrawerTrigger asChild>
         <button
           className="
-            fixed bottom-6 right-6 z-40
+            hidden md:block
+            fixed
+            bottom-6
+            right-6
+            z-40
             w-14 h-14
             rounded-full
             bg-wasteland-dark

@@ -1,23 +1,42 @@
 /**
- * Service Worker for Wasteland Tarot
- * Handles caching and offline functionality
+ * Service Worker for Wasteland Tarot PWA
+ *
+ * Caching Strategy:
+ * - App Shell: Cache First (HTML, CSS, JS, Fonts)
+ * - Static Assets: Cache First with Network Fallback (Images, Icons)
+ * - API Calls: Network First with Cache Fallback
+ * - Dynamic Content: Stale While Revalidate
+ *
+ * Cache Version: v2
+ * Max Age: 7 days for static, 1 day for API
  */
 
-const CACHE_NAME = 'wasteland-tarot-v1';
-const RUNTIME_CACHE = 'wasteland-tarot-runtime';
+const CACHE_VERSION = 'wasteland-tarot-v2';
+const APP_SHELL_CACHE = `${CACHE_VERSION}-app-shell`;
+const STATIC_CACHE = `${CACHE_VERSION}-static`;
+const API_CACHE = `${CACHE_VERSION}-api`;
+const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
-// Assets to cache on install
-const STATIC_ASSETS = [
+// App Shell - Critical resources for offline functionality
+const APP_SHELL_URLS = [
   '/',
+  '/offline',
   '/manifest.json',
+];
+
+// Static Assets - Cacheable resources
+const STATIC_URLS = [
+  '/fonts/Cubic_11.woff2',
+  '/favicon.svg',
   '/logo.svg',
 ];
 
-// API routes to cache
-const API_CACHE_ROUTES = [
-  '/api/v1/cards',
-  '/api/v1/spreads',
-];
+// Cache expiration times in milliseconds
+const MAX_AGE = {
+  static: 7 * 24 * 60 * 60 * 1000, // 7 days
+  api: 24 * 60 * 60 * 1000, // 1 day
+  dynamic: 60 * 60 * 1000, // 1 hour
+};
 
 // Cache strategies
 const CACHE_STRATEGIES = {
@@ -28,38 +47,50 @@ const CACHE_STRATEGIES = {
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[Service Worker] Installing...');
 
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[SW] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
+    Promise.all([
+      caches.open(APP_SHELL_CACHE).then((cache) => {
+        console.log('[Service Worker] Caching App Shell');
+        return cache.addAll(APP_SHELL_URLS);
+      }),
+      caches.open(STATIC_CACHE).then((cache) => {
+        console.log('[Service Worker] Caching Static Assets');
+        return cache.addAll(STATIC_URLS);
+      }),
+    ]).then(() => {
+      console.log('[Service Worker] Installation complete');
+      // Skip waiting to activate immediately
+      return self.skipWaiting();
     })
   );
-
-  // Activate immediately
-  self.skipWaiting();
 });
 
 // Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
+  console.log('[Service Worker] Activating...');
 
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
-          .map((name) => {
-            console.log('[SW] Deleting old cache:', name);
-            return caches.delete(name);
+          .filter((cacheName) => {
+            // Delete caches that don't match current version
+            return cacheName.startsWith('wasteland-tarot-') &&
+                   !cacheName.startsWith(CACHE_VERSION);
+          })
+          .map((cacheName) => {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
           })
       );
+    }).then(() => {
+      console.log('[Service Worker] Activation complete');
+      // Take control of all clients immediately
+      return self.clients.claim();
     })
   );
-
-  // Take control of all clients
-  return self.clients.claim();
 });
 
 // Fetch event - handle requests with caching
@@ -107,74 +138,131 @@ self.addEventListener('fetch', (event) => {
   }
 });
 
-// Cache-first strategy
+// Cache-first strategy with expiration
 async function cacheFirst(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
+  const cacheName = request.url.match(/\.(woff2|woff|ttf|svg|png|jpg|jpeg)$/)
+    ? STATIC_CACHE
+    : APP_SHELL_CACHE;
+  const maxAge = cacheName === STATIC_CACHE ? MAX_AGE.static : MAX_AGE.static;
 
-  if (cached) {
-    console.log('[SW] Cache hit:', request.url);
-    return cached;
+  const cache = await caches.open(cacheName);
+  const cachedResponse = await cache.match(request);
+
+  if (cachedResponse) {
+    // Check if cache is expired
+    const cacheTime = new Date(cachedResponse.headers.get('sw-cache-time') || 0);
+    const now = Date.now();
+
+    if (now - cacheTime.getTime() < maxAge) {
+      console.log('[Service Worker] Cache hit:', request.url);
+      return cachedResponse;
+    }
   }
 
-  console.log('[SW] Cache miss, fetching:', request.url);
-
   try {
-    const response = await fetch(request);
+    console.log('[Service Worker] Fetching from network:', request.url);
+    const networkResponse = await fetch(request);
 
-    // Cache successful responses
-    if (response.ok) {
-      cache.put(request, response.clone());
+    if (networkResponse && networkResponse.status === 200) {
+      // Clone and add cache timestamp
+      const responseToCache = networkResponse.clone();
+      const headers = new Headers(responseToCache.headers);
+      headers.set('sw-cache-time', new Date().toISOString());
+
+      const cachedResponseWithTime = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: headers,
+      });
+
+      cache.put(request, cachedResponseWithTime);
     }
 
-    return response;
+    return networkResponse;
   } catch (error) {
-    console.error('[SW] Fetch failed:', error);
-    // Return offline page or fallback
-    return new Response('Offline', { status: 503 });
+    console.log('[Service Worker] Network failed, using cache:', request.url);
+
+    // Return cached response even if expired
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      return caches.match('/offline');
+    }
+
+    throw error;
   }
 }
 
-// Network-first strategy
+// Network-first strategy with cache fallback
 async function networkFirst(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
+  const cacheName = request.url.includes('/api/') ? API_CACHE : DYNAMIC_CACHE;
+  const cache = await caches.open(cacheName);
 
   try {
-    const response = await fetch(request);
+    console.log('[Service Worker] Network first:', request.url);
+    const networkResponse = await fetch(request);
 
-    // Cache successful responses
-    if (response.ok) {
-      cache.put(request, response.clone());
+    if (networkResponse && networkResponse.status === 200) {
+      // Clone and cache successful responses with timestamp
+      const responseToCache = networkResponse.clone();
+      const headers = new Headers(responseToCache.headers);
+      headers.set('sw-cache-time', new Date().toISOString());
+
+      const cachedResponseWithTime = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: headers,
+      });
+
+      cache.put(request, cachedResponseWithTime);
     }
 
-    return response;
+    return networkResponse;
   } catch (error) {
-    console.log('[SW] Network failed, using cache:', request.url);
-    const cached = await cache.match(request);
+    console.log('[Service Worker] Network failed, trying cache:', request.url);
+    const cachedResponse = await cache.match(request);
 
-    if (cached) {
-      return cached;
+    if (cachedResponse) {
+      return cachedResponse;
     }
 
-    // Return offline response
-    return new Response('Offline', { status: 503 });
+    // Return offline page for navigation requests
+    if (request.mode === 'navigate') {
+      return caches.match('/offline');
+    }
+
+    throw error;
   }
 }
 
 // Stale-while-revalidate strategy
 async function staleWhileRevalidate(request) {
-  const cache = await caches.open(RUNTIME_CACHE);
-  const cached = await cache.match(request);
+  const cache = await caches.open(DYNAMIC_CACHE);
+  const cachedResponse = await cache.match(request);
 
-  // Return cached version immediately
+  // Fetch new version in background
   const fetchPromise = fetch(request).then((response) => {
-    if (response.ok) {
-      cache.put(request, response.clone());
+    if (response && response.ok) {
+      const responseToCache = response.clone();
+      const headers = new Headers(responseToCache.headers);
+      headers.set('sw-cache-time', new Date().toISOString());
+
+      const cachedResponseWithTime = new Response(responseToCache.body, {
+        status: responseToCache.status,
+        statusText: responseToCache.statusText,
+        headers: headers,
+      });
+
+      cache.put(request, cachedResponseWithTime);
     }
     return response;
-  });
+  }).catch(() => null);
 
-  return cached || fetchPromise;
+  // Return cached version immediately if available
+  return cachedResponse || fetchPromise;
 }
 
 // Background sync for offline actions
@@ -214,3 +302,28 @@ self.addEventListener('notificationclick', (event) => {
     clients.openWindow('/')
   );
 });
+
+// Message handling for client communication
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('[Service Worker] Received SKIP_WAITING message');
+    self.skipWaiting();
+  }
+
+  if (event.data && event.data.type === 'CACHE_CLEAR') {
+    console.log('[Service Worker] Clearing all caches');
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => caches.delete(cacheName))
+        );
+      })
+    );
+  }
+
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_VERSION });
+  }
+});
+
+console.log('[Service Worker] Loaded - Version:', CACHE_VERSION);

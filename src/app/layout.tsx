@@ -8,6 +8,7 @@ import { StagedAuthProvider } from '@/components/providers/StagedAuthProvider';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { LoadingStrategy } from '@/components/providers/LoadingStrategy';
 import { BackendHealthCheck } from '@/components/providers/BackendHealthCheck';
+import { PWAProvider } from '@/components/providers/PWAProvider';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
 
@@ -81,15 +82,17 @@ export default function RootLayout({
           <StagedAuthProvider requireAuth={false}>
             <AppProviders>
               <LoadingStrategy>
-                <div className="min-h-screen flex flex-col relative z-10">
-                  <ClientLayout>
-                    {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
-                    {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
-                    <ConditionalLayout>
-                      {children}
-                    </ConditionalLayout>
-                  </ClientLayout>
-                </div>
+                <PWAProvider>
+                  <div className="min-h-screen flex flex-col relative z-10">
+                    <ClientLayout>
+                      {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
+                      {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
+                      <ConditionalLayout>
+                        {children}
+                      </ConditionalLayout>
+                    </ClientLayout>
+                  </div>
+                </PWAProvider>
               </LoadingStrategy>
             </AppProviders>
           </StagedAuthProvider>

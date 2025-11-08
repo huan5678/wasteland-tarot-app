@@ -27,13 +27,13 @@ module.exports = {
           '--allow-running-insecure-content'
         ],
 
-        // Simulated Pip-Boy device conditions
-        formFactor: 'desktop',
+        // Mobile device simulation (iPhone 14 Pro)
+        formFactor: 'mobile',
         screenEmulation: {
-          mobile: false,
-          width: 1280,
-          height: 720,
-          deviceScaleFactor: 1,
+          mobile: true,
+          width: 375,
+          height: 812,
+          deviceScaleFactor: 3,
           disabled: false
         },
 

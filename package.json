@@ -171,6 +171,8 @@
     "typescript": "^5.9.3",
     "web-streams-polyfill": "^4.2.0",
     "webpack-bundle-analyzer": "^4.10.2",
-    "whatwg-fetch": "^3.6.20"
+    "whatwg-fetch": "^3.6.20",
+    "workbox-webpack-plugin": "^7.3.0",
+    "workbox-window": "^7.3.0"
   }
 }

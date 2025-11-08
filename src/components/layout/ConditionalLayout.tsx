@@ -22,6 +22,7 @@ const KNOWN_ROUTES = [
   '/dashboard',
   '/faq',
   '/journal',
+  '/offline',
   '/privacy',
   '/profile',
   '/reading',
@@ -63,18 +64,21 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   // On desktop: show Header + Footer as usual
   if (isMobile) {
     return (
-      <>
-        <Header />
-        <DynamicMainContent className="pb-[calc(64px+env(safe-area-inset-bottom))]">
-          <PageTransition>
-            {children}
-          </PageTransition>
+      <div className="flex flex-col min-h-screen">
+        <Header className="flex-shrink-0" />
+        <DynamicMainContent className="flex-1 overflow-y-auto">
+          <div className="pb-[calc(104px+env(safe-area-inset-bottom))]">
+            <PageTransition>
+              {children}
+            </PageTransition>
+          </div>
         </DynamicMainContent>
-        <MobileBottomNav 
+        <MobileBottomNav
           currentPath={pathname}
           onNavigate={handleMobileNavigate}
+          className="flex-shrink-0"
         />
-      </>
+      </div>
     )
   }
 

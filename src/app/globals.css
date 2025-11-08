@@ -1,6 +1,42 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* === GPU ACCELERATION & PERFORMANCE OPTIMIZATION === */
+/**
+ * Global GPU acceleration for animations and transforms
+ *
+ * Requirements:
+ * - AC-6.2: All animations maintain 60fps
+ * - NFR-2: Lighthouse Mobile Score ≥ 90
+ *
+ * These rules force GPU acceleration for all animated elements
+ * to ensure smooth 60fps animations on mobile devices.
+ */
+
+/* Force GPU acceleration for all animations */
+[class*="animate-"],
+[class*="transition-"],
+.will-change-transform,
+.will-change-opacity {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Reset will-change after animation completes to free resources */
+[class*="animate-"]:not(:hover):not(:active):not(:focus) {
+  will-change: auto;
+}
+
+/* Ensure smooth scrolling with GPU acceleration */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-auto {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* === CUBIC 11 FONT DECLARATION === */
 /**
  * Cubic_11 字體宣告
@@ -128,34 +164,6 @@
 
 /* CRT Flicker Animation - CRT 螢幕閃爍效果（可選，用於強化復古感） */
 /* CRT 隨機閃爍動畫 - 通用版本 */
-@keyframes crt-flicker {
-  0%, 8%, 20%, 25%, 32%, 40%, 55%, 68%, 75%, 82%, 95%, 100% {
-    opacity: 0.98;
-  }
-  10% {
-    opacity: 0.90;
-  }
-  22% {
-    opacity: 0.86;
-  }
-  27% {
-    opacity: 0.83;
-  }
-  42% {
-    opacity: 0.88;
-  }
-  70% {
-    opacity: 0.85;
-  }
-  84% {
-    opacity: 0.91;
-  }
-}
-
-.animate-crt-flicker {
-  animation: crt-flicker 7s infinite; /* 7 秒一個循環，模擬隨機閃爍 */
-}
-
 /* Scale In Animation - 縮放進入動畫（成功/錯誤提示） */
 @keyframes scale-in {
   0% {
@@ -395,70 +403,12 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Glitch Animation - 故障效果（適合 404 頁面） */
-@keyframes glitch-1 {
-  0%, 100% {
-    transform: translate(0);
-    opacity: 0.8;
-  }
-  33% {
-    transform: translate(-2px, 2px);
-    opacity: 0.6;
-  }
-  66% {
-    transform: translate(2px, -2px);
-    opacity: 0.7;
-  }
-}
-
-.animate-glitch-1 {
-  animation: glitch-1 3s infinite;
-}
-
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-out,
@@ -815,49 +765,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -897,49 +808,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -972,49 +844,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1092,49 +925,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1184,25 +978,6 @@
     box-shadow: 0 0 3px var(--color-glow-yellow);
   }
 
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0px) translateX(0px);
-      opacity: 0.3;
-    }
-    25% {
-      transform: translateY(-20px) translateX(10px);
-      opacity: 0.7;
-    }
-    50% {
-      transform: translateY(-10px) translateX(-5px);
-      opacity: 1;
-    }
-    75% {
-      transform: translateY(-30px) translateX(15px);
-      opacity: 0.5;
-    }
-  }
-
   /* 廢土網格紋理 */
   .wasteland-grid {
     @apply absolute inset-0 opacity-10;
@@ -1211,11 +986,6 @@
       linear-gradient(90deg, var(--color-terminal-green) 1px, transparent 1px);
     background-size: 50px 50px;
     animation: grid-flicker 8s ease-in-out infinite;
-  }
-
-  @keyframes grid-flicker {
-    0%, 100% { opacity: 0.05; }
-    50% { opacity: 0.15; }
   }
 
   /* Pip-Boy 掃描線效果 */
@@ -1227,11 +997,6 @@
     );
     background-size: 100% 4px;
     animation: scan 2s linear infinite;
-  }
-
-  @keyframes scan {
-    0% { transform: translateY(-100%); }
-    100% { transform: translateY(100vh); }
   }
 
   /* === FALLOUT THEMED COMPONENT CLASSES === */
@@ -1667,49 +1432,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1740,49 +1466,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1809,49 +1496,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1880,49 +1528,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -1949,49 +1558,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2018,49 +1588,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2088,49 +1619,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2157,49 +1649,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2224,49 +1677,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2291,49 +1705,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2359,49 +1734,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2432,49 +1768,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2508,49 +1805,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2577,49 +1835,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2646,49 +1865,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2715,49 +1895,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2784,49 +1925,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2853,49 +1955,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2922,49 +1985,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -2990,49 +2014,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3058,49 +2043,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3126,49 +2072,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3197,49 +2104,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3275,49 +2143,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3356,49 +2185,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3431,49 +2221,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3506,49 +2257,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3581,49 +2293,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3652,49 +2325,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3721,49 +2355,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3791,49 +2386,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3859,49 +2415,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3926,49 +2443,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -3993,49 +2471,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -4062,49 +2501,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -4138,49 +2538,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -4219,49 +2580,10 @@
  */
 
 /* Fade In/Out Animation - 淡入淡出效果 */
-@keyframes fade-in-out {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.3;
-  }
-}
-
-.animate-fade-in-out {
-  animation: fade-in-out 2s ease-in-out infinite;
-}
 
 /* Wiggle Animation - 搖晃效果（適合警告、錯誤） */
-@keyframes wiggle {
-  0%, 100% {
-    transform: rotate(0deg);
-  }
-  25% {
-    transform: rotate(-5deg);
-  }
-  75% {
-    transform: rotate(5deg);
-  }
-}
-
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
-}
 
 /* Float Animation - 懸浮效果（適合提示） */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-8px);
-  }
-}
-
-.animate-float {
-  animation: float 2s ease-in-out infinite;
-}
 
 /* Reduced Motion Support - 為動畫障礙使用者提供支援 */
 @media (prefers-reduced-motion: reduce) {
@@ -4288,41 +2610,8 @@
 }
 
 /* CRT 掃描線效果 (移動的水平線) */
-@keyframes crt-scanlines {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 0 4px;
-  }
-}
-
 /* 螢幕閃爍效果 */
 /* CRT 隨機閃爍動畫 - 模擬老舊螢幕的不規則閃爍 */
-@keyframes crt-flicker {
-  0%, 8%, 20%, 25%, 32%, 40%, 55%, 68%, 75%, 82%, 95%, 100% {
-    opacity: 1; /* 大部分時間保持正常 */
-  }
-  10% {
-    opacity: 0.92; /* 短暫輕微閃爍 */
-  }
-  22% {
-    opacity: 0.88; /* 稍強閃爍 */
-  }
-  27% {
-    opacity: 0.85; /* 更強閃爍 */
-  }
-  42% {
-    opacity: 0.90; /* 輕微閃爍 */
-  }
-  70% {
-    opacity: 0.87; /* 中等閃爍 */
-  }
-  84% {
-    opacity: 0.93; /* 非常輕微的閃爍 */
-  }
-}
-
 /* CRT 背景容器基礎樣式 */
 .crt-background {
   position: fixed;
@@ -4492,4 +2781,244 @@
   transform: translateZ(0);
 }
 
+/* === MATERIAL DESIGN 3 ELEVATION SYSTEM === */
+/**
+ * Material Design 3 Elevation System for Android
+ * Spec: mobile-native-app-layout
+ * Phase 4: Android-Specific Optimizations
+ *
+ * MD3 Elevation Levels:
+ * - Level 0: No shadow (flat surfaces)
+ * - Level 1: Cards, buttons at rest (1dp)
+ * - Level 2: App bar, FAB at rest (3dp)
+ * - Level 3: Bottom nav, dialogs (6dp)
+ * - Level 4: Nav drawer (8dp)
+ * - Level 5: Modal bottom sheets (16dp)
+ *
+ * Requirements: AC-7.2 (Android Material Design)
+ */
+
+/* MD3 Elevation Level 0 - No shadow */
+.md3-elevation-0 {
+  box-shadow: none;
+}
+
+/* MD3 Elevation Level 1 - Cards, buttons (1dp) */
+.md3-elevation-1 {
+  box-shadow:
+    0 1px 2px 0 rgba(0, 0, 0, 0.3),
+    0 1px 3px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* MD3 Elevation Level 2 - App bar, FAB (3dp) */
+.md3-elevation-2 {
+  box-shadow:
+    0 2px 6px -1px rgba(0, 0, 0, 0.2),
+    0 4px 8px 0 rgba(0, 0, 0, 0.14),
+    0 1px 16px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* MD3 Elevation Level 3 - Bottom nav, dialogs (6dp) */
+.md3-elevation-3 {
+  box-shadow:
+    0 3px 8px -2px rgba(0, 0, 0, 0.2),
+    0 6px 12px 0 rgba(0, 0, 0, 0.14),
+    0 1px 24px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* MD3 Elevation Level 4 - Nav drawer (8dp) */
+.md3-elevation-4 {
+  box-shadow:
+    0 4px 10px -2px rgba(0, 0, 0, 0.2),
+    0 8px 16px 0 rgba(0, 0, 0, 0.14),
+    0 2px 32px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* MD3 Elevation Level 5 - Modal sheets (16dp) */
+.md3-elevation-5 {
+  box-shadow:
+    0 6px 16px -4px rgba(0, 0, 0, 0.2),
+    0 16px 32px 0 rgba(0, 0, 0, 0.14),
+    0 4px 64px 0 rgba(0, 0, 0, 0.12);
+}
+
+/* === ANDROID RIPPLE EFFECTS === */
+/**
+ * Material Design Ripple Effects
+ * Phase 4: Android Interactive Elements
+ *
+ * CSS-only ripple effect for Android devices
+ * Provides tactile feedback without JavaScript
+ *
+ * Requirements: AC-7.2 (Android ripple effects)
+ */
+
+/* Ripple effect container */
+.ripple-container {
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Ripple effect animation */
+/* Ripple element (triggered by JS or pseudo-element) */
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  animation: ripple 600ms ease-out;
+}
+
+/* Ripple on active state (for buttons/interactive elements) */
+.ripple-active::after {
+  animation: ripple 600ms ease-out;
+}
+
+/* Ripple variant for dark backgrounds */
+.ripple-light::after {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* Ripple variant for light backgrounds */
+.ripple-dark::after {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Ripple variant with Pip-Boy green accent */
+.ripple-pip-boy::after {
+  background: rgba(0, 255, 136, 0.3);
+}
+
+/* === ANDROID GESTURE NAVIGATION ADAPTATION === */
+/**
+ * Android Gesture Navigation Support
+ * Phase 4: Android 10+ Gesture Bar Adaptation
+ *
+ * Android 10+ (API 29+) uses gesture navigation by default
+ * System gesture bar: ~48px height at bottom
+ * Requires additional padding to prevent overlap
+ *
+ * Requirements: AC-7.2 (Android gesture navigation)
+ */
+
+/* Android gesture navigation detection via media query */
+@media (max-width: 767px) and (hover: none) and (pointer: coarse) {
+  /* This targets touch devices (Android/iOS) */
+
+  /* Android-specific: Add extra padding for gesture navigation */
+  .android-gesture-safe {
+    padding-bottom: calc(var(--safe-area-bottom) + 16px);
+  }
+
+  /* Bottom navigation on Android with gesture nav */
+  .mobile-bottom-nav.android {
+    padding-bottom: calc(var(--safe-area-bottom) + 16px);
+    height: calc(64px + var(--safe-area-bottom) + 16px);
+  }
+}
+
+/* === PLATFORM-SPECIFIC NAVIGATION STYLES === */
+/**
+ * iOS vs Android Visual Differentiation
+ * Phase 4: Platform-Specific UI Polish
+ */
+
+/* iOS Navigation - Frosted glass effect */
+.mobile-bottom-nav.ios {
+  background: rgba(10, 15, 10, 0.8);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top: 0.5px solid rgba(0, 255, 136, 0.2);
+}
+
+/* Android Navigation - Material elevation */
+.mobile-bottom-nav.android {
+  background: #0a0f0a;
+  box-shadow:
+    0 -3px 8px -2px rgba(0, 0, 0, 0.2),
+    0 -6px 12px 0 rgba(0, 0, 0, 0.14),
+    0 -1px 24px 0 rgba(0, 0, 0, 0.12);
+  border-top: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+/* iOS App Bar - Translucent */
+.mobile-app-bar.ios {
+  background: rgba(10, 15, 10, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 0.5px solid rgba(0, 255, 136, 0.1);
+}
+
+/* Android App Bar - Solid with elevation */
+.mobile-app-bar.android {
+  background: #0a0f0a;
+  box-shadow:
+    0 2px 6px -1px rgba(0, 0, 0, 0.2),
+    0 4px 8px 0 rgba(0, 0, 0, 0.14),
+    0 1px 16px 0 rgba(0, 0, 0, 0.12);
+  border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+/* iOS FAB (Floating Action Button) - Subtle elevation */
+.fab.ios {
+  box-shadow:
+    0 4px 8px rgba(0, 255, 136, 0.3),
+    0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* Android FAB - Strong elevation */
+.fab.android {
+  box-shadow:
+    0 6px 16px -4px rgba(0, 0, 0, 0.2),
+    0 16px 32px 0 rgba(0, 0, 0, 0.14),
+    0 4px 64px 0 rgba(0, 0, 0, 0.12),
+    0 0 16px rgba(0, 255, 136, 0.3);
+}
+
+/* iOS Dynamic Island Adaptation */
+@supports (padding-top: max(0px)) {
+  .mobile-app-bar.ios.dynamic-island {
+    /* Dynamic Island devices: Extra padding for 59px safe area */
+    padding-top: max(env(safe-area-inset-top), 59px);
+    min-height: 59px;
+  }
+}
+
 /* End of Mobile Native App Layout Styles */
+/* Fallout-themed custom scrollbar */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 136, 0.3);
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 136, 0.5);
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:active {
+  background: rgba(0, 255, 136, 0.7);
+}
+
+/* Firefox scrollbar styling */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 136, 0.3) rgba(0, 0, 0, 0.2);
+}
+

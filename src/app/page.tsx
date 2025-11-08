@@ -72,7 +72,7 @@ export default function HomePage() {
               
               {/* Scan line effect */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="h-full w-full bg-gradient-to-b from-transparent via-pip-boy-green/10 to-transparent animate-scan"></div>
+                <div className="h-full w-full bg-gradient-to-b from-transparent via-pip-boy-green/10 to-transparent animate-scanline"></div>
               </div>
               
               {/* Content - Horizontal Layout */}
@@ -111,7 +111,7 @@ export default function HomePage() {
               
               {/* Scan line effect */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="h-full w-full bg-gradient-to-b from-transparent via-radiation-orange/10 to-transparent animate-scan"></div>
+                <div className="h-full w-full bg-gradient-to-b from-transparent via-radiation-orange/10 to-transparent animate-scanline"></div>
               </div>
               
               {/* Content - Horizontal Layout */}
