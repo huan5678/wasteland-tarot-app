@@ -305,9 +305,17 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <button
+          <div
             onClick={() => handleNavigation('/')}
-            className="flex items-center gap-3 transition-opacity cursor-pointer hover:opacity-80 bg-transparent border-0 p-0"
+            className="flex items-center gap-3 transition-opacity cursor-pointer hover:opacity-80"
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleNavigation('/');
+              }
+            }}
           >
             <img
               src="/logo.svg"
@@ -321,7 +329,7 @@ export function Header() {
               <h1 className="text-xl font-bold text-pip-boy-green text-glow-green">廢土塔羅</h1>
               <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜終端機</p>
             </div>
-          </button>
+          </div>
 
           {/* Desktop Navigation - Only visible on medium+ screens */}
           <nav className="hidden md:flex items-center gap-6">
