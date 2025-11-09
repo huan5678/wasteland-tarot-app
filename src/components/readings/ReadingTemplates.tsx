@@ -328,7 +328,7 @@ export function ReadingTemplates() {
           className="px-4 py-2 border flex items-center gap-2">
 
 
-              <PixelIcon name="x" className="w-4 h-4" />
+              <PixelIcon name="close" className="w-4 h-4" />
               取消
             </Button>
             <Button size="sm" variant="outline"

@@ -233,7 +233,7 @@ export const RhythmEditorControls: React.FC<RhythmEditorControlsProps> = ({ onOp
 
             aria-label="清除">
 
-              <PixelIcon name="delete-bin" sizePreset="sm" variant="warning" aria-label="清除" />
+              <PixelIcon name="trash" sizePreset="sm" variant="warning" aria-label="清除" />
             </Button>
 
             {/* 分隔線 */}

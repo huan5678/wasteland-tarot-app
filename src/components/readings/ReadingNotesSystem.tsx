@@ -148,7 +148,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
           onClick={onClose}>
 
 
-              <PixelIcon name="x" className="w-5 h-5" />
+              <PixelIcon name="close" className="w-5 h-5" />
             </Button>
           }
         </div>
@@ -224,7 +224,7 @@ export function ReadingNotesSystem({ readingId, onClose }: Props) {
           className="px-4 py-2 border flex items-center gap-2">
 
 
-              <PixelIcon name="x" className="w-4 h-4" />
+              <PixelIcon name="close" className="w-4 h-4" />
               取消
             </Button>
             <Button size="icon" variant="outline"

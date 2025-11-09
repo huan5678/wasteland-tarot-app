@@ -364,7 +364,7 @@ export function CardDetailView({
       {meaningUpright && (
         <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4 rounded">
           <h3 className="text-sm font-bold text-pip-boy-green mb-3 flex items-center gap-2">
-            <PixelIcon name="arrow-up" sizePreset="xs" decorative />
+            <PixelIcon name="arrow-up-s" sizePreset="xs" decorative />
             正位牌義
           </h3>
           <p className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
@@ -377,7 +377,7 @@ export function CardDetailView({
       {meaningReversed && (
         <div className="border-2 border-orange-400/30 bg-orange-500/5 p-4 rounded">
           <h3 className="text-sm font-bold text-orange-400 mb-3 flex items-center gap-2">
-            <PixelIcon name="arrow-down" sizePreset="xs" decorative />
+            <PixelIcon name="arrow-down-s" sizePreset="xs" decorative />
             逆位牌義
           </h3>
           <p className="text-sm text-orange-300/90 leading-relaxed whitespace-pre-wrap">

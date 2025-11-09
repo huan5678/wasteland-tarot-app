@@ -670,7 +670,7 @@ export default function ReadingDetailPage() {
       <div className="border-2 border-pip-boy-green/30 p-6 bg-black/50">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold text-pip-boy-green flex items-center gap-2 uppercase tracking-wider">
-            <PixelIcon name="cpu" sizePreset="sm" variant="primary" decorative />
+            <PixelIcon name="brain" sizePreset="sm" variant="primary" decorative />
             AI 深度解讀
           </h3>
 
@@ -746,7 +746,7 @@ export default function ReadingDetailPage() {
             {/* TTS 語音朗讀 */}
             <div className="bg-pip-boy-green/5 p-4 border border-pip-boy-green/20 rounded">
               <div className="flex items-center gap-2 mb-3">
-                <PixelIcon name="volume-2" sizePreset="sm" variant="primary" decorative />
+                <PixelIcon name="volume-up" sizePreset="sm" variant="primary" decorative />
                 <h4 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
                   語音朗讀
                 </h4>
@@ -1114,7 +1114,7 @@ export default function ReadingDetailPage() {
           className="px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider">
 
             <span className="flex items-center justify-center gap-2">
-              <PixelIcon name="plus" sizePreset="xs" variant="success" decorative />
+              <PixelIcon name="magic" sizePreset="xs" variant="success" decorative />
               新占卜
             </span>
           </Button>

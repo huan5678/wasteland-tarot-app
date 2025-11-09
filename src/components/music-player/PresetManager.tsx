@@ -91,7 +91,7 @@ const PresetButton: React.FC<PresetButtonProps> = ({
 
         aria-label="刪除">
 
-            <PixelIcon name="delete-bin" sizePreset="xs" variant="error" aria-label="刪除" />
+            <PixelIcon name="trash" sizePreset="xs" variant="error" aria-label="刪除" />
           </Button>
         }
       </div>

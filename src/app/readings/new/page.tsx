@@ -800,7 +800,7 @@ export default function NewReadingPage() {
                       </> :
 
                 <>
-                        <PixelIcon name="reload" size={16} className="mr-2" decorative />
+                        <PixelIcon name="magic" size={16} className="mr-2" decorative />
                         新占卜
                       </>
                 }

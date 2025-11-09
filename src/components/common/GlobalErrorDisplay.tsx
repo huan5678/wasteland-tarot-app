@@ -56,7 +56,7 @@ export function GlobalErrorDisplay() {
       action: latestError.retry ? {
         label: (
           <div className="flex items-center gap-1">
-            <PixelIcon name="reload" sizePreset="xs" className="text-white" decorative />
+            <PixelIcon name="refresh-cw" sizePreset="xs" className="text-white" decorative />
             <span>重試</span>
           </div>
         ),

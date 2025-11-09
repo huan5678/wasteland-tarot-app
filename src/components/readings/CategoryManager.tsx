@@ -116,7 +116,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
           onClick={onClose}>
 
 
-              <PixelIcon name="x" className="w-5 h-5" />
+              <PixelIcon name="close" className="w-5 h-5" />
             </Button>
           }
         </div>
@@ -249,7 +249,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
           className="px-3 py-2 border flex items-center gap-2">
 
 
-              <PixelIcon name="x" className="w-4 h-4" />
+              <PixelIcon name="close" className="w-4 h-4" />
               取消
             </Button>
             <Button size="sm" variant="outline"
@@ -275,7 +275,7 @@ export function CategoryManager({ onClose, selectedReadingId, onCategoryAssigned
 
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 border border-pip-boy-green/30 flex items-center justify-center text-pip-boy-green/60">
-                <PixelIcon name="x" className="w-4 h-4" />
+                <PixelIcon name="close" className="w-4 h-4" />
               </div>
               <div className="flex-1">
                 <div className="font-bold text-pip-boy-green/70 text-sm">無類別</div>

@@ -168,7 +168,7 @@ export const ErrorToast: React.FC<ErrorToastProps> = ({
                 className="flex items-center gap-1.5 rounded border px-3 py-1.5 font-medium transition-all"
                 aria-label="重試">
 
-                        <PixelIcon name="refresh" sizePreset="xs" aria-label="重試圖示" />
+                        <PixelIcon name="refresh-cw" sizePreset="xs" aria-label="重試圖示" />
                         <span>重試</span>
                       </Button>
                 }

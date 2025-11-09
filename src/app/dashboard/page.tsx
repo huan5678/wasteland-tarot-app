@@ -402,7 +402,7 @@ export default function DashboardPage() {
 
 
             <div className="text-center">
-              <PixelIcon name="spade" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
+              <PixelIcon name="magic" size={32} className="mb-3 mx-auto text-pip-boy-green" decorative />
               <h3 className="text-lg font-bold text-pip-boy-green mb-2">新占卜</h3>
               <p className="text-pip-boy-green/70 text-sm">
                 開始一場全新的塔羅占卜會議

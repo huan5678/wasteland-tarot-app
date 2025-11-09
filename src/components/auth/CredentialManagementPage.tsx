@@ -192,7 +192,7 @@ export function CredentialManagementPage() {
         <PixelIcon name="alert-triangle" sizePreset="xl" variant="error" decorative />
         <p className="text-error text-center">{error}</p>
         <Button onClick={loadCredentials} variant="default">
-          <PixelIcon name="refresh" sizePreset="xs" decorative />
+          <PixelIcon name="refresh-cw" sizePreset="xs" decorative />
           <span className="ml-2">重試</span>
         </Button>
       </div>

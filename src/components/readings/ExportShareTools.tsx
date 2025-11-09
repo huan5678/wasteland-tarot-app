@@ -169,7 +169,7 @@ ${reading.interpretation || '無解讀內容'}
         onClick={onClose}>
 
 
-            <PixelIcon name="x" className="w-5 h-5" />
+            <PixelIcon name="close" className="w-5 h-5" />
           </Button>
         }
       </div>

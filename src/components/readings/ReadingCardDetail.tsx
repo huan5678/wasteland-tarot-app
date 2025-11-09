@@ -92,13 +92,13 @@ const TAB_CONFIG: TabConfig[] = [
 const getSuitIcon = (suit: string) => {
   const suitLower = suit.toLowerCase();
   if (suitLower.includes('權杖') || suitLower.includes('wand') || suitLower.includes('radiation_rod'))
-  return <PixelIcon name="zap" sizePreset="xs" decorative />;
+  return <PixelIcon name="flashlight" sizePreset="xs" decorative />;
   if (suitLower.includes('聖杯') || suitLower.includes('cup') || suitLower.includes('nuka_cola'))
-  return <PixelIcon name="heart" sizePreset="xs" decorative />;
+  return <PixelIcon name="heart-3-fill" sizePreset="xs" decorative />;
   if (suitLower.includes('寶劍') || suitLower.includes('sword') || suitLower.includes('combat_weapon'))
-  return <PixelIcon name="sword" sizePreset="xs" decorative />;
+  return <PixelIcon name="knife-fill" sizePreset="xs" decorative />;
   if (suitLower.includes('錢幣') || suitLower.includes('pentacle') || suitLower.includes('bottle_cap'))
-  return <PixelIcon name="coin" sizePreset="xs" decorative />;
+  return <PixelIcon name="copper-coin" sizePreset="xs" decorative />;
   if (suitLower.includes('major_arcana'))
   return <PixelIcon name="star" sizePreset="xs" decorative />;
   return <PixelIcon name="star" sizePreset="xs" decorative />;
@@ -606,7 +606,7 @@ export function ReadingCardDetail({
       <div className="space-y-6">
         <div>
           <h4 className="text-pip-boy-green font-bold mb-3 flex items-center gap-2">
-            <PixelIcon name="book" sizePreset="sm" decorative />
+            <PixelIcon name="book-open" sizePreset="sm" decorative />
             {card.is_reversed || card.position === 'reversed' ? '逆位含義' : '正位含義'}
           </h4>
           <div className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-4 rounded">
@@ -665,7 +665,7 @@ export function ReadingCardDetail({
         transition={{ delay: 0.1 }}>
 
           <h4 className="text-blue-400 font-bold text-lg mb-3 flex items-center gap-2">
-            <PixelIcon name="arrow-left" sizePreset="sm" decorative />
+            <PixelIcon name="arrow-up-s" sizePreset="sm" decorative />
             正位意義
           </h4>
           <div className="bg-blue-500/5 border border-blue-400/20 p-4 rounded-lg">
@@ -681,7 +681,7 @@ export function ReadingCardDetail({
         transition={{ delay: 0.2 }}>
 
           <h4 className="text-orange-400 font-bold text-lg mb-3 flex items-center gap-2">
-            <PixelIcon name="arrow-right" sizePreset="sm" decorative />
+            <PixelIcon name="arrow-down-s" sizePreset="sm" decorative />
             逆位意義
           </h4>
           <div className="bg-orange-500/5 border border-orange-400/20 p-4 rounded-lg">

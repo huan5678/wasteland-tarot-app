@@ -18,7 +18,7 @@ interface OverviewTabProps {
 const QUICK_ACTIONS = [
   {
     href: '/readings/new',
-    icon: 'stack',
+    icon: 'magic',
     label: '新占卜'
   },
   {

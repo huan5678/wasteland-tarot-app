@@ -62,7 +62,7 @@ export default function ReadingsPage() {
               onClick={() => window.location.href = '/readings/new'}
               className="flex items-center gap-2"
             >
-              <PixelIcon name="plus" sizePreset="xs" decorative />
+              <PixelIcon name="magic" sizePreset="xs" decorative />
               新占卜
             </Button>
           </div>

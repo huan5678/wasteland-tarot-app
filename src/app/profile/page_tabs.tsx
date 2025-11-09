@@ -377,13 +377,13 @@ export default function ProfilePage() {
                   href="/readings/new"
                   className="block text-center py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm">
 
-                  <PixelIcon name="card-stack" size={16} className="mr-2 inline" decorative />新占卜
+                  <PixelIcon name="magic" size={16} className="mr-2 inline" decorative />新占卜
                 </Link>
                 <Link
                   href="/cards"
                   className="block text-center py-2 border border-pip-boy-green/50 text-pip-boy-green hover:border-pip-boy-green hover:bg-pip-boy-green/10 transition-colors text-sm">
 
-                  <PixelIcon name="books" size={16} className="mr-2 inline" decorative />卡牌圖書館
+                  <PixelIcon name="library" size={16} className="mr-2 inline" decorative />卡牌圖書館
                 </Link>
                 <Link
                   href="/readings"

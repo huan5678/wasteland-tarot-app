@@ -97,7 +97,7 @@ export function DashboardSidebar() {
     title: '核心功能',
     items: [
     { href: '/dashboard', label: '控制台', icon: 'home', ariaLabel: '控制台' },
-    { href: '/readings/new', label: '新占卜', icon: 'spade', ariaLabel: '新占卜' },
+    { href: '/readings/new', label: '新占卜', icon: 'magic', ariaLabel: '新占卜' },
     { href: '/readings', label: '占卜記錄', icon: 'scroll-text', ariaLabel: '占卜記錄' }]
 
   },

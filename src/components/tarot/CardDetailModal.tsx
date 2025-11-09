@@ -151,8 +151,8 @@ const AUTHENTICATED_TABS: TabConfig[] = [
 const getSuitIcon = (suit: string) => {
   const suitLower = suit.toLowerCase();
   if (suitLower.includes('權杖') || suitLower.includes('wand') || suitLower.includes('radiation_rod')) return <PixelIcon name="flashlight" size={16} decorative />;
-  if (suitLower.includes('聖杯') || suitLower.includes('cup') || suitLower.includes('nuka_cola')) return <PixelIcon name="heart-3" size={16} decorative />;
-  if (suitLower.includes('寶劍') || suitLower.includes('sword') || suitLower.includes('combat_weapon')) return <PixelIcon name="knife" size={16} decorative />;
+  if (suitLower.includes('聖杯') || suitLower.includes('cup') || suitLower.includes('nuka_cola')) return <PixelIcon name="heart-3-fill" size={16} decorative />;
+  if (suitLower.includes('寶劍') || suitLower.includes('sword') || suitLower.includes('combat_weapon')) return <PixelIcon name="knife-fill" size={16} decorative />;
   if (suitLower.includes('錢幣') || suitLower.includes('pentacle') || suitLower.includes('bottle_cap')) return <PixelIcon name="copper-coin" size={16} decorative />;
   if (suitLower.includes('major_arcana')) return <PixelIcon name="star-smile" size={16} decorative />;
   return <PixelIcon name="star-smile" size={16} decorative />;
