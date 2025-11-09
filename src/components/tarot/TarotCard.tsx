@@ -110,6 +110,18 @@ export function TarotCard({
   const { isTouchDevice, prefersReducedMotion } = useDeviceCapabilities()
   const { playSound } = useAudioEffect()
 
+  // 調試：追蹤初始渲染狀態
+  const isFirstRender = useRef(true)
+  if (isFirstRender.current && flipStyle === 'kokonut') {
+    console.log('[TarotCard] Initial render:', {
+      cardName: card.name,
+      isRevealed,
+      isFlipping,
+      previousRevealed
+    })
+    isFirstRender.current = false
+  }
+
   // 3D 傾斜效果（當卡片翻轉時停用以避免衝突）
   const {
     tiltRef,

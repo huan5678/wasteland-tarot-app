@@ -98,12 +98,19 @@ export default function QuickReadingPage() {
     }
 
     const initialize = async () => {
+      console.log('[QuickReading] Starting initialization...');
       hasInitialized.current = true;
       setIsLoading(true);
 
       // 檢查 localStorage 是否可用
       if (!storage.isAvailable()) {
-        console.warn('localStorage not available, using memory-only state');
+        console.warn('[QuickReading] localStorage not available, using memory-only state');
+      }
+
+      // 檢查 localStorage 中是否有舊資料
+      const oldData = storage.load();
+      if (oldData.success && oldData.data) {
+        console.warn('[QuickReading] Found old localStorage data:', oldData.data);
       }
 
       // 重要：強制清除 localStorage，確保每次進入都是全新狀態
@@ -112,11 +119,14 @@ export default function QuickReadingPage() {
 
       // 重新初始化（不載入舊狀態）
       const newCardPool = initializeCardPool();
+      console.log('[QuickReading] Generated new card pool:', newCardPool.map(c => ({ id: c.id, name: c.name })));
+
       setCardPool(newCardPool);
       setSelectedCardId(null);
-      console.log('[QuickReading] Initialized with fresh card pool, selectedCardId:', null);
+      console.log('[QuickReading] Set selectedCardId to null');
 
       setIsLoading(false);
+      console.log('[QuickReading] Initialization complete');
     };
 
     initialize();
