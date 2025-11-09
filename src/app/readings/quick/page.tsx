@@ -22,12 +22,14 @@ import { useDailyCardBackContext } from '@/components/providers/DailyCardBackPro
 import { Button } from "@/components/ui/button";
 import { TarotCard } from '@/components/tarot/TarotCard';
 import { CardDetailModal } from '@/components/tarot/CardDetailModal';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // 初始化 storage 服務
 const storage = new QuickReadingStorage();
 
 export default function QuickReadingPage() {
   const router = useRouter();
+  const isMobile = useIsMobile(); // 偵測移動端/桌面端 (< 640px)
 
   // 取得每日隨機卡背
   const { cardBackPath, isLoading: isCardBackLoading } = useDailyCardBackContext();
@@ -192,16 +194,25 @@ export default function QuickReadingPage() {
   );
 
   /**
-   * 處理點擊已翻開的卡牌（開啟 Modal）
+   * 處理點擊已翻開的卡牌（響應式：移動端導航 / 桌面端 Modal）
    */
   const handleCardClick = useCallback(
     (card: DetailedTarotCard) => {
       if (card.id.toString() === selectedCardId) {
-        console.log('Opening modal for card:', card.name);
-        setIsModalOpen(true);
+        console.log('[QuickReading] Card clicked:', card.name, { isMobile });
+
+        if (isMobile) {
+          // 移動端：導航到卡牌詳情頁面
+          console.log('[QuickReading] Mobile: Navigate to /readings/quick/card/' + card.id);
+          router.push(`/readings/quick/card/${card.id}`);
+        } else {
+          // 桌面端：開啟 Modal
+          console.log('[QuickReading] Desktop: Open modal');
+          setIsModalOpen(true);
+        }
       }
     },
-    [selectedCardId]
+    [selectedCardId, isMobile, router]
   );
 
   /**

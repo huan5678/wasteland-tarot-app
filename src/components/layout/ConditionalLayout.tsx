@@ -25,7 +25,6 @@ const KNOWN_ROUTES = [
   '/offline',
   '/privacy',
   '/profile',
-  '/reading',
   '/readings',
   '/terms',
   '/test',
@@ -60,19 +59,15 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   }
 
   // Unified responsive layout
-  // Simple structure like main branch, but with mobile nav
+  // Three-layer flex structure: Header -> Content (flex-1) -> Footer/MobileBottomNav
   return (
-    <>
+    <div className="flex flex-col h-screen overflow-hidden">
       <Header />
 
       <DynamicMainContent>
-        {/* Bottom padding for MobileBottomNav on mobile, none on desktop */}
-        {/* 104px = 40px (CompactMusicPlayer) + 64px (navigation) */}
-        <div className="pb-[104px] sm:pb-0">
-          <PageTransition>
-            {children}
-          </PageTransition>
-        </div>
+        <PageTransition>
+          {children}
+        </PageTransition>
       </DynamicMainContent>
 
       {/* Mobile: MobileBottomNav (hidden on desktop with sm:hidden) */}
@@ -87,6 +82,6 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       <div className="hidden sm:block">
         <Footer />
       </div>
-    </>
+    </div>
   )
 }

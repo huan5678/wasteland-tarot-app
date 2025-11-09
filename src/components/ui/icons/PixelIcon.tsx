@@ -33,8 +33,14 @@ import { getRemixIconClassName } from '@/lib/remixIconMapping';
  * // 基本使用（預設 line 風格）
  * <PixelIcon name="home" />
  *
- * // Fill 風格 (實心)
+ * // Fill 風格方式 1: 使用後綴（推薦）
+ * <PixelIcon name="home-fill" />
+ *
+ * // Fill 風格方式 2: 使用 prop
  * <PixelIcon name="home" remixVariant="fill" />
+ *
+ * // Line 風格（預設，也可明確指定）
+ * <PixelIcon name="home-line" />
  *
  * // 使用尺寸預設（Phase 6）
  * <PixelIcon name="user" sizePreset="lg" />
@@ -111,9 +117,26 @@ export const PixelIcon: React.FC<PixelIconProps> = ({
    * 組合 RemixIcon CSS class name
    * 格式: ri-{name}-{style}
    * 使用自動映射確保圖示名稱正確
+   *
+   * 自動檢測後綴：
+   * - 如果 name 以 -fill 結尾，自動使用 fill 風格
+   * - 如果 name 以 -line 結尾，自動使用 line 風格
+   * - 否則使用 remixVariant prop（預設 line）
    */
   const iconClassName = useMemo(() => {
-    return getRemixIconClassName(name, remixVariant);
+    let iconName = name;
+    let iconStyle = remixVariant;
+
+    // 檢測並提取後綴
+    if (name.endsWith('-fill')) {
+      iconName = name.slice(0, -5); // 移除 -fill 後綴
+      iconStyle = 'fill';
+    } else if (name.endsWith('-line')) {
+      iconName = name.slice(0, -5); // 移除 -line 後綴
+      iconStyle = 'line';
+    }
+
+    return getRemixIconClassName(iconName, iconStyle);
   }, [name, remixVariant]);
 
   /**

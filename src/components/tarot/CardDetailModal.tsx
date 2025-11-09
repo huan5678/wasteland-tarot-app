@@ -130,6 +130,8 @@ interface CardDetailModalProps {
   factionInfluence?: string;
   // Reading context (for /readings/[id] page)
   readingContext?: ReadingContext;
+  // Full page mode (for mobile pages instead of modal)
+  isFullPage?: boolean;
 }
 
 // Tab configuration for the modal interface
@@ -316,6 +318,7 @@ const CharacterVoiceSelector = ({
 export function CardDetailModal({
   card,
   isOpen,
+  isFullPage = false,
   onClose,
   onAddToReading,
   onBookmarkToggle,
@@ -685,7 +688,7 @@ export function CardDetailModal({
         {/* Left Column - Card Image */}
         <div className="space-y-4">
         <div className="relative" ref={imageContainerRef}>
-          <div className="w-full max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative">
+          <div className="w-full max-w-xs sm:max-w-md mx-auto aspect-[2/3] border-2 border-pip-boy-green/60 rounded-lg overflow-hidden bg-wasteland-dark relative">
             {imageError ?
             <div className="w-full h-full flex items-center justify-center text-pip-boy-green/60">
                 <div className="text-center">
@@ -1339,30 +1342,24 @@ export function CardDetailModal({
     </motion.div>;
 
 
-  return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50"
-        onClick={handleOverlayClick}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="card-modal-title"
-        aria-describedby="card-modal-description">
-
-        <motion.div
-          ref={modalRef}
-          variants={modalVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
-          className="bg-wasteland-dark border-2 border-pip-boy-green max-w-6xl w-full max-h-[95vh] overflow-hidden flex flex-col"
-          onClick={(e) => e.stopPropagation()}>
+  // Content component (shared between Modal and Full Page modes)
+  const modalContent = (
+    <motion.div
+      ref={modalRef}
+      variants={isFullPage ? undefined : modalVariants}
+      initial={isFullPage ? undefined : "hidden"}
+      animate={isFullPage ? undefined : "visible"}
+      exit={isFullPage ? undefined : "exit"}
+      className={cn(
+        "bg-wasteland-dark border-pip-boy-green flex flex-col",
+        isFullPage
+          ? "min-h-screen border-0" // Full page mode: min-height allows natural flow with ConditionalLayout's pb-[104px]
+          : "border-2 max-w-6xl w-full min-h-full sm:h-auto sm:max-h-[95vh]" // Modal mode: constrained size (overflow handled by inner ScrollContainer)
+      )}
+      onClick={(e) => e.stopPropagation()}>
 
           {/* Enhanced Header */}
-          <div className="border-b border-pip-boy-green/30 p-4 flex items-center justify-between bg-pip-boy-green/5">
+          <div className="border-b border-pip-boy-green/30 p-2 sm:p-4 flex items-center justify-between bg-pip-boy-green/5 flex-shrink-0">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <motion.div
@@ -1412,36 +1409,45 @@ export function CardDetailModal({
             </div>
           </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b border-pip-boy-green/30 bg-wasteland-dark/50">
-            <div className="flex overflow-x-auto scrollbar-thin scrollbar-thumb-pip-boy-green/30">
-              {TAB_CONFIG.map((tab, index) => {
-                const isActive = activeTab === tab.id;
-                return (
-                  <motion.button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={cn(
-                      "flex items-center gap-2 px-4 py-3 text-sm border-b-2 transition-all duration-200 whitespace-nowrap",
-                      isActive ?
-                      `${tab.color} border-current bg-pip-boy-green/5` :
-                      "text-pip-boy-green/60 border-transparent hover:text-pip-boy-green/80 hover:bg-pip-boy-green/5"
-                    )}
-                    whileHover={{ y: -1 }}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}>
+          {/* Scrollable container for Tabs + Content */}
+          <div className={cn(
+            "flex-1",
+            isFullPage ? "" : "overflow-y-auto min-h-0" // Modal mode: enable scroll + allow flex shrinking
+          )}>
+            {/* Tab Navigation - Sticky */}
+            <div className="sticky top-0 z-10 border-b border-pip-boy-green/30 bg-wasteland-dark/95 backdrop-blur-sm">
+              <div className="flex overflow-x-auto scrollbar-thin scrollbar-thumb-pip-boy-green/30">
+                {TAB_CONFIG.map((tab, index) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <motion.button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={cn(
+                        "flex items-center gap-2 px-4 py-3 text-sm border-b-2 transition-all duration-200 whitespace-nowrap",
+                        isActive ?
+                        `${tab.color} border-current bg-pip-boy-green/5` :
+                        "text-pip-boy-green/60 border-transparent hover:text-pip-boy-green/80 hover:bg-pip-boy-green/5"
+                      )}
+                      whileHover={{ y: -1 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}>
 
-                    <PixelIcon name={tab.name} size={16} decorative />
-                    <span>{tab.label}</span>
-                  </motion.button>);
+                      <PixelIcon name={tab.name} size={16} decorative />
+                      <span>{tab.label}</span>
+                    </motion.button>);
 
-              })}
+                })}
+              </div>
             </div>
-          </div>
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+            {/* Tab Content */}
+            <div className={cn(
+              isFullPage
+                ? "p-3" // Full page mode: normal padding
+                : "p-3 sm:p-6" // Modal mode: responsive padding
+            )}>
             <AnimatePresence mode="wait">
               {activeTab === 'overview' && renderOverviewTab()}
               {activeTab === 'meanings' && renderMeaningsTab()}
@@ -1449,11 +1455,12 @@ export function CardDetailModal({
               {activeTab === 'insights' && renderInsightsTab()}
               {activeTab === 'interactions' && renderInteractionsTab()}
             </AnimatePresence>
+            </div>
           </div>
 
           {/* Guest Mode CTA */}
           {isGuestMode &&
-          <div className="border-t border-pip-boy-green/30 p-6 bg-gradient-to-r from-pip-boy-green/10 to-pip-boy-green/5">
+          <div className="border-t border-pip-boy-green/30 bg-gradient-to-r from-pip-boy-green/10 to-pip-boy-green/5 flex-shrink-0 p-3 sm:p-6">
               <div className="max-w-3xl mx-auto text-center space-y-4">
                 <div className="flex items-center justify-center gap-2 text-pip-boy-green">
                   <PixelIcon name="skull" size={20} className="w-5 h-5 animate-pulse" decorative />
@@ -1500,24 +1507,51 @@ export function CardDetailModal({
             </div>
           }
 
-          {/* Enhanced Footer */}
-          <div className="border-t border-pip-boy-green/30 p-4 bg-pip-boy-green/5">
-            <div className="flex justify-between items-center text-xs text-pip-boy-green/60">
-              <div className="flex items-center gap-4">
-                <span>VAULT-TEC 塔羅系統 v3.0.0</span>
-                <span>輻射等級: {radiationInfo.label}</span>
-                {isGuestMode && <span className="text-orange-400">訪客模式</span>}
-              </div>
-              <div className="flex items-center gap-4">
-                {card.created_at &&
-                <span>創建: {new Date(card.created_at).toLocaleDateString()}</span>
-                }
-                {!isGuestMode && cardIsBookmarked && <span>★ 已收藏</span>}
+          {/* Enhanced Footer - Only show in Modal mode */}
+          {!isFullPage && (
+            <div className="border-t border-pip-boy-green/30 p-4 bg-pip-boy-green/5">
+              <div className="flex justify-between items-center text-xs text-pip-boy-green/60">
+                <div className="flex items-center gap-4">
+                  <span>VAULT-TEC 塔羅系統 v3.0.0</span>
+                  <span>輻射等級: {radiationInfo.label}</span>
+                  {isGuestMode && <span className="text-orange-400">訪客模式</span>}
+                </div>
+                <div className="flex items-center gap-4">
+                  {card.created_at &&
+                  <span>創建: {new Date(card.created_at).toLocaleDateString()}</span>
+                  }
+                  {!isGuestMode && cardIsBookmarked && <span>★ 已收藏</span>}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </motion.div>
-      </motion.div>
-    </AnimatePresence>);
+  );
 
+  // Return based on mode
+  if (isFullPage) {
+    // Full page mode: render content directly without Modal wrapper
+    return modalContent;
+  }
+
+  // Modal mode: wrap content in overlay
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-x-0 top-0 bottom-[104px] sm:bottom-0 bg-black/90 backdrop-blur-sm flex items-stretch sm:items-center justify-center p-2 sm:p-4 z-50"
+        onClick={handleOverlayClick}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="card-modal-title"
+        aria-describedby="card-modal-description"
+        // Mobile: bottom-[104px] = Space for MobileBottomNav (40px CompactMusicPlayer + 64px Navigation)
+        // Desktop: bottom-0 = Full screen
+      >
+        {modalContent}
+      </motion.div>
+    </AnimatePresence>
+  );
 }

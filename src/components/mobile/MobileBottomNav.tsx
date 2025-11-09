@@ -61,7 +61,7 @@ function getNavigationItems(user: User | null): NavigationItem[] {
   if (!user) {
     // Guest users (4 items)
     return [
-      { id: 'home', label: '首頁', iconName: 'home', href: '/' },
+      { id: 'home', label: '首頁', iconName: 'tent-fill', href: '/' },
       { id: 'cards', label: '卡牌', iconName: 'stack', href: '/cards' },
       { id: 'login', label: '登入', iconName: 'user', href: '/auth' },
       { id: 'more', label: '更多', iconName: 'menu', action: 'more' },
@@ -70,9 +70,9 @@ function getNavigationItems(user: User | null): NavigationItem[] {
 
   // Logged-in users (5 items - New Reading is center item)
   return [
-    { id: 'home', label: '首頁', iconName: 'home', href: '/' },
+    { id: 'home', label: '首頁', iconName: 'tent-fill', href: '/' },
     { id: 'bingo', label: '賓果', iconName: 'grid', href: '/bingo' },
-    { id: 'reading-new', label: '新占卜', iconName: 'magic', href: '/reading/new', badge: undefined },
+    { id: 'reading-new', label: '新占卜', iconName: 'magic', href: '/readings/new', badge: undefined },
     { id: 'profile', label: '個人', iconName: 'user', href: '/profile' },
     { id: 'more', label: '更多', iconName: 'menu', action: 'more' },
   ];
@@ -99,6 +99,7 @@ function getMoreItems(user: User | null): NavigationItem[] {
 
   // Logged-in users - additional items + logout
   return [
+    { id: 'dashboard', label: '控制台', iconName: 'home', href: '/dashboard' },
     { id: 'profile', label: '個人資料', iconName: 'user', href: '/profile' },
     { id: 'achievements', label: '成就系統', iconName: 'trophy', href: '/achievements' },
     { id: 'cards', label: '卡牌圖鑑', iconName: 'stack', href: '/cards' },
@@ -116,12 +117,18 @@ export function MobileBottomNav({
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   // Get user from prop or authStore (prop has priority)
   const storeUser = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const user = userProp !== undefined ? userProp : storeUser;
   const router = useRouter();
+
+  // Set year only on client side
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   // Memoize navigation items to prevent unnecessary re-renders
   const navigationItems = useMemo(() => getNavigationItems(user), [user]);
@@ -265,7 +272,7 @@ export function MobileBottomNav({
         aria-label="主要導航"
         aria-roledescription="導航列，5 個分頁"
       className={cn(
-        'mobile-bottom-nav fixed bottom-0 left-0 right-0 z-30',
+        'mobile-bottom-nav w-full z-30',
         'flex flex-col', // Stack music player and navigation vertically
         // Platform-specific styling (defined in globals.css)
         isIOS && 'ios',
@@ -363,7 +370,8 @@ export function MobileBottomNav({
 
           {/* Scrollable content */}
           <div className="overflow-y-auto h-[calc(80vh-4rem)] p-4">
-            <nav className="space-y-1">
+            {/* Navigation Items */}
+            <nav className="space-y-1 mb-6">
               {moreItems.map((item, index) => {
                 const isLogout = item.action === 'logout';
                 return (
@@ -391,6 +399,81 @@ export function MobileBottomNav({
                 );
               })}
             </nav>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-pip-boy-green to-transparent opacity-30 my-6"></div>
+
+            {/* Footer Content - Mobile Only */}
+            <div className="space-y-6 pb-4">
+              {/* Brand Section */}
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <img
+                    src="/logo.svg"
+                    alt="廢土塔羅 Logo"
+                    className="w-8 h-8"
+                    style={{
+                      filter: 'brightness(0) saturate(100%) invert(85%) sepia(55%) saturate(1000%) hue-rotate(60deg) brightness(100%) contrast(105%) drop-shadow(0 0 4px rgba(0, 255, 65, 0.6))'
+                    }}
+                  />
+                  <div>
+                    <h3 className="text-base font-bold text-pip-boy-green text-glow-green">廢土塔羅</h3>
+                    <p className="text-xs text-pip-boy-green/60">Pip-Boy 占卜</p>
+                  </div>
+                </div>
+                <p className="text-xs text-pip-boy-green/70 leading-relaxed">
+                  透過古老的塔羅智慧，發現你在末世後廢土中的命運，由 Vault-Tec 驅動。
+                </p>
+              </div>
+
+              {/* Social Links */}
+              <div>
+                <h4 className="text-xs font-bold text-pip-boy-green mb-2 uppercase tracking-wide">社群連結</h4>
+                <div className="space-y-1">
+                  {[
+                    { href: 'https://github.com', label: 'GitHub', icon: 'github' as IconName },
+                    { href: 'https://twitter.com', label: 'Twitter', icon: 'external-link' as IconName },
+                    { href: 'https://discord.com', label: 'Discord', icon: 'message' as IconName }
+                  ].map((link) => (
+                    <a
+                      key={link.href}
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-pip-boy-green/70 hover:text-pip-boy-green transition-colors py-1"
+                    >
+                      <PixelIcon name={link.icon} size={16} decorative />
+                      <span>{link.label}</span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Emergency Info */}
+              <div className="p-3 border border-pip-boy-green/30 bg-pip-boy-green/5 rounded">
+                <p className="text-xs text-pip-boy-green/60">
+                  <strong className="text-pip-boy-green/80">技術支援：</strong><br />
+                  Vault-Tec 熱線：1-800-VAULT-TEC<br />
+                  緊急終端機：B-117-A
+                </p>
+              </div>
+
+              {/* Copyright & System Status */}
+              <div className="text-center space-y-2">
+                <div className="text-xs text-pip-boy-green/50">
+                  © {currentYear || '----'} Vault-Tec Corporation<br />
+                  保留所有權利
+                </div>
+                <div className="flex items-center justify-center gap-3 text-xs text-pip-boy-green/50">
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-pip-boy-green rounded-full animate-pulse"></div>
+                    <span>系統線上</span>
+                  </div>
+                  <span>|</span>
+                  <div>v3.1.4</div>
+                </div>
+              </div>
+            </div>
           </div>
         </SheetContent>
       </Sheet>

@@ -147,7 +147,7 @@ export default function AchievementsPage() {
             className="grid grid-cols-2 md:grid-cols-4 gap-4">
 
             {/* 總成就數 */}
-            <div className="card-wasteland p-4 text-center">
+            <div className="card-wasteland p-4 text-center border-2 border-pip-boy-green/30">
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="apps" sizePreset="md" variant="primary" decorative />
               </div>
@@ -158,7 +158,7 @@ export default function AchievementsPage() {
             </div>
 
             {/* 已解鎖 */}
-            <div className="card-wasteland p-4 text-center">
+            <div className="card-wasteland p-4 text-center border-2 border-pip-boy-green/30">
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="unlock" sizePreset="md" variant="success" decorative />
               </div>
@@ -169,7 +169,7 @@ export default function AchievementsPage() {
             </div>
 
             {/* 已領取 */}
-            <div className="card-wasteland p-4 text-center">
+            <div className="card-wasteland p-4 text-center border-2 border-pip-boy-green/30">
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="check-circle" sizePreset="md" variant="info" decorative />
               </div>
@@ -180,7 +180,7 @@ export default function AchievementsPage() {
             </div>
 
             {/* 完成度 */}
-            <div className="card-wasteland p-4 text-center">
+            <div className="card-wasteland p-4 text-center border-2 border-pip-boy-green/30">
               <div className="flex items-center justify-center mb-2">
                 <PixelIcon name="chart" sizePreset="md" variant="warning" decorative />
               </div>

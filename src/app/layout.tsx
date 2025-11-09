@@ -83,10 +83,11 @@ export default function RootLayout({
             <AppProviders>
               <LoadingStrategy>
                 <PWAProvider>
-                  <div className="min-h-screen flex flex-col relative z-10">
+                  <div className="relative z-10">
                     <ClientLayout>
                       {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
                       {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
+                      {/* ConditionalLayout 內部有自己的 flex flex-col min-h-screen 結構 */}
                       <ConditionalLayout>
                         {children}
                       </ConditionalLayout>

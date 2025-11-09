@@ -19,8 +19,14 @@ import { PixelIcon } from '@/components/ui/icons'
 // 基本圖示（預設 line 風格）
 <PixelIcon name="home" />
 
-// Fill 風格（實心）
+// Fill 風格方式 1: 使用後綴（推薦）✨
+<PixelIcon name="home-fill" />
+
+// Fill 風格方式 2: 使用 prop
 <PixelIcon name="home" remixVariant="fill" />
+
+// Line 風格（預設，也可明確指定）
+<PixelIcon name="home-line" />
 
 // 自訂尺寸
 <PixelIcon name="user" size={32} />
@@ -31,22 +37,30 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ### 從 RemixIcon 網站複製名稱
 
-1. 訪問 [remixicon.com](https://remixicon.com/)
-2. 搜尋並找到想要的圖示
-3. 複製圖示名稱（例如 "home-line"）
-4. 去掉 `-line` 或 `-fill` 後綴
-5. 直接使用：
+**✨ 新功能：支援後綴自動檢測！**
+
+現在可以直接從 RemixIcon 網站複製完整名稱（包含 `-line` 或 `-fill` 後綴），PixelIcon 會自動處理：
 
 ```tsx
-// 網站顯示: home-line
-<PixelIcon name="home" />
+// 方式 1: 直接使用完整名稱（推薦）
+<PixelIcon name="home-line" />      // 自動使用 line 風格
+<PixelIcon name="home-fill" />      // 自動使用 fill 風格
+<PixelIcon name="tent-fill" />      // 自動使用 fill 風格
 
-// 網站顯示: user-fill
-<PixelIcon name="user" remixVariant="fill" />
+// 方式 2: 去掉後綴 + 使用 prop（舊方式，仍支援）
+<PixelIcon name="home" />                    // 預設 line
+<PixelIcon name="home" remixVariant="fill" /> // 指定 fill
 
-// 網站顯示: loader-4-line
-<PixelIcon name="loader-4" />
+// 方式 3: 去掉後綴（預設 line）
+<PixelIcon name="home" />           // 預設 line 風格
+<PixelIcon name="user" />           // 預設 line 風格
 ```
+
+**步驟**：
+1. 訪問 [remixicon.com](https://remixicon.com/)
+2. 搜尋並找到想要的圖示
+3. 複製完整名稱（例如 "tent-fill"）
+4. 直接使用，不需要手動處理後綴！
 
 ## 🎨 Phase 6 功能
 

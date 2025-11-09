@@ -47,7 +47,10 @@ export function DynamicMainContent({
   return (
     <main
       className={cn(
-        "w-full",
+        "w-full flex-1 overflow-y-auto",
+        // Mobile: limit height to keep MobileBottomNav visible
+        // Desktop: no limit, let content flow naturally
+        "max-h-[calc(100vh-104px)] sm:max-h-none",
         className
       )}
       style={{

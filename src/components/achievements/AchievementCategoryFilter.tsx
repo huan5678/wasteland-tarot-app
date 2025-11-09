@@ -4,11 +4,12 @@ import React from 'react';
 import { PixelIcon } from '@/components/ui/icons';
 import { cn } from '@/lib/utils';
 import { AchievementCategory } from '@/lib/stores/achievementStore';
+import { Button } from "@/components/ui/button";
 
 // ============================================================================
 // Types
 // ============================================================================
-import { Button } from "@/components/ui/button";
+
 interface CategoryOption {
   value: AchievementCategory | null;
   label: string;
@@ -27,43 +28,43 @@ interface AchievementCategoryFilterProps {
 // ============================================================================
 
 const CATEGORY_OPTIONS: CategoryOption[] = [
-{
-  value: null,
-  label: '全部',
-  icon: 'apps',
-  description: '顯示所有成就'
-},
-{
-  value: 'READING',
-  label: '閱讀',
-  icon: 'book',
-  description: '塔羅閱讀相關成就'
-},
-{
-  value: 'SOCIAL',
-  label: '社交',
-  icon: 'group',
-  description: '社群互動相關成就'
-},
-{
-  value: 'BINGO',
-  label: 'Bingo',
-  icon: 'grid',
-  description: 'Bingo 遊戲相關成就'
-},
-{
-  value: 'KARMA',
-  label: 'Karma',
-  icon: 'zap',
-  description: 'Karma 累積相關成就'
-},
-{
-  value: 'EXPLORATION',
-  label: '探索',
-  icon: 'compass',
-  description: '廢土探索相關成就'
-}];
-
+  {
+    value: null,
+    label: '全部',
+    icon: 'apps',
+    description: '顯示所有成就'
+  },
+  {
+    value: 'READING',
+    label: '閱讀',
+    icon: 'book',
+    description: '塔羅閱讀相關成就'
+  },
+  {
+    value: 'SOCIAL',
+    label: '社交',
+    icon: 'group',
+    description: '社群互動相關成就'
+  },
+  {
+    value: 'BINGO',
+    label: 'Bingo',
+    icon: 'grid',
+    description: 'Bingo 遊戲相關成就'
+  },
+  {
+    value: 'KARMA',
+    label: 'Karma',
+    icon: 'zap',
+    description: 'Karma 累積相關成就'
+  },
+  {
+    value: 'EXPLORATION',
+    label: '探索',
+    icon: 'compass',
+    description: '廢土探索相關成就'
+  }
+];
 
 // ============================================================================
 // Component
@@ -80,39 +81,28 @@ export const AchievementCategoryFilter: React.FC<AchievementCategoryFilterProps>
         const isActive = currentFilter === option.value;
 
         return (
-          <Button size="icon" variant="default"
-          key={option.value || 'all'}
-          onClick={() => onFilterChange(option.value)}
-          className="{expression}"
-
-
-
-
-
-
-
-
-
-          aria-label={`篩選 ${option.label} 類別成就`}
-          title={option.description}>
-
+          <Button
+            key={option.value || 'all'}
+            size="sm"
+            variant={isActive ? 'default' : 'outline'}
+            onClick={() => onFilterChange(option.value)}
+            className="gap-2"
+            aria-label={`篩選 ${option.label} 類別成就`}
+            title={option.description}
+          >
             <PixelIcon
               name={option.icon}
               sizePreset="xs"
-              variant={isActive ? 'primary' : 'default'}
-              decorative />
-
-            <span className={cn(
-              'text-sm font-medium',
-              isActive && 'text-pip-boy-green'
-            )}>
+              decorative
+            />
+            <span className="text-sm font-medium">
               {option.label}
             </span>
-          </Button>);
-
+          </Button>
+        );
       })}
-    </div>);
-
+    </div>
+  );
 };
 
 export default AchievementCategoryFilter;

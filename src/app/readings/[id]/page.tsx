@@ -30,6 +30,7 @@ import { useMetadataStore } from '@/stores/metadataStore';
 import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer';
 import { use3DTilt } from '@/hooks/tilt/use3DTilt';
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // Tab 類型定義（移除 card-${number}，改用 Modal 顯示卡片詳情）
 import { Button } from "@/components/ui/button";type MainTabType = 'overview' | 'interpretation' | 'metadata';
@@ -50,6 +51,7 @@ export default function ReadingDetailPage() {
   const router = useRouter();
   const params = useParams();
   const readingId = params.id as string;
+  const isMobile = useIsMobile(); // 偵測移動端/桌面端 (< 640px)
 
   const [reading, setReading] = useState<Reading | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -308,46 +310,49 @@ export default function ReadingDetailPage() {
     return tabs;
   }, [reading]);
 
-  // 卡片點擊處理（開啟 Modal）
+  // 卡片點擊處理（響應式：移動端導航 / 桌面端 Modal）
   const handleCardClick = useCallback((card: ReadingCard, index: number) => {
-    // 調試：檢查 card 物件
-    console.log('[handleCardClick] 🔍 Card object:', {
-      cardName: card.name,
-      hasCharacterVoices: !!card.character_voices,
-      characterVoicesKeys: card.character_voices ? Object.keys(card.character_voices) : [],
-      characterVoicesSample: card.character_voices
-    });
-    
-    // 轉換為 WastelandCard 格式
-    const wastelandCard: WastelandCard & {story?: any;audioUrls?: Record<string, string>;} = {
-      id: card.id,
-      name: card.name,
-      suit: card.suit,
-      number: card.number || card.card_number || 0,
-      keywords: card.keywords || [],
-      upright_meaning: card.upright_meaning || '',
-      reversed_meaning: card.reversed_meaning || '',
-      description: card.description || '',
-      fallout_reference: card.fallout_reference,
-      vault_reference: card.vault_reference,
-      threat_level: card.threat_level,
-      wasteland_humor: card.wasteland_humor,
-      rarity_level: card.rarity_level || 'common',
-      karma_alignment: card.karma_alignment || 'NEUTRAL',
-      radiation_factor: card.radiation_factor || 0,
-      pip_boy_interpretation: card.pip_boy_interpretation || '',
-      character_voices: card.character_voices || {},
-      element: card.element,
-      astrological_association: card.astrological_association,
-      symbolism: card.symbolism,
-      image_url: getCardImageUrl(card as any),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
+    console.log('[ReadingDetail] Card clicked:', card.name, { isMobile });
 
-    setSelectedCardForModal(wastelandCard);
-    setIsCardModalOpen(true);
-  }, []);
+    if (isMobile) {
+      // 移動端：導航到卡牌詳情頁面
+      console.log('[ReadingDetail] Mobile: Navigate to /readings/' + readingId + '/card/' + card.id);
+      router.push(`/readings/${readingId}/card/${card.id}`);
+    } else {
+      // 桌面端：開啟 Modal
+      console.log('[ReadingDetail] Desktop: Open modal');
+
+      // 轉換為 WastelandCard 格式
+      const wastelandCard: WastelandCard & {story?: any;audioUrls?: Record<string, string>;} = {
+        id: card.id,
+        name: card.name,
+        suit: card.suit,
+        number: card.number || card.card_number || 0,
+        keywords: card.keywords || [],
+        upright_meaning: card.upright_meaning || '',
+        reversed_meaning: card.reversed_meaning || '',
+        description: card.description || '',
+        fallout_reference: card.fallout_reference,
+        vault_reference: card.vault_reference,
+        threat_level: card.threat_level,
+        wasteland_humor: card.wasteland_humor,
+        rarity_level: card.rarity_level || 'common',
+        karma_alignment: card.karma_alignment || 'NEUTRAL',
+        radiation_factor: card.radiation_factor || 0,
+        pip_boy_interpretation: card.pip_boy_interpretation || '',
+        character_voices: card.character_voices || {},
+        element: card.element,
+        astrological_association: card.astrological_association,
+        symbolism: card.symbolism,
+        image_url: getCardImageUrl(card as any),
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      setSelectedCardForModal(wastelandCard);
+      setIsCardModalOpen(true);
+    }
+  }, [isMobile, readingId, router]);
 
   // 互動處理
   const handleImageError = useCallback((index: number) => {
