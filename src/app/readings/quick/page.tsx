@@ -40,6 +40,7 @@ export default function QuickReadingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [sessionKey, setSessionKey] = useState(Date.now()); // 用於強制重新掛載卡片
 
   /**
    * 從 enhancedCards 中隨機選取 3-5 張大阿爾克納
@@ -97,23 +98,45 @@ export default function QuickReadingPage() {
         console.warn('[QuickReading] localStorage not available, using memory-only state');
       }
 
-      // 檢查 localStorage 中是否有舊資料
-      const oldData = storage.load();
-      if (oldData.success && oldData.data) {
-        console.warn('[QuickReading] Found old localStorage data:', oldData.data);
+      // 嘗試從 localStorage 載入已保存的狀態
+      const savedState = storage.load();
+
+      if (savedState.success && savedState.value) {
+        console.log('[QuickReading] Found saved state:', savedState.value);
+
+        // 嘗試恢復卡牌池
+        try {
+          const savedCardIds = savedState.value.cardPoolIds || [];
+          const restoredPool = savedCardIds
+            .map((id: string) => enhancedWastelandCards.find(c => c.id.toString() === id))
+            .filter((card): card is DetailedTarotCard => card !== undefined);
+
+          if (restoredPool.length > 0) {
+            console.log('[QuickReading] Restored card pool:', restoredPool.map(c => ({ id: c.id, name: c.name })));
+            setCardPool(restoredPool);
+            setSelectedCardId(savedState.value.selectedCardId || null);
+            setSessionKey(Date.now()); // 強制重新掛載避免閃爍
+            console.log('[QuickReading] Loaded from localStorage successfully');
+          } else {
+            throw new Error('No valid cards in saved pool');
+          }
+        } catch (error) {
+          console.warn('[QuickReading] Failed to restore saved state:', error);
+          // 失敗時重新初始化
+          const newCardPool = initializeCardPool();
+          setCardPool(newCardPool);
+          setSelectedCardId(null);
+          setSessionKey(Date.now());
+        }
+      } else {
+        // 沒有保存的狀態，重新初始化
+        console.log('[QuickReading] No saved state, initializing new card pool');
+        const newCardPool = initializeCardPool();
+        console.log('[QuickReading] Generated new card pool:', newCardPool.map(c => ({ id: c.id, name: c.name })));
+        setCardPool(newCardPool);
+        setSelectedCardId(null);
+        setSessionKey(Date.now());
       }
-
-      // 重要：強制清除 localStorage，確保每次進入都是全新狀態
-      storage.clear();
-      console.log('[QuickReading] Cleared localStorage for fresh start');
-
-      // 重新初始化（不載入舊狀態）
-      const newCardPool = initializeCardPool();
-      console.log('[QuickReading] Generated new card pool:', newCardPool.map(c => ({ id: c.id, name: c.name })));
-
-      setCardPool(newCardPool);
-      setSelectedCardId(null);
-      console.log('[QuickReading] Set selectedCardId to null');
 
       setIsLoading(false);
       console.log('[QuickReading] Initialization complete');
@@ -138,7 +161,7 @@ export default function QuickReadingPage() {
         return;
       }
 
-      console.log('Card flipped:', cardId);
+      console.log('[QuickReading] Card flipped:', cardId);
       setSelectedCardId(cardId);
 
       // 儲存至 localStorage
@@ -148,9 +171,21 @@ export default function QuickReadingPage() {
         timestamp: Date.now()
       };
 
+      console.log('[QuickReading] Saving to localStorage:', saveData);
       const saveResult = storage.save(saveData);
-      if (!saveResult.success) {
-        console.error('Failed to save to localStorage:', saveResult.error);
+
+      if (saveResult.success) {
+        console.log('[QuickReading] ✅ Saved to localStorage successfully');
+
+        // 驗證保存
+        const verification = storage.load();
+        if (verification.success && verification.value) {
+          console.log('[QuickReading] ✅ Verification: localStorage contains:', verification.value);
+        } else {
+          console.error('[QuickReading] ❌ Verification failed:', verification.success ? 'No data' : verification.error);
+        }
+      } else {
+        console.error('[QuickReading] ❌ Failed to save to localStorage:', saveResult.error);
       }
     },
     [selectedCardId, cardPool]
@@ -287,62 +322,98 @@ export default function QuickReadingPage() {
             </p>
           </div>
 
-          {/* Carousel with Cards - 保持結構避免重新渲染導致閃爍 */}
-          <CarouselContainer
-            cards={cardPool}
-            selectedCardId={selectedCardId}
-            activeIndex={activeCardIndex}
-            onIndexChange={setActiveCardIndex}
-            onCardFlip={handleCardFlip}
-            onCardClick={handleCardClick}
-            isDisabled={!!selectedCardId}>
+          {/* 條件渲染：未選中時顯示 Carousel，已選中時顯示單張卡片 */}
+          {!selectedCardId ? (
+            // 未選中：顯示 Carousel 供選擇
+            <CarouselContainer
+              cards={cardPool}
+              selectedCardId={selectedCardId}
+              activeIndex={activeCardIndex}
+              onIndexChange={setActiveCardIndex}
+              onCardFlip={handleCardFlip}
+              onCardClick={handleCardClick}
+              isDisabled={false}>
 
               {(card, index, isActive) => {
-            const isCardRevealed = card.id.toString() === selectedCardId;
-            const isCardSelected = card.id.toString() === selectedCardId;
+                const isCardRevealed = false; // 未選中前都是卡背
+                const isCardSelected = false;
 
-            // 調試日誌
-            if (index === 0) {
-              console.log('[QuickReading Render]', {
-                cardId: card.id,
-                cardName: card.name,
-                selectedCardId,
-                isCardRevealed,
-                isCardSelected,
-              });
-            }
-
-            return (
-              <TarotCard
-                key={card.id}
-                card={card}
-                isRevealed={isCardRevealed}
-                position="upright"
-                size="large"
-                flipStyle="kokonut"
-                cardBackUrl={displayCardBackUrl}
-                onClick={() => {
-                  if (!selectedCardId) {
-                    // 卡背狀態，點擊翻牌
-                    handleCardFlip(card.id.toString());
-                  } else if (isCardSelected) {
-                    // 已翻開的卡牌，點擊開啟 Modal
-                    handleCardClick(card);
-                  }
-                }}
-                isSelectable={!selectedCardId}
-                isSelected={isCardSelected}
-                showGlow={isCardSelected}
-                enableHaptic={true}
-                className={
-                  selectedCardId && !isCardSelected ?
-                  'opacity-0 pointer-events-none' :
-                  ''
-                }
-              />
-            );
-          }}
+                return (
+                  <TarotCard
+                    key={`${sessionKey}-${card.id}`}
+                    card={card}
+                    isRevealed={isCardRevealed}
+                    position="upright"
+                    size="large"
+                    flipStyle="kokonut"
+                    cardBackUrl={displayCardBackUrl}
+                    onClick={() => {
+                      // 卡背狀態，點擊翻牌
+                      handleCardFlip(card.id.toString());
+                    }}
+                    isSelectable={true}
+                    isSelected={false}
+                    showGlow={false}
+                    enableHaptic={true}
+                  />
+                );
+              }}
             </CarouselContainer>
+          ) : (
+            // 已選中：只顯示選中的卡片（靜態展示）
+            (() => {
+              const selectedCardData = cardPool.find(c => c.id.toString() === selectedCardId);
+
+              console.log('[QuickReading] Rendering selected card:', {
+                selectedCardId,
+                cardPoolLength: cardPool.length,
+                cardPoolIds: cardPool.map(c => c.id.toString()),
+                foundCard: selectedCardData,
+                hasImageUrl: !!selectedCardData?.image_url,
+                hasUprightMeaning: !!(selectedCardData as any)?.upright_meaning,
+                hasMeaningUpright: !!(selectedCardData as any)?.meaning_upright,
+                imageUrl: selectedCardData?.image_url,
+                uprightMeaning: (selectedCardData as any)?.upright_meaning,
+                meaningUpright: (selectedCardData as any)?.meaning_upright
+              });
+
+              if (!selectedCardData) {
+                console.error('[QuickReading] ❌ Selected card not found in card pool!');
+                return (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="text-center text-pip-boy-green">
+                      <p className="text-lg mb-4">錯誤：找不到選中的卡片</p>
+                      <p className="text-sm text-pip-boy-green/70">selectedCardId: {selectedCardId}</p>
+                      <p className="text-sm text-pip-boy-green/70">cardPool IDs: {cardPool.map(c => c.id).join(', ')}</p>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="flex justify-center items-center py-8">
+                  <div className="max-w-sm">
+                    <TarotCard
+                      key={`${sessionKey}-${selectedCardId}`}
+                      card={selectedCardData}
+                      isRevealed={true}
+                      position="upright"
+                      size="large"
+                      flipStyle="kokonut"
+                      cardBackUrl={displayCardBackUrl}
+                      onClick={() => {
+                        handleCardClick(selectedCardData);
+                      }}
+                      isSelectable={false}
+                      isSelected={true}
+                      showGlow={true}
+                      enableHaptic={true}
+                    />
+                  </div>
+                </div>
+              );
+            })()
+          )}
 
           {/* 主要 CTA - 翻牌後顯示 */}
           {selectedCardId &&

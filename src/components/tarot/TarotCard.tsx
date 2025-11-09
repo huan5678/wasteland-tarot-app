@@ -99,6 +99,21 @@ export function TarotCard({
   enableGyroscope = true,
   enableGloss = true
 }: TarotCardProps) {
+  // 兼容兩種欄位命名（upright_meaning vs meaning_upright）
+  const meaningUpright = (card as any).meaning_upright || (card as any).upright_meaning || ''
+  const meaningReversed = (card as any).meaning_reversed || (card as any).reversed_meaning || ''
+
+  // Debug: 檢查欄位兼容性
+  if (flipStyle === 'kokonut') {
+    console.log('[TarotCard] Field compatibility check:', {
+      cardName: card.name,
+      hasMeaningUpright: !!(card as any).meaning_upright,
+      hasUprightMeaning: !!(card as any).upright_meaning,
+      finalMeaningUpright: meaningUpright,
+      imageUrl: card.image_url
+    });
+  }
+
   const [isFlipping, setIsFlipping] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [previousRevealed, setPreviousRevealed] = useState(isRevealed)
@@ -322,57 +337,47 @@ export function TarotCard({
           relative w-full h-full group
           ${isHovered ? 'animate-card-hover' : ''}
           transition-all duration-300 ease-out
-        `}
-        style={{ perspective: '1200px' }}>
+        `}>
           <div
             className={`
               relative w-full h-full
-              ${isFlipping ? 'animate-card-flip' : 'transition-all duration-700'}
-            `}
-            style={{
-              transformStyle: 'preserve-3d',
-              transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)'
-            }}>
-            {/* Back - 翻轉中或未翻開時渲染 */}
-            {(isFlipping || !isRevealed) && (
-              <div
-                className={`
-                  absolute inset-0 w-full h-full rounded-lg
-                  border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-                  flex items-center justify-center bg-black overflow-hidden
-                  ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
-                  transition-all duration-300 relative
-                `}
-                style={{ backfaceVisibility: 'hidden' }}>
+              transition-all duration-700
+            `}>
+            {/* Back - 始終渲染，由 opacity 控制顯示 */}
+            <div
+              className={`
+                absolute inset-0 w-full h-full rounded-lg
+                border-2 ${isSelected && !isRevealed ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+                flex items-center justify-center bg-black overflow-hidden
+                ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
+                transition-all duration-300 relative
+              `}
+              style={{ opacity: isRevealed ? 0 : 1, pointerEvents: isRevealed ? 'none' : 'auto' }}>
                 <img
                   src={cardBackUrl}
                   alt="Wasteland Tarot Card Back"
                   className="w-full h-full object-cover"
                 />
                 {/* Pixel hover effect for card back */}
-                {!isRevealed && (
-                  <CardBackPixelEffect
-                    isHovered={isHovered}
-                    gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
-                    speed={35}
-                  />
-                )}
-              </div>
-            )}
-            {/* Front - 翻轉中或已翻開時渲染 */}
-            {(isFlipping || isRevealed) && (
-              <div
-                className={`
-                  absolute inset-0 w-full h-full rounded-lg
-                  border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-                  bg-black overflow-hidden
-                  ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
-                  transition-all duration-300
-                `}
-                style={{
-                  backfaceVisibility: 'hidden',
-                  transform: 'rotateY(180deg)'
-                }}>
+                <CardBackPixelEffect
+                  isHovered={isHovered && !isRevealed}
+                  gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
+                  speed={35}
+                />
+            </div>
+            {/* Front - 始終渲染，由 opacity 控制顯示 */}
+            <div
+              className={`
+                absolute inset-0 w-full h-full rounded-lg
+                border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+                bg-black overflow-hidden
+                ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
+                transition-all duration-300
+              `}
+              style={{
+                opacity: isRevealed ? 1 : 0,
+                pointerEvents: isRevealed ? 'auto' : 'none'
+              }}>
               {/* Enhanced indicators */}
               {(onClick || isSelectable) && (
                 <div className={`
@@ -387,13 +392,8 @@ export function TarotCard({
                 </div>
               )}
 
-              {/* Shimmer effect for special states */}
-              {showGlow && (
-                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer z-10"></div>
-              )}
-
               {/* Card Image - 絕對定位佔滿整個卡片 */}
-              <div className="absolute inset-0 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full h-full">
+              <div className="absolute inset-0 flex items-center justify-center p-1 bg-pip-boy-green/5 w-full h-full z-30">
                 {imageError ? (
                   <div className="text-pip-boy-green/60 text-xs">無圖</div>
                 ) : (
@@ -401,13 +401,17 @@ export function TarotCard({
                 )}
               </div>
 
+              {/* Shimmer effect for special states - 最上層 */}
+              {showGlow && (
+                <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-transparent via-pip-boy-green/10 to-transparent animate-card-shimmer z-20 pointer-events-none"></div>
+              )}
+
               {/* Card Info - 絕對定位在底部 */}
               <div className="absolute bottom-0 left-0 right-0 p-2 border-t border-pip-boy-green/30 bg-wasteland-dark/60 z-10">
                 <div className="text-center text-pip-boy-green text-[11px] font-bold leading-tight">{card.name}</div>
-                <div className="text-center text-pip-boy-green/60 text-[10px] line-clamp-2 mt-0.5">{position === 'upright' ? card.meaning_upright : card.meaning_reversed}</div>
+                <div className="text-center text-pip-boy-green/60 text-[10px] line-clamp-2 mt-0.5">{position === 'upright' ? meaningUpright : meaningReversed}</div>
               </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -573,7 +577,7 @@ export function TarotCard({
 
             {/* Card Meaning */}
             <p className="text-xs text-gray-600 text-center line-clamp-2">
-              {position === 'upright' ? card.meaning_upright : card.meaning_reversed}
+              {position === 'upright' ? meaningUpright : meaningReversed}
             </p>
 
             {/* Keywords */}

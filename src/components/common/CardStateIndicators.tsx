@@ -56,7 +56,7 @@ const stateConfig = {
     animate: 'bounce' as const
   },
   selected: {
-    iconName: 'checkbox-on' as IconName,
+    iconName: 'eye' as IconName,
     variant: 'success' as const,
     bgColor: 'bg-pip-boy-green/30',
     label: '已選擇',
