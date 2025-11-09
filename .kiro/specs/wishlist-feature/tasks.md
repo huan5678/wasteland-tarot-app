@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端完整實作已完成 (Tasks 1-4, 10/38 完成, 26%)。資料層、業務邏輯、API Endpoints、後端測試全數通過。接下來進入前端開發階段，優先實作 Zustand 狀態管理與 Markdown 編輯器核心元件。
+**當前進度**: 後端與前端狀態管理完成 (Tasks 1-5, 11/38 完成, 29%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store 全數完成。接下來優先實作 Markdown 編輯器核心元件與願望歷史列表。
 
 ---
 
@@ -81,9 +81,9 @@
 
 ---
 
-### ✅ 後端開發完成總結
+### ✅ 第一與第二階段完成總結
 
-**已完成階段**: 資料層、後端業務邏輯、API Endpoints、後端測試（Tasks 1-4）
+**已完成階段**: 資料層、後端業務邏輯、API Endpoints、後端測試、前端狀態管理（Tasks 1-5）
 
 **完成內容**:
 - ✅ **資料層** (Tasks 1-1.2): Wishlist 資料表、SQLAlchemy 模型、Migration 檔案
@@ -91,6 +91,7 @@
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
 - ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
+- ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
 
 **測試覆蓋率**:
 - ContentValidator: 40 tests ✅
@@ -106,14 +107,13 @@
 
 ---
 
-### 🎯 當前實作階段：前端核心元件
+### 🎯 當前實作階段：前端 UI 元件
 
-**階段目標**: 建立前端狀態管理與 Markdown 編輯器，實作使用者願望提交與歷史查詢功能。
+**階段目標**: 建立 Markdown 編輯器與願望歷史列表，實作使用者願望提交與查詢介面。
 
-**為何重要**: Tasks 5-9 是使用者介面的核心，完成後使用者即可透過彈窗提交願望、查看歷史記錄並進行編輯。
+**為何重要**: Tasks 6-9 是使用者介面的核心 UI 元件，完成後使用者即可透過彈窗提交願望、查看歷史記錄並進行編輯。
 
 **實作重點**:
-- **Task 5**: 建立 Zustand 願望狀態管理（遵循 `authStore` 模式）
 - **Task 6**: 實作 Markdown 編輯器元件（上下兩欄：編輯區 + 預覽區）
 - **Task 7**: 實作願望歷史列表元件（顯示願望卡片與管理員回覆）
 - **Task 8**: 實作願望彈窗主容器（整合編輯器與歷史列表）
@@ -153,9 +153,9 @@ import { PixelIcon } from '@/components/ui/icons'
 ```
 
 **完成後解鎖**:
-- ✅ 使用者可在 `/profile` 頁面提交願望
-- ✅ 使用者可查看願望歷史與管理員回覆
-- ✅ 使用者可編輯未回覆的願望（一次機會）
+- 🎯 使用者可在 `/profile` 頁面提交願望
+- 🎯 使用者可查看願望歷史與管理員回覆
+- 🎯 使用者可編輯未回覆的願望（一次機會）
 - 🔜 管理員介面開發 (Tasks 10-10.4)
 
 ---
@@ -373,30 +373,22 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 10/38 子任務，26% 完成)
+### 已完成任務 (✅ 11/38 子任務，29% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
 - ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
+- ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
 
-### 後端開發完成 🎉
+### 後端與狀態管理完成 🎉
 
-**已完成**: Tasks 1-4（資料層、業務邏輯、API、測試）
-**測試狀態**: 107/107 tests passing ✅
+**已完成**: Tasks 1-5（資料層、業務邏輯、API、測試、狀態管理）
+**測試狀態**: 107/107 backend tests passing ✅
 **API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整
+**Store 狀態**: wishlistStore.ts 已建立，整合所有使用者與管理員操作 ✅
 
-### 下一步建議：前端開發階段 (優先順序)
-
-#### 🎯 Task 5: 建立 Zustand 願望狀態管理（1-2 小時）
-**目標**: 建立前端狀態管理基礎，整合後端 API
-**輸出**:
-- `src/stores/wishlistStore.ts`（遵循 `authStore.ts` 模式）
-- 定義 `Wish` 介面、狀態欄位、使用者與管理員操作方法
-- 實作 `fetchUserWishes()`、`submitWish()`、`updateWish()` 方法
-- 實作 `fetchAdminWishes()`、`submitReply()`、`toggleHidden()` 方法
-
-**為何重要**: 所有前端元件都依賴此 store 進行狀態管理與 API 呼叫
+### 下一步建議：前端 UI 元件開發 (優先順序)
 
 #### 🎯 Task 6: 實作 Markdown 編輯器元件（3-4 小時）
 **目標**: 建立願望與回覆的編輯器核心元件
@@ -408,6 +400,12 @@ import { PixelIcon } from '@/components/ui/icons'
 
 **為何重要**: 編輯器是使用者與管理員編寫內容的核心介面
 
+**必要依賴安裝**:
+```bash
+bun add react-markdown rehype-sanitize rehype-highlight remark-gfm strip-markdown
+bun add -D @types/react-markdown
+```
+
 #### 🎯 Task 7: 實作願望歷史列表元件（2-3 小時）
 **目標**: 顯示使用者的願望歷史與管理員回覆
 **輸出**:
@@ -415,11 +413,20 @@ import { PixelIcon } from '@/components/ui/icons'
 - `src/components/wishlist/WishCard.tsx`（顯示願望內容、時間、回覆、編輯按鈕）
 - 實作編輯模式切換與更新邏輯
 
-**依賴**: Task 5 (wishlistStore)、Task 6 (MarkdownEditor)
+**依賴**: Task 5 (wishlistStore) ✅、Task 6 (MarkdownEditor)
 
-**預估剩餘時數**: 35-50 小時（28 個待完成子任務）
+#### 🎯 Task 8: 實作願望彈窗主容器（2-3 小時）
+**目標**: 整合編輯器與歷史列表成為完整彈窗
+**輸出**:
+- `src/components/wishlist/WishlistModal.tsx`
+- 整合 MarkdownEditor 與 WishHistory
+- 實作彈窗開關、無障礙功能
+
+**依賴**: Task 6 (MarkdownEditor)、Task 7 (WishHistory)
+
+**預估剩餘時數**: 32-47 小時（27 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 26% (10/38)
+**當前完成度**: 29% (11/38)
 
 ---
 
@@ -609,7 +616,7 @@ flowchart TD
     T4[Task 4: 後端單元測試與整合測試 ✅]
 
     %% Phase 3: Frontend Core (Can start after API ready)
-    T5[Task 5: 建立 Zustand 願望狀態管理]
+    T5[Task 5: 建立 Zustand 願望狀態管理 ✅]
     T6[Task 6: 實作 Markdown 編輯器元件]
     T6_1[Task 6.1: 實作編輯器無障礙功能]
     T7[Task 7: 實作願望歷史列表元件]
@@ -701,9 +708,9 @@ flowchart TD
     style T3_1 fill:#28a745,stroke:#1e7e34,color:#fff
     style T3_2 fill:#28a745,stroke:#1e7e34,color:#fff
     style T4 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T5 fill:#28a745,stroke:#1e7e34,color:#fff
 
     %% Phase 3: Next Steps (Yellow highlight)
-    style T5 fill:#ffc107,stroke:#ff9800,color:#000
     style T6 fill:#ffc107,stroke:#ff9800,color:#000
     style T6_1 fill:#e1f5fe,stroke:#0288d1,color:#000
     style T7 fill:#ffc107,stroke:#ff9800,color:#000
@@ -728,8 +735,8 @@ flowchart TD
 
 ### 圖例說明
 
-- 🟢 **綠色 (已完成)**: Tasks 1-4 - 資料層、後端業務邏輯、API、後端測試
-- 🟡 **黃色 (下一步)**: Tasks 5-7 - 前端狀態管理與核心元件
+- 🟢 **綠色 (已完成)**: Tasks 1-5 - 資料層、後端業務邏輯、API、後端測試、前端狀態管理
+- 🟡 **黃色 (下一步)**: Tasks 6-7 - Markdown 編輯器與願望歷史列表
 - 🔵 **藍色 (待實作)**: Tasks 8-9, 6.1, 7.1, 8.1 - 前端整合與無障礙功能
 - 🟣 **紫色 (待實作)**: Tasks 10-10.4 - 管理員介面
 - 🟠 **橘色 (待實作)**: Tasks 11-13.1 - 測試與 QA
@@ -738,9 +745,9 @@ flowchart TD
 
 以下任務可以平行執行（需先完成依賴任務）：
 
-**階段 3A (當前 - 前端核心):**
-- Task 5 (Zustand store) **必須先完成**，其他任務依賴此 store
-- Task 5 完成後，Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) 可以平行開發
+**階段 3A (當前 - 前端 UI 元件):**
+- Task 5 (Zustand store) ✅ **已完成**
+- Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) **可以平行開發**
 - Task 6.1 與 7.1 可以在各自主任務完成後平行實作
 
 **階段 4 (管理員介面):**
