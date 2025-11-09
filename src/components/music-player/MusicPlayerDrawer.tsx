@@ -157,11 +157,12 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
             z-40
             w-14 h-14
             rounded-full
-            bg-wasteland-dark
+            bg-black/90
+            backdrop-blur-sm
             border-2 border-pip-boy-green
             flex items-center justify-center
             transition-all duration-300
-            hover:bg-pip-boy-green/10
+            hover:bg-pip-boy-green/20
             hover:shadow-[0_0_20px_rgba(0,255,136,0.4)]
             active:scale-95
           "
@@ -244,10 +245,10 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               {isPlaying ? <PixelIcon name="pause" sizePreset="sm" aria-label="暫停圖示" /> : <PixelIcon name="play" sizePreset="sm" aria-label="播放圖示" />}
             </Button>
 
-            {/* Expand Button */}
+            {/* Expand Button - Hidden on mobile (too small to be useful) */}
             <Button size="icon" variant="outline"
           onClick={handleExpand}
-          className="p-2 border rounded transition-colors"
+          className="hidden sm:flex p-2 border rounded transition-colors"
           aria-label="展開播放器至完整模式"
           aria-expanded="false">
 
@@ -276,9 +277,10 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                 </p>
               </div>
               <div className="flex gap-2">
+                {/* Minimize Button - Hidden on mobile (drawer already takes full screen) */}
                 <Button size="icon" variant="outline"
               onClick={handleMinimize}
-              className="flex items-center gap-1.5 px-2 py-1 border rounded transition-colors"
+              className="hidden sm:flex items-center gap-1.5 px-2 py-1 border rounded transition-colors"
               aria-label="最小化播放器至控制條"
               aria-expanded="true">
 
@@ -295,30 +297,37 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
               </div>
             </div>
 
-            {/* Responsive Layout - 移除 overflow-y-auto 以防止拖動音量時頁面跳轉 */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px] gap-4 min-h-0">
-              {/* Left Column: Controls - 可以獨立捲動 */}
-              <div className="flex flex-col gap-4 overflow-y-auto pr-2 min-w-0">
-                {/* Music Mode Selector */}
-                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
+            {/* Responsive Layout */}
+            {/* Mobile: Single column with Pattern first */}
+            {/* Desktop: Two columns with controls on left, visualizer on right */}
+            <div className="flex-1 overflow-y-auto">
+              <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_380px] gap-4 pb-4">
+
+                {/* Music Mode Selector - First position */}
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0 lg:order-1 lg:row-start-1">
                   <h3 className="text-sm font-bold mb-3">節奏 Pattern</h3>
                   <MusicModeSelector
-                  currentMode={systemPresets[currentModeIndex]?.name || null}
-                  onModeSelect={async (index: number) => {
-                    setModeIndex(index);
-                  }} />
-
+                    currentMode={systemPresets[currentModeIndex]?.name || null}
+                    onModeSelect={async (index: number) => {
+                      setModeIndex(index);
+                    }}
+                  />
                 </div>
 
-                {/* Progress Bar + Playback Controls (整合) */}
-                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
-                  <h3 className="text-sm font-bold mb-3">播放進度</h3>
-                  <RhythmProgressBar 
-                    currentStep={synthCurrentStep}
-                    currentLoop={synthCurrentLoop}
-                  />
-                  
-                  <div className="mt-4 pt-4 border-t border-pip-boy-green/20">
+                {/* Integrated Player Controls - Progress + Playback + Volume */}
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0 lg:order-2 lg:row-start-2">
+                  <h3 className="text-sm font-bold mb-3">播放控制</h3>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <RhythmProgressBar
+                      currentStep={synthCurrentStep}
+                      currentLoop={synthCurrentLoop}
+                    />
+                  </div>
+
+                  {/* Playback Controls */}
+                  <div className="mb-4 pb-4 border-b border-pip-boy-green/20">
                     <PlaybackControls
                       isPlaying={isPlaying}
                       onPlay={resume}
@@ -332,27 +341,25 @@ export function MusicPlayerDrawer({ className }: MusicPlayerDrawerProps) {
                       repeatMode={repeatMode}
                     />
                   </div>
-                </div>
-              </div>
 
-              {/* Right Column: Visualizer + Volume Control */}
-              <div className="flex flex-col gap-4 lg:overflow-y-auto">
-                {/* Visualizer - 固定高度，不會太高 */}
-                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
-                  <h3 className="text-sm font-bold mb-3">音訊視覺化</h3>
-                  <div className="h-48 sm:h-56">
-                    <MusicVisualizer
-                    isPlaying={isPlaying}
-                    analyserNode={analyserNodeForViz} />
-
+                  {/* Volume Control */}
+                  <div>
+                    <h4 className="text-xs font-bold mb-2 text-pip-boy-green/70">音量</h4>
+                    <VolumeControl />
                   </div>
                 </div>
 
-                {/* Volume Control - 移到右側 */}
-                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0">
-                  <h3 className="text-sm font-bold mb-3">音量控制</h3>
-                  <VolumeControl />
+                {/* Visualizer - Smaller on mobile, larger on desktop */}
+                <div className="p-3 sm:p-4 bg-pip-boy-green/5 border border-pip-boy-green/30 rounded flex-shrink-0 lg:order-3 lg:row-span-2 lg:col-start-2 lg:row-start-1">
+                  <h3 className="text-sm font-bold mb-3">音訊視覺化</h3>
+                  <div className="h-48 lg:h-96">
+                    <MusicVisualizer
+                      isPlaying={isPlaying}
+                      analyserNode={analyserNodeForViz}
+                    />
+                  </div>
                 </div>
+
               </div>
             </div>
           </motion.div>)

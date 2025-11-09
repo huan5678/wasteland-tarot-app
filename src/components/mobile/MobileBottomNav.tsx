@@ -250,12 +250,8 @@ export function MobileBottomNav({
     }
   );
 
-  // Calculate bottom navigation height based on platform
-  // Updated to include compact music player (40px) + navigation (64px)
-  const bottomNavHeight = isAndroid && androidInfo.hasGestureNav
-    ? `${104 + safeArea.bottom + androidInfo.gestureNavHeight}px`
-    : `${104 + safeArea.bottom}px`;
-
+  // Calculate bottom navigation padding based on platform
+  // Let flex handle height automatically to avoid resize issues
   const bottomNavPadding = isAndroid && androidInfo.hasGestureNav
     ? `${safeArea.bottom + androidInfo.gestureNavHeight}px`
     : `${safeArea.bottom}px`;
@@ -280,7 +276,8 @@ export function MobileBottomNav({
       )}
       style={{
         paddingBottom: bottomNavPadding,
-        height: bottomNavHeight
+        // Remove fixed height - let flex calculate automatically
+        // This prevents resize/hydration issues
       }}
     >
       {/* Compact Music Player (40px) */}

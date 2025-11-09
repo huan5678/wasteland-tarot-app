@@ -126,13 +126,13 @@ export function Header() {
    */
   const showBingoBadge = user && !hasClaimed && dailyNumber !== null;
 
-  // 滾動監聽邏輯
+  // 滾動監聽邏輯 - 監聽 main 元素的滾動（來自 DynamicMainContent 的廣播）
   useEffect(() => {
-    const handleScroll = () => {
+    const handleScroll = (event: CustomEvent) => {
       // 如果手機選單開啟，不處理滾動隱藏
       if (mobileMenuOpen) return;
 
-      const currentScrollY = window.scrollY;
+      const currentScrollY = event.detail.scrollY;
 
       // 向下滾動 且 超過 threshold
       if (currentScrollY > lastScrollY && currentScrollY > 80) {
@@ -151,11 +151,11 @@ export function Header() {
       setLastScrollY(currentScrollY);
     };
 
-    // 使用 passive: true 優化滾動效能
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    // 監聽 DynamicMainContent 廣播的滾動事件
+    window.addEventListener('main-scroll', handleScroll as EventListener);
 
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('main-scroll', handleScroll as EventListener);
     };
   }, [lastScrollY, mobileMenuOpen]);
 
@@ -280,20 +280,19 @@ export function Header() {
       }
       }>
 
-      {/* Top Terminal Bar */}
-      <div className="interface-header">
+      {/* Top Terminal Bar - Hidden on mobile (sm:block) */}
+      <div className="interface-header hidden sm:block">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-2 md:px-4">
           <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
-            <span className="hidden sm:inline">VAULT-TEC PIP-BOY 3000 MARK IV</span>
-            <span className="sm:hidden">PIP-BOY 3000</span>
-            <span className="hidden sm:inline">|</span>
+            <span>VAULT-TEC PIP-BOY 3000 MARK IV</span>
+            <span>|</span>
             <span className="hidden md:inline">狀態：線上</span>
           </div>
           <div className="flex items-center gap-2 md:gap-4 text-xs md:text-sm">
             <span className="hidden md:inline">{isClient ? currentTime : '2287.10.23 14:00:00'}</span>
             {user &&
             <>
-                <span className="hidden sm:inline">|</span>
+                <span>|</span>
                 <span className="truncate max-w-[100px] sm:max-w-none">Vault Dweller：{user.name}</span>
               </>
             }
@@ -331,8 +330,8 @@ export function Header() {
             </div>
           </div>
 
-          {/* Desktop Navigation - Only visible on medium+ screens */}
-          <nav className="hidden md:flex items-center gap-6">
+          {/* Desktop Navigation - Only visible on large+ screens (≥ 1024px) */}
+          <nav className="hidden lg:flex items-center gap-6">
             {/* 導航連結 */}
             {generalNavLinks.map((link) => (
             <Button
@@ -342,11 +341,6 @@ export function Header() {
               onClick={() => handleNavigation(link.href)}
               className="relative flex items-center gap-2"
             >
-
-
-
-
-
               <PixelIcon
                 name={link.icon}
                 sizePreset="xs"
@@ -373,9 +367,10 @@ export function Header() {
             }
           </nav>
 
-          {/* Desktop Menu - Only show on md and above (tablet/desktop) */}
-          {/* On small screens (<md), navigation handled by MobileBottomNav */}
-          <div className="hidden md:block">
+          {/* Hamburger Menu - Show on sm to lg screens (640px - 1024px) */}
+          {/* On small screens (<640px), navigation handled by MobileBottomNav */}
+          {/* On large screens (≥1024px), navigation handled by Desktop Navigation above */}
+          <div className="hidden sm:block lg:hidden">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button size="icon" variant="outline"

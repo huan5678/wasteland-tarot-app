@@ -60,14 +60,15 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   }
 
   // Unified responsive layout
-  // Same structure, CSS controls mobile vs desktop display
+  // Simple structure like main branch, but with mobile nav
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
       <Header />
 
-      <DynamicMainContent className="flex-1 overflow-y-auto">
+      <DynamicMainContent>
         {/* Bottom padding for MobileBottomNav on mobile, none on desktop */}
-        <div className="pb-[calc(104px+env(safe-area-inset-bottom))] sm:pb-0">
+        {/* 104px = 40px (CompactMusicPlayer) + 64px (navigation) */}
+        <div className="pb-[104px] sm:pb-0">
           <PageTransition>
             {children}
           </PageTransition>
@@ -86,6 +87,6 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
       <div className="hidden sm:block">
         <Footer />
       </div>
-    </div>
+    </>
   )
 }

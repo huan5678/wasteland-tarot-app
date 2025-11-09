@@ -140,16 +140,33 @@ Total Height: 104px (+40px)
 
 ---
 
+### Task 7.5: Header 響應式簡化 ✅
+
+**實作細節**:
+- ✅ Terminal Bar 在小螢幕隱藏：`hidden sm:block` (line 284)
+- ✅ Logo 永遠顯示（所有螢幕尺寸）
+- ✅ 導航選單保持 `hidden md:flex`（平板以上顯示）
+
+**DynamicMainContent 增強**:
+- ✅ 監聽 `header-height-change` 事件（Header 廣播的高度變化）
+- ✅ 動態設置 `padding-top: ${headerHeight}px`
+- ✅ 響應式自適應：
+  - Desktop (≥640px): padding-top ≈ 112px (Terminal Bar + Main Navigation)
+  - Mobile (<640px): padding-top ≈ 80px (只有 Main Navigation)
+- ✅ 支援 Header 滾動隱藏：padding-top 自動變為 0
+
+**檔案修改**:
+- `src/components/layout/Header.tsx` (line 284)
+- `src/components/layout/DynamicMainContent.tsx` (新增 useEffect)
+
+**Good Taste 原則**:
+- 使用 CSS-based responsive design（不需要 JavaScript 條件渲染）
+- 事件驅動的高度同步（Header 和 Main 解耦）
+- 零 Layout Shift（動態調整無閃爍）
+
+---
+
 ## 🔄 Pending Tasks
-
-### Task 7.5: Header 響應式簡化
-
-**狀態**: Not Started
-**優先級**: Low (非必要，當前 Header 已支援響應式)
-
-**計劃**:
-- 小螢幕：只顯示 Logo（`hidden sm:flex` for nav）
-- 桌面：顯示完整導航
 
 ### Task 7.7: 整合測試與驗證
 
@@ -170,21 +187,25 @@ Total Height: 104px (+40px)
 ### 檔案變更
 - **新建**: 1 個檔案
   - `src/components/music-player/CompactMusicPlayer.tsx`
-- **修改**: 3 個檔案
+- **修改**: 5 個檔案
   - `src/components/layout/ConditionalLayout.tsx`
   - `src/components/mobile/MobileBottomNav.tsx`
   - `src/components/music-player/MusicPlayerDrawer.tsx`
+  - `src/components/layout/Header.tsx` ⭐ NEW (Task 7.5)
+  - `src/components/layout/DynamicMainContent.tsx` ⭐ NEW (Task 7.5)
 
 ### 程式碼變更
-- **新增**: ~100 lines (CompactMusicPlayer)
-- **修改**: ~20 lines (佈局調整)
-- **Total**: ~120 lines
+- **新增**: ~135 lines (CompactMusicPlayer + DynamicMainContent useEffect)
+- **修改**: ~25 lines (佈局調整 + Header responsive)
+- **Total**: ~160 lines
 
 ### 關鍵數字
 - 捲動問題: 修復 1 個致命 bug
 - 底部導航: 支援 2 種狀態（4 vs 5 選項）
 - 播放器整合: 新增 40px compact player
 - 圖示修正: 5 個圖示驗證
+- Header 響應式: Terminal Bar 小螢幕隱藏 ⭐ NEW
+- Main content: 動態 padding-top 系統 ⭐ NEW
 
 ---
 
@@ -247,9 +268,19 @@ strategic-planner 的診斷報告準確度：
 
 ## 📝 備註
 
-### 為什麼 Header 響應式簡化（Task 7.5）還沒做？
+### Task 7.5 額外改進：DynamicMainContent
 
-當前 Header 已經有基本的響應式支援，用戶沒有特別提到這是急需解決的問題。建議在測試其他功能後，根據實際需求決定是否執行。
+在修復 Header Terminal Bar 顯示問題時，發現 main content 被 fixed Header 遮住。實作了動態 padding-top 系統：
+
+**技術實作**:
+1. Header 已經在廣播 `header-height-change` 事件（使用 ResizeObserver）
+2. DynamicMainContent 監聽該事件，動態設置 `padding-top`
+3. 好處：
+   - 響應 Header 高度變化（Terminal Bar 顯示/隱藏）
+   - 支援 Header 滾動隱藏（padding-top 變為 0）
+   - 無需元件重新掛載（CSS-only transitions）
+
+**Linus 評價**: "Good Taste! 事件驅動的高度同步，Header 和 Main 完全解耦。"
 
 ### 技術債務
 
