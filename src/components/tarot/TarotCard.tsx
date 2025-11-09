@@ -301,23 +301,30 @@ export function TarotCard({
         {/* Loading shimmer */}
         {isAnimating && <CardLoadingShimmer />}
         <div className={`
-          relative w-full h-full [perspective:1200px] group
+          relative w-full h-full group
           ${isHovered ? 'animate-card-hover' : ''}
           transition-all duration-300 ease-out
-        `}>
-          <div className={`
-            relative w-full h-full [transform-style:preserve-3d]
-            ${isFlipping ? 'animate-card-flip' : 'transition-all duration-700'}
-            ${isRevealed ? '[transform:rotateY(180deg)]' : '[transform:rotateY(0deg)]'}
-          `}>
+        `}
+        style={{ perspective: '1200px' }}>
+          <div
+            className={`
+              relative w-full h-full
+              ${isFlipping ? 'animate-card-flip' : 'transition-all duration-700'}
+            `}
+            style={{
+              transformStyle: 'preserve-3d',
+              transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)'
+            }}>
             {/* Back */}
-            <div className={`
-              absolute inset-0 w-full h-full [backface-visibility:hidden] rounded-lg
-              border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-              flex items-center justify-center bg-black overflow-hidden
-              ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
-              transition-all duration-300 relative
-            `}>
+            <div
+              className={`
+                absolute inset-0 w-full h-full rounded-lg
+                border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+                flex items-center justify-center bg-black overflow-hidden
+                ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
+                transition-all duration-300 relative
+              `}
+              style={{ backfaceVisibility: 'hidden' }}>
               <img
                 src={cardBackUrl}
                 alt="Wasteland Tarot Card Back"
@@ -333,13 +340,18 @@ export function TarotCard({
               )}
             </div>
             {/* Front */}
-            <div className={`
-              absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-lg
-              border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
-              bg-black overflow-hidden
-              ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
-              transition-all duration-300
-            `}>
+            <div
+              className={`
+                absolute inset-0 w-full h-full rounded-lg
+                border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
+                bg-black overflow-hidden
+                ${isHovered ? 'shadow-xl shadow-pip-boy-green/30' : ''}
+                transition-all duration-300
+              `}
+              style={{
+                backfaceVisibility: 'hidden',
+                transform: 'rotateY(180deg)'
+              }}>
               {/* Enhanced indicators */}
               {(onClick || isSelectable) && (
                 <div className={`

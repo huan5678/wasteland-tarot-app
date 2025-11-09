@@ -96,39 +96,15 @@ export default function QuickReadingPage() {
         console.warn('localStorage not available, using memory-only state');
       }
 
-      // 嘗試載入已保存的狀態
-      const loadResult = storage.load();
+      // 重要：強制清除 localStorage，確保每次進入都是全新狀態
+      storage.clear();
+      console.log('[QuickReading] Cleared localStorage for fresh start');
 
-      if (loadResult.success && loadResult.value) {
-        const savedData = loadResult.value;
-        console.log('Loaded saved state from localStorage:', savedData);
-
-        // 重建卡牌池
-        const allMajorArcana = enhancedWastelandCards.filter(
-          (card) => card.suit === 'major_arcana' // 修正：使用 API 枚舉值
-        );
-
-        const restoredCardPool = savedData.cardPoolIds.
-        map((id) => allMajorArcana.find((card) => card.id === id)).
-        filter((card): card is DetailedTarotCard => card !== undefined);
-
-        // 驗證恢復的卡牌池
-        if (restoredCardPool.length === savedData.cardPoolIds.length) {
-          setCardPool(restoredCardPool);
-          setSelectedCardId(savedData.selectedCardId);
-          console.log('Successfully restored card pool and selection');
-        } else {
-          console.warn('Some cards not found, reinitializing...');
-          const newCardPool = initializeCardPool();
-          setCardPool(newCardPool);
-          setSelectedCardId(null);
-        }
-      } else {
-        // 無保存記錄或資料損壞，重新初始化
-        const newCardPool = initializeCardPool();
-        setCardPool(newCardPool);
-        setSelectedCardId(null);
-      }
+      // 重新初始化（不載入舊狀態）
+      const newCardPool = initializeCardPool();
+      setCardPool(newCardPool);
+      setSelectedCardId(null);
+      console.log('[QuickReading] Initialized with fresh card pool, selectedCardId:', null);
 
       setIsLoading(false);
     };
@@ -305,35 +281,51 @@ export default function QuickReadingPage() {
             onCardClick={handleCardClick}
             isDisabled={!!selectedCardId}>
 
-              {(card, index, isActive) =>
-            <TarotCard
-              key={card.id}
-              card={card}
-              isRevealed={card.id.toString() === selectedCardId}
-              position="upright"
-              size="large"
-              flipStyle="kokonut"
-              cardBackUrl={displayCardBackUrl}
-              onClick={() => {
-                if (!selectedCardId) {
-                  // 卡背狀態，點擊翻牌
-                  handleCardFlip(card.id.toString());
-                } else if (card.id.toString() === selectedCardId) {
-                  // 已翻開的卡牌，點擊開啟 Modal
-                  handleCardClick(card);
-                }
-              }}
-              isSelectable={!selectedCardId}
-              isSelected={card.id.toString() === selectedCardId}
-              showGlow={card.id.toString() === selectedCardId}
-              enableHaptic={true}
-              className={
-              selectedCardId && card.id.toString() !== selectedCardId ?
-              'opacity-0 pointer-events-none' :
-              ''
-              } />
+              {(card, index, isActive) => {
+            const isCardRevealed = card.id.toString() === selectedCardId;
+            const isCardSelected = card.id.toString() === selectedCardId;
 
+            // 調試日誌
+            if (index === 0) {
+              console.log('[QuickReading Render]', {
+                cardId: card.id,
+                cardName: card.name,
+                selectedCardId,
+                isCardRevealed,
+                isCardSelected,
+              });
             }
+
+            return (
+              <TarotCard
+                key={card.id}
+                card={card}
+                isRevealed={isCardRevealed}
+                position="upright"
+                size="large"
+                flipStyle="kokonut"
+                cardBackUrl={displayCardBackUrl}
+                onClick={() => {
+                  if (!selectedCardId) {
+                    // 卡背狀態，點擊翻牌
+                    handleCardFlip(card.id.toString());
+                  } else if (isCardSelected) {
+                    // 已翻開的卡牌，點擊開啟 Modal
+                    handleCardClick(card);
+                  }
+                }}
+                isSelectable={!selectedCardId}
+                isSelected={isCardSelected}
+                showGlow={isCardSelected}
+                enableHaptic={true}
+                className={
+                  selectedCardId && !isCardSelected ?
+                  'opacity-0 pointer-events-none' :
+                  ''
+                }
+              />
+            );
+          }}
             </CarouselContainer>
 
           {/* 主要 CTA - 翻牌後顯示 */}

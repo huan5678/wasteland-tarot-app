@@ -1,0 +1,94 @@
+{
+  "environment": {
+    "supabase_url": true,
+    "service_role_key": true,
+    "anon_key": true,
+    "database_url": true,
+    "project_name": "Wasteland Tarot API"
+  },
+  "connections": {
+    "service_role": {
+      "status": "success",
+      "total_cards": 78,
+      "can_read": true,
+      "error": null
+    },
+    "anonymous": {
+      "status": "success",
+      "total_cards": 78,
+      "can_read": true,
+      "error": null
+    }
+  },
+  "schema": {
+    "total_fields": 28,
+    "required_fields": {
+      "id": true,
+      "name": true,
+      "suit": true,
+      "number": true,
+      "upright_meaning": true,
+      "reversed_meaning": true,
+      "radiation_level": true,
+      "threat_level": true,
+      "upright_keywords": true,
+      "reversed_keywords": true
+    },
+    "enhanced_fields": {
+      "pip_boy_voice": true,
+      "vault_dweller_voice": true,
+      "wasteland_trader_voice": true,
+      "super_mutant_voice": true,
+      "codsworth_voice": true,
+      "good_interpretation": true,
+      "neutral_interpretation": true,
+      "evil_interpretation": true,
+      "brotherhood_significance": true,
+      "ncr_significance": true,
+      "legion_significance": true,
+      "raiders_significance": true,
+      "wasteland_humor": true,
+      "nuka_cola_reference": true,
+      "fallout_easter_egg": true,
+      "special_ability": true
+    },
+    "missing_required": [],
+    "missing_enhanced": []
+  },
+  "card_data": {
+    "total_cards": 78,
+    "expected_total": 78,
+    "suit_distribution": {
+      "major_arcana": 22,
+      "nuka_cola_bottles": 14,
+      "combat_weapons": 14,
+      "bottle_caps": 14,
+      "radiation_rods": 14
+    },
+    "structure_valid": true,
+    "quality_issues": [],
+    "completion_percentage": 100.0
+  },
+  "rls_policies": {
+    "anon_card_read": {
+      "status": "success",
+      "accessible": true
+    },
+    "anon_card_write": {
+      "status": "correctly_blocked",
+      "error": "{'message': 'new row violates row-level security policy for table \"wasteland_cards\"', 'code': '42501', 'hint': None, 'details': None}"
+    },
+    "service_card_write": {
+      "status": "success"
+    }
+  },
+  "summary": {
+    "overall_status": true,
+    "environment": true,
+    "connections": true,
+    "schema": true,
+    "card_data": true,
+    "rls_policies": true,
+    "timestamp": "2025-09-30T01:02:44.794530"
+  }
+}

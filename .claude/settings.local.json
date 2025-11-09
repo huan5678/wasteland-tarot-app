@@ -78,7 +78,8 @@
       "SlashCommand(/kiro:spec-init google-oauth-passkey-integration \"整合 Google OAuth 與 Passkey 無密碼認證系統。允許用戶使用 Google 帳號快速註冊後，可選擇升級為 Passkey 認證。支援三種登入方式：(1) Google OAuth 一鍵登入，(2) Passkey 生物辨識登入，(3) Email/密碼傳統登入。整合現有的 Supabase OAuth 設定和 WebAuthn 實作，確保所有認證方式能共存並提供一致的使用體驗。特別功能：首次 Google 登入後引導用戶註冊 Passkey，以獲得更快速的生物辨識登入體驗。\")",
       "SlashCommand(/kiro:spec-init \"修復認證 token 錯誤：(1) 賓果頁面出現 'No access token provided' 錯誤，導致無法正常載入賓果資料；(2) 成就系統頁面出現 'ReferenceError: token is not defined' 錯誤，導致頁面崩潰。這兩個錯誤都是因為前端未正確處理 Supabase 認證 token 的取得與傳遞。需要確保所有需要認證的頁面都能正確從 Supabase Auth 取得 access token，並在 API 請求中正確帶入 Authorization header。修復應該包含錯誤處理機制，當 token 不存在時應導向登入頁面而非顯示錯誤。\")",
       "Bash(test:*)",
-      "Bash(fdfind:*)"
+      "Bash(fdfind:*)",
+      "Bash(xargs rg:*)"
     ]
   },
   "enableAllProjectMcpServers": true,
