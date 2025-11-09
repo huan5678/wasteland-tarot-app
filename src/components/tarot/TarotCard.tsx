@@ -321,14 +321,14 @@ export function TarotCard({
               transformStyle: 'preserve-3d',
               transform: isRevealed ? 'rotateY(180deg)' : 'rotateY(0deg)'
             }}>
-            {/* Back - 只在未翻開時渲染 */}
-            {!isRevealed && (
+            {/* Back - 翻轉中或未翻開時渲染 */}
+            {(isFlipping || !isRevealed) && (
               <div
                 className={`
                   absolute inset-0 w-full h-full rounded-lg
                   border-2 ${isSelected ? 'border-pip-boy-green animate-pulse' : 'border-pip-boy-green/60'}
                   flex items-center justify-center bg-black overflow-hidden
-                  ${isHovered ? 'shadow-lg shadow-pip-boy-green/20' : ''}
+                  ${isHovered && !isRevealed ? 'shadow-lg shadow-pip-boy-green/20' : ''}
                   transition-all duration-300 relative
                 `}
                 style={{ backfaceVisibility: 'hidden' }}>
@@ -338,15 +338,17 @@ export function TarotCard({
                   className="w-full h-full object-cover"
                 />
                 {/* Pixel hover effect for card back */}
-                <CardBackPixelEffect
-                  isHovered={isHovered}
-                  gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
-                  speed={35}
-                />
+                {!isRevealed && (
+                  <CardBackPixelEffect
+                    isHovered={isHovered}
+                    gap={size === 'small' ? 10 : size === 'medium' ? 8 : 6}
+                    speed={35}
+                  />
+                )}
               </div>
             )}
-            {/* Front - 只在已翻開時渲染 */}
-            {isRevealed && (
+            {/* Front - 翻轉中或已翻開時渲染 */}
+            {(isFlipping || isRevealed) && (
               <div
                 className={`
                   absolute inset-0 w-full h-full rounded-lg
