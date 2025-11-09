@@ -295,8 +295,7 @@ export default function QuickReadingPage() {
             </p>
           </div>
 
-          {/* Carousel with Cards - 僅在未選卡時顯示 */}
-          {!selectedCardId ?
+          {/* Carousel with Cards - 保持結構避免重新渲染導致閃爍 */}
           <CarouselContainer
             cards={cardPool}
             selectedCardId={selectedCardId}
@@ -304,10 +303,11 @@ export default function QuickReadingPage() {
             onIndexChange={setActiveCardIndex}
             onCardFlip={handleCardFlip}
             onCardClick={handleCardClick}
-            isDisabled={false}>
+            isDisabled={!!selectedCardId}>
 
               {(card, index, isActive) =>
             <TarotCard
+              key={card.id}
               card={card}
               isRevealed={card.id.toString() === selectedCardId}
               position="upright"
@@ -329,30 +329,12 @@ export default function QuickReadingPage() {
               enableHaptic={true}
               className={
               selectedCardId && card.id.toString() !== selectedCardId ?
-              'opacity-50 pointer-events-none' :
+              'opacity-0 pointer-events-none' :
               ''
               } />
 
             }
-            </CarouselContainer> : (
-
-          /* 已選卡時僅顯示單張卡片 */
-          <div className="flex justify-center py-8">
-              <TarotCard
-              card={selectedCard!}
-              isRevealed={true}
-              position="upright"
-              size="large"
-              flipStyle="kokonut"
-              cardBackUrl={displayCardBackUrl}
-              onClick={() => handleCardClick(selectedCard!)}
-              isSelectable={false}
-              isSelected={true}
-              showGlow={true}
-              enableHaptic={true} />
-
-            </div>)
-          }
+            </CarouselContainer>
 
           {/* 主要 CTA - 翻牌後顯示 */}
           {selectedCardId &&
