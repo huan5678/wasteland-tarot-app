@@ -19,19 +19,9 @@ import type { DetailedTarotCard } from '@/components/tarot/CardDetailModal';
 import { QuickReadingStorage } from '@/lib/quickReadingStorage';
 import { CarouselContainer } from '@/components/readings/CarouselContainer';
 import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider';
-import dynamic from 'next/dynamic';
-
-// Dynamic import CardDetailModal to reduce initial bundle size
-import { Button } from "@/components/ui/button";const CardDetailModal = dynamic(
-  () => import('@/components/tarot/CardDetailModal').then((mod) => ({ default: mod.CardDetailModal })),
-  { ssr: false }
-);
-
-// Dynamic import TarotCard to reduce initial bundle size
-const TarotCard = dynamic(
-  () => import('@/components/tarot/TarotCard').then((mod) => ({ default: mod.TarotCard })),
-  { ssr: false }
-);
+import { Button } from "@/components/ui/button";
+import { TarotCard } from '@/components/tarot/TarotCard';
+import { CardDetailModal } from '@/components/tarot/CardDetailModal';
 
 // 初始化 storage 服務
 const storage = new QuickReadingStorage();
