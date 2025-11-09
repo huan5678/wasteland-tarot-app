@@ -507,7 +507,7 @@ export function TarotCard({
           `}
           style={{
             backfaceVisibility: 'hidden',
-            transform: isFlipping ? 'rotateY(0deg)' : 'rotateY(180deg)',
+            transform: isFlipping ? 'rotateY(180deg)' : 'rotateY(0deg)',
             transition: isFlipping ? 'none' : 'transform 0.6s ease-out'
           }}
         >
