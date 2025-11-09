@@ -11,7 +11,7 @@
  * - CTA 導流至註冊/登入
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { PixelIcon } from '@/components/ui/icons';
 import { enhancedWastelandCards } from '@/data/enhancedCards';
@@ -86,9 +86,19 @@ export default function QuickReadingPage() {
 
   /**
    * 頁面載入時初始化卡牌池與載入已保存狀態
+   * 重要：使用 ref 確保只初始化一次，防止無限循環
    */
+  const hasInitialized = useRef(false);
+
   useEffect(() => {
+    // 防止重複初始化
+    if (hasInitialized.current) {
+      console.log('[QuickReading] Already initialized, skipping...');
+      return;
+    }
+
     const initialize = async () => {
+      hasInitialized.current = true;
       setIsLoading(true);
 
       // 檢查 localStorage 是否可用
@@ -110,7 +120,13 @@ export default function QuickReadingPage() {
     };
 
     initialize();
-  }, [initializeCardPool]);
+
+    // Cleanup: 當組件卸載時重置 flag
+    return () => {
+      console.log('[QuickReading] Component unmounting, resetting init flag');
+      hasInitialized.current = false;
+    };
+  }, []); // 空 dependency array，只在 mount 時執行
 
   /**
    * 處理卡牌翻轉

@@ -130,6 +130,12 @@ export function TarotCard({
   // Handle flip animation when isRevealed changes
   useEffect(() => {
     if (previousRevealed !== isRevealed) {
+      console.log('[TarotCard] isRevealed changed:', {
+        cardName: card.name,
+        from: previousRevealed,
+        to: isRevealed
+      });
+
       setCardState('revealing')
       setIsFlipping(true)
       setIsAnimating(true)
@@ -147,7 +153,7 @@ export function TarotCard({
 
       return () => clearTimeout(timer)
     }
-  }, [isRevealed, previousRevealed, playSound])
+  }, [isRevealed, previousRevealed, card.name, playSound]) // card.name 用於 logging
 
   // Handle animation delay for sequential reveals
   useEffect(() => {
