@@ -9,10 +9,7 @@ import { ResponsiveContainer, MobileGrid, MobileCard, SafeAreaView } from '@/com
 import { useAdvancedDeviceCapabilities } from '@/hooks/useAdvancedGestures'
 import { useMobilePerformance, useAdaptiveQuality } from '@/hooks/useMobilePerformance'
 import { createMobileAccessibility } from '@/utils/mobileAccessibility'
-import {
-  Smartphone, Tablet, Monitor, Zap, Star, Heart, DollarSign,
-  Users, Calendar, Brain, TrendingUp, ArrowRight
-} from 'lucide-react'
+import { PixelIcon } from '@/components/ui/icons'
 
 // Mock data for demo
 const mockCard = {
@@ -36,7 +33,7 @@ const mockSpreads = [
     difficulty: 'beginner' as const,
     category: 'daily' as const,
     duration: '1-2 分鐘',
-    icon: <Star className="w-6 h-6" />,
+    icon: <PixelIcon name="star" className="w-6 h-6" />,
     preview: ['當前狀況'],
     positions: [
       { id: '1', label: '核心訊息', meaning: '代表當前最重要的訊息或指引' }
@@ -51,7 +48,7 @@ const mockSpreads = [
     difficulty: 'intermediate' as const,
     category: 'love' as const,
     duration: '5-10 分鐘',
-    icon: <Heart className="w-6 h-6" />,
+    icon: <PixelIcon name="heart" className="w-6 h-6" />,
     preview: ['過去', '現在', '未來'],
     positions: [
       { id: '1', label: '過去影響', meaning: '影響現在愛情狀況的過去因素' },
@@ -68,7 +65,7 @@ const mockSpreads = [
     difficulty: 'advanced' as const,
     category: 'career' as const,
     duration: '15-20 分鐘',
-    icon: <DollarSign className="w-6 h-6" />,
+    icon: <PixelIcon name="money-dollar-circle" className="w-6 h-6" />,
     preview: ['現狀', '優勢', '挑戰', '機會', '建議'],
     positions: [
       { id: '1', label: '現況分析', meaning: '當前職業狀況的整體評估' },
@@ -125,11 +122,11 @@ export default function MobileDemoPage() {
   }
 
   const demoTabs = [
-    { id: 'cards', label: '卡牌', icon: <Star className="w-5 h-5" />, isActive: currentDemo === 'cards' },
-    { id: 'reading', label: '占卜', icon: <Heart className="w-5 h-5" />, isActive: currentDemo === 'reading' },
-    { id: 'spreads', label: '牌陣', icon: <Users className="w-5 h-5" />, isActive: currentDemo === 'spreads' },
-    { id: 'navigation', label: '導航', icon: <TrendingUp className="w-5 h-5" />, isActive: currentDemo === 'navigation' },
-    { id: 'performance', label: '性能', icon: <Zap className="w-5 h-5" />, isActive: currentDemo === 'performance' }
+    { id: 'cards', label: '卡牌', icon: <PixelIcon name="star" className="w-5 h-5" />, isActive: currentDemo === 'cards' },
+    { id: 'reading', label: '占卜', icon: <PixelIcon name="heart" className="w-5 h-5" />, isActive: currentDemo === 'reading' },
+    { id: 'spreads', label: '牌陣', icon: <PixelIcon name="group" className="w-5 h-5" />, isActive: currentDemo === 'spreads' },
+    { id: 'navigation', label: '導航', icon: <PixelIcon name="line-chart" className="w-5 h-5" />, isActive: currentDemo === 'navigation' },
+    { id: 'performance', label: '性能', icon: <PixelIcon name="flashlight" className="w-5 h-5" />, isActive: currentDemo === 'performance' }
   ]
 
   const DeviceInfo = () => (
@@ -137,9 +134,9 @@ export default function MobileDemoPage() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-pip-boy-green font-mono font-bold">設備信息</h3>
         <div className="flex items-center gap-2 text-pip-boy-green/70">
-          {screenSize === 'mobile' && <Smartphone className="w-5 h-5" />}
-          {screenSize === 'tablet' && <Tablet className="w-5 h-5" />}
-          {screenSize === 'desktop' && <Monitor className="w-5 h-5" />}
+          {screenSize === 'mobile' && <PixelIcon name="smartphone" className="w-5 h-5" />}
+          {screenSize === 'tablet' && <PixelIcon name="tablet" className="w-5 h-5" />}
+          {screenSize === 'desktop' && <PixelIcon name="computer" className="w-5 h-5" />}
           <span className="text-sm font-mono">{screenSize}</span>
         </div>
       </div>
@@ -233,7 +230,7 @@ export default function MobileDemoPage() {
                          flex items-center justify-center gap-2"
               >
                 體驗全螢幕閱讀
-                <ArrowRight className="w-5 h-5" />
+                <PixelIcon name="arrow-right" className="w-5 h-5" />
               </button>
             </MobileCard>
           </div>
