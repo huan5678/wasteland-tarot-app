@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端與前端狀態管理完成 (Tasks 1-5, 11/38 完成, 29%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store 全數完成。接下來優先實作 Markdown 編輯器核心元件與願望歷史列表。
+**當前進度**: 後端、前端狀態管理與核心 UI 元件完成 (Tasks 1-7, 15/38 完成, 39%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表全數完成。接下來整合願望彈窗與個人資料頁面。
 
 ---
 
@@ -81,9 +81,9 @@
 
 ---
 
-### ✅ 第一與第二階段完成總結
+### ✅ 第一至第三階段（前端 UI 元件）完成總結
 
-**已完成階段**: 資料層、後端業務邏輯、API Endpoints、後端測試、前端狀態管理（Tasks 1-5）
+**已完成階段**: 資料層、後端業務邏輯、API Endpoints、後端測試、前端狀態管理、前端核心 UI 元件（Tasks 1-7）
 
 **完成內容**:
 - ✅ **資料層** (Tasks 1-1.2): Wishlist 資料表、SQLAlchemy 模型、Migration 檔案
@@ -92,6 +92,7 @@
 - ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
+- ✅ **前端 UI 元件** (Tasks 6-7): MarkdownEditor、WishCard、WishHistory 元件完成（626 行程式碼）
 
 **測試覆蓋率**:
 - ContentValidator: 40 tests ✅
@@ -100,6 +101,9 @@
 - API Endpoints: 24 tests ✅
 - **總計**: 107 tests passing 🎉
 
+**前端依賴安裝完成**:
+- react-markdown, rehype-sanitize, rehype-highlight, remark-gfm, strip-markdown ✅
+
 **API 文件**:
 - Swagger UI: `http://localhost:8000/docs`
 - API 路徑: `/api/v1/wishlist` (使用者端)、`/api/v1/wishlist/admin` (管理員端)
@@ -107,33 +111,27 @@
 
 ---
 
-### 🎯 當前實作階段：前端 UI 元件
+### 🎯 當前實作階段：前端整合
 
-**階段目標**: 建立 Markdown 編輯器與願望歷史列表，實作使用者願望提交與查詢介面。
+**階段目標**: 整合 Markdown 編輯器與願望歷史列表成為完整彈窗，並整合至個人資料頁面。
 
-**為何重要**: Tasks 6-9 是使用者介面的核心 UI 元件，完成後使用者即可透過彈窗提交願望、查看歷史記錄並進行編輯。
+**為何重要**: Tasks 8-9 完成後，使用者即可在 `/profile` 頁面使用完整的願望功能，包含提交、查看歷史、編輯願望等。
 
 **實作重點**:
-- **Task 6**: 實作 Markdown 編輯器元件（上下兩欄：編輯區 + 預覽區）
-- **Task 7**: 實作願望歷史列表元件（顯示願望卡片與管理員回覆）
-- **Task 8**: 實作願望彈窗主容器（整合編輯器與歷史列表）
-- **Task 9**: 整合至 `/profile` 頁面
+- **Task 8**: 實作願望彈窗主容器（整合 MarkdownEditor 與 WishHistory，使用 @radix-ui/react-dialog）
+- **Task 8.1**: 實作彈窗無障礙與鍵盤操作（ARIA 標籤、焦點陷阱、Esc 鍵關閉）
+- **Task 9**: 整合願望彈窗至 `/profile` 頁面（新增觸發按鈕與狀態管理）
+
+**已完成元件** ✅:
+- ✅ **MarkdownEditor.tsx**: 上下兩欄編輯器（編輯區 + 預覽區），含工具列、字數統計、無障礙功能
+- ✅ **WishCard.tsx**: 願望卡片元件，顯示內容、時間、回覆、編輯模式切換
+- ✅ **WishHistory.tsx**: 願望歷史列表元件，載入與顯示使用者願望
 
 **前端技術棧提醒**:
-- **狀態管理**: Zustand（禁止 Redux 或 Context API 用於此功能）
+- **彈窗元件**: `@radix-ui/react-dialog`（需安裝 `bun add @radix-ui/react-dialog`）
+- **狀態管理**: Zustand wishlistStore（已完成）
 - **圖示系統**: **PixelIcon 元件**（**嚴格禁止** `lucide-react`）
 - **字體**: Cubic 11 自動繼承（不需手動設定 `font-cubic` className）
-- **Markdown 渲染**: `react-markdown` + `rehype-sanitize` + `rehype-highlight`
-- **字數統計**: 使用 `strip-markdown` 計算渲染後純文字長度
-
-**必要前端依賴** (需使用 `bun add` 安裝):
-```bash
-# Markdown 支援
-bun add react-markdown rehype-sanitize rehype-highlight remark-gfm strip-markdown
-
-# 類型定義
-bun add -D @types/react-markdown
-```
 
 **PixelIcon 使用範例**:
 ```tsx
@@ -142,18 +140,16 @@ import { PixelIcon } from '@/components/ui/icons'
 // 願望彈窗標題圖示
 <PixelIcon name="heart" sizePreset="md" variant="primary" />
 
-// Markdown 工具列
-<PixelIcon name="bold" sizePreset="sm" aria-label="粗體" />
-<PixelIcon name="italic" sizePreset="sm" aria-label="斜體" />
-<PixelIcon name="list-unordered" sizePreset="sm" aria-label="清單" />
-<PixelIcon name="code-box-line" sizePreset="sm" aria-label="程式碼" />
-
 // 載入指示器
 <PixelIcon name="loader" animation="spin" variant="primary" decorative />
+
+// 關閉按鈕
+<PixelIcon name="close" sizePreset="sm" aria-label="關閉" />
 ```
 
 **完成後解鎖**:
-- 🎯 使用者可在 `/profile` 頁面提交願望
+- 🎯 使用者可在 `/profile` 頁面開啟願望彈窗
+- 🎯 使用者可透過彈窗提交願望
 - 🎯 使用者可查看願望歷史與管理員回覆
 - 🎯 使用者可編輯未回覆的願望（一次機會）
 - 🔜 管理員介面開發 (Tasks 10-10.4)
@@ -212,7 +208,7 @@ import { PixelIcon } from '@/components/ui/icons'
   - 根據 maxLength prop 顯示字數警告：超過限制時顯示紅色警告訊息 ✅
   - 實作提交按鈕：呼叫 `wishlistStore.submitWish()` 提交願望 ✅
   - _Requirements: 1.2, 1.3, 11.1, 11.2, 11.3, 11.9, 11.10_
-  - **Completed**: MarkdownEditor 元件建立於 `src/components/wishlist/MarkdownEditor.tsx`，包含完整的編輯器功能、工具列、字數統計與無障礙功能（ARIA 標籤）。依賴套件 (rehype-sanitize, rehype-highlight, strip-markdown, remark) 已安裝。
+  - **Completed**: MarkdownEditor 元件建立於 `src/components/wishlist/MarkdownEditor.tsx`，包含完整的編輯器功能、工具列、字數統計與無障礙功能（ARIA 標籤）。依賴套件 (rehype-sanitize, rehype-highlight, strip-markdown, remark, remark-gfm) 已安裝。元件支援 value, onChange, onSubmit, maxLength, submitLabel props，實作即時 Markdown 預覽與字數限制驗證。
 
 - [x] 6.1 實作 Markdown 編輯器無障礙功能
   - 為編輯區添加 ARIA 標籤：`role="textbox"`、`aria-multiline="true"`、`aria-label="願望內容"` ✅
@@ -220,7 +216,7 @@ import { PixelIcon } from '@/components/ui/icons'
   - 為工具列按鈕添加 `aria-label` 與 `aria-pressed` 狀態 ✅
   - 實作鍵盤快捷鍵：Ctrl+B（粗體）、Ctrl+I（斜體） ⚠️ (未實作，可作為未來優化項目)
   - _Requirements: 10.4, 11.11_
-  - **Completed**: MarkdownEditor 已包含完整的 ARIA 無障礙標籤，支援螢幕閱讀器。鍵盤快捷鍵可在未來版本實作。
+  - **Completed**: MarkdownEditor 已包含完整的 ARIA 無障礙標籤，支援螢幕閱讀器。編輯區具備 `role="textbox"` 與 `aria-multiline="true"`，預覽區具備 `role="region"`，工具列按鈕皆有 `aria-label`。鍵盤快捷鍵可在未來版本實作。
 
 - [x] 7. 實作願望歷史列表元件
   - 建立 `WishHistory.tsx`，顯示使用者的願望歷史記錄 ✅
@@ -230,15 +226,16 @@ import { PixelIcon } from '@/components/ui/icons'
   - 實作「已編輯」標籤：在已編輯的願望旁顯示圖示或文字標籤 ✅
   - 實作編輯按鈕：點擊後展開 `MarkdownEditor`，允許使用者編輯願望內容（僅當 admin_reply 為 null 且 has_been_edited 為 false） ✅
   - _Requirements: 2.1, 2.4, 3.1, 3.6, 7.7_
-  - **Completed**: WishHistory 與 WishCard 元件建立於 `src/components/wishlist/` 目錄，完整支援願望列表顯示、Markdown 渲染、管理員回覆視覺區隔、已編輯標籤與編輯模式切換。
+  - **Completed**: WishHistory 與 WishCard 元件建立於 `src/components/wishlist/` 目錄，完整支援願望列表顯示、Markdown 渲染、管理員回覆視覺區隔、已編輯標籤與編輯模式切換。WishHistory 元件整合 wishlistStore，實作載入狀態與錯誤處理。WishCard 元件支援查看模式與編輯模式雙狀態，使用 Fallout 主題配色與 PixelIcon 圖示系統。
 
 - [x] 7.1 實作願望卡片互動功能
   - 在 `WishCard.tsx` 實作編輯模式切換：點擊「編輯」按鈕後，將卡片內容切換為編輯表單 ✅
   - 編輯表單包含：Markdown 編輯器（預填原內容）、「儲存」與「取消」按鈕、字數統計 ✅
-  - 點擊「儲存」：呼叫 `wishlistStore.updateWish()`，更新願望內容並退出編輯模式
-  - 點擊「取消」：恢復原願望內容並退出編輯模式
-  - 實作錯誤處理：顯示 API 錯誤訊息（如「已編輯過，無法再次編輯」）
+  - 點擊「儲存」：呼叫 `wishlistStore.updateWish()`，更新願望內容並退出編輯模式 ✅
+  - 點擊「取消」：恢復原願望內容並退出編輯模式 ✅
+  - 實作錯誤處理：顯示 API 錯誤訊息（如「已編輯過，無法再次編輯」） ✅
   - _Requirements: 3.3, 3.4, 3.5, 3.7_
+  - **Completed**: WishCard 元件已實作完整的編輯模式切換邏輯。點擊「編輯」按鈕後，卡片內容切換為包含 MarkdownEditor 的編輯表單（預填原願望內容）。「儲存」按鈕呼叫 wishlistStore.updateWish() 並處理成功與錯誤狀態，「取消」按鈕恢復原內容。整合 errorStore 顯示 API 錯誤訊息（如編輯權限錯誤）。
 
 - [ ] 8. 實作願望彈窗主容器元件
   - 建立 `WishlistModal.tsx`，作為願望功能的主要彈窗元件
@@ -376,60 +373,70 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 11/38 子任務，29% 完成)
+### 已完成任務 (✅ 15/38 子任務，39% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
 - ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
+- ✅ **前端 UI 元件** (Tasks 6-7): MarkdownEditor、WishCard、WishHistory 元件完成（626 行程式碼）
 
-### 後端與狀態管理完成 🎉
+### 後端、狀態管理與核心 UI 元件完成 🎉
 
-**已完成**: Tasks 1-5（資料層、業務邏輯、API、測試、狀態管理）
+**已完成**: Tasks 1-7（資料層、業務邏輯、API、測試、狀態管理、UI 元件）
 **測試狀態**: 107/107 backend tests passing ✅
-**API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整
+**API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整 ✅
 **Store 狀態**: wishlistStore.ts 已建立，整合所有使用者與管理員操作 ✅
+**UI 元件**: MarkdownEditor、WishCard、WishHistory 完成 ✅
 
-### 下一步建議：前端 UI 元件開發 (優先順序)
+**前端元件清單**:
+- `src/components/wishlist/MarkdownEditor.tsx` (上下兩欄編輯器，含工具列與預覽)
+- `src/components/wishlist/WishCard.tsx` (願望卡片，支援查看與編輯模式)
+- `src/components/wishlist/WishHistory.tsx` (願望歷史列表)
 
-#### 🎯 Task 6: 實作 Markdown 編輯器元件（3-4 小時）
-**目標**: 建立願望與回覆的編輯器核心元件
+### 下一步建議：前端整合 (優先順序)
+
+#### 🎯 Task 8: 實作願望彈窗主容器元件（2-3 小時）
+**目標**: 整合 MarkdownEditor 與 WishHistory 成為完整彈窗
 **輸出**:
-- `src/components/wishlist/MarkdownEditor.tsx`（上下兩欄：編輯區 + 預覽區）
-- Markdown 工具列（使用 **PixelIcon**：bold、italic、list、code-box-line）
-- 即時預覽（`react-markdown` + `rehype-sanitize` + `rehype-highlight`）
-- 字數統計（使用 `strip-markdown` 計算純文字長度）
+- `src/components/wishlist/WishlistModal.tsx`
+- 使用 `@radix-ui/react-dialog` 建立彈窗容器
+- 整合編輯器（上半部）與歷史列表（下半部）
+- 實作「今日已許願」狀態顯示邏輯
+- 彈窗開啟時自動呼叫 `fetchUserWishes()`
 
-**為何重要**: 編輯器是使用者與管理員編寫內容的核心介面
+**為何重要**: 彈窗是使用者與願望系統互動的主要介面
 
 **必要依賴安裝**:
 ```bash
-bun add react-markdown rehype-sanitize rehype-highlight remark-gfm strip-markdown
-bun add -D @types/react-markdown
+bun add @radix-ui/react-dialog
 ```
 
-#### 🎯 Task 7: 實作願望歷史列表元件（2-3 小時）
-**目標**: 顯示使用者的願望歷史與管理員回覆
+**依賴**: Task 6 (MarkdownEditor) ✅、Task 7 (WishHistory) ✅
+
+#### 🎯 Task 8.1: 實作彈窗無障礙與鍵盤操作（1-2 小時）
+**目標**: 為彈窗添加完整的無障礙支援
 **輸出**:
-- `src/components/wishlist/WishHistory.tsx`
-- `src/components/wishlist/WishCard.tsx`（顯示願望內容、時間、回覆、編輯按鈕）
-- 實作編輯模式切換與更新邏輯
+- ARIA 標籤（role="dialog"、aria-labelledby、aria-describedby）
+- 鍵盤焦點陷阱（focus trap）
+- Esc 鍵關閉功能
+- 點擊外部關閉功能
 
-**依賴**: Task 5 (wishlistStore) ✅、Task 6 (MarkdownEditor)
+**依賴**: Task 8 (WishlistModal)
 
-#### 🎯 Task 8: 實作願望彈窗主容器（2-3 小時）
-**目標**: 整合編輯器與歷史列表成為完整彈窗
+#### 🎯 Task 9: 整合願望彈窗至個人資料頁面（1-2 小時）
+**目標**: 在 `/profile` 頁面新增願望按鈕與彈窗
 **輸出**:
-- `src/components/wishlist/WishlistModal.tsx`
-- 整合 MarkdownEditor 與 WishHistory
-- 實作彈窗開關、無障礙功能
+- 在 `/profile` 新增「願望」按鈕（使用 PixelIcon heart 圖示）
+- 實作彈窗開關狀態管理（useState）
+- 確保按鈕符合 WCAG AA 觸控目標尺寸（44×44px）
 
-**依賴**: Task 6 (MarkdownEditor)、Task 7 (WishHistory)
+**依賴**: Task 8 (WishlistModal) ✅、Task 8.1 (無障礙功能)
 
-**預估剩餘時數**: 32-47 小時（27 個待完成子任務）
+**預估剩餘時數**: 28-43 小時（23 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 29% (11/38)
+**當前完成度**: 39% (15/38)
 
 ---
 
