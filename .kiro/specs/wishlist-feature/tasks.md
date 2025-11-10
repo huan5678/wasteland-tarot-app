@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端、前端狀態管理與核心 UI 元件完成 (Tasks 1-7, 15/38 完成, 39%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表全數完成。接下來整合願望彈窗與個人資料頁面。
+**當前進度**: 後端、前端狀態管理與核心 UI 元件完成 (Tasks 1-8, 16/38 完成, 42%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器全數完成。接下來補充彈窗無障礙功能與整合至個人資料頁面。
 
 ---
 
@@ -237,7 +237,7 @@ import { PixelIcon } from '@/components/ui/icons'
   - _Requirements: 3.3, 3.4, 3.5, 3.7_
   - **Completed**: WishCard 元件已實作完整的編輯模式切換邏輯。點擊「編輯」按鈕後，卡片內容切換為包含 MarkdownEditor 的編輯表單（預填原願望內容）。「儲存」按鈕呼叫 wishlistStore.updateWish() 並處理成功與錯誤狀態，「取消」按鈕恢復原內容。整合 errorStore 顯示 API 錯誤訊息（如編輯權限錯誤）。
 
-- [ ] 8. 實作願望彈窗主容器元件
+- [x] 8. 實作願望彈窗主容器元件
   - 建立 `WishlistModal.tsx`，作為願望功能的主要彈窗元件
   - 使用 `@radix-ui/react-dialog` 的 `Dialog` 元件作為基礎
   - 彈窗標題：使用 **PixelIcon** 的 `heart` 圖示 + 「願望許願池」文字
@@ -246,6 +246,7 @@ import { PixelIcon } from '@/components/ui/icons'
   - 下半部歷史列表：顯示 `WishHistory` 元件，設定固定高度並可滾動
   - 實作彈窗開啟時自動呼叫 `fetchUserWishes()`
   - _Requirements: 1.2, 1.6, 7.1, 7.5, 7.6_
+  - **Completed**: WishlistModal 元件建立於 `src/components/wishlist/WishlistModal.tsx`，完整整合 MarkdownEditor 與 WishHistory 元件。使用 @radix-ui/react-dialog 實作彈窗容器，包含標題（heart 圖示 + 「願望許願池」）、描述、上半部輸入區域（根據 hasSubmittedToday 切換顯示編輯器或「今日已許願」訊息）、下半部可滾動歷史列表。實作 useEffect 在彈窗開啟時自動呼叫 fetchUserWishes()。套用完整的 Fallout 主題樣式（Pip-Boy Green 邊框、陰影、配色）與基本無障礙標籤（aria-labelledby、aria-describedby）。
 
 - [ ] 8.1 實作彈窗無障礙與鍵盤操作
   - 為彈窗容器添加 ARIA 標籤：`role="dialog"`、`aria-labelledby`、`aria-describedby`
@@ -373,70 +374,68 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 15/38 子任務，39% 完成)
+### 已完成任務 (✅ 16/38 子任務，42% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
 - ✅ **API Endpoints** (Tasks 3.1-3.2): 7 個 endpoints（3 個使用者端、4 個管理員端）
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
-- ✅ **前端 UI 元件** (Tasks 6-7): MarkdownEditor、WishCard、WishHistory 元件完成（626 行程式碼）
+- ✅ **前端 UI 元件** (Tasks 6-8): MarkdownEditor、WishCard、WishHistory、WishlistModal 元件完成（780+ 行程式碼）
 
 ### 後端、狀態管理與核心 UI 元件完成 🎉
 
-**已完成**: Tasks 1-7（資料層、業務邏輯、API、測試、狀態管理、UI 元件）
+**已完成**: Tasks 1-8（資料層、業務邏輯、API、測試、狀態管理、UI 元件、願望彈窗）
 **測試狀態**: 107/107 backend tests passing ✅
 **API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整 ✅
 **Store 狀態**: wishlistStore.ts 已建立，整合所有使用者與管理員操作 ✅
-**UI 元件**: MarkdownEditor、WishCard、WishHistory 完成 ✅
+**UI 元件**: MarkdownEditor、WishCard、WishHistory、WishlistModal 完成 ✅
 
 **前端元件清單**:
 - `src/components/wishlist/MarkdownEditor.tsx` (上下兩欄編輯器，含工具列與預覽)
 - `src/components/wishlist/WishCard.tsx` (願望卡片，支援查看與編輯模式)
 - `src/components/wishlist/WishHistory.tsx` (願望歷史列表)
+- `src/components/wishlist/WishlistModal.tsx` (願望彈窗主容器，整合編輯器與歷史列表)
 
 ### 下一步建議：前端整合 (優先順序)
 
-#### 🎯 Task 8: 實作願望彈窗主容器元件（2-3 小時）
-**目標**: 整合 MarkdownEditor 與 WishHistory 成為完整彈窗
+#### ✅ Task 8: 實作願望彈窗主容器元件（已完成）
+**目標**: 整合 MarkdownEditor 與 WishHistory 成為完整彈窗 ✅
 **輸出**:
-- `src/components/wishlist/WishlistModal.tsx`
-- 使用 `@radix-ui/react-dialog` 建立彈窗容器
-- 整合編輯器（上半部）與歷史列表（下半部）
-- 實作「今日已許願」狀態顯示邏輯
-- 彈窗開啟時自動呼叫 `fetchUserWishes()`
+- `src/components/wishlist/WishlistModal.tsx` ✅
+- 使用 `@radix-ui/react-dialog` 建立彈窗容器 ✅
+- 整合編輯器（上半部）與歷史列表（下半部）✅
+- 實作「今日已許願」狀態顯示邏輯 ✅
+- 彈窗開啟時自動呼叫 `fetchUserWishes()` ✅
 
-**為何重要**: 彈窗是使用者與願望系統互動的主要介面
+**完成內容**: WishlistModal 元件完整實作，包含標題（heart 圖示 + 「願望許願池」）、描述、上半部輸入區域（根據 hasSubmittedToday 切換）、下半部可滾動歷史列表、Fallout 主題樣式（Pip-Boy Green 邊框與陰影）、基本無障礙標籤（aria-labelledby、aria-describedby）。
 
-**必要依賴安裝**:
-```bash
-bun add @radix-ui/react-dialog
-```
-
-**依賴**: Task 6 (MarkdownEditor) ✅、Task 7 (WishHistory) ✅
-
-#### 🎯 Task 8.1: 實作彈窗無障礙與鍵盤操作（1-2 小時）
+#### 🎯 Task 8.1: 實作彈窗無障礙與鍵盤操作（1-2 小時）**[下一步]**
 **目標**: 為彈窗添加完整的無障礙支援
 **輸出**:
-- ARIA 標籤（role="dialog"、aria-labelledby、aria-describedby）
-- 鍵盤焦點陷阱（focus trap）
-- Esc 鍵關閉功能
-- 點擊外部關閉功能
+- ARIA 標籤（role="dialog"、aria-labelledby、aria-describedby）✅ **（Radix UI 已內建）**
+- 鍵盤焦點陷阱（focus trap）**（Radix UI 已內建，可選擇性測試與補強）**
+- Esc 鍵關閉功能 ✅ **（Radix UI 已內建）**
+- 點擊外部關閉功能 ✅ **（Radix UI 已內建）**
 
-**依賴**: Task 8 (WishlistModal)
+**依賴**: Task 8 (WishlistModal) ✅
 
-#### 🎯 Task 9: 整合願望彈窗至個人資料頁面（1-2 小時）
+**備註**: Radix UI Dialog 已內建多數無障礙功能（role="dialog"、焦點陷阱、Esc 關閉、點擊外部關閉），Task 8.1 主要補充額外的測試與驗證。可選擇性跳過並直接進行 Task 9。
+
+#### 🎯 Task 9: 整合願望彈窗至個人資料頁面（1-2 小時）**[推薦下一步]**
 **目標**: 在 `/profile` 頁面新增願望按鈕與彈窗
 **輸出**:
 - 在 `/profile` 新增「願望」按鈕（使用 PixelIcon heart 圖示）
 - 實作彈窗開關狀態管理（useState）
 - 確保按鈕符合 WCAG AA 觸控目標尺寸（44×44px）
 
-**依賴**: Task 8 (WishlistModal) ✅、Task 8.1 (無障礙功能)
+**依賴**: Task 8 (WishlistModal) ✅
 
-**預估剩餘時數**: 28-43 小時（23 個待完成子任務）
+**為何推薦**: 完成 Task 9 後，使用者即可在 `/profile` 頁面使用完整的願望功能，實現端到端的功能流程。
+
+**預估剩餘時數**: 26-40 小時（22 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 39% (15/38)
+**當前完成度**: 42% (16/38)
 
 ---
 
