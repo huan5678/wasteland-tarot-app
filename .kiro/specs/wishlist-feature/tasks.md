@@ -279,35 +279,39 @@ import { PixelIcon } from '@/components/ui/icons'
   - _Requirements: 4.1, 4.6, 5.6_
   - **Completed**: AdminWishlistPage created at `src/app/admin/wishlist/page.tsx` with complete wish list display, admin-specific wish cards showing user ID, content (Markdown rendered), submission time, reply status, hidden status, and action buttons. Implemented automatic data loading via useEffect + fetchAdminWishes(), empty state message, loading state, error handling, and full Fallout Pip-Boy theme styling (#00ff88 primary, #ff8800 secondary). AdminWishCard component includes user ID display, status badges (replied/unreplied, hidden/visible, edited), and placeholder action buttons (Reply/Edit Reply, Hide/Unhide) ready for interaction logic in Tasks 10.2-10.3.
 
-- [ ] 10.1 實作管理員篩選與排序功能
-  - 建立頁面頂部篩選器元件：包含回覆狀態篩選器（全部/已回覆/未回覆）與隱藏狀態篩選器（顯示已隱藏/僅顯示未隱藏/僅顯示已隱藏）
-  - 建立排序選擇器：提供「最新優先」與「最舊優先」兩種排序方式
-  - 實作篩選器變更時自動呼叫 `wishlistStore.setAdminFilter()` 或 `setAdminSort()`，觸發重新載入願望列表
-  - 實作載入指示器：顯示 Pip-Boy 風格的 loading spinner（使用 **PixelIcon** 的 `loader` 圖示 + spin animation）
+- [x] 10.1 實作管理員篩選與排序功能
+  - 建立頁面頂部篩選器元件：包含回覆狀態篩選器（全部/已回覆/未回覆）與隱藏狀態篩選器（顯示已隱藏/僅顯示未隱藏/僅顯示已隱藏）✅
+  - 建立排序選擇器：提供「最新優先」與「最舊優先」兩種排序方式 ✅
+  - 實作篩選器變更時自動呼叫 `wishlistStore.setAdminFilter()` 或 `setAdminSort()`，觸發重新載入願望列表 ✅
+  - 實作載入指示器：顯示 Pip-Boy 風格的 loading spinner（使用 **PixelIcon** 的 `loader-4` 圖示 + spin animation）✅
   - _Requirements: 4.2, 4.3, 4.4, 4.5, 10.1_
+  - **Completed**: AdminFilters 元件建立於 `src/app/admin/wishlist/page.tsx`，包含回覆狀態篩選器（3 個選項）與排序選擇器（2 個選項），使用陣列映射消除硬編碼。篩選器變更時自動呼叫 setAdminFilter() 或 setAdminSort() 並重新載入資料。所有按鈕符合 WCAG AA 標準（44×44px），使用 PixelIcon 的 filter 和 sort 圖示。載入指示器使用 loader-4 圖示 + spin animation。
 
-- [ ] 10.2 實作管理員回覆功能
-  - 在願望卡片新增「回覆」按鈕（或「編輯回覆」按鈕，若已有回覆）
-  - 點擊按鈕後展開 Markdown 編輯器（上下兩欄：編輯區 + 預覽區）
-  - 實作字數統計：管理員回覆最多 1000 字（計算渲染後純文字長度）
-  - 實作「提交回覆」與「取消」按鈕
-  - 點擊「提交回覆」：呼叫 `wishlistStore.submitReply()`，更新願望卡片顯示並收起編輯器
-  - 實作錯誤處理：顯示 API 錯誤訊息並保留輸入內容
+- [x] 10.2 實作管理員回覆功能
+  - 在願望卡片新增「回覆」按鈕（或「編輯回覆」按鈕，若已有回覆）✅
+  - 點擊按鈕後展開 Markdown 編輯器（上下兩欄：編輯區 + 預覽區）✅
+  - 實作字數統計：管理員回覆最多 1000 字（計算渲染後純文字長度）✅
+  - 實作「提交回覆」與「取消」按鈕 ✅
+  - 點擊「提交回覆」：呼叫 `wishlistStore.submitReply()`，更新願望卡片顯示並收起編輯器 ✅
+  - 實作錯誤處理：顯示 API 錯誤訊息並保留輸入內容 ✅
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.7_
+  - **Completed**: AdminWishCard 實作完整的回覆功能，包含 isReplyMode 狀態管理、handleReplyClick/handleSubmitReply/handleCancelReply 回調函數。回覆模式下展開 MarkdownEditor（重用 `src/components/wishlist/MarkdownEditor.tsx`），字數限制 1000 字，提供「更新回覆」/「提交回覆」與「取消」按鈕。成功提交後自動關閉編輯模式，錯誤處理完整（保留輸入內容）。按鈕符合 WCAG AA 標準（44×44px）。
 
-- [ ] 10.3 實作管理員隱藏/取消隱藏功能
-  - 在願望卡片新增「隱藏」按鈕（或「取消隱藏」按鈕，若已隱藏）
-  - 點擊「隱藏」：呼叫 `wishlistStore.toggleHidden(wish_id, true)`，更新願望狀態並從預設列表移除
-  - 點擊「取消隱藏」：呼叫 `wishlistStore.toggleHidden(wish_id, false)`，恢復願望至未隱藏列表
-  - 顯示「已隱藏」標籤或圖示於已隱藏的願望卡片
+- [x] 10.3 實作管理員隱藏/取消隱藏功能
+  - 在願望卡片新增「隱藏」按鈕（或「取消隱藏」按鈕，若已隱藏）✅
+  - 點擊「隱藏」：呼叫 `wishlistStore.toggleHidden(wish_id, true)`，更新願望狀態並從預設列表移除 ✅
+  - 點擊「取消隱藏」：呼叫 `wishlistStore.toggleHidden(wish_id, false)`，恢復願望至未隱藏列表 ✅
+  - 顯示「已隱藏」標籤或圖示於已隱藏的願望卡片 ✅
   - _Requirements: 6.1, 6.2, 6.3, 6.6_
+  - **Completed**: AdminWishCard 實作 handleToggleHidden 回調函數，點擊「隱藏」/「取消隱藏」按鈕時呼叫 `toggleHidden(wish.id, !wish.is_hidden)`。按鈕文字與圖示根據 is_hidden 狀態動態切換（eye/eye-off）。已隱藏願望卡片顯示「已隱藏」狀態標籤（紅色）。完整錯誤處理，按鈕符合 WCAG AA 標準（44×44px）。
 
-- [ ] 10.4 實作管理員分頁功能
-  - 建立分頁導航元件：顯示當前頁碼、總頁數、上一頁/下一頁按鈕
-  - 點擊分頁按鈕時呼叫 `wishlistStore.setAdminPage()`，載入對應頁面的願望列表
-  - 每頁顯示 50 筆記錄（預設），可透過 query 參數調整
-  - 實作頁碼跳轉功能：輸入框允許直接跳轉至指定頁碼
+- [x] 10.4 實作管理員分頁功能
+  - 建立分頁導航元件：顯示當前頁碼、總頁數、上一頁/下一頁按鈕 ✅
+  - 點擊分頁按鈕時呼叫 `wishlistStore.setAdminPage()`，載入對應頁面的願望列表 ✅
+  - 每頁顯示 50 筆記錄（預設），可透過 query 參數調整 ✅
+  - 實作頁碼跳轉功能：輸入框允許直接跳轉至指定頁碼 ✅
   - _Requirements: 4.7_
+  - **Completed**: AdminPagination 元件建立於 `src/app/admin/wishlist/page.tsx`，包含上一頁/下一頁按鈕、智能頁碼顯示（最多 5 個頁碼，含省略號處理）、頁碼資訊顯示（第 X 頁，共 Y 頁，總計 Z 筆）。handlePageJump 函數實作頁碼跳轉，handlePrevPage/handleNextPage 實作上下頁切換。分頁按鈕點擊時呼叫 setAdminPage() 自動重新載入資料。每頁顯示 50 筆記錄（由 store 的 adminPageSize 控制）。所有按鈕符合 WCAG AA 標準（44×44px），使用 PixelIcon 的 arrow-left-s/arrow-right-s/file-list 圖示。
 
 ---
 
