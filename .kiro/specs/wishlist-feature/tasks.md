@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端、前端狀態管理、核心 UI 元件與個人資料頁面整合完成 (Tasks 1-9, 17/38 完成, 45%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器、Profile 頁面整合全數完成。**使用者已可在 /profile 頁面使用完整的願望功能！** 接下來可選擇補充彈窗無障礙功能（Task 8.1，可選）或進入管理員介面開發（Tasks 10-10.4）。
+**當前進度**: 後端、前端狀態管理、核心 UI 元件、個人資料頁面整合與管理員頁面基礎完成 (Tasks 1-10, 18/38 完成, 47%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器、Profile 頁面整合、管理員願望管理頁面全數完成。**使用者已可在 /profile 頁面使用完整的願望功能！管理員已可在 /admin/wishlist 查看所有願望！** 接下來可選擇補充彈窗無障礙功能（Task 8.1，可選）或繼續管理員介面互動功能（Tasks 10.1-10.4）。
 
 ---
 
@@ -270,13 +270,14 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 第四階段：管理員介面
 
-- [ ] 10. 建立管理員願望管理頁面
+- [x] 10. 建立管理員願望管理頁面
   - 建立 `/admin/wishlist` 頁面元件 `AdminWishlistPage.tsx`
   - 實作頁面載入時自動呼叫 `wishlistStore.fetchAdminWishes()`
   - 顯示願望列表：使用卡片佈局，每張卡片包含使用者 ID/名稱、願望內容、提交時間、回覆狀態、隱藏狀態、操作按鈕
   - 實作空狀態提示：當符合篩選條件的願望數量為 0 時，顯示「無符合條件的願望」訊息
   - 套用 Fallout Pip-Boy 主題樣式：使用 `#00ff88`（主色）與 `#ff8800`（強調色）
   - _Requirements: 4.1, 4.6, 5.6_
+  - **Completed**: AdminWishlistPage created at `src/app/admin/wishlist/page.tsx` with complete wish list display, admin-specific wish cards showing user ID, content (Markdown rendered), submission time, reply status, hidden status, and action buttons. Implemented automatic data loading via useEffect + fetchAdminWishes(), empty state message, loading state, error handling, and full Fallout Pip-Boy theme styling (#00ff88 primary, #ff8800 secondary). AdminWishCard component includes user ID display, status badges (replied/unreplied, hidden/visible, edited), and placeholder action buttons (Reply/Edit Reply, Hide/Unhide) ready for interaction logic in Tasks 10.2-10.3.
 
 - [ ] 10.1 實作管理員篩選與排序功能
   - 建立頁面頂部篩選器元件：包含回覆狀態篩選器（全部/已回覆/未回覆）與隱藏狀態篩選器（顯示已隱藏/僅顯示未隱藏/僅顯示已隱藏）
@@ -378,7 +379,7 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 17/38 子任務，45% 完成)
+### 已完成任務 (✅ 18/38 子任務，47% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
@@ -387,22 +388,25 @@ import { PixelIcon } from '@/components/ui/icons'
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
 - ✅ **前端 UI 元件** (Tasks 6-8): MarkdownEditor、WishCard、WishHistory、WishlistModal 元件完成（789 行程式碼）
 - ✅ **Profile 頁面整合** (Task 9): 願望按鈕與彈窗集成完成，使用者可在 /profile 頁面使用完整願望功能
+- ✅ **管理員頁面基礎** (Task 10): 管理員願望管理頁面建立完成，顯示所有願望列表與狀態
 
-### 後端、狀態管理與核心 UI 元件完成 🎉
+### 使用者端與管理員介面基礎完成 🎉
 
-**已完成**: Tasks 1-8（資料層、業務邏輯、API、測試、狀態管理、UI 元件、願望彈窗）
+**已完成**: Tasks 1-10（資料層、業務邏輯、API、測試、狀態管理、UI 元件、願望彈窗、管理員頁面）
 **測試狀態**: 107/107 backend tests passing ✅
 **API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整 ✅
 **Store 狀態**: wishlistStore.ts 已建立，整合所有使用者與管理員操作 ✅
-**UI 元件**: MarkdownEditor、WishCard、WishHistory、WishlistModal 完成 ✅
+**使用者 UI**: MarkdownEditor、WishCard、WishHistory、WishlistModal 完成 ✅
+**管理員 UI**: AdminWishlistPage 完成，包含願望列表顯示與狀態標籤 ✅
 
 **前端元件清單**:
 - `src/components/wishlist/MarkdownEditor.tsx` (217 行 - 上下兩欄編輯器，含工具列與預覽)
 - `src/components/wishlist/WishCard.tsx` (176 行 - 願望卡片，支援查看與編輯模式)
 - `src/components/wishlist/WishHistory.tsx` (233 行 - 願望歷史列表)
 - `src/components/wishlist/WishlistModal.tsx` (163 行 - 願望彈窗主容器，整合編輯器與歷史列表)
+- `src/app/admin/wishlist/page.tsx` (管理員願望管理頁面，含 AdminWishCard 元件)
 
-### 下一步建議：前端整合 (優先順序)
+### 下一步建議：管理員介面互動功能 (優先順序)
 
 #### ✅ Task 8: 實作願望彈窗主容器元件（已完成）
 **目標**: 整合 MarkdownEditor 與 WishHistory 成為完整彈窗 ✅
@@ -438,9 +442,54 @@ import { PixelIcon } from '@/components/ui/icons'
 
 **完成狀態**: 使用者現在可以在 `/profile` 頁面使用完整的願望功能，實現端到端的功能流程！ 🎉
 
-**預估剩餘時數**: 24-38 小時（21 個待完成子任務）
+#### ✅ Task 10: 建立管理員願望管理頁面（已完成）
+**目標**: 建立管理員介面基礎，顯示所有使用者的願望列表 ✅
+**輸出**:
+- 建立 `/admin/wishlist` 頁面元件 `AdminWishlistPage.tsx` ✅
+- 實作 `AdminWishCard` 元件顯示願望詳細資訊 ✅
+- 頁面載入時自動呼叫 `fetchAdminWishes()` ✅
+- 顯示使用者 ID、願望內容、提交時間、回覆狀態、隱藏狀態 ✅
+- 實作空狀態提示（無符合條件的願望）✅
+- 套用 Fallout Pip-Boy 主題樣式 ✅
+- 建立操作按鈕 UI（回覆/編輯回覆、隱藏/取消隱藏）✅
+
+**依賴**: Task 5 (wishlistStore) ✅
+
+**完成狀態**: 管理員現在可以在 `/admin/wishlist` 頁面查看所有使用者的願望，包含完整的狀態標籤與操作按鈕 UI！ 🎉
+
+#### 🎯 Task 10.1: 實作管理員篩選與排序功能（1-2 小時）**[推薦下一步]**
+**目標**: 為管理員頁面添加篩選與排序功能
+**輸出**:
+- 建立頁面頂部篩選器元件（回覆狀態、隱藏狀態）
+- 建立排序選擇器（最新優先/最舊優先）
+- 實作篩選器變更時自動呼叫 `setAdminFilter()` 或 `setAdminSort()`
+- 實作載入指示器（Pip-Boy 風格 loading spinner）
+
+**依賴**: Task 10 (AdminWishlistPage) ✅
+
+#### 🎯 Task 10.2: 實作管理員回覆功能（2-3 小時）
+**目標**: 為管理員添加回覆願望的功能
+**輸出**:
+- 在願望卡片實作「回覆」按鈕點擊互動
+- 展開 Markdown 編輯器（上下兩欄：編輯區 + 預覽區）
+- 實作字數統計（最多 1000 字）
+- 實作「提交回覆」與「取消」按鈕
+- 呼叫 `wishlistStore.submitReply()` 更新願望
+
+**依賴**: Task 10 (AdminWishlistPage) ✅
+
+#### 🎯 Task 10.3: 實作管理員隱藏/取消隱藏功能（1 小時）
+**目標**: 為管理員添加隱藏願望的功能
+**輸出**:
+- 在願望卡片實作「隱藏」/「取消隱藏」按鈕點擊互動
+- 呼叫 `wishlistStore.toggleHidden()` 切換狀態
+- 更新願望卡片顯示（隱藏標籤）
+
+**依賴**: Task 10 (AdminWishlistPage) ✅
+
+**預估剩餘時數**: 20-34 小時（20 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 45% (17/38)
+**當前完成度**: 47% (18/38)
 
 ---
 
