@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端、前端狀態管理與核心 UI 元件完成 (Tasks 1-8, 16/38 完成, 42%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器全數完成。接下來補充彈窗無障礙功能與整合至個人資料頁面。
+**當前進度**: 後端、前端狀態管理、核心 UI 元件與個人資料頁面整合完成 (Tasks 1-9, 17/38 完成, 45%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器、Profile 頁面整合全數完成。**使用者已可在 /profile 頁面使用完整的願望功能！** 接下來可選擇補充彈窗無障礙功能（Task 8.1，可選）或進入管理員介面開發（Tasks 10-10.4）。
 
 ---
 
@@ -149,11 +149,13 @@ import { PixelIcon } from '@/components/ui/icons'
 ```
 
 **完成後解鎖**:
-- 🎯 使用者可在 `/profile` 頁面開啟願望彈窗
-- 🎯 使用者可透過彈窗提交願望
-- 🎯 使用者可查看願望歷史與管理員回覆
-- 🎯 使用者可編輯未回覆的願望（一次機會）
+- ✅ 使用者可在 `/profile` 頁面開啟願望彈窗
+- ✅ 使用者可透過彈窗提交願望
+- ✅ 使用者可查看願望歷史與管理員回覆
+- ✅ 使用者可編輯未回覆的願望（一次機會）
 - 🔜 管理員介面開發 (Tasks 10-10.4)
+
+**使用者端功能完整實現！** 🎉 接下來可進入管理員介面開發階段。
 
 ---
 
@@ -256,12 +258,13 @@ import { PixelIcon } from '@/components/ui/icons'
   - 實作點擊外部關閉功能：點擊彈窗外部區域時關閉彈窗
   - _Requirements: 7.6, 10.4, 10.6, 10.7_
 
-- [ ] 9. 整合願望彈窗至個人資料頁面
-  - 在 `/profile` 頁面新增「願望」按鈕，點擊後開啟 `WishlistModal`
-  - 按鈕使用 **PixelIcon** 的 `heart` 圖示，並套用 Pip-Boy Green 配色
-  - 實作彈窗開關狀態管理：使用 `useState` 控制 isOpen 狀態
-  - 確保按鈕滿足 WCAG AA 觸控目標尺寸標準（44×44px）
+- [x] 9. 整合願望彈窗至個人資料頁面
+  - 在 `/profile` 頁面新增「願望」按鈕，點擊後開啟 `WishlistModal` ✅
+  - 按鈕使用 **PixelIcon** 的 `heart` 圖示，並套用 Pip-Boy Green 配色 ✅
+  - 實作彈窗開關狀態管理：使用 `useState` 控制 isOpen 狀態 ✅
+  - 確保按鈕滿足 WCAG AA 觸控目標尺寸標準（44×44px）✅
   - _Requirements: 7.1, 10.8_
+  - **Completed**: Integrated WishlistModal into profile page at `/home/user/wasteland-tarot-app/src/app/profile/page.tsx`. Added wishlist button in header area with PixelIcon heart icon, Pip-Boy Green styling, min-w-[44px] min-h-[44px] for WCAG AA compliance, and aria-label="開啟願望許願池". Implemented useState for modal open/close state management. Button triggers WishlistModal which loads user wishes on open via useEffect.
 
 ---
 
@@ -375,7 +378,7 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 16/38 子任務，42% 完成)
+### 已完成任務 (✅ 17/38 子任務，45% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
@@ -383,6 +386,7 @@ import { PixelIcon } from '@/components/ui/icons'
 - ✅ **後端測試** (Task 4): 107 個測試全數通過（單元測試 + 整合測試 + API 測試）
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
 - ✅ **前端 UI 元件** (Tasks 6-8): MarkdownEditor、WishCard、WishHistory、WishlistModal 元件完成（789 行程式碼）
+- ✅ **Profile 頁面整合** (Task 9): 願望按鈕與彈窗集成完成，使用者可在 /profile 頁面使用完整願望功能
 
 ### 後端、狀態管理與核心 UI 元件完成 🎉
 
@@ -423,20 +427,20 @@ import { PixelIcon } from '@/components/ui/icons'
 
 **備註**: Radix UI Dialog 已內建多數無障礙功能（role="dialog"、焦點陷阱、Esc 關閉、點擊外部關閉），Task 8.1 主要補充額外的測試與驗證。可選擇性跳過並直接進行 Task 9。
 
-#### 🎯 Task 9: 整合願望彈窗至個人資料頁面（1-2 小時）**[推薦下一步]**
-**目標**: 在 `/profile` 頁面新增願望按鈕與彈窗
+#### ✅ Task 9: 整合願望彈窗至個人資料頁面（已完成）
+**目標**: 在 `/profile` 頁面新增願望按鈕與彈窗 ✅
 **輸出**:
-- 在 `/profile` 新增「願望」按鈕（使用 PixelIcon heart 圖示）
-- 實作彈窗開關狀態管理（useState）
-- 確保按鈕符合 WCAG AA 觸控目標尺寸（44×44px）
+- 在 `/profile` 新增「願望」按鈕（使用 PixelIcon heart 圖示）✅
+- 實作彈窗開關狀態管理（useState）✅
+- 確保按鈕符合 WCAG AA 觸控目標尺寸（44×44px）✅
 
 **依賴**: Task 8 (WishlistModal) ✅
 
-**為何推薦**: 完成 Task 9 後，使用者即可在 `/profile` 頁面使用完整的願望功能，實現端到端的功能流程。
+**完成狀態**: 使用者現在可以在 `/profile` 頁面使用完整的願望功能，實現端到端的功能流程！ 🎉
 
-**預估剩餘時數**: 26-40 小時（22 個待完成子任務）
+**預估剩餘時數**: 24-38 小時（21 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 42% (16/38)
+**當前完成度**: 45% (17/38)
 
 ---
 

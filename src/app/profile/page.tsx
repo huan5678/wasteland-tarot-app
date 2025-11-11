@@ -18,7 +18,9 @@ import { PipBoyTabs, PipBoyTabsList, PipBoyTabsTrigger, PipBoyTabsContent } from
 import { OverviewTab } from '@/components/profile/tabs/OverviewTab';
 import { AchievementsTab } from '@/components/profile/tabs/AchievementsTab';
 import { SettingsTab } from '@/components/profile/tabs/SettingsTab';
-import { AccountTab } from '@/components/profile/tabs/AccountTab';import { Button } from "@/components/ui/button";
+import { AccountTab } from '@/components/profile/tabs/AccountTab';
+import { Button } from "@/components/ui/button";
+import WishlistModal from '@/components/wishlist/WishlistModal';
 
 interface UserProfile {
   username: string;
@@ -72,6 +74,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState<Partial<UserProfile>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
 
   // ✅ 輔助函式：根據 faction key 取得顯示名稱
   const getFactionLabel = (factionKey: string): string => {
@@ -324,13 +327,32 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-pip-boy-green">
-              Vault 居民檔案
-            </h1>
-            <p className="text-pip-boy-green/70 text-sm">
-              個人資料管理系統 - ID: {profile.username}
-            </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-pip-boy-green">
+                Vault 居民檔案
+              </h1>
+              <p className="text-pip-boy-green/70 text-sm">
+                個人資料管理系統 - ID: {profile.username}
+              </p>
+            </div>
+
+            {/* 願望按鈕 */}
+            <button
+              onClick={() => setIsWishlistOpen(true)}
+              className="flex items-center gap-2 min-w-[44px] min-h-[44px] px-4 py-2 border-2 border-pip-boy-green bg-black hover:bg-pip-boy-green/20 transition-colors group"
+              aria-label="開啟願望許願池"
+            >
+              <PixelIcon
+                name="heart"
+                sizePreset="sm"
+                variant="primary"
+                decorative
+              />
+              <span className="text-pip-boy-green font-bold group-hover:text-pip-boy-green/90">
+                願望
+              </span>
+            </button>
           </div>
         </div>
 
@@ -401,6 +423,12 @@ export default function ProfilePage() {
             />
           </PipBoyTabsContent>
         </PipBoyTabs>
+
+        {/* 願望彈窗 */}
+        <WishlistModal
+          open={isWishlistOpen}
+          onOpenChange={setIsWishlistOpen}
+        />
       </div>
     </div>);
 
