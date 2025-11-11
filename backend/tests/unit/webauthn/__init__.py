@@ -1,3 +1,0 @@
-"""
-WebAuthn unit tests package
-"""

@@ -11,9 +11,6 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-// 後端 API 基礎 URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
-
 // 定義受保護的路由模式
 const protectedRoutes = [
   '/dashboard',

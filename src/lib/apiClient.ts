@@ -48,7 +48,12 @@ class APIClient {
   private readonly apiPrefix = '/api/v1';
 
   constructor() {
-    this.baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    // In browser: use empty string to route through Next.js API proxy
+    // In SSR: use backend URL from environment variable
+    const isBrowser = typeof window !== 'undefined';
+    this.baseURL = isBrowser
+      ? '' // Browser: relative path → Next.js proxy
+      : process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:8000'; // SSR: direct backend
   }
 
   /**
