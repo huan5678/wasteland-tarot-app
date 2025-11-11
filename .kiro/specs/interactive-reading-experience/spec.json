@@ -1,0 +1,28 @@
+{
+  "feature_name": "interactive-reading-experience",
+  "created_at": "2025-11-11T11:04:45Z",
+  "updated_at": "2025-11-11T14:30:00Z",
+  "language": "zh-tw",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true,
+      "version": "1.1",
+      "last_update_notes": "整合深度研究發現：Fisher-Yates 演算法、Framer Motion 動畫、TanStack Virtual、prefers-reduced-motion、SSE Exponential Backoff、篩選器 UI 最佳實踐"
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "version": "1.1",
+      "last_update_notes": "修正設計審核問題：(1) 標籤資料結構改用關聯表 reading_tags，(2) 補充虛擬捲動變動高度實作細節（estimateSize），(3) 補充 LazyMotion 功能限制檢查清單與降級策略"
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false,
+      "version": "1.0",
+      "last_update_notes": "完整任務規劃：14 個階段，22 個主要任務，88 個子任務（含 12 個可選測試任務）。涵蓋所有需求，識別 32 個可並行任務，遵循任務生成規則與並行分析準則。"
+    }
+  },
+  "ready_for_implementation": false
+}
