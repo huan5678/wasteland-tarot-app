@@ -25,6 +25,31 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Pip-Boy System Error:', error, errorInfo);
+
+    // 🟢 Task 15.7: Log error to backend
+    this.logErrorToBackend({
+      timestamp: new Date().toISOString(),
+      errorType: error.name,
+      message: error.message,
+      stackTrace: error.stack,
+      componentStack: errorInfo.componentStack,
+      context: {
+        url: typeof window !== 'undefined' ? window.location.href : '',
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : ''
+      }
+    });
+  }
+
+  private async logErrorToBackend(errorLog: any) {
+    try {
+      await fetch('/api/v1/logs/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(errorLog)
+      });
+    } catch (e) {
+      console.error('[ErrorBoundary] Failed to log error to backend:', e);
+    }
   }
 
   handleReset = () => {

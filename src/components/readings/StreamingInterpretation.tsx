@@ -121,16 +121,46 @@ export function StreamingInterpretation({
           }
           </div>
 
-          {/* Skip button */}
-          {streaming.isStreaming &&
-        <Button size="xs" variant="outline"
-        onClick={streaming.skip}
-        className="absolute top-0 right-0 px-3 py-1 border rounded transition-colors duration-200"
-        aria-label="Skip to full text">
+          {/* 🟢 Task 4.2: Streaming controls */}
+          {streaming.isStreaming && (
+            <div
+              className="flex items-center gap-2 absolute top-0 right-0"
+              data-testid="streaming-controls"
+            >
+              {/* Pause/Resume button */}
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={streaming.togglePause}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label={streaming.isPaused ? '繼續' : '暫停'}
+              >
+                {streaming.isPaused ? '繼續' : '暫停'}
+              </Button>
 
-              Skip
-            </Button>
-        }
+              {/* 2x speed button */}
+              <Button
+                size="xs"
+                variant={streaming.currentSpeed === 2 ? 'default' : 'outline'}
+                onClick={() => streaming.setSpeed(streaming.currentSpeed === 2 ? 1 : 2)}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label={streaming.currentSpeed === 2 ? '正常速度' : '2倍速度'}
+              >
+                2x
+              </Button>
+
+              {/* Skip button */}
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={streaming.skip}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label="跳過到完整文字"
+              >
+                跳過
+              </Button>
+            </div>
+          )}
         </div>
       }
 
@@ -264,16 +294,46 @@ export function MultiCardStreamingInterpretation({
           }
           </div>
 
-          {/* Skip button */}
-          {streaming.isStreaming &&
-        <Button size="xs" variant="outline"
-        onClick={streaming.skip}
-        className="absolute top-0 right-0 px-3 py-1 border rounded transition-colors duration-200"
-        aria-label="Skip to full text">
+          {/* 🟢 Task 4.2: Streaming controls */}
+          {streaming.isStreaming && (
+            <div
+              className="flex items-center gap-2 absolute top-0 right-0"
+              data-testid="streaming-controls"
+            >
+              {/* Pause/Resume button */}
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={streaming.togglePause}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label={streaming.isPaused ? '繼續' : '暫停'}
+              >
+                {streaming.isPaused ? '繼續' : '暫停'}
+              </Button>
 
-              Skip
-            </Button>
-        }
+              {/* 2x speed button */}
+              <Button
+                size="xs"
+                variant={streaming.currentSpeed === 2 ? 'default' : 'outline'}
+                onClick={() => streaming.setSpeed(streaming.currentSpeed === 2 ? 1 : 2)}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label={streaming.currentSpeed === 2 ? '正常速度' : '2倍速度'}
+              >
+                2x
+              </Button>
+
+              {/* Skip button */}
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={streaming.skip}
+                className="px-3 py-1 border rounded transition-colors duration-200"
+                aria-label="跳過到完整文字"
+              >
+                跳過
+              </Button>
+            </div>
+          )}
         </div>
       }
 

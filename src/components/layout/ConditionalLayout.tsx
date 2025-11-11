@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import { Header } from './Header'
-import { Footer } from './Footer'
+import { FooterDrawer } from './FooterDrawer'
 import { DynamicMainContent } from './DynamicMainContent'
 import { PageTransition } from './PageTransition'
 import { MobileBottomNav } from '@/components/mobile/MobileBottomNav'
@@ -78,9 +78,9 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
         />
       </div>
 
-      {/* Desktop: Footer (hidden on mobile with hidden sm:block) */}
+      {/* Desktop: FooterDrawer (hidden on mobile with hidden sm:block) */}
       <div className="hidden sm:block">
-        <Footer />
+        <FooterDrawer />
       </div>
     </div>
   )

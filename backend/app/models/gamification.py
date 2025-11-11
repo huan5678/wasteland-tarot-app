@@ -38,6 +38,8 @@ class KarmaLog(Base):
     """
     __tablename__ = "karma_logs"
 
+    __table_args__ = {'extend_existing': True}
+
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     action_type: str = Column(String(50), nullable=False, comment="行為類型: daily_login, complete_reading, etc.")
@@ -73,6 +75,8 @@ class UserKarma(Base):
     - current_level: Cached user level (calculated from total_karma)
     """
     __tablename__ = "user_karma"
+
+    __table_args__ = {'extend_existing': True}
 
     # Primary key
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
@@ -152,6 +156,8 @@ class DailyTask(Base):
     """
     __tablename__ = "daily_tasks"
 
+    __table_args__ = {'extend_existing': True}
+
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     task_key: str = Column(String(50), unique=True, nullable=False, comment="任務唯一標識")
     name: str = Column(String(100), nullable=False, comment="任務名稱")
@@ -177,6 +183,8 @@ class UserDailyTask(Base):
     用戶每日任務進度表 - 記錄用戶每日任務的完成進度
     """
     __tablename__ = "user_daily_tasks"
+
+    __table_args__ = {'extend_existing': True}
 
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -211,6 +219,8 @@ class WeeklyTask(Base):
     """
     __tablename__ = "weekly_tasks"
 
+    __table_args__ = {'extend_existing': True}
+
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     task_key: str = Column(String(50), unique=True, nullable=False, comment="任務唯一標識")
     name: str = Column(String(100), nullable=False, comment="任務名稱")
@@ -236,6 +246,8 @@ class UserWeeklyTask(Base):
     用戶每週任務進度表 - 記錄用戶每週任務的完成進度
     """
     __tablename__ = "user_weekly_tasks"
+
+    __table_args__ = {'extend_existing': True}
 
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -273,6 +285,8 @@ class UserActivityStats(Base):
     用戶每日活躍度統計表 - 記錄用戶每日的活動數據
     """
     __tablename__ = "user_activity_stats"
+
+    __table_args__ = {'extend_existing': True}
 
     id: UUID = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -317,6 +331,8 @@ class UserLoginStreak(Base):
     用戶連續登入記錄表 - 追蹤用戶的連續登入天數與里程碑
     """
     __tablename__ = "user_login_streaks"
+
+    __table_args__ = {'extend_existing': True}
 
     user_id: UUID = Column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     current_streak: int = Column(Integer, nullable=False, server_default="0", comment="當前連續天數")

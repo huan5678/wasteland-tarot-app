@@ -10,7 +10,8 @@ import { SpreadSelector } from '@/components/readings/SpreadSelector';
 import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview';
 import { toCanonical } from '@/lib/spreadMapping';
 import { spreadPositionMeanings } from '@/lib/spreadLayouts';
-import { SpreadInteractiveDraw } from '@/components/readings/SpreadInteractiveDraw';
+import { InteractiveCardDraw } from '@/components/tarot/InteractiveCardDraw';
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { AuthLoading } from '@/components/auth/AuthLoading';
 import { toast } from 'sonner';
@@ -41,6 +42,7 @@ interface TarotCardWithPosition {
 export default function NewReadingPage() {
   // 統一認證檢查（自動處理初始化、重導向、日誌）
   const { isReady, user } = useRequireAuth();
+  const { prefersReducedMotion } = usePrefersReducedMotion();
   const [step, setStep] = useState<'setup' | 'drawing' | 'results'>('setup');
   const [question, setQuestion] = useState('');
   const [spreadType, setSpreadType] = useState<string>('single_wasteland_reading');
@@ -186,6 +188,7 @@ export default function NewReadingPage() {
             }
 
             // Determine current step based on state
+            // CRITICAL FIX: Only auto-restore step on first load, don't override during active drawing
             if (sessionState.cards_drawn && sessionState.cards_drawn.length > 0) {
               // If cards are drawn, always go to results page
               // (interpretation will continue loading there if not completed)
@@ -196,6 +199,9 @@ export default function NewReadingPage() {
           }
 
           console.log('恢復現有會話:', activeSession.id);
+        } else {
+          // Session already initialized - don't override step during active operations
+          console.log('[Session] Already initialized, skipping step override to preserve drawing state');
         }
       } else {
         // Reset initialization flag when no active session
@@ -229,6 +235,10 @@ export default function NewReadingPage() {
         session_state: sessionState,
         status: 'active'
       });
+
+      // CRITICAL FIX: Mark this session as initialized to prevent step reset
+      sessionInitialized.current = true;
+      initialSessionId.current = session.id;
 
       console.log('新會話已建立:', session.id);
       toast.success('會話已建立', { description: '你的占卜進度將自動儲存' });
@@ -321,12 +331,29 @@ export default function NewReadingPage() {
     }
   };
 
-  const handleCardsDrawn = async (cards: TarotCardWithPosition[]) => {
-    setDrawnCards(cards);
+  const handleCardsDrawn = async (cards: any[]) => {
+    console.log('[InteractiveCardDraw] Cards drawn:', cards);
+
+    // Convert CardWithPosition to TarotCardWithPosition
+    const convertedCards: TarotCardWithPosition[] = cards.map((card) => ({
+      id: typeof card.id === 'number' ? card.id : (card.number || 0),
+      uuid: typeof card.id === 'string' ? card.id : card.uuid,
+      name: card.name,
+      suit: card.suit,
+      number: card.number,
+      upright_meaning: card.upright_meaning,
+      reversed_meaning: card.reversed_meaning,
+      image_url: card.image_url,
+      keywords: card.keywords || [],
+      position: card.position,
+      _position_meta: card.positionLabel // Preserve position label
+    } as any));
+
+    setDrawnCards(convertedCards);
     setStep('results');
 
     // Track cards drawn
-    cards.forEach((card) => {
+    convertedCards.forEach((card) => {
       trackCardView(card.id.toString());
     });
 
@@ -335,10 +362,10 @@ export default function NewReadingPage() {
       spread_type: spreadType,
       character_voice: 'pip-boy',
       question_length: question.length,
-      card_ids: cards.map((c) => c.id.toString())
+      card_ids: convertedCards.map((c) => c.id.toString())
     });
 
-    await generateInterpretation(cards);
+    await generateInterpretation(convertedCards);
   };
 
   const generateInterpretation = async (cards: TarotCardWithPosition[]) => {
@@ -678,7 +705,16 @@ export default function NewReadingPage() {
               </p>
             </div>
 
-            <SpreadInteractiveDraw spreadType={toCanonical(spreadType)} onDone={handleCardsDrawn} />
+            <InteractiveCardDraw
+              spreadType={toCanonical(spreadType)}
+              positionsMeta={spreadPositionMeanings[toCanonical(spreadType)]?.map((p) => ({
+                id: p.name,
+                label: p.name
+              }))}
+              onCardsDrawn={handleCardsDrawn}
+              enableAnimation={!prefersReducedMotion}
+              animationDuration={1500}
+            />
           </div>
         }
 

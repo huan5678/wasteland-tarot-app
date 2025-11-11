@@ -637,3 +637,59 @@ class AnalyticsExportData(BaseModel):
             }
         }
     )
+
+
+# ============================================================================
+# TAG MANAGEMENT SCHEMAS
+# ============================================================================
+
+class TagUpdate(BaseModel):
+    """更新解讀記錄標籤的 Schema"""
+    tags: List[str] = Field(
+        ...,
+        max_length=20,
+        description="標籤列表（最多 20 個，每個標籤 1-50 字元）",
+        example=["愛情", "事業", "健康"]
+    )
+
+    @field_validator('tags')
+    @classmethod
+    def validate_tags(cls, v: List[str]) -> List[str]:
+        """驗證標籤列表"""
+        if len(v) > 20:
+            raise ValueError('最多只能有 20 個標籤')
+
+        # 驗證每個標籤
+        validated_tags = []
+        for tag in v:
+            tag_stripped = tag.strip()
+            if not tag_stripped:
+                continue  # 跳過空白標籤
+            if len(tag_stripped) > 50:
+                raise ValueError(f'標籤 "{tag_stripped}" 超過 50 字元')
+            validated_tags.append(tag_stripped)
+
+        return validated_tags
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "tags": ["愛情", "事業", "健康"]
+            }
+        }
+    )
+
+
+class TagWithCount(BaseModel):
+    """帶有使用統計的標籤"""
+    tag: str = Field(..., description="標籤名稱")
+    count: int = Field(..., description="使用次數", ge=0)
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "tag": "愛情",
+                "count": 12
+            }
+        }
+    )

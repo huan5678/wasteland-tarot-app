@@ -54,6 +54,8 @@ class UserAchievement(BaseModel):
 
     __tablename__ = "user_achievements"
 
+    __table_args__ = {'extend_existing': True}
+
     # User and Achievement Info
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     achievement_id = Column(String, nullable=False)
@@ -165,6 +167,8 @@ class UserFriendship(BaseModel):
     """
 
     __tablename__ = "user_friendships"
+
+    __table_args__ = {'extend_existing': True}
 
     # Friendship Participants
     requester_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
@@ -296,6 +300,8 @@ class KarmaHistory(BaseModel):
 
     __tablename__ = "karma_history"
 
+    __table_args__ = {'extend_existing': True}
+
     # User and Change Info
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     karma_before = Column(Integer, nullable=False)
@@ -416,6 +422,8 @@ class EventParticipant(BaseModel):
 
     __tablename__ = "event_participants"
 
+    __table_args__ = {'extend_existing': True}
+
     # Core Relations
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     event_id = Column(UUID(as_uuid=True), ForeignKey("community_events.id"), nullable=False, index=True)
@@ -489,6 +497,8 @@ class CommunityEvent(BaseModel):
     """
 
     __tablename__ = "community_events"
+
+    __table_args__ = {'extend_existing': True}
 
     # Event Information
     event_name = Column(String(150), nullable=False)

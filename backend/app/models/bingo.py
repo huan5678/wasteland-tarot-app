@@ -22,6 +22,8 @@ class UserBingoCard(BaseModel):
 
     __tablename__ = "user_bingo_cards"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)  # First day of the month (e.g., 2025-10-01)
     card_data = Column(JSON, nullable=False)  # 5x5 array: [[1,2,3,4,5], [6,7,8,9,10], ...]
@@ -100,6 +102,8 @@ class DailyBingoNumber(BaseModel):
 
     __tablename__ = "daily_bingo_numbers"
 
+    __table_args__ = {'extend_existing': True}
+
     date = Column(Date, nullable=False, unique=True, index=True)
     number = Column(Integer, nullable=False)
     cycle_number = Column(Integer, nullable=False, default=1)  # Tracks which 25-day cycle
@@ -136,6 +140,8 @@ class UserNumberClaim(BaseModel):
     """
 
     __tablename__ = "user_number_claims"
+
+    __table_args__ = {'extend_existing': True}
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     card_id = Column(UUID(as_uuid=True), ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False, index=True)
@@ -180,6 +186,8 @@ class BingoReward(BaseModel):
 
     __tablename__ = "bingo_rewards"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     card_id = Column(UUID(as_uuid=True), ForeignKey("user_bingo_cards.id", ondelete="CASCADE"), nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)
@@ -222,6 +230,8 @@ class MonthlyResetLog(BaseModel):
     """
 
     __tablename__ = "monthly_reset_logs"
+
+    __table_args__ = {'extend_existing': True}
 
     reset_date = Column(Date, nullable=False, index=True)
     status = Column(String(20), nullable=False)  # SUCCESS, FAILED, PARTIAL
@@ -274,6 +284,8 @@ class UserBingoCardHistory(BaseModel):
 
     __tablename__ = "user_bingo_cards_history"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(String, nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)
     card_data = Column(JSON, nullable=False)
@@ -295,6 +307,8 @@ class UserNumberClaimHistory(BaseModel):
     """
 
     __tablename__ = "user_number_claims_history"
+
+    __table_args__ = {'extend_existing': True}
 
     user_id = Column(String, nullable=False, index=True)
     card_id = Column(String, nullable=False)
@@ -318,6 +332,8 @@ class BingoRewardHistory(BaseModel):
     """
 
     __tablename__ = "bingo_rewards_history"
+
+    __table_args__ = {'extend_existing': True}
 
     user_id = Column(String, nullable=False, index=True)
     month_year = Column(Date, nullable=False, index=True)

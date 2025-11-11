@@ -19,6 +19,8 @@ class UserAnalytics(Base):
     """
     __tablename__ = "user_analytics"
 
+    __table_args__ = {'extend_existing': True}
+
     id = Column(String, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
@@ -96,6 +98,8 @@ class AnalyticsEvent(Base):
     """
     __tablename__ = "analytics_events"
 
+    __table_args__ = {'extend_existing': True}
+
     id = Column(String, primary_key=True)
     analytics_id = Column(String, ForeignKey("user_analytics.id"), nullable=False, index=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
@@ -157,6 +161,8 @@ class ReadingPattern(Base):
     """
     __tablename__ = "reading_patterns"
 
+    __table_args__ = {'extend_existing': True}
+
     id = Column(String, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
@@ -209,6 +215,8 @@ class UserRecommendation(Base):
     Stores generated recommendations for spreads, cards, and interpretations
     """
     __tablename__ = "user_recommendations"
+
+    __table_args__ = {'extend_existing': True}
 
     id = Column(String, primary_key=True)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)

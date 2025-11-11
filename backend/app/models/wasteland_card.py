@@ -79,6 +79,7 @@ class WastelandCard(BaseModel):
     """
 
     __tablename__ = "wasteland_cards"
+    __table_args__ = {'extend_existing': True}
 
     # Basic Card Information
     name = Column(String(100), nullable=False)

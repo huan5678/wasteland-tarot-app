@@ -28,6 +28,8 @@ class ReadingJournal(BaseModel):
 
     __tablename__ = "reading_journals"
 
+    __table_args__ = {'extend_existing': True}
+
     # Primary Key
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, server_default=func.gen_random_uuid())
 

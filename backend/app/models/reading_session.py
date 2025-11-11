@@ -27,6 +27,8 @@ class ReadingSession(Base):
 
     __tablename__ = "reading_sessions"
 
+    __table_args__ = {'extend_existing': True}
+
     # Primary key - UUID type to match database
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_pkg.uuid4)
 

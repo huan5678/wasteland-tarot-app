@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { PixelIcon } from '@/components/ui/icons';import { Button } from "@/components/ui/button";
+import { PixelIcon } from '@/components/ui/icons';
+import { Button } from "@/components/ui/button";
+import { cn } from '@/lib/utils';
 
-export function Footer() {
+export function Footer({ className }: { className?: string }) {
   const router = useRouter();
   const [currentYear, setCurrentYear] = useState<number | null>(null);
 
@@ -29,11 +31,11 @@ export function Footer() {
 
   return (
     <footer
-      className="border-t-2 border-pip-boy-green"
+      className={cn("border-t-2 border-pip-boy-green", className)}
       style={{ backgroundColor: 'var(--color-wasteland-dark)' }}>
 
       {/* Main Footer Content */}
-      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8">
+      <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 pb-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {/* Brand Column */}
           <div>

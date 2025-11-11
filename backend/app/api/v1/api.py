@@ -34,6 +34,7 @@ from app.api.v1.endpoints import (
     tasks,
     levels,
     quests,
+    tags,
 )
 from app.api import oauth, webauthn
 
@@ -222,4 +223,11 @@ api_router.include_router(
 api_router.include_router(
     tasks.router,
     tags=["📋 Tasks"]
+)
+
+# Tags endpoints - 標籤管理 (Phase 6 - Task 7.5)
+api_router.include_router(
+    tags.router,
+    prefix="/tags",
+    tags=["🏷️ Tags"]
 )

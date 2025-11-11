@@ -21,6 +21,8 @@ class User(BaseModel):
 
     __tablename__ = "users"
 
+    __table_args__ = {'extend_existing': True}
+
     # Basic Authentication Info (OAuth 整合)
     email = Column(String(255), unique=True, index=True, nullable=False)
     name = Column(String(50), nullable=False)  # 取代 username，用於顯示名稱
@@ -92,7 +94,7 @@ class User(BaseModel):
     credentials = relationship("Credential", back_populates="user", cascade="all, delete-orphan")  # WebAuthn credentials
     journals = relationship("ReadingJournal", back_populates="user", cascade="all, delete-orphan")
     karma = relationship("UserKarma", back_populates="user", uselist=False, cascade="all, delete-orphan")
-    karma = relationship("UserKarma", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    reading_categories = relationship("ReadingCategory", back_populates="user", cascade="all, delete-orphan")
 
     # Dashboard Gamification Relationships
     karma_logs = relationship("KarmaLog", back_populates="user", cascade="all, delete-orphan")
@@ -265,6 +267,8 @@ class UserProfile(BaseModel):
 
     __tablename__ = "user_profiles"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Wasteland Character Info
@@ -368,6 +372,8 @@ class UserPreferences(BaseModel):
 
     __tablename__ = "user_preferences"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
 
     # Reading Preferences
@@ -470,6 +476,8 @@ class UserLoginHistory(BaseModel):
 
     __tablename__ = "user_login_history"
 
+    __table_args__ = {'extend_existing': True}
+
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     login_date = Column(DateTime(timezone=True).with_variant(DateTime, "postgresql"), nullable=False)
     login_count = Column(Integer, default=1, nullable=False)  # Number of logins on this date
@@ -507,6 +515,8 @@ class TokenExtensionHistory(BaseModel):
     """
 
     __tablename__ = "token_extension_history"
+
+    __table_args__ = {'extend_existing': True}
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     extension_type = Column(String(50), nullable=False)  # 'activity' or 'loyalty'

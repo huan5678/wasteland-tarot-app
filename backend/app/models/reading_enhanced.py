@@ -60,6 +60,7 @@ class SpreadTemplate(BaseModel):
     """
 
     __tablename__ = "spread_templates"
+    __table_args__ = {'extend_existing': True}
 
     # Basic Template Info
     name = Column(String(100), nullable=False)
@@ -154,6 +155,8 @@ class InterpretationTemplate(BaseModel):
     """
 
     __tablename__ = "interpretation_templates"
+
+    __table_args__ = {'extend_existing': True}
 
     # Character Information
     character_voice = Column(String(50), nullable=False)
@@ -251,10 +254,13 @@ class CompletedReading(BaseModel):
 
     __tablename__ = "completed_readings"
 
+    __table_args__ = {'extend_existing': True}
+
     # Basic Reading Information
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     spread_template_id = Column(UUID(as_uuid=True), ForeignKey("spread_templates.id"), index=True)
     interpretation_template_id = Column(UUID(as_uuid=True), ForeignKey("interpretation_templates.id"), index=True)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("reading_categories.id"), nullable=True, index=True)
 
     # Reading Content
     question = Column(Text, nullable=False)
@@ -315,6 +321,9 @@ class CompletedReading(BaseModel):
     interpretation_template = relationship("InterpretationTemplate")
     card_positions = relationship("ReadingCardPosition", back_populates="completed_reading")
     journals = relationship("ReadingJournal", back_populates="reading", cascade="all, delete-orphan")
+    tags = relationship("ReadingTag", back_populates="reading", cascade="all, delete-orphan")
+    category = relationship("ReadingCategory", back_populates="readings")
+    shares = relationship("ReadingShare", back_populates="reading", cascade="all, delete-orphan")
 
     def calculate_total_duration(self) -> int:
         """Calculate reading duration in seconds"""
@@ -398,6 +407,8 @@ class ReadingCardPosition(BaseModel):
 
     __tablename__ = "reading_card_positions"
 
+    __table_args__ = {'extend_existing': True}
+
     # Reading and Card References
     completed_reading_id = Column(UUID(as_uuid=True), ForeignKey("completed_readings.id"), nullable=False, index=True)
     card_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
@@ -477,6 +488,8 @@ class CardSynergy(BaseModel):
 
     __tablename__ = "card_synergies"
 
+    __table_args__ = {'extend_existing': True}
+
     # Card Combination
     card_1_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
     card_2_id = Column(UUID(as_uuid=True), ForeignKey("wasteland_cards.id"), nullable=False, index=True)
@@ -552,5 +565,84 @@ class CardSynergy(BaseModel):
             "is_three_card": self.is_three_card_synergy(),
             "discovered_by_user": self.discovered_by_user,
             "discovery_date": self.discovery_date.isoformat() if self.discovery_date else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class ReadingTag(BaseModel):
+    """
+    Many-to-many relationship table for reading tags
+
+    Allows users to tag their readings with custom labels for organization and searching.
+    Maximum of 20 tags per reading enforced by database trigger.
+    """
+
+    __tablename__ = "reading_tags"
+
+    __table_args__ = (
+        {"schema": None, "extend_existing": True},  # Use default schema + allow redefinition
+    )
+
+    # Foreign Keys
+    reading_id = Column(UUID(as_uuid=True), ForeignKey("completed_readings.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Tag Data
+    tag = Column(String(50), nullable=False)  # CHECK constraint handled by database: LENGTH(tag) BETWEEN 1 AND 50
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    reading = relationship("CompletedReading", back_populates="tags")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert tag to dictionary"""
+        return {
+            "id": str(self.id),
+            "reading_id": str(self.reading_id),
+            "tag": self.tag,
+            "created_at": self.created_at.isoformat() if self.created_at else None
+        }
+
+
+class ReadingCategory(BaseModel):
+    """
+    User-defined categories for organizing readings
+
+    Allows users to create custom categories (e.g., Love, Career, Health)
+    with colors and icons for visual organization.
+    """
+
+    __tablename__ = "reading_categories"
+
+    __table_args__ = (
+        {"schema": None, "extend_existing": True},  # Use default schema + allow redefinition
+    )
+
+    # Ownership
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Category Data
+    name = Column(String(100), nullable=False)
+    color = Column(String(7), nullable=False)  # Hex color code (e.g., #ff0000)
+    description = Column(Text, nullable=True)
+    icon = Column(String(50), nullable=True)  # Icon identifier (e.g., 'heart', 'briefcase')
+
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="reading_categories")
+    readings = relationship("CompletedReading", back_populates="category")
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert category to dictionary"""
+        return {
+            "id": str(self.id),
+            "user_id": str(self.user_id),
+            "name": self.name,
+            "color": self.color,
+            "description": self.description,
+            "icon": self.icon,
             "created_at": self.created_at.isoformat() if self.created_at else None
         }

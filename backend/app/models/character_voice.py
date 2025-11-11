@@ -28,6 +28,8 @@ class Character(BaseModel):
 
     __tablename__ = "characters"
 
+    __table_args__ = {'extend_existing': True}
+
     key = Column(String(50), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
@@ -96,6 +98,8 @@ class Faction(BaseModel):
 
     __tablename__ = "factions"
 
+    __table_args__ = {'extend_existing': True}
+
     key = Column(String(50), unique=True, nullable=False, index=True)
     name = Column(String(100), nullable=False)
     description = Column(Text, nullable=True)
@@ -148,6 +152,8 @@ class FactionCharacter(BaseModel):
 
     __tablename__ = "faction_characters"
 
+    __table_args__ = {'extend_existing': True}
+
     faction_id = Column(
         UUID(as_uuid=True),
         ForeignKey('factions.id', ondelete='CASCADE'),
@@ -196,6 +202,8 @@ class CardInterpretation(BaseModel):
     """
 
     __tablename__ = "card_interpretations"
+
+    __table_args__ = {'extend_existing': True}
 
     card_id = Column(
         UUID(as_uuid=True),

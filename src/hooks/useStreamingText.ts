@@ -64,6 +64,8 @@ export interface StreamingTextOptions {
   enableFallback?: boolean;     // Enable fallback to non-streaming endpoint (default: false)
   fallbackUrl?: string;         // Custom fallback URL (default: auto-derived from url)
   fallbackResponseKey?: string; // JSON response key for text content (default: 'interpretation')
+  // 🟢 Task 4.1: Typewriter optimization options
+  enableRandomVariation?: boolean; // Enable ±20% random variation (default: true)
 }
 
 export interface StreamingTextState {
@@ -84,6 +86,13 @@ export interface StreamingTextState {
   errorType: StreamingErrorType | null;  // Classified error type
   userFriendlyError: string | null;      // User-friendly error message
   recoverySuggestion: string | null;     // Recovery suggestion
+  // 🟢 Task 4.1 & 4.2: Streaming controls
+  pause: () => void;        // Pause typewriter effect
+  resume: () => void;       // Resume typewriter effect
+  togglePause: () => void;  // Toggle pause state
+  isPaused: boolean;        // Whether typewriter is paused
+  setSpeed: (multiplier: number) => void;  // Set speed multiplier (e.g., 2 for 2x speed)
+  currentSpeed: number;     // Current speed multiplier
 }
 
 /**
@@ -132,6 +141,8 @@ export function useStreamingText({
   enableFallback = false,
   fallbackUrl,
   fallbackResponseKey = 'interpretation',
+  // 🟢 Task 4.1: Typewriter optimization parameters
+  enableRandomVariation = true,
 }: StreamingTextOptions): StreamingTextState {
   const [text, setText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -150,6 +161,9 @@ export function useStreamingText({
   const [errorType, setErrorType] = useState<StreamingErrorType | null>(null);
   const [userFriendlyError, setUserFriendlyError] = useState<string | null>(null);
   const [recoverySuggestion, setRecoverySuggestion] = useState<string | null>(null);
+  // 🟢 Task 4.1 & 4.2: Streaming controls state
+  const [isPaused, setIsPaused] = useState(false);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
 
   // 🟢 TDD P1: Audio integration
   const { playSound } = useAudioEffect();
@@ -232,6 +246,39 @@ export function useStreamingText({
     return requestBodyJsonRef.current;
   }, [requestBody]); // We DO include requestBody here - React will compare by reference,
   // but we keep the same string if content is identical
+
+  /**
+   * 🟢 Task 4.1 & 4.2: Pause typewriter effect
+   */
+  const pause = useCallback(() => {
+    setIsPaused(true);
+  }, []);
+
+  /**
+   * 🟢 Task 4.1 & 4.2: Resume typewriter effect
+   */
+  const resume = useCallback(() => {
+    setIsPaused(false);
+  }, []);
+
+  /**
+   * 🟢 Task 4.1 & 4.2: Toggle pause state
+   */
+  const togglePause = useCallback(() => {
+    setIsPaused(prev => !prev);
+  }, []);
+
+  /**
+   * 🟢 Task 4.1 & 4.2: Set speed multiplier
+   * @param multiplier - Speed multiplier (e.g., 2 for 2x speed, 0.5 for half speed)
+   */
+  const setSpeed = useCallback((multiplier: number) => {
+    if (multiplier <= 0) {
+      logger.warn('Speed multiplier must be positive, ignoring:', multiplier);
+      return;
+    }
+    setSpeedMultiplier(multiplier);
+  }, []);
 
   /**
    * Skip typewriter effect and show full text immediately
@@ -394,12 +441,30 @@ export function useStreamingText({
   }, [classifyError]);
 
   /**
-   * Store charsPerSecond in ref to keep startTypewriter stable
+   * Store charsPerSecond and other dynamic values in refs to keep startTypewriter stable
    */
   const charsPerSecondRef = useRef(charsPerSecond);
+  const enableRandomVariationRef = useRef(enableRandomVariation);
+  const isPausedRef = useRef(isPaused);
+  const speedMultiplierRef = useRef(speedMultiplier);
+  const frameCountRef = useRef(0);
+  const fpsRef = useRef(60);
+
   useEffect(() => {
     charsPerSecondRef.current = charsPerSecond;
   }, [charsPerSecond]);
+
+  useEffect(() => {
+    enableRandomVariationRef.current = enableRandomVariation;
+  }, [enableRandomVariation]);
+
+  useEffect(() => {
+    isPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  useEffect(() => {
+    speedMultiplierRef.current = speedMultiplier;
+  }, [speedMultiplier]);
 
   /**
    * 🟢 TDD P1: Play typing sound with throttling
@@ -415,15 +480,55 @@ export function useStreamingText({
   }, [enableTypingSound, soundThrottle, typingSoundVolume, playSound]);
 
   /**
-   * Start typewriter effect
+   * 🟢 Task 4.1: Start typewriter effect with optimization features
+   * - Speed control via speedMultiplier
+   * - Pause/resume support
+   * - ±20% random variation
+   * - Batch rendering for low FPS
    * Made stable with useCallback and no dependencies - uses refs internally
    */
   const startTypewriter = useCallback(() => {
     if (typewriterIntervalRef.current) return; // Already running
 
-    const intervalMs = 1000 / charsPerSecondRef.current;
+    // FPS monitoring for batch rendering
+    let lastFrameTime = Date.now();
+    let frameCounter = 0;
+
+    const getEffectiveSpeed = (): number => {
+      const baseSpeed = charsPerSecondRef.current * speedMultiplierRef.current;
+
+      // 🟢 Task 4.1: Apply ±20% random variation if enabled
+      if (enableRandomVariationRef.current) {
+        const variation = 0.8 + Math.random() * 0.4; // Range: 0.8 to 1.2 (±20%)
+        return baseSpeed * variation;
+      }
+
+      return baseSpeed;
+    };
+
+    // Calculate batch size based on FPS (for low FPS optimization)
+    const getBatchSize = (): number => {
+      const currentFps = fpsRef.current;
+
+      // 🟢 Task 4.1: Batch rendering when FPS < 30
+      if (currentFps < 30) {
+        // Low FPS: render more characters per frame
+        return Math.ceil(charsPerSecondRef.current / 10); // ~10 frames/sec worth of chars
+      }
+
+      // Normal FPS: render 1-3 chars per frame
+      return Math.min(3, Math.ceil(charsPerSecondRef.current / 20));
+    };
+
+    const intervalMs = 1000 / (charsPerSecondRef.current * speedMultiplierRef.current);
 
     typewriterIntervalRef.current = setInterval(() => {
+      // 🟢 Task 4.1 & 4.2: Check pause state
+      if (isPausedRef.current) {
+        // Paused, skip this frame
+        return;
+      }
+
       if (skippedRef.current) {
         // Skipped, stop typewriter
         if (typewriterIntervalRef.current) {
@@ -433,12 +538,23 @@ export function useStreamingText({
         return;
       }
 
+      // 🟢 Task 4.1: FPS monitoring
+      frameCounter++;
+      const now = Date.now();
+      if (now - lastFrameTime >= 1000) {
+        fpsRef.current = Math.round((frameCounter * 1000) / (now - lastFrameTime));
+        frameCounter = 0;
+        lastFrameTime = now;
+      }
+
       const fullText = fullTextRef.current;
       const displayed = displayedCharsRef.current;
 
       if (displayed < fullText.length) {
-        // Add next chunk of characters (1-3 chars at a time for natural feel)
-        const chunkSize = Math.min(3, Math.ceil(charsPerSecondRef.current / 10));
+        // 🟢 Task 4.1: Get batch size based on FPS
+        const batchSize = getBatchSize();
+        const chunkSize = Math.min(batchSize, fullText.length - displayed);
+
         const nextChars = fullText.slice(displayed, displayed + chunkSize);
         displayedCharsRef.current = displayed + nextChars.length;
         setText(fullText.slice(0, displayedCharsRef.current));
@@ -818,5 +934,12 @@ export function useStreamingText({
     errorType,
     userFriendlyError,
     recoverySuggestion,
+    // 🟢 Task 4.1 & 4.2: Return streaming controls
+    pause,
+    resume,
+    togglePause,
+    isPaused,
+    setSpeed,
+    currentSpeed: speedMultiplier,
   };
 }

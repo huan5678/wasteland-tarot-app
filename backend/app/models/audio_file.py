@@ -56,6 +56,8 @@ class AudioFile(BaseModel):
 
     __tablename__ = "audio_files"
 
+    __table_args__ = {'extend_existing': True}
+
     # 關聯 IDs（靜態解讀用）
     card_id = Column(
         UUID(as_uuid=True),

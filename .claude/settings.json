@@ -1,7 +1,7 @@
 {
   "statusLine": {
     "type": "command",
-    "command": "bash /Users/sean/Documents/React/tarot-card-nextjs-app/.claude/statusline-plan-b.sh",
+    "command": "bash .claude/statusline-plan-b.sh",
     "padding": 0
   }
 }

@@ -45,6 +45,8 @@ class Achievement(BaseModel):
 
     __tablename__ = "achievements"
 
+    __table_args__ = {'extend_existing': True}
+
     # 基本資訊
     code = Column(String(100), unique=True, nullable=False, index=True)  # 唯一識別碼
     name_zh_tw = Column(String(200), nullable=False)  # 成就名稱（繁體中文）
@@ -119,6 +121,8 @@ class UserAchievementProgress(BaseModel):
     """
 
     __tablename__ = "user_achievement_progress"
+
+    __table_args__ = {'extend_existing': True}
 
     # 關聯
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
