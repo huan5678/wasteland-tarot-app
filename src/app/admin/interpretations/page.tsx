@@ -28,7 +28,7 @@ import type {
 '@/types/character-voice';
 import type { TarotCard } from '@/types/api';
 import { toast } from 'sonner';
-import { CardListSkeleton, InterpretationListSkeleton, StatCardSkeleton } from '@/components/ui/Skeleton';
+import { CardListSkeleton, InterpretationListSkeleton, StatCardSkeleton } from '@/components/ui/skeleton';
 import { ProgressBar, type ProgressStats } from '@/components/ui/ProgressBar';import { Button } from "@/components/ui/button";
 
 export default function InterpretationsPage() {
