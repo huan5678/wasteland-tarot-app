@@ -4,7 +4,7 @@
 
 本實作計畫將願望功能分為 5 個主要階段：**資料層建置**、**後端業務邏輯與 API**、**前端核心元件**、**管理員介面**、**整合與測試**。每個任務以功能導向描述，確保所有需求皆被覆蓋。
 
-**當前進度**: 後端、前端狀態管理、核心 UI 元件、個人資料頁面整合與管理員頁面基礎完成 (Tasks 1-10, 18/38 完成, 47%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器、Profile 頁面整合、管理員願望管理頁面全數完成。**使用者已可在 /profile 頁面使用完整的願望功能！管理員已可在 /admin/wishlist 查看所有願望！** 接下來可選擇補充彈窗無障礙功能（Task 8.1，可選）或繼續管理員介面互動功能（Tasks 10.1-10.4）。
+**當前進度**: 後端、前端狀態管理、核心 UI 元件、個人資料頁面整合與管理員介面完成 (Tasks 1-10.4, 22/38 完成, 58%)。資料層、業務邏輯、API Endpoints、後端測試、Zustand Store、Markdown 編輯器、願望歷史列表、願望彈窗主容器、Profile 頁面整合、管理員願望管理頁面（含篩選、排序、回覆、隱藏、分頁功能）全數完成。**使用者已可在 /profile 頁面使用完整的願望功能！管理員已可在 /admin/wishlist 使用完整的願望管理功能！** 接下來進入測試與 QA 階段（Tasks 11-13.1）。
 
 ---
 
@@ -383,7 +383,7 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 實作進度總結
 
-### 已完成任務 (✅ 18/38 子任務，47% 完成)
+### 已完成任務 (✅ 22/38 子任務，58% 完成)
 - ✅ **資料層** (Tasks 1-1.2): Migration、Wishlist 模型、資料庫部署
 - ✅ **後端業務邏輯** (Tasks 2-2.3): ContentValidator、TimezoneUtil、WishlistService（使用者與管理員方法）
 - ✅ **Pydantic Schemas** (Task 3): 5 個 schemas 定義與驗證規則
@@ -392,108 +392,92 @@ import { PixelIcon } from '@/components/ui/icons'
 - ✅ **前端狀態管理** (Task 5): Zustand Store 完整實作，包含使用者與管理員操作方法
 - ✅ **前端 UI 元件** (Tasks 6-8): MarkdownEditor、WishCard、WishHistory、WishlistModal 元件完成（789 行程式碼）
 - ✅ **Profile 頁面整合** (Task 9): 願望按鈕與彈窗集成完成，使用者可在 /profile 頁面使用完整願望功能
-- ✅ **管理員頁面基礎** (Task 10): 管理員願望管理頁面建立完成，顯示所有願望列表與狀態
+- ✅ **管理員介面完整實現** (Tasks 10-10.4): 管理員願望管理頁面完成，含篩選、排序、回覆、隱藏、分頁功能（592 行程式碼）
 
-### 使用者端與管理員介面基礎完成 🎉
+### 使用者端與管理員介面完整實現 🎉
 
-**已完成**: Tasks 1-10（資料層、業務邏輯、API、測試、狀態管理、UI 元件、願望彈窗、管理員頁面）
+**已完成**: Tasks 1-10.4（資料層、業務邏輯、API、測試、狀態管理、UI 元件、願望彈窗、管理員介面）
 **測試狀態**: 107/107 backend tests passing ✅
 **API 狀態**: 7 個 endpoints 全數就緒，Swagger UI 文件完整 ✅
 **Store 狀態**: wishlistStore.ts 已建立，整合所有使用者與管理員操作 ✅
-**使用者 UI**: MarkdownEditor、WishCard、WishHistory、WishlistModal 完成 ✅
-**管理員 UI**: AdminWishlistPage 完成，包含願望列表顯示與狀態標籤 ✅
+**使用者 UI**: MarkdownEditor、WishCard、WishHistory、WishlistModal 完成（789 行）✅
+**管理員 UI**: AdminWishlistPage 完成，含篩選、排序、回覆、隱藏、分頁（592 行）✅
 
 **前端元件清單**:
 - `src/components/wishlist/MarkdownEditor.tsx` (217 行 - 上下兩欄編輯器，含工具列與預覽)
 - `src/components/wishlist/WishCard.tsx` (176 行 - 願望卡片，支援查看與編輯模式)
 - `src/components/wishlist/WishHistory.tsx` (233 行 - 願望歷史列表)
 - `src/components/wishlist/WishlistModal.tsx` (163 行 - 願望彈窗主容器，整合編輯器與歷史列表)
-- `src/app/admin/wishlist/page.tsx` (管理員願望管理頁面，含 AdminWishCard 元件)
+- `src/app/admin/wishlist/page.tsx` (592 行 - 管理員願望管理頁面，含篩選、排序、回覆、隱藏、分頁功能)
 
-### 下一步建議：管理員介面互動功能 (優先順序)
+**前端總程式碼**: 1,381 行（使用者端 789 行 + 管理員端 592 行）
 
-#### ✅ Task 8: 實作願望彈窗主容器元件（已完成）
-**目標**: 整合 MarkdownEditor 與 WishHistory 成為完整彈窗 ✅
-**輸出**:
-- `src/components/wishlist/WishlistModal.tsx` ✅
-- 使用 `@radix-ui/react-dialog` 建立彈窗容器 ✅
-- 整合編輯器（上半部）與歷史列表（下半部）✅
-- 實作「今日已許願」狀態顯示邏輯 ✅
-- 彈窗開啟時自動呼叫 `fetchUserWishes()` ✅
+### 下一步建議：測試與 QA 階段 🧪
 
-**完成內容**: WishlistModal 元件完整實作，包含標題（heart 圖示 + 「願望許願池」）、描述、上半部輸入區域（根據 hasSubmittedToday 切換）、下半部可滾動歷史列表、Fallout 主題樣式（Pip-Boy Green 邊框與陰影）、基本無障礙標籤（aria-labelledby、aria-describedby）。
+#### ✅ 已完成階段總結
 
-#### 🎯 Task 8.1: 實作彈窗無障礙與鍵盤操作（1-2 小時）**[下一步]**
-**目標**: 為彈窗添加完整的無障礙支援
-**輸出**:
-- ARIA 標籤（role="dialog"、aria-labelledby、aria-describedby）✅ **（Radix UI 已內建）**
-- 鍵盤焦點陷阱（focus trap）**（Radix UI 已內建，可選擇性測試與補強）**
-- Esc 鍵關閉功能 ✅ **（Radix UI 已內建）**
-- 點擊外部關閉功能 ✅ **（Radix UI 已內建）**
+**使用者端功能** (Tasks 1-9) ✅:
+- 願望提交、查看歷史、編輯功能
+- Markdown 編輯器與即時預覽
+- 完整的願望彈窗整合至 /profile 頁面
+- 每日限制檢查與狀態顯示
+- **使用者可在 /profile 頁面使用完整的願望功能！**
 
-**依賴**: Task 8 (WishlistModal) ✅
+**管理員介面功能** (Tasks 10-10.4) ✅:
+- 願望列表顯示與狀態標籤
+- 篩選功能（回覆狀態、隱藏狀態）
+- 排序功能（最新優先/最舊優先）
+- 回覆功能（支援 Markdown 編輯器）
+- 隱藏/取消隱藏功能
+- 分頁導航（每頁 50 筆，含頁碼跳轉）
+- **管理員可在 /admin/wishlist 使用完整的願望管理功能！**
 
-**備註**: Radix UI Dialog 已內建多數無障礙功能（role="dialog"、焦點陷阱、Esc 關閉、點擊外部關閉），Task 8.1 主要補充額外的測試與驗證。可選擇性跳過並直接進行 Task 9。
+**程式碼統計** 📊:
+- 後端測試：107/107 passing ✅
+- 前端程式碼：1,381 行（使用者端 789 行 + 管理員端 592 行）
+- API Endpoints：7 個（3 個使用者端 + 4 個管理員端）
 
-#### ✅ Task 9: 整合願望彈窗至個人資料頁面（已完成）
-**目標**: 在 `/profile` 頁面新增願望按鈕與彈窗 ✅
-**輸出**:
-- 在 `/profile` 新增「願望」按鈕（使用 PixelIcon heart 圖示）✅
-- 實作彈窗開關狀態管理（useState）✅
-- 確保按鈕符合 WCAG AA 觸控目標尺寸（44×44px）✅
+---
 
-**依賴**: Task 8 (WishlistModal) ✅
+#### 🎯 下一步：進入測試與 QA 階段（Tasks 11-13.1）
 
-**完成狀態**: 使用者現在可以在 `/profile` 頁面使用完整的願望功能，實現端到端的功能流程！ 🎉
+**階段目標**: 確保願望功能的品質、效能、安全性與無障礙性
 
-#### ✅ Task 10: 建立管理員願望管理頁面（已完成）
-**目標**: 建立管理員介面基礎，顯示所有使用者的願望列表 ✅
-**輸出**:
-- 建立 `/admin/wishlist` 頁面元件 `AdminWishlistPage.tsx` ✅
-- 實作 `AdminWishCard` 元件顯示願望詳細資訊 ✅
-- 頁面載入時自動呼叫 `fetchAdminWishes()` ✅
-- 顯示使用者 ID、願望內容、提交時間、回覆狀態、隱藏狀態 ✅
-- 實作空狀態提示（無符合條件的願望）✅
-- 套用 Fallout Pip-Boy 主題樣式 ✅
-- 建立操作按鈕 UI（回覆/編輯回覆、隱藏/取消隱藏）✅
+**推薦執行順序**:
 
-**依賴**: Task 5 (wishlistStore) ✅
+1. **Task 11: 前端單元測試** (3-4 小時)
+   - MarkdownEditor、WishHistory、WishlistModal 元件測試
+   - wishlistStore 狀態管理測試
+   - 使用 MSW mock API 請求
 
-**完成狀態**: 管理員現在可以在 `/admin/wishlist` 頁面查看所有使用者的願望，包含完整的狀態標籤與操作按鈕 UI！ 🎉
+2. **Task 11.1: 前端整合測試** (2-3 小時)
+   - 完整願望提交流程測試
+   - 願望編輯流程測試
+   - 管理員回覆流程測試
 
-#### 🎯 Task 10.1: 實作管理員篩選與排序功能（1-2 小時）**[推薦下一步]**
-**目標**: 為管理員頁面添加篩選與排序功能
-**輸出**:
-- 建立頁面頂部篩選器元件（回覆狀態、隱藏狀態）
-- 建立排序選擇器（最新優先/最舊優先）
-- 實作篩選器變更時自動呼叫 `setAdminFilter()` 或 `setAdminSort()`
-- 實作載入指示器（Pip-Boy 風格 loading spinner）
+3. **Task 12: 端對端測試 (E2E)** (3-4 小時)
+   - 使用 Playwright 測試使用者流程
+   - 測試管理員流程
+   - 測試每日限制與時區邊界
 
-**依賴**: Task 10 (AdminWishlistPage) ✅
+4. **Task 12.1: 無障礙性測試** (2-3 小時)
+   - axe-core WCAG AA 合規性檢查
+   - 鍵盤導航測試
+   - 螢幕閱讀器測試
 
-#### 🎯 Task 10.2: 實作管理員回覆功能（2-3 小時）
-**目標**: 為管理員添加回覆願望的功能
-**輸出**:
-- 在願望卡片實作「回覆」按鈕點擊互動
-- 展開 Markdown 編輯器（上下兩欄：編輯區 + 預覽區）
-- 實作字數統計（最多 1000 字）
-- 實作「提交回覆」與「取消」按鈕
-- 呼叫 `wishlistStore.submitReply()` 更新願望
+5. **Task 13: 效能與安全性測試** (2-3 小時)
+   - API 回應時間測試
+   - Markdown XSS 防護測試
+   - 並發提交測試
 
-**依賴**: Task 10 (AdminWishlistPage) ✅
+6. **Task 13.1: 錯誤處理與日誌測試** (1-2 小時)
+   - 自訂例外錯誤訊息測試
+   - 前端錯誤顯示測試
+   - 網路錯誤恢復測試
 
-#### 🎯 Task 10.3: 實作管理員隱藏/取消隱藏功能（1 小時）
-**目標**: 為管理員添加隱藏願望的功能
-**輸出**:
-- 在願望卡片實作「隱藏」/「取消隱藏」按鈕點擊互動
-- 呼叫 `wishlistStore.toggleHidden()` 切換狀態
-- 更新願望卡片顯示（隱藏標籤）
-
-**依賴**: Task 10 (AdminWishlistPage) ✅
-
-**預估剩餘時數**: 20-34 小時（20 個待完成子任務）
+**預估剩餘時數**: 13-19 小時（16 個待完成子任務）
 **總預估時數**: 60-80 小時
-**當前完成度**: 47% (18/38)
+**當前完成度**: 58% (22/38)
 
 ---
 
@@ -777,21 +761,23 @@ flowchart TD
     style T4 fill:#28a745,stroke:#1e7e34,color:#fff
     style T5 fill:#28a745,stroke:#1e7e34,color:#fff
 
-    %% Phase 3: Next Steps (Yellow highlight)
-    style T6 fill:#ffc107,stroke:#ff9800,color:#000
+    %% Phase 3: Completed (Green)
+    style T6 fill:#28a745,stroke:#1e7e34,color:#fff
     style T6_1 fill:#e1f5fe,stroke:#0288d1,color:#000
-    style T7 fill:#ffc107,stroke:#ff9800,color:#000
-    style T7_1 fill:#e1f5fe,stroke:#0288d1,color:#000
-    style T8 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T7 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T7_1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T8 fill:#28a745,stroke:#1e7e34,color:#fff
     style T8_1 fill:#e1f5fe,stroke:#0288d1,color:#000
-    style T9 fill:#e1f5fe,stroke:#0288d1,color:#000
+    style T9 fill:#28a745,stroke:#1e7e34,color:#fff
 
-    style T10 fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style T10_1 fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style T10_2 fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style T10_3 fill:#f3e5f5,stroke:#9c27b0,color:#000
-    style T10_4 fill:#f3e5f5,stroke:#9c27b0,color:#000
+    %% Phase 4: Completed (Green)
+    style T10 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T10_1 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T10_2 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T10_3 fill:#28a745,stroke:#1e7e34,color:#fff
+    style T10_4 fill:#28a745,stroke:#1e7e34,color:#fff
 
+    %% Phase 5: Testing & QA (Next Steps - Orange)
     style T11 fill:#fff3e0,stroke:#ff9800,color:#000
     style T11_1 fill:#fff3e0,stroke:#ff9800,color:#000
     style T12 fill:#fff3e0,stroke:#ff9800,color:#000
@@ -802,24 +788,25 @@ flowchart TD
 
 ### 圖例說明
 
-- 🟢 **綠色 (已完成)**: Tasks 1-5 - 資料層、後端業務邏輯、API、後端測試、前端狀態管理
-- 🟡 **黃色 (下一步)**: Tasks 6-7 - Markdown 編輯器與願望歷史列表
-- 🔵 **藍色 (待實作)**: Tasks 8-9, 6.1, 7.1, 8.1 - 前端整合與無障礙功能
-- 🟣 **紫色 (待實作)**: Tasks 10-10.4 - 管理員介面
-- 🟠 **橘色 (待實作)**: Tasks 11-13.1 - 測試與 QA
+- 🟢 **綠色 (已完成)**: Tasks 1-10.4 - 資料層、後端業務邏輯、API、測試、狀態管理、UI 元件、管理員介面
+- 🔵 **藍色 (可選)**: Tasks 6.1, 8.1 - 無障礙功能補強（Radix UI 已內建基礎功能）
+- 🟠 **橘色 (下一步)**: Tasks 11-13.1 - 測試與 QA 階段
 
 ### 平行執行建議
 
 以下任務可以平行執行（需先完成依賴任務）：
 
-**階段 3A (當前 - 前端 UI 元件):**
-- Task 5 (Zustand store) ✅ **已完成**
-- Task 6 (Markdown 編輯器) 與 Task 7 (願望歷史列表) **可以平行開發**
-- Task 6.1 與 7.1 可以在各自主任務完成後平行實作
+**階段 1-4 (已完成)** ✅:
+- Tasks 1-10.4 全數完成，包含資料層、後端業務邏輯、API、前端 UI 元件、管理員介面
 
-**階段 4 (管理員介面):**
-- Task 10.1-10.4 (管理員功能) 可以在前端核心元件完成後平行開發
+**階段 5 (測試階段 - 當前):**
+- **Task 11 (前端單元測試)** 與 **Task 13 (效能測試)** 可以平行執行
+- **Task 12 (E2E 測試)** 需要 Task 11 完成後執行（確保單元測試通過）
+- **Task 12.1 (無障礙測試)** 可以與 Task 12 平行執行
+- **Task 13.1 (錯誤處理測試)** 需要 Task 13 完成後執行
 
-**階段 5 (測試階段):**
-- Task 11 (前端單元測試) 與 Task 13 (效能測試) 可以部分平行
-- Task 12 (E2E 測試) 與 Task 12.1 (無障礙測試) 需要完整功能後依序進行
+**推薦執行順序**:
+1. 平行執行 Task 11 與 Task 13（前端單元測試 + 效能測試）
+2. Task 11.1 (前端整合測試)
+3. 平行執行 Task 12 與 Task 12.1（E2E 測試 + 無障礙測試）
+4. Task 13.1 (錯誤處理測試)
