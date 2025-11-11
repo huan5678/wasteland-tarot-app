@@ -168,6 +168,79 @@ global.WastelandTarot = {
   },
 }
 
+// Mock react-markdown and related packages
+const React = require('react')
+
+jest.mock('react-markdown', () => ({
+  __esModule: true,
+  default: ({ children }: { children: string }) => {
+    return React.createElement('div', { 'data-testid': 'markdown-content' }, children)
+  },
+}))
+
+jest.mock('rehype-sanitize', () => ({
+  __esModule: true,
+  default: () => () => {},
+}))
+
+jest.mock('rehype-highlight', () => ({
+  __esModule: true,
+  default: () => () => {},
+}))
+
+jest.mock('remark-gfm', () => ({
+  __esModule: true,
+  default: () => () => {},
+}))
+
+jest.mock('strip-markdown', () => ({
+  __esModule: true,
+  default: () => () => {},
+}))
+
+jest.mock('remark', () => ({
+  remark: () => {
+    let inputText = ''
+    return {
+      use: jest.fn().mockReturnThis(),
+      process: jest.fn().mockImplementation((text: string) => {
+        inputText = text
+        // Simple markdown stripping - remove common markdown syntax
+        const stripped = text
+          .replace(/\*\*([^*]+)\*\*/g, '$1') // bold
+          .replace(/\*([^*]+)\*/g, '$1') // italic
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links
+          .replace(/^#+\s+/gm, '') // headings
+          .replace(/^>\s+/gm, '') // blockquotes
+          .replace(/^[-*+]\s+/gm, '') // lists
+          .replace(/```[\s\S]*?```/g, '') // code blocks
+          .replace(/`([^`]+)`/g, '$1') // inline code
+          .trim()
+        return Promise.resolve({
+          toString: () => stripped,
+        })
+      }),
+      processSync: jest.fn().mockImplementation((text: string) => {
+        inputText = text
+        // Same simple markdown stripping
+        const stripped = text
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+          .replace(/^#+\s+/gm, '')
+          .replace(/^>\s+/gm, '')
+          .replace(/^[-*+]\s+/gm, '')
+          .replace(/```[\s\S]*?```/g, '')
+          .replace(/`([^`]+)`/g, '$1')
+          .trim()
+        return {
+          toString: () => stripped,
+        }
+      }),
+    }
+  },
+}))
+
 // Mock canvas for card animations
 HTMLCanvasElement.prototype.getContext = jest.fn().mockImplementation(() => ({
   fillRect: jest.fn(),

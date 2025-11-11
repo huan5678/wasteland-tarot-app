@@ -317,7 +317,7 @@ import { PixelIcon } from '@/components/ui/icons'
 
 ## 第五階段：整合與測試
 
-- [ ] 11. 前端單元測試
+- [x] 11. 前端單元測試
   - 建立 `MarkdownEditor.test.tsx`：測試編輯器渲染、工具列按鈕功能、字數統計、即時預覽
   - 建立 `WishHistory.test.tsx`：測試願望列表渲染、編輯模式切換、管理員回覆顯示
   - 建立 `WishlistModal.test.tsx`：測試彈窗開關、每日限制狀態顯示、自動載入願望列表

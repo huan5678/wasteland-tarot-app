@@ -9,6 +9,7 @@ import { cardHandlers } from './handlers/cards'
 import { readingHandlers } from './handlers/readings'
 import { userHandlers } from './handlers/users'
 import { bingoHandlers } from './handlers/bingo'
+import { wishlistHandlers } from './handlers/wishlist'
 
 // Combine all API handlers
 export const handlers = [
@@ -17,6 +18,7 @@ export const handlers = [
   ...readingHandlers,
   ...userHandlers,
   ...bingoHandlers,
+  ...wishlistHandlers,
 ]
 
 // Setup MSW server with all handlers
