@@ -8,6 +8,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { JournalCard } from './JournalCard';
 import { PixelIcon } from '@/components/ui/icons';
+import { AnimatedList } from '@/components/ui/AnimatedList';
 import type { Journal } from '@/stores/journalStore';
 
 // ============================================================================
@@ -165,16 +166,20 @@ export function JournalList({
 
   };
 
-  const renderJournalList = () =>
-  <div className="space-y-4" role="list">
-      {filteredJournals.map((journal) =>
-    <JournalCard
-      key={journal.id}
-      journal={journal}
-      onClick={onJournalClick} />
-
-    )}
-    </div>;
+  const renderJournalList = () => (
+    <AnimatedList
+      items={filteredJournals}
+      keyExtractor={(journal) => journal.id}
+      renderItem={(journal, index, isSelected) => (
+        <JournalCard journal={journal} onClick={onJournalClick} />
+      )}
+      onItemSelect={(journal) => onJournalClick(journal)}
+      maxHeight="none"
+      showGradients={false}
+      enableArrowNavigation={true}
+      displayScrollbar={true}
+    />
+  );
 
 
   const renderPagination = () => {

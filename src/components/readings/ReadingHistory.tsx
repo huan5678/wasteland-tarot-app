@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { toDisplay } from '@/lib/spreadMapping';
 import { Button } from '@/components/ui/button';
 import { PaginationControls } from '@/components/cards/PaginationControls';
+import { AnimatedList } from '@/components/ui/AnimatedList';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -276,116 +277,132 @@ export function ReadingHistory({ onSelect }: Props) {
           共 <span className="numeric tabular-nums mx-1">{filtered.length}</span> 筆
         </div>
       </div>
-      <div className="space-y-3">
-        {paginatedData.map((r) =>
-        <div key={r.id} className="border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer" onClick={() => {router.push(`/readings/${r.id}`);import('@/lib/actionTracker').then((m) => m.track('reading:view_detail', { id: r.id }));}}>
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-3">
-                <div className="text-2xl">{getSpreadIcons(r)}</div>
-                <div>
-                  <div className="text-sm font-bold text-pip-boy-green">{getSpreadDisplayName(r)}</div>
-                  <div className="text-xs text-pip-boy-green/60">{formatDate((r as any).created_at || (r as any).date)}</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  size="icon-sm"
-                  variant={r.is_favorite ? 'default' : 'ghost'}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleFavorite(r.id).then(() =>
-                      import('@/lib/actionTracker').then((m) =>
-                        m.track('reading:toggle_favorite', { id: r.id, value: !r.is_favorite })
-                      )
-                    );
-                  }}
-                  title={r.is_favorite ? '取消收藏' : '加入收藏'}
-                >
-                  <PixelIcon name="star" className="w-4 h-4" />
-                </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon-sm"
-                      variant="ghost"
-                      onClick={(e) => e.stopPropagation()}
-                      title="更多操作"
-                    >
-                      <PixelIcon name="more-2" className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="bg-wasteland-dark border-2 border-pip-boy-green/30"
-                  >
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/readings/${r.id}`);
-                      }}
-                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
-                    >
-                      <PixelIcon name="eye" className="w-4 h-4 mr-2" />
-                      查看詳情
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
-                        const a = document.createElement('a');
-                        a.href = URL.createObjectURL(blob);
-                        a.download = `reading-${r.id}.json`;
-                        a.click();
-                      }}
-                      className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
-                    >
-                      <PixelIcon name="save" className="w-4 h-4 mr-2" />
-                      匯出 JSON
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="bg-pip-boy-green/30" />
-                    <DropdownMenuItem
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteClick(e, r.id);
-                      }}
-                      className="text-red-400 hover:bg-red-400/10 hover:text-red-300 cursor-pointer"
-                    >
-                      <PixelIcon name="trash" className="w-4 h-4 mr-2" />
-                      刪除占卜
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-            {/* 使用者的問題 */}
-            <p className="mt-2 text-pip-boy-green/80 text-sm italic">
-              "{r.question}"
-            </p>
-            {/* AI 解讀標示 */}
-            {r.ai_interpretation_requested &&
-          <div className="mt-2 flex items-center gap-2">
-                <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
-                  <PixelIcon name="cpu" sizePreset="xs" variant="primary" decorative />
-                  <span className="font-bold uppercase tracking-wider">AI 已解讀</span>
-                </div>
-                {(r as any).interpretation_audio_url &&
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
-                    <PixelIcon name="volume-up" sizePreset="xs" variant="primary" decorative />
-                    <span className="font-bold uppercase tracking-wider">語音朗讀</span>
-                  </div>
-            }
-              </div>
-          }
-          </div>
-        )}
-        {paginatedData.length === 0 && filtered.length === 0 &&
+      {paginatedData.length === 0 && filtered.length === 0 ? (
         <div className="text-center py-12 border-2 border-pip-boy-green/30">
-            <PixelIcon name="contacts" className="w-10 h-10 mx-auto mb-3 opacity-50" />
-            <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
-          </div>
-        }
-      </div>
+          <PixelIcon name="contacts" className="w-10 h-10 mx-auto mb-3 opacity-50" />
+          <div className="text-sm text-pip-boy-green/70">沒有符合條件的占卜</div>
+        </div>
+      ) : (
+        <AnimatedList
+          items={paginatedData}
+          keyExtractor={(r) => r.id}
+          renderItem={(r, index, isSelected) => (
+            <div
+              className={`border-2 border-pip-boy-green/30 p-3 hover:border-pip-boy-green transition cursor-pointer ${
+                isSelected ? 'border-pip-boy-green bg-pip-boy-green/5' : ''
+              }`}
+              onClick={() => {
+                router.push(`/readings/${r.id}`);
+                import('@/lib/actionTracker').then((m) => m.track('reading:view_detail', { id: r.id }));
+              }}
+            >
+              <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                  <div className="text-2xl">{getSpreadIcons(r)}</div>
+                  <div>
+                    <div className="text-sm font-bold text-pip-boy-green">{getSpreadDisplayName(r)}</div>
+                    <div className="text-xs text-pip-boy-green/60">
+                      {formatDate((r as any).created_at || (r as any).date)}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="icon-sm"
+                    variant={r.is_favorite ? 'default' : 'ghost'}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleFavorite(r.id).then(() =>
+                        import('@/lib/actionTracker').then((m) =>
+                          m.track('reading:toggle_favorite', { id: r.id, value: !r.is_favorite })
+                        )
+                      );
+                    }}
+                    title={r.is_favorite ? '取消收藏' : '加入收藏'}
+                  >
+                    <PixelIcon name="star" className="w-4 h-4" />
+                  </Button>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        size="icon-sm"
+                        variant="ghost"
+                        onClick={(e) => e.stopPropagation()}
+                        title="更多操作"
+                      >
+                        <PixelIcon name="more-2" className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-wasteland-dark border-2 border-pip-boy-green/30">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/readings/${r.id}`);
+                        }}
+                        className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                      >
+                        <PixelIcon name="eye" className="w-4 h-4 mr-2" />
+                        查看詳情
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const blob = new Blob([JSON.stringify(r, null, 2)], { type: 'application/json' });
+                          const a = document.createElement('a');
+                          a.href = URL.createObjectURL(blob);
+                          a.download = `reading-${r.id}.json`;
+                          a.click();
+                        }}
+                        className="text-pip-boy-green hover:bg-pip-boy-green/10 hover:text-pip-boy-green-bright cursor-pointer"
+                      >
+                        <PixelIcon name="save" className="w-4 h-4 mr-2" />
+                        匯出 JSON
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator className="bg-pip-boy-green/30" />
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(e, r.id);
+                        }}
+                        className="text-red-400 hover:bg-red-400/10 hover:text-red-300 cursor-pointer"
+                      >
+                        <PixelIcon name="trash" className="w-4 h-4 mr-2" />
+                        刪除占卜
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+              {/* 使用者的問題 */}
+              <p className="mt-2 text-pip-boy-green/80 text-sm italic">"{r.question}"</p>
+              {/* AI 解讀標示 */}
+              {r.ai_interpretation_requested && (
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                    <PixelIcon name="cpu" sizePreset="xs" variant="primary" decorative />
+                    <span className="font-bold uppercase tracking-wider">AI 已解讀</span>
+                  </div>
+                  {(r as any).interpretation_audio_url && (
+                    <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-pip-boy-green/10 border border-pip-boy-green/30 text-pip-boy-green text-xs">
+                      <PixelIcon name="volume-up" sizePreset="xs" variant="primary" decorative />
+                      <span className="font-bold uppercase tracking-wider">語音朗讀</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+          onItemSelect={(r) => {
+            router.push(`/readings/${r.id}`);
+            import('@/lib/actionTracker').then((m) => m.track('reading:view_detail', { id: r.id }));
+          }}
+          maxHeight="none"
+          showGradients={false}
+          enableArrowNavigation={true}
+          displayScrollbar={true}
+        />
+      )}
 
       {/* Pagination Controls */}
       {filtered.length > 0 && totalPages > 1 && (
