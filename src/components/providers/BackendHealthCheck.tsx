@@ -49,7 +49,7 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
           {/* Vault-Tec Logo */}
           <div className="flex justify-center">
             <PixelIcon
-              name="loader-4"
+              name="loader-4-line"
               sizePreset="xxl"
               variant="primary"
               animation="spin"
@@ -87,10 +87,15 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
 
           {/* 進度條 */}
           {!error && (
-            <div className="w-full bg-wasteland-dark h-2 rounded overflow-hidden">
-              <div 
-                className="h-full bg-pip-boy-green transition-all duration-300"
-                style={{ width: `${((retryCount + 1) / MAX_RETRIES) * 100}%` }}
+            <div className="w-full bg-wasteland-dark h-2 rounded overflow-hidden relative">
+              {/* 進度條填充（3 秒循環：0% → 100%） */}
+              <div
+                className="h-full bg-pip-boy-green origin-left animate-progress-loop"
+              />
+              {/* 閃爍效果 */}
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-pip-boy-green/50 to-transparent animate-pulse"
+                style={{ pointerEvents: 'none' }}
               />
             </div>
           )}

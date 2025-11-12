@@ -14,14 +14,19 @@
  */
 
 /* Force GPU acceleration for all animations */
+/* Note: Don't set transform here as it will override animation transforms like animate-spin */
 [class*="animate-"],
 [class*="transition-"],
 .will-change-transform,
 .will-change-opacity {
   will-change: transform, opacity;
-  transform: translateZ(0);
   backface-visibility: hidden;
   perspective: 1000px;
+}
+
+/* Apply GPU hack only to elements without animation transforms */
+[class*="transition-"]:not([class*="animate-"]) {
+  transform: translateZ(0);
 }
 
 /* Reset will-change after animation completes to free resources */
@@ -130,6 +135,20 @@
 
 .animate-float {
   animation: float 2s ease-in-out infinite;
+}
+
+/* Progress Loop Animation - 進度條循環動畫（3 秒 0% → 100% 循環） */
+@keyframes progress-loop {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+.animate-progress-loop {
+  animation: progress-loop 3s linear infinite;
 }
 
 /* Pip-Boy Scanline Animation - Pip-Boy 掃描線效果（適合載入畫面） */

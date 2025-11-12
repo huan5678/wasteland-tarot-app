@@ -8,6 +8,9 @@ import type { Config } from "tailwindcss";
  * - Content paths
  * - Plugins
  * - Settings that can't be configured in CSS
+ *
+ * Note: Animation support is provided by tw-animate-css imported in globals.css
+ * (Tailwind v4's CSS-first approach, not JS plugins)
  */
 const config: Config = {
   darkMode: ["class"],
@@ -16,7 +19,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  plugins: [require("tailwindcss-animate")],
+  plugins: [],
 } satisfies Config;
 
 export default config;
