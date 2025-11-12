@@ -130,11 +130,12 @@ export function TarotFanDrawer({
       return memo;
     },
     {
-      axis: 'x', // Only horizontal drag
+      // Remove axis restriction to allow drag from anywhere
       filterTaps: true, // Prevent clicks during drag
-      threshold: 5, // Minimum 5px movement to trigger
+      threshold: 3, // Lower threshold for easier drag activation (3px instead of 5px)
       rubberband: false, // Disable rubberband (no bounds)
       from: () => [rotationRef.current, 0],
+      pointer: { touch: true }, // Enable touch events
     }
   );
 
@@ -158,32 +159,25 @@ export function TarotFanDrawer({
   // Container style (responsive positioning)
   // CRITICAL: Use percentage positioning + margin for stable axis
   const containerStyle = useMemo(() => {
-    if (deviceType === 'desktop') {
-      // Desktop: Circle center at bottom-center of viewport
-      return {
-        position: 'fixed' as const,
-        left: '50%', // Horizontal center
-        bottom: '0', // At bottom
-        width: `${containerSize.width}px`,
-        height: `${containerSize.height}px`,
-        marginLeft: `-${containerSize.width / 2}px`, // Center horizontally
-        marginBottom: `-${containerSize.height / 2}px`, // Half above viewport
-        pointerEvents: 'auto' as const,
-      };
-    } else {
-      // Mobile: Circle center at right-center of viewport
-      return {
-        position: 'fixed' as const,
-        right: '0', // At right edge
-        top: '50%', // Vertical center
-        width: `${containerSize.width}px`,
-        height: `${containerSize.height}px`,
-        marginRight: `-${containerSize.width / 2}px`, // Half outside viewport
-        marginTop: `-${containerSize.height / 2}px`, // Center vertically
-        pointerEvents: 'auto' as const,
-      };
-    }
-  }, [deviceType, containerSize]);
+    // Both desktop and mobile: Circle center at bottom-center of container
+    // Adjusted for 60vh container height
+    const bottomOffset = deviceType === 'mobile' ? 80 : 0; // Reduced offset for 60vh
+    return {
+      position: 'absolute' as const,
+      left: '50%', // Horizontal center
+      bottom: `${bottomOffset}px`, // Lift on mobile
+      width: `${containerSize.width}px`,
+      height: `${containerSize.height}px`,
+      marginLeft: `-${containerSize.width / 2}px`, // Center horizontally
+      marginBottom: `-${containerSize.height / 2}px`, // Half above bottom
+      pointerEvents: 'none' as const, // Let drag events pass through, cards will have pointerEvents: 'auto'
+      zIndex: 5,
+      userSelect: 'none' as const,
+      WebkitUserSelect: 'none' as const,
+      MozUserSelect: 'none' as const,
+      msUserSelect: 'none' as const,
+    };
+  }, [containerSize, deviceType]);
 
   // Fan container style (rotatable)
   // CRITICAL: transform-origin must be '50% 50%' (container center = circle center)
@@ -195,28 +189,38 @@ export function TarotFanDrawer({
       transform: `rotate(${rotation}deg)`,
       transformOrigin: '50% 50%', // Rotate around container center (= circle center)
       transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-      cursor: isDragging ? 'grabbing' : 'grab',
-      touchAction: 'pan-y', // Allow vertical scroll, prevent horizontal
+      pointerEvents: 'none' as const, // Let events pass through to cards or parent
+      userSelect: 'none' as const,
+      WebkitUserSelect: 'none' as const,
+      MozUserSelect: 'none' as const,
+      msUserSelect: 'none' as const,
     }),
     [rotation, isDragging]
   );
 
   return (
     <div
+      {...bind()}
       data-testid="tarot-fan-drawer"
       data-device-type={deviceType}
       data-rotation={rotation}
       className={className}
       style={{
         position: 'relative',
-        width: '100vw',
-        height: '100vh',
+        width: '100%',
+        height: '60vh',
         overflow: 'hidden',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        touchAction: 'none',
       }}
     >
       {/* Fan container */}
       <div style={containerStyle}>
-        <div {...bind()} style={fanStyle}>
+        <div style={fanStyle}>
           {/* Render only visible cards (virtualization) */}
           {visibleIndices.map((index) => {
             const position = cardPositions[index];
@@ -240,29 +244,20 @@ export function TarotFanDrawer({
         </div>
       </div>
 
-      {/* Selection UI Overlay - positioned near rotation axis */}
+      {/* Selection UI Overlay - absolute positioned relative to container */}
       <div
         className="selection-ui"
         style={{
-          position: 'fixed',
-          // Desktop: near bottom center (axis location)
-          // Mobile: near right center (axis location)
-          ...(deviceType === 'desktop'
-            ? {
-                bottom: '120px', // Above the fan arc
-                left: '50%',
-                transform: 'translateX(-50%)',
-              }
-            : {
-                right: '120px', // Left of the fan arc
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }),
+          position: 'absolute',
+          // Position from bottom of container (adjusted for 60vh)
+          bottom: deviceType === 'desktop' ? '40px' : '60px',
+          left: '50%',
+          transform: 'translateX(-50%)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           gap: '12px',
-          zIndex: 10000,
+          zIndex: 10,
           pointerEvents: 'none',
         }}
       >
@@ -281,9 +276,7 @@ export function TarotFanDrawer({
             }}
           >
             <PixelIcon name="hand" sizePreset="xs" variant="primary" decorative />
-            <span style={{ marginLeft: '8px' }}>
-              {deviceType === 'desktop' ? '左右拖曳旋轉牌組' : '上下拖曳旋轉牌組'}
-            </span>
+            <span style={{ marginLeft: '8px' }}>左右拖曳旋轉牌組</span>
           </div>
         )}
 
@@ -308,47 +301,22 @@ export function TarotFanDrawer({
           已選 {selection.count}/{spreadCount} 張
         </div>
 
-        {/* Confirm button */}
-        {selection.count > 0 && (
-          <Button
-            size="lg"
-            variant="default"
-            onClick={handleConfirm}
-            disabled={selection.count !== spreadCount}
-            style={{
-              pointerEvents: 'auto',
-            }}
-            data-testid="confirm-selection-button"
-          >
-            <PixelIcon name="check" sizePreset="sm" decorative />
-            <span>確認選擇</span>
-          </Button>
-        )}
+        {/* Confirm button - always show, disabled when not enough cards selected */}
+        <Button
+          size="lg"
+          variant="default"
+          onClick={handleConfirm}
+          disabled={selection.count !== spreadCount}
+          style={{
+            pointerEvents: 'auto',
+          }}
+          data-testid="confirm-selection-button"
+        >
+          <PixelIcon name="check" sizePreset="sm" decorative />
+          <span>確認選擇</span>
+        </Button>
       </div>
 
-      {/* Debug info (development only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            padding: '12px',
-            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-            border: '1px solid #00ff88',
-            borderRadius: '8px',
-            color: '#00ff88',
-            fontSize: '10px',
-            fontFamily: 'monospace',
-            zIndex: 10001,
-          }}
-        >
-          <div>Rotation: {rotation.toFixed(1)}° (normalized: {normalizeRotation(rotation).toFixed(1)}°)</div>
-          <div>Visible: {visibleIndices.length}/78</div>
-          <div>Selected: {selection.count}/{spreadCount}</div>
-          <div>Device: {deviceType}</div>
-        </div>
-      )}
     </div>
   );
 }

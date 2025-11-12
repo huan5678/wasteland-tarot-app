@@ -185,14 +185,14 @@ export function IncompleteSessionsList() {
                 取消
               </span>
             </Button>
-            <Button size="icon" variant="outline"
+            <Button size="sm" variant="destructive"
             onClick={handleConfirmDelete}
             disabled={isDeleting}
             className="flex-1 px-4 py-3 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 uppercase font-bold tracking-wider">
 
               {isDeleting ?
               <span className="flex items-center justify-center gap-2">
-                  <PixelIcon name="loader" sizePreset="xs" animation="spin" variant="error" decorative />
+                  <PixelIcon name="loader-4" sizePreset="xs" animation="spin" variant="error" decorative />
                   刪除中...
                 </span> :
 

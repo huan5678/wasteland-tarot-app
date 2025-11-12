@@ -449,7 +449,7 @@ export function InteractiveCardDraw({
     <div
       data-testid="interactive-card-draw"
       data-reduced-motion={shouldDisableAnimations}
-      className="flex flex-col items-center justify-center p-6"
+      className="flex flex-col items-center w-full overflow-visible"
     >
       {/* Hidden state indicator for testing */}
       <div data-testid="drawing-state" className="sr-only">
@@ -580,16 +580,26 @@ export function InteractiveCardDraw({
                 <div
                   key={index}
                   onClick={handleFlip}
-                  className={!isFlipped ? 'cursor-pointer' : ''}
+                  style={{
+                    position: 'relative',
+                    width: '240px',
+                    height: '360px',
+                    cursor: !isFlipped ? 'pointer' : 'default',
+                  }}
                 >
                   <CardThumbnail
                     card={card}
-                    size="medium"
+                    size="large"
                     flippable
                     isRevealed={isFlipped}
                     position={position}
                     positionLabel={positionLabel}
                     cardBackUrl={displayCardBackUrl}
+                    enable3DTilt={true}
+                    enableGloss={true}
+                    enableGyroscope={true}
+                    tiltMaxAngle={15}
+                    tiltTransitionDuration={400}
                   />
                 </div>
               );

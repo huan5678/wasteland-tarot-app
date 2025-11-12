@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { useAnalytics, useReadingTracking } from '@/hooks/useAnalytics';
 import { useSessionStore } from '@/lib/sessionStore';
+import { useSpreadTemplatesStore } from '@/lib/spreadTemplatesStore';
 import { useAutoSave, useSessionChangeTracker } from '@/hooks/useAutoSave';
 import { AutoSaveIndicator } from '@/components/session/AutoSaveIndicator';
 import { CardDetailModal } from '@/components/tarot/CardDetailModal';
@@ -43,6 +44,10 @@ export default function NewReadingPage() {
   // 統一認證檢查（自動處理初始化、重導向、日誌）
   const { isReady, user } = useRequireAuth();
   const { prefersReducedMotion } = usePrefersReducedMotion();
+
+  // Get spread templates loading state
+  const isSpreadsLoading = useSpreadTemplatesStore(s => s.isLoading);
+
   const [step, setStep] = useState<'setup' | 'drawing' | 'results'>('setup');
   const [question, setQuestion] = useState('');
   const [spreadType, setSpreadType] = useState<string>('single_wasteland_reading');
@@ -108,6 +113,21 @@ export default function NewReadingPage() {
 
   // CRITICAL: Generate stable reading ID for InteractiveCardDraw to prevent infinite loop
   const stableReadingIdRef = useRef<string>(`temp-reading-${Date.now()}`);
+
+  // Prevent body scrolling during drawing step
+  useEffect(() => {
+    if (step === 'drawing') {
+      // Save original overflow value
+      const originalOverflow = document.body.style.overflow;
+      // Prevent scrolling
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        // Restore original overflow when leaving drawing step
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [step]);
 
   // Initialize or resume session on mount
   useEffect(() => {
@@ -331,6 +351,13 @@ export default function NewReadingPage() {
         question_length: question.length
       });
       setStep('drawing');
+    }
+  };
+
+  // Handle back to step 1 (only allowed if no cards drawn yet)
+  const handleBackToSetup = () => {
+    if (step === 'drawing' && drawnCards.length === 0) {
+      setStep('setup');
     }
   };
 
@@ -576,35 +603,51 @@ export default function NewReadingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-wasteland-dark p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold text-pip-boy-green">
-                新塔羅占卜
-              </h1>
-              <p className="text-pip-boy-green/70 text-sm">
-                廢土占卜協議 - Pip-Boy 增強版
-              </p>
-            </div>
-            {activeSession &&
-            <div className="ml-4">
-                <AutoSaveIndicator />
+    <div className={cn(
+      "flex flex-col bg-wasteland-dark overflow-x-hidden",
+      step === 'drawing' ? '' : 'min-h-screen p-4'
+    )}>
+      <div className={step === 'drawing' ? 'flex flex-col' : 'max-w-4xl mx-auto w-full flex-1'}>
+        {/* Header - hidden during card drawing step */}
+        {step !== 'drawing' && (
+          <div className="border-2 border-pip-boy-green bg-pip-boy-green/10 p-4 mb-6">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <h1 className="text-2xl font-bold text-pip-boy-green">
+                  新塔羅占卜
+                </h1>
+                <p className="text-pip-boy-green/70 text-sm">
+                  廢土占卜協議 - Pip-Boy 增強版
+                </p>
               </div>
-            }
+              {activeSession && (
+                <div className="ml-4">
+                  <AutoSaveIndicator />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Progress Indicator */}
-        <div className="flex items-center justify-center mb-8">
+        {/* Progress Indicator - always in normal flow */}
+        <div className={cn(
+          "flex items-center justify-center",
+          step === 'drawing' ? 'py-4' : 'mb-8'
+        )}>
           <div className="flex items-center gap-4">
-            <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs ${
-            step === 'setup' ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green' :
-            ['drawing', 'results'].includes(step) ? 'bg-pip-boy-green/20 text-pip-boy-green border-pip-boy-green' :
-            'border-pip-boy-green/50 text-pip-boy-green/50'}`
-            }>
+            {/* Step 1 - clickable when in step 2 and no cards drawn yet */}
+            <div
+              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs ${
+                step === 'setup' ? 'bg-pip-boy-green text-wasteland-dark border-pip-boy-green' :
+                ['drawing', 'results'].includes(step) ? 'bg-pip-boy-green/20 text-pip-boy-green border-pip-boy-green' :
+                'border-pip-boy-green/50 text-pip-boy-green/50'
+              } ${
+                step === 'drawing' && drawnCards.length === 0 ? 'cursor-pointer hover:bg-pip-boy-green/40 transition-colors' : ''
+              }`}
+              onClick={step === 'drawing' && drawnCards.length === 0 ? handleBackToSetup : undefined}
+              role={step === 'drawing' && drawnCards.length === 0 ? 'button' : undefined}
+              aria-label={step === 'drawing' && drawnCards.length === 0 ? '返回問題設定' : undefined}
+            >
               1
             </div>
             <div className={`w-16 h-px ${step === 'drawing' || step === 'results' ? 'bg-pip-boy-green' : 'bg-pip-boy-green/50'}`}></div>
@@ -684,9 +727,11 @@ export default function NewReadingPage() {
               type="submit"
               variant="default"
               size="lg"
-              className="w-full">
+              className="w-full"
+              disabled={isSpreadsLoading || !question.trim()}>
 
-                <PixelIcon name="target" size={16} className="mr-2" decorative />進行卡牌抽取
+                <PixelIcon name="target" size={16} className="mr-2" decorative />
+                {isSpreadsLoading ? '載入牌陣中...' : '進行卡牌抽取'}
               </PipBoyButton>
             </form>
           </div>
@@ -694,10 +739,10 @@ export default function NewReadingPage() {
 
         {/* Step 2: Card Drawing */}
         {step === 'drawing' &&
-        <div className="relative">
-            {/* Header section with normal container */}
-            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 mb-6">
-              <h2 className="text-xl font-bold text-pip-boy-green mb-4 text-center flex items-center justify-center">
+        <div className="flex flex-col flex-1">
+            {/* Header section - compact design for step 2 */}
+            <div className="mx-4 mb-6 border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-4">
+              <h2 className="text-xl font-bold text-pip-boy-green mb-3 text-center flex items-center justify-center">
                 <PixelIcon name="card-stack" size={20} className="mr-2" decorative />抽取你的卡牌
               </h2>
 
@@ -711,18 +756,18 @@ export default function NewReadingPage() {
               </div>
             </div>
 
-            {/* Card drawing area - no padding to accommodate full-screen fan */}
+            {/* Card drawing area - natural height */}
             <InteractiveCardDraw
-              spreadType={toCanonical(spreadType)}
-              positionsMeta={spreadPositionMeanings[toCanonical(spreadType)]?.map((p) => ({
-                id: p.name,
-                label: p.name
-              }))}
-              onCardsDrawn={handleCardsDrawn}
-              enableAnimation={!prefersReducedMotion}
-              animationDuration={1500}
-              readingId={activeSession?.id || stableReadingIdRef.current}
-            />
+                spreadType={toCanonical(spreadType)}
+                positionsMeta={spreadPositionMeanings[toCanonical(spreadType)]?.map((p) => ({
+                  id: p.name,
+                  label: p.name
+                }))}
+                onCardsDrawn={handleCardsDrawn}
+                enableAnimation={!prefersReducedMotion}
+                animationDuration={1500}
+                readingId={activeSession?.id || stableReadingIdRef.current}
+              />
           </div>
         }
 
@@ -753,6 +798,10 @@ export default function NewReadingPage() {
                   <div
                     key={`${card.id}-${index}`}
                     className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
+                    style={{
+                      width: '200px',
+                      height: '300px',
+                    }}
                     onClick={() => handleCardClick(card)}>
 
                       <CardThumbnail

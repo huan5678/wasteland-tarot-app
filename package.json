@@ -22,7 +22,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "3.9.1",
-    "@use-gesture/react": "^10.3.1",
     "@ncdai/react-wheel-picker": "^1.0.17",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

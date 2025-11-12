@@ -278,11 +278,11 @@ export function CardBackPixelEffect({
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 w-full h-full pointer-events-none ${className}`}
+      className={`absolute inset-0 w-full h-full pointer-events-none rounded-lg ${className}`}
     >
       <canvas
         ref={canvasRef}
-        className="w-full h-full block opacity-70"
+        className="w-full h-full block opacity-70 rounded-lg"
         aria-hidden="true"
       />
     </div>

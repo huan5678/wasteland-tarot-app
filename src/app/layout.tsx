@@ -56,7 +56,7 @@ export default function RootLayout({
         參考: .kiro/specs/cubic-11-font-integration/design.md
       */}
       <body
-        className={cn("font-cubic", "text-pip-boy-green", "antialiased")}
+        className={cn("font-cubic", "text-pip-boy-green", "antialiased", "overflow-x-hidden")}
         style={{backgroundColor: 'var(--color-wasteland-darker)'}}
         suppressHydrationWarning
       >

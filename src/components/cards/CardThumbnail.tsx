@@ -104,6 +104,11 @@ export interface CardThumbnailProps {
   positionLabel?: string
 
   /**
+   * 隱藏卡背「點擊翻牌」提示文字（需要 flippable=true）
+   */
+  hideFlipHint?: boolean
+
+  /**
    * 動畫延遲（ms）
    */
   animationDelay?: number
@@ -161,6 +166,7 @@ export function CardThumbnail({
   cardBackUrl = '/assets/cards/card-backs/01.png',
   onFlipComplete,
   positionLabel,
+  hideFlipHint = false,
   animationDelay = 0,
   onClick
 }: CardThumbnailProps) {
@@ -183,7 +189,9 @@ export function CardThumbnail({
     enableGyroscope,
     enableGloss,
     size: flippable ? size : 'small', // 靜態模式使用 small（縮圖）
-    loading: !imageLoaded
+    // CRITICAL: In flippable mode, when card is face-down (not revealed), we don't need to wait for front image
+    // Only set loading=true when card is revealed but image hasn't loaded yet
+    loading: flippable && !isRevealed ? false : !imageLoaded
   })
 
   // 處理翻牌動畫（僅 flippable 模式）
@@ -283,14 +291,16 @@ export function CardThumbnail({
             <div className="absolute inset-0 w-full h-full [backface-visibility:hidden]">
               <PipBoyCard
                 padding="none"
-                className="h-full overflow-hidden relative"
+                className="h-full overflow-hidden relative rounded-lg"
               >
                 {/* 卡背圖片 */}
-                <div className="relative w-full h-full bg-black">
+                <div className="relative w-full h-full bg-black rounded-lg">
                   <img
                     src={cardBackUrl}
                     alt="Wasteland Tarot Card Back"
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain rounded-lg"
+                    draggable={false}
+                    onDragStart={(e) => e.preventDefault()}
                   />
                   {/* Pixel hover effect */}
                   <CardBackPixelEffect
@@ -301,22 +311,24 @@ export function CardThumbnail({
                 </div>
 
                 {/* 卡背提示文字 */}
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center text-pip-boy-green">
-                    <PixelIcon
-                      name="sparkles"
-                      size={size === 'small' ? 24 : size === 'medium' ? 32 : 40}
-                      className="mb-2 mx-auto"
-                      decorative
-                    />
-                    <div className={cn(
-                      'font-bold',
-                      size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
-                    )}>
-                      點擊翻牌
+                {!hideFlipHint && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="text-center text-pip-boy-green">
+                      <PixelIcon
+                        name="sparkles"
+                        size={size === 'small' ? 24 : size === 'medium' ? 32 : 40}
+                        className="mb-2 mx-auto"
+                        decorative
+                      />
+                      <div className={cn(
+                        'font-bold',
+                        size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                      )}>
+                        點擊翻牌
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </PipBoyCard>
             </div>
 
@@ -327,11 +339,11 @@ export function CardThumbnail({
                 <PipBoyCard
                   isClickable={!!onClick}
                   padding="none"
-                  className="h-full overflow-hidden transition-all duration-300 relative"
+                  className="h-full overflow-hidden transition-all duration-300 relative rounded-lg"
                 >
                   {/* 卡牌圖片容器 - 逆位時旋轉 180 度 */}
                   <div className={cn(
-                    "relative aspect-[2/3] bg-black overflow-hidden",
+                    "relative aspect-[2/3] bg-black overflow-hidden rounded-lg",
                     position === 'reversed' && 'rotate-180'
                   )}>
                     {/* 載入中骨架屏 */}
@@ -366,7 +378,7 @@ export function CardThumbnail({
                       fill
                       sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                       className={cn(
-                        'object-cover transition-all duration-300',
+                        'object-cover transition-all duration-300 rounded-lg',
                         onClick && 'group-hover:scale-110',
                         !imageLoaded && 'opacity-0'
                       )}
@@ -374,6 +386,8 @@ export function CardThumbnail({
                       priority={priority}
                       onError={handleImageError}
                       onLoadingComplete={handleImageLoadingComplete}
+                      draggable={false}
+                      onDragStart={(e) => e.preventDefault()}
                     />
 
                     {/* 黑色半透明覆蓋層 (hover 時淡化) */}
@@ -521,6 +535,8 @@ export function CardThumbnail({
             priority={priority}
             onError={handleImageError}
             onLoadingComplete={handleImageLoadingComplete}
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
           />
 
           {/* 黑色半透明覆蓋層 (hover 時淡化) */}
@@ -670,6 +686,8 @@ export function CardThumbnailList({ card, className }: CardThumbnailListProps) {
           sizes="48px"
           className="object-cover"
           onError={() => setImageError(true)}
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
         />
       </div>
 

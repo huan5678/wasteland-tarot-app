@@ -15,6 +15,7 @@
  */
 
 import React, { ReactNode } from 'react'
+import { LazyMotion, domAnimation } from 'framer-motion'
 import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { GlobalErrorDisplay } from '@/components/common/GlobalErrorDisplay'
 import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider'
@@ -88,20 +89,26 @@ function UIProviders({ children }: { children: ReactNode }) {
       {/* FontLoadMonitor: 開發環境字體載入監控 */}
       <FontLoadMonitor />
 
-      {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
-      {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
-      <TiltConfigProvider>
-        {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
-        <DailyCardBackProvider>
-          {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
-          <MusicPlayerInitializer />
+      {/* LazyMotion: Framer Motion lazy loading provider */}
+      {/* 啟用所有使用 'framer-motion/m' 的組件動畫功能 */}
+      {/* domAnimation: 輕量版 features，包含大部分常用動畫功能 */}
+      {/* strict: 關閉以允許混用 motion 和 m components */}
+      <LazyMotion features={domAnimation}>
+        {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
+        {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
+        <TiltConfigProvider>
+          {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
+          <DailyCardBackProvider>
+            {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
+            <MusicPlayerInitializer />
 
-          {children}
+            {children}
 
-          {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
-          <MusicPlayerDrawer />
-        </DailyCardBackProvider>
-      </TiltConfigProvider>
+            {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
+            <MusicPlayerDrawer />
+          </DailyCardBackProvider>
+        </TiltConfigProvider>
+      </LazyMotion>
     </>
   )
 }

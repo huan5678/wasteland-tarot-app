@@ -82,21 +82,21 @@ const FAN_CONFIGS: Record<'desktop' | 'mobile', FanConfig> = {
   desktop: {
     position: 'bottom-center',
     fanAngle: 360, // FULL CIRCLE: All 78 cards arranged in 360°
-    radius: 400,
+    radius: 480, // Increased radius - cards closer to viewport edge
     visibleCards: 25, // Number of cards visible in bottom viewport at once
-    cardWidth: 80,
-    cardHeight: 120,
-    overlap: 0.85,
+    cardWidth: 120, // Much larger cards (was 100)
+    cardHeight: 180, // Much larger cards (was 150)
+    overlap: 0.45, // Show more than half of each card
     startAngle: 0, // Start from 0° (rightmost), full 360° rotation
   },
   mobile: {
-    position: 'right-side',
+    position: 'bottom-center',
     fanAngle: 360, // FULL CIRCLE: All 78 cards arranged in 360°
-    radius: 250,
-    visibleCards: 15, // Number of cards visible in right viewport at once
-    cardWidth: 60,
-    cardHeight: 90,
-    overlap: 0.90,
+    radius: 410, // Increased radius - cards closer to viewport edge
+    visibleCards: 12, // Fewer cards for easier interaction
+    cardWidth: 110, // Much larger cards (was 90)
+    cardHeight: 165, // Much larger cards (was 135)
+    overlap: 0.3, // Show more than half of each card (0.5 = exactly half)
     startAngle: 0, // Start from 0° (rightmost), full 360° rotation
   },
 };
@@ -183,14 +183,14 @@ function useResponsiveRadius(baseRadius: number, deviceType: 'desktop' | 'mobile
   useEffect(() => {
     const updateRadius = () => {
       if (deviceType === 'desktop') {
-        // Desktop: scale based on viewport width (min 350px, max 500px)
+        // Desktop: scale based on viewport width (min 420px, max 560px)
         const vw = window.innerWidth;
-        const scaledRadius = Math.min(500, Math.max(350, vw * 0.35));
+        const scaledRadius = Math.min(560, Math.max(420, vw * 0.4));
         setRadius(scaledRadius);
       } else {
-        // Mobile: scale based on viewport height (min 200px, max 320px)
-        const vh = window.innerHeight;
-        const scaledRadius = Math.min(320, Math.max(200, vh * 0.35));
+        // Mobile: also scale based on viewport width for bottom fan (min 350px, max 460px)
+        const vw = window.innerWidth;
+        const scaledRadius = Math.min(460, Math.max(350, vw * 0.52));
         setRadius(scaledRadius);
       }
     };
@@ -254,16 +254,10 @@ export function useFanLayout(totalCards: number = 78) {
     let viewportStartAngle: number;
     let viewportEndAngle: number;
 
-    if (deviceType === 'desktop') {
-      // Desktop: bottom semi-circle visible (180° - 360° range)
-      // When rotated, this range shifts
-      viewportStartAngle = 180 - rotationAngle;
-      viewportEndAngle = 360 - rotationAngle;
-    } else {
-      // Mobile: right-side quarter-circle visible (315° - 45° range, crossing 0°)
-      viewportStartAngle = 315 - rotationAngle;
-      viewportEndAngle = 45 - rotationAngle;
-    }
+    // Both desktop and mobile: bottom semi-circle visible (180° - 360° range)
+    // When rotated, this range shifts
+    viewportStartAngle = 180 - rotationAngle;
+    viewportEndAngle = 360 - rotationAngle;
 
     // Normalize angles to 0-360 range
     const normalizeAngle = (angle: number): number => {

@@ -69,7 +69,7 @@ export const TiltVisualEffects: React.FC<TiltVisualEffectsProps> = React.memo(
       <>
         {/* 動態光澤 overlay */}
         <div
-          className={cn('tilt-gloss-overlay', className)}
+          className={cn('tilt-gloss-overlay rounded-lg', className)}
           style={{
             position: 'absolute',
             inset: 0,

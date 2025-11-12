@@ -48,10 +48,10 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
         <div className="text-center space-y-6 max-w-md px-4">
           {/* Vault-Tec Logo */}
           <div className="flex justify-center">
-            <PixelIcon 
-              name="loader" 
-              sizePreset="xxl" 
-              variant="primary" 
+            <PixelIcon
+              name="loader-4"
+              sizePreset="xxl"
+              variant="primary"
               animation="spin"
               decorative
             />

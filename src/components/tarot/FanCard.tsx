@@ -14,7 +14,7 @@
 
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import * as m from 'framer-motion/m';
 import { CardPosition } from '@/hooks/useFanLayout';
 import { CardThumbnail } from '@/components/cards/CardThumbnail';
@@ -109,6 +109,9 @@ export const FanCard = React.memo(function FanCard({
   const { prefersReducedMotion } = usePrefersReducedMotion();
   const shouldAnimate = !prefersReducedMotion && !isDisabled;
 
+  // Track hover state
+  const [isHovered, setIsHovered] = useState(false);
+
   // Create dummy card (security: no real card data)
   const dummyCard = useMemo(() => createDummyCard(index), [index]);
 
@@ -120,54 +123,60 @@ export const FanCard = React.memo(function FanCard({
   }, [width]);
 
   // Calculate transform style (GPU-accelerated)
+  // Integrate hover state directly into transform to avoid conflicts
   const transformStyle = useMemo(
-    () => ({
-      position: 'absolute' as const,
-      left: 0,
-      top: 0,
-      width: `${width}px`,
-      height: `${height}px`,
-      // CRITICAL: translate to position, then rotate around center
-      // Subtract half width/height to center the card at the target position
-      transform: `
-        translate3d(${position.x - width / 2}px, ${position.y - height / 2}px, 0)
-        rotate(${position.rotation}deg)
-        ${isSelected ? 'translateY(-20px) scale(1.15)' : ''}
-      `,
-      transformOrigin: 'center center',
-      zIndex: isSelected ? 9999 : position.zIndex,
-      // Performance hints
-      willChange: shouldAnimate ? 'transform' : 'auto',
-      backfaceVisibility: 'hidden' as const,
-      WebkitBackfaceVisibility: 'hidden' as const,
-      // CSS containment for performance
-      contain: 'layout style paint' as const,
-      // Cursor
-      cursor: isDisabled ? 'not-allowed' : 'pointer',
-      // Transition for smooth selection
-      transition: prefersReducedMotion
-        ? 'none'
-        : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s',
-    }),
-    [position, isSelected, width, height, isDisabled, shouldAnimate, prefersReducedMotion]
-  );
+    () => {
+      // Calculate hover effect
+      // If selected, don't scale further (keep 1.0); if not selected, scale to 1.05
+      const hoverScale = isHovered && shouldAnimate ? (isSelected ? 1 : 1.05) : 1;
+      // If selected, don't lift further (already lifted); if not selected, lift -10px
+      const hoverY = isHovered && shouldAnimate ? (isSelected ? 0 : -10) : 0;
 
-  // Motion variants for hover/tap
-  const motionVariants = useMemo(
-    () => ({
-      hover: shouldAnimate
-        ? {
-            scale: isSelected ? 1.15 : 1.05,
-            y: isSelected ? -20 : -10,
-          }
-        : undefined,
-      tap: shouldAnimate
-        ? {
-            scale: isSelected ? 1.1 : 0.98,
-          }
-        : undefined,
-    }),
-    [shouldAnimate, isSelected]
+      // Calculate selection effect
+      const selectY = isSelected ? -20 : 0;
+      const selectScale = isSelected ? 1.15 : 1;
+
+      // Combine all effects
+      const totalScale = selectScale * hoverScale;
+      const totalY = selectY + hoverY;
+
+      return {
+        position: 'absolute' as const,
+        left: 0,
+        top: 0,
+        width: `${width}px`,
+        height: `${height}px`,
+        // CRITICAL: All transforms in ONE place - no conflicts!
+        transform: `
+          translate3d(${position.x - width / 2}px, ${position.y - height / 2}px, 0)
+          rotate(${position.rotation}deg)
+          translateY(${totalY}px)
+          scale(${totalScale})
+        `,
+        transformOrigin: 'center center',
+        zIndex: isSelected ? 9999 : position.zIndex,
+        // Performance hints
+        willChange: shouldAnimate ? 'transform' : 'auto',
+        backfaceVisibility: 'hidden' as const,
+        WebkitBackfaceVisibility: 'hidden' as const,
+        // CSS containment for performance
+        contain: 'layout style paint' as const,
+        // Cursor - inherit from parent during drag
+        cursor: isDisabled ? 'inherit' : 'pointer',
+        // CRITICAL: Enable pointer events for card clicks while parent container has pointerEvents: 'none'
+        pointerEvents: 'auto' as const,
+        // Prevent text selection during drag
+        userSelect: 'none' as const,
+        WebkitUserSelect: 'none' as const,
+        MozUserSelect: 'none' as const,
+        msUserSelect: 'none' as const,
+        // Transition for smooth selection and hover
+        transition: prefersReducedMotion
+          ? 'none'
+          : 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s',
+      };
+    },
+    [position, isSelected, isHovered, width, height, isDisabled, shouldAnimate, prefersReducedMotion]
   );
 
   return (
@@ -178,12 +187,14 @@ export const FanCard = React.memo(function FanCard({
       style={transformStyle}
       className="fan-card"
       onClick={isDisabled ? undefined : onClick}
-      whileHover={motionVariants.hover}
-      whileTap={motionVariants.tap}
+      onMouseEnter={() => !isDisabled && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       role="button"
       tabIndex={isDisabled ? -1 : 0}
       aria-label={`牌組第 ${index + 1} 張${isSelected ? ' (已選擇)' : ''}`}
       aria-pressed={isSelected}
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
       onKeyDown={(e) => {
         if (!isDisabled && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
@@ -212,6 +223,7 @@ export const FanCard = React.memo(function FanCard({
           isRevealed={false}
           cardBackUrl={cardBackUrl}
           enable3DTilt={false} // Disable 3D tilt (handled by parent motion.div)
+          hideFlipHint={true} // Hide flip hint in fan drawer (not a flip interaction)
         />
 
         {/* Selection badge (checkmark) */}

@@ -14,12 +14,9 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import * as m from 'framer-motion/m';
+import { m } from 'framer-motion';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
 import { PixelIcon } from '@/components/ui/icons';
-
-// Create motion aliases for cleaner JSX
-const motion = { div: m.div, p: m.p };
 
 /**
  * Props for ShuffleAnimation component
@@ -133,14 +130,14 @@ export function ShuffleAnimation({
   const shouldSimplify = prefersReducedMotion || isPerformanceDegraded;
 
   return (
-    <motion.div
+    <m.div
         data-testid="shuffle-animation"
         data-duration={duration}
         data-reduced-motion={shouldSimplify}
         role="status"
         aria-live="polite"
         aria-label={shouldSimplify ? '正在洗牌（簡化模式）' : '正在洗牌'}
-        className="flex flex-col items-center justify-center gap-4 p-8"
+        className="flex flex-col items-center justify-center gap-4 py-12"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -164,9 +161,13 @@ export function ShuffleAnimation({
           // Full animation with radiation effects
           <>
             {/* Radiation glow effect */}
-            <motion.div
+            <m.div
               data-testid="radiation-effect"
               className="relative"
+              style={{
+                width: '280px',
+                height: '280px',
+              }}
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [0.5, 1, 0.5],
@@ -180,65 +181,60 @@ export function ShuffleAnimation({
               {/* Outer glow */}
               <div className="absolute inset-0 rounded-full bg-pip-boy-green/20 blur-xl" />
 
-              {/* Card stack with shuffle effect */}
-              <motion.div
-                className="relative"
-                animate={{
-                  rotateZ: [-5, 5, -5],
-                  x: [-10, 10, -10],
-                }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                }}
+              {/* Card stack with shuffle effect - centered */}
+              <div
+                className="absolute inset-0 flex items-center justify-center"
               >
                 {/* Multiple card layers to simulate deck */}
-                {[0, 1, 2, 3, 4].map((index) => (
-                  <motion.div
-                    key={index}
-                    className="absolute w-32 h-48 bg-black border-2 border-pip-boy-green rounded-lg"
-                    style={{
-                      top: `${index * 2}px`,
-                      left: `${index * 2}px`,
-                      zIndex: 5 - index,
-                    }}
-                    initial={{
-                      opacity: 1 - index * 0.15,
-                      rotateZ: index * 2,
-                    }}
-                    animate={{
-                      opacity: [
-                        1 - index * 0.15,
-                        1 - index * 0.1,
-                        1 - index * 0.15,
-                      ],
-                      rotateZ: [index * 2, index * -2, index * 2],
-                      x: [0, (index - 2) * 5, 0],
-                    }}
-                    transition={{
-                      duration: 1.2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                      delay: index * 0.1,
-                    }}
-                  >
-                    {/* Card back pattern */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <PixelIcon
-                        name="sparkles"
-                        sizePreset="lg"
-                        variant="primary"
-                        decorative
-                      />
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
+                {[0, 1, 2, 3, 4].map((index) => {
+                  // Static offset for card stack depth effect
+                  const offset = (index - 2) * 2;
+                  return (
+                    <m.div
+                      key={index}
+                      className="absolute w-32 h-48 bg-black border-2 border-pip-boy-green rounded-lg"
+                      style={{
+                        zIndex: 5 - index,
+                      }}
+                      initial={{
+                        opacity: 1 - index * 0.15,
+                        x: offset,
+                        y: offset,
+                      }}
+                      animate={{
+                        opacity: [
+                          1 - index * 0.15,
+                          1 - index * 0.1,
+                          1 - index * 0.15,
+                        ],
+                        rotateZ: [index * 2, index * -2, index * 2],
+                        x: [offset + (index - 2) * -5, offset + (index - 2) * 5, offset + (index - 2) * -5],
+                        y: offset,
+                      }}
+                      transition={{
+                        duration: 1.2,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                        delay: index * 0.1,
+                      }}
+                    >
+                      {/* Card back pattern */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <PixelIcon
+                          name="sparkles"
+                          sizePreset="lg"
+                          variant="primary"
+                          decorative
+                        />
+                      </div>
+                    </m.div>
+                  );
+                })}
+              </div>
+            </m.div>
 
             {/* Status text */}
-            <motion.p
+            <m.p
               className="text-sm text-pip-boy-green/70 font-mono"
               animate={{
                 opacity: [0.5, 1, 0.5],
@@ -250,20 +246,20 @@ export function ShuffleAnimation({
               }}
             >
               洗牌中...
-            </motion.p>
+            </m.p>
 
             {/* Performance warning (if degraded during animation) */}
             {isPerformanceDegraded && (
-              <motion.p
+              <m.p
                 className="text-xs text-amber-400/70"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
                 已切換至簡化模式以提升效能
-              </motion.p>
+              </m.p>
             )}
           </>
         )}
-      </motion.div>
+      </m.div>
   );
 }
