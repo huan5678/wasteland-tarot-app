@@ -17,13 +17,19 @@ import { CardWithPosition } from '@/components/tarot/InteractiveCardDraw';
 
 /**
  * Saved reading state structure
+ *
+ * IMPORTANT: Only store minimal data to avoid QuotaExceededError
+ * - Store IDs instead of full card objects
+ * - Store only position info (upright/reversed) for revealed cards
  */
 export interface SavedReadingState {
   spreadType: string;
   drawingState: 'idle' | 'shuffling' | 'selecting' | 'flipping' | 'complete';
-  shuffledDeck: any[];
-  drawnCards: CardWithPosition[];
-  revealedIndices: number[];
+  shuffledDeckIds: Array<string | number>; // Only card IDs
+  revealedCards: Array<{
+    index: number;
+    position: 'upright' | 'reversed';
+  }>; // Only position info for revealed cards
   timestamp: number;
 }
 
@@ -68,9 +74,8 @@ function isValidSavedState(data: any): data is SavedReadingState {
     typeof data === 'object' &&
     typeof data.spreadType === 'string' &&
     typeof data.drawingState === 'string' &&
-    Array.isArray(data.shuffledDeck) &&
-    Array.isArray(data.drawnCards) &&
-    Array.isArray(data.revealedIndices) &&
+    Array.isArray(data.shuffledDeckIds) &&
+    Array.isArray(data.revealedCards) &&
     typeof data.timestamp === 'number'
   );
 }
@@ -138,11 +143,41 @@ export function useSessionRecovery(readingId: string): UseSessionRecoveryReturn 
           timestamp: Date.now(),
         };
 
-        sessionStorage.setItem(storageKey, JSON.stringify(stateToSave));
+        const serialized = JSON.stringify(stateToSave);
+
+        // Check size before saving (warn if > 100KB)
+        const sizeInKB = new Blob([serialized]).size / 1024;
+        if (sizeInKB > 100) {
+          console.warn(`[useSessionRecovery] Large state size: ${sizeInKB.toFixed(2)}KB`);
+          console.warn('[useSessionRecovery] State content:', stateToSave);
+        }
+
+        sessionStorage.setItem(storageKey, serialized);
         setSavedState(stateToSave);
         setHasIncompleteReading(true);
       } catch (error) {
-        console.error('[useSessionRecovery] Error saving state:', error);
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+          console.error('[useSessionRecovery] Storage quota exceeded!');
+          console.error('[useSessionRecovery] Clearing ALL sessionStorage to free up space...');
+
+          // Clear entire sessionStorage (more aggressive)
+          sessionStorage.clear();
+
+          // Try saving again with empty storage
+          try {
+            const serialized = JSON.stringify(stateToSave);
+            sessionStorage.setItem(storageKey, serialized);
+            setSavedState(stateToSave);
+            setHasIncompleteReading(true);
+            console.log('[useSessionRecovery] Successfully saved after clearing storage');
+          } catch (retryError) {
+            console.error('[useSessionRecovery] Still failed after clearing. State too large:', retryError);
+            setHasIncompleteReading(false);
+            setSavedState(null);
+          }
+        } else {
+          console.error('[useSessionRecovery] Error saving state:', error);
+        }
       }
     },
     [storageKey]

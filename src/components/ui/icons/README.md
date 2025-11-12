@@ -28,6 +28,12 @@ import { PixelIcon } from '@/components/ui/icons'
 // Line 風格（預設，也可明確指定）
 <PixelIcon name="home-line" />
 
+// 無後綴圖示（自動處理）
+<PixelIcon name="hand" />  // ri-hand (auto-detected)
+
+// 或明確指定無後綴
+<PixelIcon name="hand" remixVariant="none" />
+
 // 自訂尺寸
 <PixelIcon name="user" size={32} />
 
@@ -54,6 +60,9 @@ import { PixelIcon } from '@/components/ui/icons'
 // 方式 3: 去掉後綴（預設 line）
 <PixelIcon name="home" />           // 預設 line 風格
 <PixelIcon name="user" />           // 預設 line 風格
+
+// 特殊情況：無後綴圖示（自動處理）
+<PixelIcon name="hand" />           // ri-hand (auto-detected)
 ```
 
 **步驟**：
@@ -61,6 +70,11 @@ import { PixelIcon } from '@/components/ui/icons'
 2. 搜尋並找到想要的圖示
 3. 複製完整名稱（例如 "tent-fill"）
 4. 直接使用，不需要手動處理後綴！
+
+**無後綴圖示**：
+部分 RemixIcon 圖示沒有 `-line` 或 `-fill` 後綴（例如 `hand`），PixelIcon 會自動偵測並處理。目前支援的無後綴圖示：
+- `hand` → `ri-hand`
+- 更多圖示將根據需要添加到 `ICONS_WITHOUT_SUFFIX` 清單中
 
 ## 🎨 Phase 6 功能
 

@@ -4,12 +4,6 @@
  * Provides an interactive card drawing experience with:
  * - Fisher-Yates shuffle algorithm for unbiased randomization
  * - Framer Motion animations (with reduced motion support)
-<<<<<<< HEAD
- * - Multiple spread type support
- * - State management for drawing flow
- *
- * Requirements: 1.1, 1.2, 1.3
-=======
  * - ShuffleAnimation for visual shuffle feedback
  * - CardSpreadLayout for card arrangement
  * - CardFlipAnimation for individual card flips
@@ -18,35 +12,38 @@
  * - Performance monitoring and auto-degradation
  *
  * Requirements: 1.1-1.13
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
  */
 
 'use client';
 
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import * as m from 'framer-motion/m';
 import { useFisherYatesShuffle } from '@/hooks/useFisherYatesShuffle';
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion';
-<<<<<<< HEAD
-import { Button } from '@/components/ui/button';
-import { PixelIcon } from '@/components/ui/icons';
-import { cardsAPI } from '@/lib/api';
-=======
 import { useSessionRecovery } from '@/hooks/useSessionRecovery';
+import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider';
 import { Button } from '@/components/ui/button';
 import { PixelIcon } from '@/components/ui/icons';
 import { cardsAPI } from '@/lib/api';
 import { ShuffleAnimation } from './ShuffleAnimation';
-import { CardFlipAnimation } from './CardFlipAnimation';
+import { CardThumbnail } from '@/components/cards/CardThumbnail';
 import { CardSpreadLayout } from './CardSpreadLayout';
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
+import { DeckStack } from './DeckStack';
+import { TarotFanDrawer } from './TarotFanDrawer';
+
+// Create motion alias for cleaner JSX
+const motion = { div: m.div };
 
 /**
  * Drawing state machine
+ *
+ * Flow: idle → shuffling → fanSelection → selectingCards → flipping → complete
  */
 export type DrawingState =
-  | 'idle' // No drawing in progress
-  | 'shuffling' // Shuffling the deck
-  | 'selectingCards' // Showing card backs, waiting for user clicks
+  | 'idle' // No drawing in progress (show DeckStack)
+  | 'shuffling' // Shuffling the deck (show ShuffleAnimation)
+  | 'fanSelection' // 78-card fan selection (show TarotFanDrawer)
+  | 'selectingCards' // Showing selected card backs, waiting for flip clicks
   | 'flipping' // Flipping a specific card
   | 'complete'; // Drawing complete
 
@@ -88,12 +85,9 @@ export interface InteractiveCardDrawProps {
 
   /** Animation duration in milliseconds */
   animationDuration?: number;
-<<<<<<< HEAD
-=======
 
   /** Unique reading session ID for session recovery (optional, will generate if not provided) */
   readingId?: string;
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
 }
 
 /**
@@ -161,19 +155,35 @@ export function InteractiveCardDraw({
   onDrawingStateChange,
   enableAnimation = true,
   animationDuration = 1500,
-<<<<<<< HEAD
-=======
-  readingId = `reading-${Date.now()}`,
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
+  readingId,
 }: InteractiveCardDrawProps) {
+  // Generate stable reading ID (only once on mount)
+  const stableReadingId = useMemo(
+    () => readingId || `reading-${Date.now()}`,
+    [readingId]
+  );
+
   // Hooks
   const { shuffle } = useFisherYatesShuffle();
   const { prefersReducedMotion } = usePrefersReducedMotion();
-<<<<<<< HEAD
-=======
-  const { hasIncompleteReading, savedState, saveState, restoreState, clearState } =
-    useSessionRecovery(readingId);
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
+  const { cardBackPath, isLoading: isCardBackLoading } = useDailyCardBackContext();
+
+  // Dynamic card back URL with fallback
+  const displayCardBackUrl = useMemo(
+    () => (isCardBackLoading ? '/assets/cards/card-backs/01.png' : cardBackPath),
+    [isCardBackLoading, cardBackPath]
+  );
+
+  // TEMPORARILY DISABLED: useSessionRecovery causing infinite loop
+  // const { hasIncompleteReading, savedState, saveState, restoreState, clearState } =
+  //   useSessionRecovery(stableReadingId);
+
+  // Dummy values to make component work without session recovery
+  const hasIncompleteReading = false;
+  const savedState = null;
+  const saveState = () => {};
+  const restoreState = () => null;
+  const clearState = () => {};
 
   // State
   const [drawingState, setDrawingState] = useState<DrawingState>('idle');
@@ -182,10 +192,7 @@ export function InteractiveCardDraw({
   const [flippedCards, setFlippedCards] = useState<CardWithPosition[]>([]); // Cards that have been flipped
   const [flippingIndex, setFlippingIndex] = useState<number | null>(null); // Currently flipping card index
   const [error, setError] = useState<string | null>(null);
-<<<<<<< HEAD
-=======
   const [showRestorePrompt, setShowRestorePrompt] = useState(false);
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
 
   // Ref to prevent animation overlap
   const isDrawingRef = useRef(false);
@@ -193,16 +200,13 @@ export function InteractiveCardDraw({
   // Determine if animations should be disabled
   const shouldDisableAnimations = prefersReducedMotion || !enableAnimation;
 
-<<<<<<< HEAD
-=======
-  // Check for incomplete reading on mount
-  useEffect(() => {
-    if (hasIncompleteReading && savedState) {
-      setShowRestorePrompt(true);
-    }
-  }, [hasIncompleteReading, savedState]);
+  // TEMPORARILY DISABLED: Check for incomplete reading on mount
+  // useEffect(() => {
+  //   if (hasIncompleteReading && savedState) {
+  //     setShowRestorePrompt(true);
+  //   }
+  // }, [hasIncompleteReading, savedState]);
 
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
   // Validate spread type on mount
   useEffect(() => {
     if (!VALID_SPREAD_TYPES.includes(spreadType)) {
@@ -217,28 +221,28 @@ export function InteractiveCardDraw({
     onDrawingStateChange?.(drawingState);
   }, [drawingState, onDrawingStateChange]);
 
-<<<<<<< HEAD
-=======
-  // Save state when drawing state changes (except idle and complete)
-  useEffect(() => {
-    if (drawingState === 'idle' || drawingState === 'complete') {
-      return;
-    }
+  // TEMPORARILY DISABLED: Save state when drawing state changes
+  // TODO: Re-enable after fixing infinite loop and quota issues
+  // useEffect(() => {
+  //   if (drawingState === 'idle' || drawingState === 'complete') {
+  //     return;
+  //   }
 
-    // Map drawing state to savedState format
-    const mappedState =
-      drawingState === 'shuffling' ? 'shuffling' :
-      drawingState === 'selectingCards' ? 'selecting' :
-      drawingState === 'flipping' ? 'flipping' : 'idle';
+  //   const mappedState =
+  //     drawingState === 'shuffling' ? 'shuffling' :
+  //     drawingState === 'selectingCards' ? 'selecting' :
+  //     drawingState === 'flipping' ? 'flipping' : 'idle';
 
-    saveState({
-      spreadType,
-      drawingState: mappedState,
-      shuffledDeck,
-      drawnCards: flippedCards,
-      revealedIndices: flippedCards.map(c => c.positionIndex),
-    });
-  }, [drawingState, spreadType, shuffledDeck, flippedCards, saveState]);
+  //   saveState({
+  //     spreadType,
+  //     drawingState: mappedState,
+  //     shuffledDeckIds: shuffledDeck.map(card => card.id),
+  //     revealedCards: flippedCards.map(c => ({
+  //       index: c.positionIndex,
+  //       position: c.position,
+  //     })),
+  //   });
+  // }, [drawingState, spreadType, shuffledDeck, flippedCards, saveState]);
 
   // Clear state when complete
   useEffect(() => {
@@ -250,27 +254,54 @@ export function InteractiveCardDraw({
   /**
    * Restore saved reading state
    */
-  const handleRestoreReading = useCallback(() => {
+  const handleRestoreReading = useCallback(async () => {
     const restored = restoreState();
     if (!restored) {
       return;
     }
 
-    // Restore state
-    setShuffledDeck(restored.shuffledDeck);
-    setFlippedCards(restored.drawnCards);
-    setSelectedCards(restored.shuffledDeck.slice(0, restored.drawnCards.length));
+    try {
+      // Fetch full deck to reconstruct shuffled deck from IDs
+      const fullDeck = await cardsAPI.getAll();
+      const idToCard = new Map(fullDeck.map(card => [card.id, card]));
 
-    // Restore drawing state
-    const mappedState =
-      restored.drawingState === 'shuffling' ? 'shuffling' :
-      restored.drawingState === 'selecting' ? 'selectingCards' :
-      restored.drawingState === 'flipping' ? 'flipping' : 'idle';
-    setDrawingState(mappedState as DrawingState);
+      // Reconstruct shuffled deck from saved IDs
+      const reconstructedDeck = restored.shuffledDeckIds
+        .map(id => idToCard.get(id))
+        .filter(Boolean) as any[]; // Remove any missing cards
 
-    setShowRestorePrompt(false);
-    console.log('[InteractiveCardDraw] Restored saved reading state');
-  }, [restoreState]);
+      // Reconstruct flipped cards from revealed cards info
+      const reconstructedFlippedCards: CardWithPosition[] = restored.revealedCards.map(revealed => {
+        const card = reconstructedDeck[revealed.index];
+        return {
+          ...card,
+          position: revealed.position,
+          positionIndex: revealed.index,
+          positionLabel: positionsMeta?.[revealed.index]?.label || `位置 ${revealed.index + 1}`,
+        };
+      });
+
+      // Restore state
+      setShuffledDeck(reconstructedDeck);
+      setFlippedCards(reconstructedFlippedCards);
+      setSelectedCards(reconstructedDeck.slice(0, restored.revealedCards.length));
+
+      // Restore drawing state
+      const mappedState =
+        restored.drawingState === 'shuffling' ? 'shuffling' :
+        restored.drawingState === 'selecting' ? 'selectingCards' :
+        restored.drawingState === 'flipping' ? 'flipping' : 'idle';
+      setDrawingState(mappedState as DrawingState);
+
+      setShowRestorePrompt(false);
+      console.log('[InteractiveCardDraw] Restored saved reading state');
+    } catch (error) {
+      console.error('[InteractiveCardDraw] Failed to restore reading:', error);
+      setError('無法恢復暫存的解讀，請重新開始');
+      clearState();
+      setShowRestorePrompt(false);
+    }
+  }, [restoreState, clearState, positionsMeta]);
 
   /**
    * Decline restoration and start fresh
@@ -280,9 +311,8 @@ export function InteractiveCardDraw({
     setShowRestorePrompt(false);
   }, [clearState]);
 
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
   /**
-   * Main draw cards function - shuffles and shows card backs
+   * Main draw cards function - shuffles deck and transitions to fan selection
    */
   const handleDrawCards = useCallback(async () => {
     // Prevent overlapping draws
@@ -309,13 +339,8 @@ export function InteractiveCardDraw({
         );
       }
 
-      // Step 4: Select cards from shuffled deck and show backs
-      const cardCount = getCardCount(spreadType, positionsMeta);
-      const selected = shuffled.slice(0, cardCount);
-      setSelectedCards(selected);
-
-      // Step 5: Transition to card selection state
-      setDrawingState('selectingCards');
+      // Step 4: Transition to fan selection (user manually selects cards)
+      setDrawingState('fanSelection');
 
     } catch (err) {
       const errorMessage =
@@ -336,28 +361,35 @@ export function InteractiveCardDraw({
   ]);
 
   /**
-<<<<<<< HEAD
-   * Handle clicking a card back to flip it
+   * Handle cards selected from TarotFanDrawer
+   * NOTE: Receives indices only (no card data) to prevent DevTools snooping
    */
-  const handleCardClick = useCallback(async (index: number) => {
-    // Prevent clicking if already flipped or currently flipping another card
-    if (flippingIndex !== null) return;
-    if (flippedCards.some(c => c.positionIndex === index)) return;
+  const handleFanCardsSelected = useCallback((selectedIndices: number[]) => {
+    console.log('[InteractiveCardDraw] User selected card indices from fan:', selectedIndices);
 
-    setFlippingIndex(index);
-    setDrawingState('flipping');
+    // Get full card objects from shuffledDeck using indices
+    const fullSelectedCards = selectedIndices.map(index => {
+      const card = shuffledDeck[index];
+      if (!card) {
+        console.error(`[InteractiveCardDraw] Card not found at index: ${index}`);
+        return null;
+      }
+      return card;
+    }).filter(Boolean); // Remove any null values
 
-    // Wait for flip animation
-    if (!shouldDisableAnimations) {
-      await new Promise(resolve => setTimeout(resolve, 600));
+    if (fullSelectedCards.length !== selectedIndices.length) {
+      console.error('[InteractiveCardDraw] Some selected indices were invalid');
+      setError('選擇的卡片資料有誤，請重新開始');
+      setDrawingState('idle');
+      return;
     }
 
-    // Add position information and mark as flipped
-    const card = selectedCards[index];
-    const cardWithPosition: CardWithPosition = {
-      ...card,
-      position: Math.random() > 0.5 ? 'upright' : 'reversed',
-=======
+    // Update selected cards and transition to card flip state
+    setSelectedCards(fullSelectedCards);
+    setDrawingState('selectingCards');
+  }, [shuffledDeck]);
+
+  /**
    * Handle card flip completion (called by CardFlipAnimation)
    */
   const handleCardFlipComplete = useCallback((completedCard: CardWithPosition, index: number) => {
@@ -372,7 +404,6 @@ export function InteractiveCardDraw({
       ...card,
       ...completedCard,
       position: completedCard.position || (Math.random() > 0.5 ? 'upright' : 'reversed'),
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
       positionIndex: index,
       positionLabel: positionsMeta?.[index]?.label || `位置 ${index + 1}`,
     };
@@ -381,11 +412,8 @@ export function InteractiveCardDraw({
     setFlippedCards(newFlippedCards);
     setFlippingIndex(null);
 
-<<<<<<< HEAD
-=======
     console.log('[InteractiveCardDraw] Card flipped:', cardWithPosition.name, cardWithPosition.position);
 
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
     // Check if all cards are flipped
     if (newFlippedCards.length === selectedCards.length) {
       setDrawingState('complete');
@@ -396,17 +424,10 @@ export function InteractiveCardDraw({
       setDrawingState('selectingCards');
     }
   }, [
-<<<<<<< HEAD
-    flippingIndex,
-=======
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
     flippedCards,
     selectedCards,
     positionsMeta,
     onCardsDrawn,
-<<<<<<< HEAD
-    shouldDisableAnimations,
-=======
   ]);
 
   /**
@@ -422,7 +443,6 @@ export function InteractiveCardDraw({
   }, [
     flippingIndex,
     flippedCards,
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
   ]);
 
   return (
@@ -436,8 +456,6 @@ export function InteractiveCardDraw({
         {drawingState}
       </div>
 
-<<<<<<< HEAD
-=======
       {/* Restore Reading Prompt */}
       {showRestorePrompt && (
         <div
@@ -487,7 +505,6 @@ export function InteractiveCardDraw({
         </div>
       )}
 
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
       {/* Error Display */}
       {error && (
         <div
@@ -499,39 +516,15 @@ export function InteractiveCardDraw({
         </div>
       )}
 
-      {/* Draw Button (shown only when idle) */}
+      {/* Deck Stack (shown only when idle) */}
       {drawingState === 'idle' && (
-        <Button
-          data-testid="start-draw-button"
-          size="lg"
-          variant="default"
+        <DeckStack
           onClick={handleDrawCards}
-          disabled={isDrawingRef.current}
-          className="px-8 py-6"
-        >
-          <PixelIcon name="sparkles" sizePreset="sm" decorative />
-          <span className="text-lg">
-            開始抽牌（{getCardCount(spreadType, positionsMeta)} 張）
-          </span>
-        </Button>
+          isDisabled={isDrawingRef.current}
+          cardCount={78}
+        />
       )}
 
-<<<<<<< HEAD
-      {/* Loading State (shuffling) */}
-      {drawingState === 'shuffling' && (
-        <div className="flex flex-col items-center gap-4">
-          <PixelIcon
-            name="loader"
-            sizePreset="xxl"
-            className={shouldDisableAnimations ? '' : 'animate-spin'}
-            variant="primary"
-            decorative
-          />
-          <span className="text-sm text-pip-boy-green/70">
-            洗牌中...
-          </span>
-        </div>
-=======
       {/* Shuffle Animation with Performance Monitoring */}
       {drawingState === 'shuffling' && (
         <ShuffleAnimation
@@ -542,7 +535,16 @@ export function InteractiveCardDraw({
           }}
           playSound={!shouldDisableAnimations}
         />
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
+      )}
+
+      {/* Fan Selection State - 78-card interactive fan drawer */}
+      {drawingState === 'fanSelection' && shuffledDeck.length > 0 && (
+        <TarotFanDrawer
+          totalCards={78}
+          spreadCount={getCardCount(spreadType, positionsMeta)}
+          onCardsSelected={handleFanCardsSelected}
+          cardBackUrl={displayCardBackUrl}
+        />
       )}
 
       {/* Card Selection State - Show card backs for user to click */}
@@ -551,84 +553,6 @@ export function InteractiveCardDraw({
           <p className="text-center text-pip-boy-green/70 text-sm mb-6">
             點擊卡片以翻開它們
           </p>
-<<<<<<< HEAD
-          <div className="flex flex-wrap justify-center gap-4">
-            {selectedCards.map((card, index) => {
-              const isFlipped = flippedCards.some(c => c.positionIndex === index);
-              const isFlipping = flippingIndex === index;
-              const flippedCard = flippedCards.find(c => c.positionIndex === index);
-              const positionLabel = positionsMeta?.[index]?.label || `位置 ${index + 1}`;
-
-              return (
-                <div
-                  key={index}
-                  className="relative"
-                  style={{ perspective: '1000px' }}
-                >
-                  {/* Position Label */}
-                  <div className="text-center text-pip-boy-green/60 text-xs mb-2">
-                    {positionLabel}
-                  </div>
-
-                  {/* Card Container */}
-                  <div
-                    className={`relative w-32 h-48 transition-all duration-600 cursor-pointer ${
-                      isFlipped ? '' : 'hover:scale-105'
-                    }`}
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      transform: isFlipped || isFlipping ? 'rotateY(180deg)' : 'rotateY(0deg)',
-                      transitionDuration: '0.6s',
-                      transitionTimingFunction: 'ease-in-out',
-                    }}
-                    onClick={() => !isFlipped && !isFlipping && handleCardClick(index)}
-                  >
-                    {/* Card Back */}
-                    <div
-                      className="absolute inset-0 backface-hidden border-2 border-pip-boy-green bg-pip-boy-green/5 flex flex-col items-center justify-center"
-                      style={{ backfaceVisibility: 'hidden' }}
-                    >
-                      <PixelIcon
-                        name="radioactive"
-                        sizePreset="xl"
-                        variant="primary"
-                        decorative
-                      />
-                      <span className="text-pip-boy-green text-xs mt-2 font-bold">
-                        VAULT-TEC
-                      </span>
-                      <span className="text-pip-boy-green/50 text-xs">
-                        ?
-                      </span>
-                    </div>
-
-                    {/* Card Front (flipped card) */}
-                    {isFlipped && flippedCard && (
-                      <div
-                        className="absolute inset-0 backface-hidden border-2 border-pip-boy-green bg-wasteland-dark p-2 flex flex-col items-center justify-center"
-                        style={{
-                          backfaceVisibility: 'hidden',
-                          transform: 'rotateY(180deg)',
-                        }}
-                      >
-                        <img
-                          src={flippedCard.image_url}
-                          alt={flippedCard.name}
-                          className="w-full h-auto object-contain"
-                        />
-                        <div className="text-center mt-2">
-                          <p className="text-pip-boy-green text-xs font-bold">
-                            {flippedCard.name}
-                          </p>
-                          <p className="text-pip-boy-green/60 text-xs">
-                            {flippedCard.position === 'upright' ? '正位' : '逆位'}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-=======
           <div className="flex flex-wrap justify-center gap-6">
             {selectedCards.map((card, index) => {
               const isFlipped = flippedCards.some(c => c.positionIndex === index);
@@ -636,27 +560,38 @@ export function InteractiveCardDraw({
               const flippedCard = flippedCards.find(c => c.positionIndex === index);
               const positionLabel = positionsMeta?.[index]?.label || `位置 ${index + 1}`;
 
-              // Create card object with position metadata
-              const cardWithMeta: CardWithPosition = flippedCard || {
-                ...card,
-                position: 'upright', // Will be determined on flip
-                positionIndex: index,
-                positionLabel,
+              // Get position (upright/reversed) from flipped card if available
+              const position = flippedCard?.position || 'upright';
+
+              // Handle click to flip card
+              const handleFlip = () => {
+                if (!isCurrentlyFlipping && !isFlipped) {
+                  const completedCard: CardWithPosition = {
+                    ...card,
+                    position: Math.random() > 0.5 ? 'upright' : 'reversed',
+                    positionIndex: index,
+                    positionLabel,
+                  };
+                  handleCardFlipComplete(completedCard, index);
+                }
               };
 
               return (
-                <CardFlipAnimation
+                <div
                   key={index}
-                  card={cardWithMeta}
-                  isRevealed={isFlipped}
-                  onFlipComplete={(completedCard) => handleCardFlipComplete(completedCard, index)}
-                  allowClickToFlip={true}
-                  isDisabled={isCurrentlyFlipping || isFlipped}
-                  flipDuration={0.6}
-                  playSound={!shouldDisableAnimations}
-                  className="w-40 h-60"
-                />
->>>>>>> origin/claude/fix-interactive-reading-experience-011CV31XNLA7PavNAZiAKkEG
+                  onClick={handleFlip}
+                  className={!isFlipped ? 'cursor-pointer' : ''}
+                >
+                  <CardThumbnail
+                    card={card}
+                    size="medium"
+                    flippable
+                    isRevealed={isFlipped}
+                    position={position}
+                    positionLabel={positionLabel}
+                    cardBackUrl={displayCardBackUrl}
+                  />
+                </div>
               );
             })}
           </div>

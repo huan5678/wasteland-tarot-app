@@ -84,6 +84,13 @@ export function DashboardSidebar() {
     const newState = !isCollapsed;
     setIsCollapsed(newState);
     localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(newState));
+
+    // 發送自定義事件通知 layout 狀態變化
+    window.dispatchEvent(
+      new CustomEvent('sidebar-collapsed-change', {
+        detail: { collapsed: newState }
+      })
+    );
   };
 
   // 導航處理
@@ -179,7 +186,7 @@ export function DashboardSidebar() {
               size="icon"
               variant={active ? 'default' : 'ghost'}
               onClick={() => handleNavigation(item.href)}
-              className="relative h-12 w-12"
+              className="relative h-12 w-full flex items-center justify-center"
               aria-label={item.ariaLabel}
               aria-current={active ? 'page' : undefined}
             >
@@ -209,7 +216,7 @@ export function DashboardSidebar() {
   return (
     <aside
       className={`
-        self-start sticky
+        fixed left-0 z-30
         bg-wasteland-darker border-r-2 border-pip-boy-green
         flex flex-col flex-shrink-0
         transition-all duration-300 ease-in-out
@@ -265,7 +272,7 @@ export function DashboardSidebar() {
           }
 
             {/* 選單項目 */}
-            <div className={isCollapsed ? 'space-y-1' : ''}>
+            <div className={isCollapsed ? 'flex flex-col items-stretch space-y-1' : ''}>
               {section.items.map((item) =>
             isCollapsed ? renderCollapsedItem(item) : renderExpandedItem(item)
             )}
@@ -280,9 +287,9 @@ export function DashboardSidebar() {
         <TooltipProvider delayDuration={300}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button size="icon" variant="link"
+                <Button size="icon" variant="ghost"
               onClick={toggleCollapse}
-              className="w-full flex items-center justify-center py-3 transition-all duration-200"
+              className="w-full flex items-center justify-center py-3 hover:bg-pip-boy-green/10 hover:text-pip-boy-green transition-all duration-200"
               aria-label="展開側邊欄">
 
                   <PixelIcon
@@ -299,9 +306,9 @@ export function DashboardSidebar() {
             </Tooltip>
           </TooltipProvider> :
 
-        <Button size="default" variant="link"
+        <Button size="default" variant="ghost"
         onClick={toggleCollapse}
-        className="w-full flex items-center gap-3 px-4 py-3 transition-all duration-200"
+        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-pip-boy-green/10 hover:text-pip-boy-green transition-all duration-200"
         aria-label="收合側邊欄">
 
             <PixelIcon

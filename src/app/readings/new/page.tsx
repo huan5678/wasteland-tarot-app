@@ -106,6 +106,9 @@ export default function NewReadingPage() {
   const sessionInitialized = useRef(false);
   const initialSessionId = useRef<string | null>(null);
 
+  // CRITICAL: Generate stable reading ID for InteractiveCardDraw to prevent infinite loop
+  const stableReadingIdRef = useRef<string>(`temp-reading-${Date.now()}`);
+
   // Initialize or resume session on mount
   useEffect(() => {
     const initializeSession = async () => {
@@ -691,20 +694,24 @@ export default function NewReadingPage() {
 
         {/* Step 2: Card Drawing */}
         {step === 'drawing' &&
-        <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6">
-            <h2 className="text-xl font-bold text-pip-boy-green mb-4 text-center flex items-center justify-center">
-              <PixelIcon name="card-stack" size={20} className="mr-2" decorative />抽取你的卡牌
-            </h2>
+        <div className="relative">
+            {/* Header section with normal container */}
+            <div className="border-2 border-pip-boy-green/30 bg-pip-boy-green/5 p-6 mb-6">
+              <h2 className="text-xl font-bold text-pip-boy-green mb-4 text-center flex items-center justify-center">
+                <PixelIcon name="card-stack" size={20} className="mr-2" decorative />抽取你的卡牌
+              </h2>
 
-            <div className="text-center mb-6">
-              <p className="text-pip-boy-green/80 text-sm italic mb-2">
-                "{question}"
-              </p>
-              <p className="text-pip-boy-green/60 text-xs">
-                在抽取卡牌時專注於你的問題
-              </p>
+              <div className="text-center">
+                <p className="text-pip-boy-green/80 text-sm italic mb-2">
+                  "{question}"
+                </p>
+                <p className="text-pip-boy-green/60 text-xs">
+                  在抽取卡牌時專注於你的問題
+                </p>
+              </div>
             </div>
 
+            {/* Card drawing area - no padding to accommodate full-screen fan */}
             <InteractiveCardDraw
               spreadType={toCanonical(spreadType)}
               positionsMeta={spreadPositionMeanings[toCanonical(spreadType)]?.map((p) => ({
@@ -714,6 +721,7 @@ export default function NewReadingPage() {
               onCardsDrawn={handleCardsDrawn}
               enableAnimation={!prefersReducedMotion}
               animationDuration={1500}
+              readingId={activeSession?.id || stableReadingIdRef.current}
             />
           </div>
         }

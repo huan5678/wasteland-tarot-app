@@ -131,14 +131,23 @@ export const REMIX_ICON_MAPPING: Record<string, string> = {
 }
 
 /**
+ * Icons that don't have -line or -fill suffix
+ * These icons only have a single style (e.g., ri-hand)
+ */
+export const ICONS_WITHOUT_SUFFIX = new Set([
+  'hand',
+  // Add more no-suffix icons here as discovered
+])
+
+/**
  * Get RemixIcon class name from legacy icon name
  * Automatically appends default style suffix if not present
  *
  * @param name - Legacy icon name or RemixIcon name
- * @param remixVariant - Style variant ('line' or 'fill'), defaults to 'line'
- * @returns Full RemixIcon class name (e.g., 'ri-home-line')
+ * @param remixVariant - Style variant ('line' or 'fill' or 'none'), defaults to 'line'
+ * @returns Full RemixIcon class name (e.g., 'ri-home-line' or 'ri-hand')
  */
-export function getRemixIconClassName(name: string, remixVariant: 'line' | 'fill' = 'line'): string {
+export function getRemixIconClassName(name: string, remixVariant: 'line' | 'fill' | 'none' = 'line'): string {
   // Safety check: if name is undefined or empty, return a default icon
   if (!name || typeof name !== 'string') {
     console.warn('PixelIcon: Invalid name provided, using fallback icon "star"');
@@ -150,6 +159,11 @@ export function getRemixIconClassName(name: string, remixVariant: 'line' | 'fill
     return name;
   }
 
+  // If already in ri-{name} format (no suffix), return as is
+  if (name.startsWith('ri-') && !name.endsWith('-line') && !name.endsWith('-fill')) {
+    return name;
+  }
+
   // Remove 'ri-' prefix if present
   const cleanName = name.startsWith('ri-') ? name.slice(3) : name;
 
@@ -158,6 +172,11 @@ export function getRemixIconClassName(name: string, remixVariant: 'line' | 'fill
 
   // Map to correct RemixIcon name
   const mappedName = REMIX_ICON_MAPPING[nameWithoutStyle] || nameWithoutStyle;
+
+  // Check if this icon doesn't use suffix or remixVariant is 'none'
+  if (ICONS_WITHOUT_SUFFIX.has(mappedName) || remixVariant === 'none') {
+    return `ri-${mappedName}`;
+  }
 
   // Return with ri- prefix and style suffix
   return `ri-${mappedName}-${remixVariant}`;

@@ -523,8 +523,9 @@ export interface PixelIconProps extends Omit<React.HTMLAttributes<HTMLElement>, 
   /**
    * 圖示風格（RemixIcon CSS class name）
    *
-   * 選擇圖示風格：line（線條）或 fill（實心）
+   * 選擇圖示風格：line（線條）、fill（實心）或 none（無後綴）
    * 對應 RemixIcon 的 class name 規則: ri-{name}-{style}
+   * 部分圖示只有無後綴版本（如 hand → ri-hand）
    *
    * @default 'line'
    *
@@ -532,7 +533,9 @@ export interface PixelIconProps extends Omit<React.HTMLAttributes<HTMLElement>, 
    * ```tsx
    * <PixelIcon name="home" remixVariant="line" />  // ri-home-line
    * <PixelIcon name="home" remixVariant="fill" />  // ri-home-fill
+   * <PixelIcon name="hand" remixVariant="none" />  // ri-hand (no suffix)
+   * <PixelIcon name="hand" />  // ri-hand (auto-detected from ICONS_WITHOUT_SUFFIX)
    * ```
    */
-  remixVariant?: 'line' | 'fill';
+  remixVariant?: 'line' | 'fill' | 'none';
 }

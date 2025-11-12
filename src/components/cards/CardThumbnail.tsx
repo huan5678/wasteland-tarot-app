@@ -245,13 +245,13 @@ export function CardThumbnail({
   // ========== 渲染：翻牌模式 ==========
   if (flippable) {
     return (
-      <div className={cn('flex flex-col items-center gap-3', className)}>
+      <div className={cn('w-full h-full flex flex-col items-center gap-3', className)}>
         {/* 翻牌容器 */}
         <div
           ref={tiltRef}
           className={cn(
-            sizeClasses[size],
-            'relative cursor-pointer [perspective:1200px]',
+            // In flippable mode, use flex-1 to fill available space
+            'flex-1 w-full relative cursor-pointer [perspective:1200px]',
             isFlipping && 'pointer-events-none'
           )}
           onClick={handleClick}
@@ -290,7 +290,7 @@ export function CardThumbnail({
                   <img
                     src={cardBackUrl}
                     alt="Wasteland Tarot Card Back"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                   {/* Pixel hover effect */}
                   <CardBackPixelEffect
@@ -321,112 +321,118 @@ export function CardThumbnail({
             </div>
 
             {/* 卡面 - 需要先旋轉 180 度，這樣外層翻轉時才會正面朝前 */}
+            {/* OPTIMIZATION: 只在 isRevealed 時渲染牌面，避免不必要的圖片預載入 */}
             <div className="absolute inset-0 w-full h-full [backface-visibility:hidden] [transform:rotateY(180deg)]">
-              <PipBoyCard
-                isClickable={!!onClick}
-                padding="none"
-                className="h-full overflow-hidden transition-all duration-300 relative"
-              >
-                {/* 卡牌圖片容器 - 逆位時旋轉 180 度 */}
-                <div className={cn(
-                  "relative aspect-[2/3] bg-black overflow-hidden",
-                  position === 'reversed' && 'rotate-180'
-                )}>
-                  {/* 載入中骨架屏 */}
-                  {!imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
-                      <PixelIcon
-                        name="image"
-                        size={32}
-                        className="text-pip-boy-green/50"
-                        decorative
-                      />
-                    </div>
-                  )}
-
-                  {/* 載入中旋轉圖示（中央） */}
-                  {!imageLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                      <PixelIcon
-                        name="loader"
-                        animation="spin"
-                        variant="primary"
-                        sizePreset="lg"
-                        decorative
-                      />
-                    </div>
-                  )}
-
-                  {/* 卡牌圖片 */}
-                  <Image
-                    src={imageUrl}
-                    alt={imageAlt}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                    className={cn(
-                      'object-cover transition-all duration-300',
-                      onClick && 'group-hover:scale-110',
-                      !imageLoaded && 'opacity-0'
-                    )}
-                    loading={priority ? undefined : 'lazy'}
-                    priority={priority}
-                    onError={handleImageError}
-                    onLoadingComplete={handleImageLoadingComplete}
-                  />
-
-                  {/* 黑色半透明覆蓋層 (hover 時淡化) */}
-                  {onClick && (
-                    <div
-                      className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-300 pointer-events-none"
-                      aria-hidden="true"
-                    />
-                  )}
-
-                  {/* 圖片發光效果(懸停時) */}
-                  {onClick && (
-                    <div
-                      className="absolute inset-0 bg-pip-boy-green/0 group-hover:bg-pip-boy-green/10 transition-colors duration-300 pointer-events-none"
-                      aria-hidden="true"
-                    />
-                  )}
-                </div>
-
-                {/* 卡牌資訊 */}
-                <div className="p-3 space-y-2">
-                  {/* 卡牌名稱 */}
-                  <h4 className={cn(
-                    'font-semibold text-pip-boy-green uppercase tracking-wide line-clamp-2',
-                    onClick && 'group-hover:text-pip-boy-green-bright transition-colors',
-                    size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
-                  )}>
-                    {card.name}
-                  </h4>
-
-                  {/* 花色與編號 */}
-                  <div className="flex items-center justify-between text-xs text-pip-boy-green/70">
-                    <span>{suitName}</span>
-                    {card.number !== null && card.number !== undefined && (
-                      <span className="font-semibold">#{String(card.number).padStart(2, '0')}</span>
-                    )}
-                  </div>
-
-                  {/* 正逆位指示 */}
+              {isRevealed ? (
+                <PipBoyCard
+                  isClickable={!!onClick}
+                  padding="none"
+                  className="h-full overflow-hidden transition-all duration-300 relative"
+                >
+                  {/* 卡牌圖片容器 - 逆位時旋轉 180 度 */}
                   <div className={cn(
-                    'text-center text-pip-boy-green/60',
-                    size === 'small' ? 'text-[10px]' : 'text-xs'
+                    "relative aspect-[2/3] bg-black overflow-hidden",
+                    position === 'reversed' && 'rotate-180'
                   )}>
-                    {position === 'upright' ? '正位' : '逆位'}
-                  </div>
-                </div>
+                    {/* 載入中骨架屏 */}
+                    {!imageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
+                        <PixelIcon
+                          name="image"
+                          size={32}
+                          className="text-pip-boy-green/50"
+                          decorative
+                        />
+                      </div>
+                    )}
 
-                {/* 懸停邊框效果 */}
-                {onClick && (
-                  <div
-                    className="absolute inset-0 border-2 border-transparent group-hover:border-pip-boy-green/50 rounded-sm pointer-events-none transition-colors duration-300"
-                    aria-hidden="true"
-                  />
-                )}
-              </PipBoyCard>
+                    {/* 載入中旋轉圖示（中央） */}
+                    {!imageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <PixelIcon
+                          name="loader"
+                          animation="spin"
+                          variant="primary"
+                          sizePreset="lg"
+                          decorative
+                        />
+                      </div>
+                    )}
+
+                    {/* 卡牌圖片 */}
+                    <Image
+                      src={imageUrl}
+                      alt={imageAlt}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                      className={cn(
+                        'object-cover transition-all duration-300',
+                        onClick && 'group-hover:scale-110',
+                        !imageLoaded && 'opacity-0'
+                      )}
+                      loading={priority ? undefined : 'lazy'}
+                      priority={priority}
+                      onError={handleImageError}
+                      onLoadingComplete={handleImageLoadingComplete}
+                    />
+
+                    {/* 黑色半透明覆蓋層 (hover 時淡化) */}
+                    {onClick && (
+                      <div
+                        className="absolute inset-0 bg-black/60 group-hover:bg-black/20 transition-all duration-300 pointer-events-none"
+                        aria-hidden="true"
+                      />
+                    )}
+
+                    {/* 圖片發光效果(懸停時) */}
+                    {onClick && (
+                      <div
+                        className="absolute inset-0 bg-pip-boy-green/0 group-hover:bg-pip-boy-green/10 transition-colors duration-300 pointer-events-none"
+                        aria-hidden="true"
+                      />
+                    )}
+                  </div>
+
+                  {/* 卡牌資訊 */}
+                  <div className="p-3 space-y-2">
+                    {/* 卡牌名稱 */}
+                    <h4 className={cn(
+                      'font-semibold text-pip-boy-green uppercase tracking-wide line-clamp-2',
+                      onClick && 'group-hover:text-pip-boy-green-bright transition-colors',
+                      size === 'small' ? 'text-xs' : size === 'medium' ? 'text-sm' : 'text-base'
+                    )}>
+                      {card.name}
+                    </h4>
+
+                    {/* 花色與編號 */}
+                    <div className="flex items-center justify-between text-xs text-pip-boy-green/70">
+                      <span>{suitName}</span>
+                      {card.number !== null && card.number !== undefined && (
+                        <span className="font-semibold">#{String(card.number).padStart(2, '0')}</span>
+                      )}
+                    </div>
+
+                    {/* 正逆位指示 */}
+                    <div className={cn(
+                      'text-center text-pip-boy-green/60',
+                      size === 'small' ? 'text-[10px]' : 'text-xs'
+                    )}>
+                      {position === 'upright' ? '正位' : '逆位'}
+                    </div>
+                  </div>
+
+                  {/* 懸停邊框效果 */}
+                  {onClick && (
+                    <div
+                      className="absolute inset-0 border-2 border-transparent group-hover:border-pip-boy-green/50 rounded-sm pointer-events-none transition-colors duration-300"
+                      aria-hidden="true"
+                    />
+                  )}
+                </PipBoyCard>
+              ) : (
+                // 未翻開時顯示空白，避免預載入牌面圖片
+                <div className="w-full h-full bg-black" aria-hidden="true" />
+              )}
             </div>
           </div>
         </div>

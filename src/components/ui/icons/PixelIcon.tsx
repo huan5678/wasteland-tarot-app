@@ -89,7 +89,7 @@ export const PixelIcon: React.FC<PixelIconProps> = ({
   onClick,
   onMouseEnter,
   onMouseLeave,
-  remixVariant = 'line',
+  remixVariant = 'line' as 'line' | 'fill' | 'none',
   ...rest
 }) => {
   /**

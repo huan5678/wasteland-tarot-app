@@ -69,14 +69,13 @@ export function FooterDrawer() {
       onOpenChange={setIsOpen}
       modal={false}  // 非模態 - 不阻擋背景互動
     >
-      {/* Trigger Bar - 收合時顯示在畫面底部 */}
+      {/* Trigger Bar - 收合時顯示在 flex 容器底部 */}
       <AnimatePresence>
         {!isOpen && (
           <DrawerTrigger asChild>
             <motion.button
               className={cn(
-                "fixed bottom-0 left-0 right-0 z-40",
-                "h-12",
+                "w-full h-12",
                 "bg-wasteland-dark/95 backdrop-blur-sm",
                 "border-t-2 border-pip-boy-green",
                 "flex items-center justify-center gap-2",
