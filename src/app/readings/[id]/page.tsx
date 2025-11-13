@@ -23,6 +23,7 @@ import { useReadingsStore } from '@/lib/readingsStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Switch } from '@/components/ui/switch';
 import { ShareButton } from '@/components/share/ShareButton';
+import { ShareLinkManagement } from '@/components/readings/ShareLinkManagement';
 import { CardDetailModal } from '@/components/tarot/CardDetailModal';
 import type { WastelandCard } from '@/types/database';
 import { useAuthStore } from '@/lib/authStore';
@@ -990,6 +991,11 @@ export default function ReadingDetailPage() {
           </div>
       }
       </div>
+
+      {/* Share Link Management Section */}
+      <div className="mt-8">
+        <ShareLinkManagement readingId={readingId} />
+      </div>
     </motion.div>;
 
 
@@ -1097,7 +1103,7 @@ export default function ReadingDetailPage() {
           </Button>
 
           {/* Share Button - 只對已完成的占卜顯示 */}
-          {reading && <ShareButton readingId={reading.id} />}
+          {reading && <ShareButton readingId={reading.id} reading={reading} />}
 
           <Button size="sm" variant="outline"
           onClick={() => setDeleteDialogOpen(true)}

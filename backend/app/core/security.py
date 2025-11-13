@@ -105,13 +105,15 @@ def get_access_token_cookie_settings() -> Dict[str, Any]:
 
     Note: Do NOT set 'domain' for localhost - browsers handle it automatically
     Setting Domain=localhost can cause cookies to be rejected in modern browsers
+
+    NFR-3.2: 30-minute token expiration for security
     """
     cookie_settings = {
         "key": "access_token",
         "httponly": True,
-        "secure": settings.environment == "production",  # HTTPS only in production
+        "secure": settings.environment == "production",  # HTTPS only in production (NFR-3.1)
         "samesite": "lax",  # CSRF protection
-        "max_age": settings.access_token_expire_minutes * 60,  # 7 days in seconds (10080 minutes * 60)
+        "max_age": settings.access_token_expire_minutes * 60,  # 30 minutes * 60 = 1800 seconds
         "path": "/",  # CRITICAL: Ensure cookie is sent for all paths
     }
 

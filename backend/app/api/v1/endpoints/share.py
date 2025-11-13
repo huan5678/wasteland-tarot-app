@@ -8,9 +8,9 @@ Requirements: 10.2, 10.6, 10.7, 10.8
 import uuid as uuid_lib
 import bcrypt
 from datetime import datetime
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status, Body
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.core.dependencies import get_db, get_current_user
 from app.models.user import User
@@ -21,6 +21,7 @@ from app.schemas.share import (
     ShareResponse,
     ShareViewRequest,
     ShareListItem,
+    ShareListResponse,
 )
 
 router = APIRouter()
@@ -41,7 +42,7 @@ def strip_pii(reading_dict: dict) -> dict:
 async def generate_share_link(
     id: str,
     request: ShareCreateRequest,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -51,7 +52,8 @@ async def generate_share_link(
     - **password**: Optional 4-8 digit password protection
     """
     # Get reading and verify ownership
-    reading = db.query(CompletedReading).filter(CompletedReading.id == id).first()
+    result = await db.execute(select(CompletedReading).where(CompletedReading.id == id))
+    reading = result.scalar_one_or_none()
 
     if not reading:
         raise HTTPException(
@@ -90,16 +92,16 @@ async def generate_share_link(
     )
 
     db.add(share)
-    db.commit()
-    db.refresh(share)
+    await db.commit()
+    await db.refresh(share)
 
     # Generate share URL
     share_url = f"https://wasteland-tarot.com/share/{share.uuid}"
 
     return ShareResponse(
         uuid=share.uuid,
-        share_url=share_url,
-        has_password=password_hash is not None,
+        url=share_url,
+        require_password=password_hash is not None,
         access_count=share.access_count,
         created_at=share.created_at,
         is_active=share.is_active,
@@ -109,17 +111,18 @@ async def generate_share_link(
 @router.get("/share/{uuid}")
 async def view_shared_reading(
     uuid: str,
-    password_data: ShareViewRequest = Body(None),
-    db: Session = Depends(get_db),
+    password: str = None,
+    db: AsyncSession = Depends(get_db),
 ):
     """
     View a shared reading by its public UUID.
 
     - **uuid**: Public share UUID
-    - **password**: Password if share is protected
+    - **password**: Password if share is protected (query parameter)
     """
     # Get share record
-    share = db.query(ReadingShare).filter(ReadingShare.uuid == uuid).first()
+    result = await db.execute(select(ReadingShare).where(ReadingShare.uuid == uuid))
+    share = result.scalar_one_or_none()
 
     if not share:
         raise HTTPException(
@@ -136,25 +139,26 @@ async def view_shared_reading(
 
     # Check password if protected
     if share.password_hash:
-        if not password_data or not password_data.password:
+        if not password:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="需要密碼",
             )
 
         # Verify password
-        if not bcrypt.checkpw(password_data.password.encode(), share.password_hash.encode()):
+        if not bcrypt.checkpw(password.encode(), share.password_hash.encode()):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail="密碼錯誤",
             )
 
     # Increment access count
     share.access_count += 1
-    db.commit()
+    await db.commit()
 
     # Get reading data
-    reading = db.query(CompletedReading).filter(CompletedReading.id == share.reading_id).first()
+    result = await db.execute(select(CompletedReading).where(CompletedReading.id == share.reading_id))
+    reading = result.scalar_one_or_none()
 
     if not reading:
         raise HTTPException(
@@ -179,7 +183,7 @@ async def view_shared_reading(
 @router.delete("/share/{uuid}")
 async def revoke_share(
     uuid: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -188,7 +192,8 @@ async def revoke_share(
     - **uuid**: Public share UUID to revoke
     """
     # Get share record
-    share = db.query(ReadingShare).filter(ReadingShare.uuid == uuid).first()
+    result = await db.execute(select(ReadingShare).where(ReadingShare.uuid == uuid))
+    share = result.scalar_one_or_none()
 
     if not share:
         raise HTTPException(
@@ -197,7 +202,8 @@ async def revoke_share(
         )
 
     # Get reading to verify ownership
-    reading = db.query(CompletedReading).filter(CompletedReading.id == share.reading_id).first()
+    result = await db.execute(select(CompletedReading).where(CompletedReading.id == share.reading_id))
+    reading = result.scalar_one_or_none()
 
     if not reading:
         raise HTTPException(
@@ -214,16 +220,16 @@ async def revoke_share(
 
     # Mark as inactive (idempotent)
     share.is_active = False
-    db.commit()
+    await db.commit()
 
-    return {"message": "已撤回分享連結"}
+    return {"message": "分享連結已撤銷", "uuid": uuid}
 
 
-@router.get("/readings/{id}/shares", response_model=List[ShareListItem])
+@router.get("/readings/{id}/shares", response_model=ShareListResponse)
 async def list_reading_shares(
     id: str,
     active_only: bool = False,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     """
@@ -233,7 +239,8 @@ async def list_reading_shares(
     - **active_only**: Filter only active shares
     """
     # Get reading and verify ownership
-    reading = db.query(CompletedReading).filter(CompletedReading.id == id).first()
+    result = await db.execute(select(CompletedReading).where(CompletedReading.id == id))
+    reading = result.scalar_one_or_none()
 
     if not reading:
         raise HTTPException(
@@ -249,17 +256,20 @@ async def list_reading_shares(
         )
 
     # Get shares
-    query = db.query(ReadingShare).filter(ReadingShare.reading_id == id)
+    query = select(ReadingShare).where(ReadingShare.reading_id == id)
 
     if active_only:
-        query = query.filter(ReadingShare.is_active == True)
+        query = query.where(ReadingShare.is_active == True)
 
-    shares = query.order_by(ReadingShare.created_at.desc()).all()
+    query = query.order_by(ReadingShare.created_at.desc())
+    result = await db.execute(query)
+    shares = result.scalars().all()
 
     # Convert to response format
     share_list = [
         ShareListItem(
             uuid=share.uuid,
+            url=f"https://wasteland-tarot.com/share/{share.uuid}",
             access_count=share.access_count,
             is_active=share.is_active,
             created_at=share.created_at,
@@ -268,4 +278,4 @@ async def list_reading_shares(
         for share in shares
     ]
 
-    return share_list
+    return {"shares": share_list}

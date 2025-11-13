@@ -21,10 +21,11 @@ class Settings(BaseSettings):
     # Security
     secret_key: str = Field(..., env="SECRET_KEY")
     algorithm: str = "HS256"
-    # 修改：延長 access token 過期時間從 30 分鐘改為 7 天
-    # 避免使用者重啟瀏覽器後需要頻繁重新登入
-    access_token_expire_minutes: int = Field(10080, env="ACCESS_TOKEN_EXPIRE_MINUTES")  # 7 days = 7*24*60 = 10080 minutes
-    refresh_token_expire_days: int = Field(30, env="REFRESH_TOKEN_EXPIRE_DAYS")  # 延長為 30 天
+    # NFR-3.2: JWT token authentication with 30-minute expiration
+    # For production security, access tokens expire in 30 minutes
+    # Users will need to re-authenticate or use refresh token
+    access_token_expire_minutes: int = Field(30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
+    refresh_token_expire_days: int = Field(7, env="REFRESH_TOKEN_EXPIRE_DAYS")  # 7 days for refresh tokens
 
     # Supabase Configuration
     supabase_url: str = Field(..., env="SUPABASE_URL")
