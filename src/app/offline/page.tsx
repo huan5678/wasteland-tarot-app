@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '離線模式 | 廢土塔羅 - 網路連線中斷',
+  description: '網路連線已中斷，廢土塔羅正在等待重新連線。請檢查你的網路設定，或稍後再試。部分功能可能無法使用。',
+};
+
 'use client'
 
 import { PixelIcon } from '@/components/ui/icons'

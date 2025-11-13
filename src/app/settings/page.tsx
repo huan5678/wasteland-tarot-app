@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '設定 | 廢土塔羅 - 自訂你的廢土塔羅體驗',
+  description: '管理你的偏好設定，包含閱讀偏好、解讀風格、通知設定、隱私控制與帳號安全。支援 Passkey 生物辨識登入、Google OAuth 與多重認證方式。',
+};
+
 'use client';
 
 import React, { useState } from 'react';

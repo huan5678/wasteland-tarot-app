@@ -8,6 +8,13 @@
  * - 支援返回到 /readings/[id]
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '卡牌解讀 | 廢土塔羅 - 深入了解卡牌意義',
+  description: '查看占卜中特定卡牌的詳細解讀，包含正逆位意義、在此占卜中的位置意義與完整詮釋。',
+};
+
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'

@@ -9,6 +9,13 @@
  * - 支援返回到 /readings/quick
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '快速占卜卡牌 | 廢土塔羅 - 查看卡牌詳情',
+  description: '查看快速占卜中抽到的卡牌詳細資訊，包含卡牌意義、象徵與解讀建議。無需註冊即可體驗。',
+};
+
 'use client'
 
 import { useEffect, useState } from 'react'

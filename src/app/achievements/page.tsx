@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '廢土成就 | 廢土塔羅 - 探索廢土，解鎖成就，獲得獎勵',
+  description: '追蹤你在廢土塔羅中的成就進度，解鎖閱讀、社交、賓果、探索四大類成就。完成挑戰獲得業力點數、專屬稱號與視覺徽章獎勵。',
+};
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';

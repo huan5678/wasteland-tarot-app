@@ -8,6 +8,14 @@
  * - 搜尋與篩選
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '角色管理 | 廢土塔羅管理後台',
+  description: '管理廢土塔羅的角色資料，包含新增、編輯、刪除角色，設定角色聲音與關聯陣營。僅供管理員使用。',
+  robots: 'noindex, nofollow',
+};
+
 'use client';
 
 import { useState, useEffect } from 'react';

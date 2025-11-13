@@ -9,6 +9,14 @@
  * - 啟用/停用切換
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '陣營管理 | 廢土塔羅管理後台',
+  description: '管理廢土塔羅的陣營資料，包含新增、編輯、刪除陣營，查看關聯角色數量與啟用狀態。僅供管理員使用。',
+  robots: 'noindex, nofollow',
+};
+
 'use client';
 
 import { useState, useEffect } from 'react';

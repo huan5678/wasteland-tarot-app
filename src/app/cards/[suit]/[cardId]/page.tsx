@@ -10,6 +10,13 @@
  * - 載入狀態與錯誤處理
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '卡牌詳情 | 廢土塔羅 - 探索塔羅牌意義與解讀',
+  description: '深入了解塔羅牌的象徵意義、正逆位解讀與廢土主題背景故事。每張卡牌都結合 Fallout 世界觀，提供獨特的生存智慧與靈性指引。',
+};
+
 'use client'
 
 import React, { useEffect, useState } from 'react'

@@ -8,6 +8,13 @@
  * - Tab N+2: 元資料
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '占卜詳情 | 廢土塔羅 - 查看占卜記錄與解讀',
+  description: '查看你的塔羅占卜詳細記錄，包含問題、牌陣配置、每張卡牌解讀與完整占卜結果。回顧過去的占卜體驗，深化理解。',
+};
+
 'use client';
 
 import { useEffect, useState, useMemo, useCallback } from 'react';

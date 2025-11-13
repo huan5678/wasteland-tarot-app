@@ -49,7 +49,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-TW" className="dark">
+    <html lang="zh-Hant" className="dark">
       {/*
         font-cubic: Cubic 11 像素字體，完整支援中英文
         使用 className 驅動的字體整合策略，所有子元件透過 inherit 繼承字體設定

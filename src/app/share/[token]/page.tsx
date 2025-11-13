@@ -10,6 +10,13 @@
  * TDD Green Phase: 實作功能讓測試通過
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '分享占卜 | 廢土塔羅 - 查看公開占卜記錄',
+  description: '查看用戶分享的塔羅占卜記錄。無需登入即可瀏覽完整的占卜結果與解讀內容。',
+};
+
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';

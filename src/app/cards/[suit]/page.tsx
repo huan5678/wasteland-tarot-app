@@ -11,6 +11,13 @@
  * - SSG 支援：預先生成所有有效花色的靜態頁面
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '卡牌瀏覽 | 廢土塔羅 - 探索塔羅牌圖書館',
+  description: '瀏覽廢土塔羅的完整卡牌集合，包含大阿爾克那與四個小阿爾克那花色。每張卡牌都融入 Fallout 世界觀，提供獨特的廢土主題解讀。',
+};
+
 'use client'
 
 import React, { useEffect, useState } from 'react'
