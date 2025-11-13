@@ -1,0 +1,52 @@
+{
+  "feature_name": "ai-streaming-completion",
+  "created_at": "2025-11-13T08:07:32Z",
+  "updated_at": "2025-11-13T19:45:00Z",
+  "language": "zh-TW",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true,
+      "note": "Auto-approved: Updated requirements focused on integration (85% already implemented)"
+    },
+    "design": {
+      "generated": true,
+      "approved": true,
+      "note": "Auto-approved: Integration-focused design with TTS, auth, timeout, monitoring"
+    },
+    "tasks": {
+      "generated": true,
+      "approved": false,
+      "note": "Regenerated 2025-11-13: Integration tasks with parallel markers, 6 major tasks (integration, TTS, security, monitoring, testing, deployment)"
+    }
+  },
+  "ready_for_implementation": true,
+  "metadata": {
+    "complexity": "low-medium",
+    "implementation_status": "85% core features complete, needs integration",
+    "task_count": {
+      "major_tasks": 6,
+      "sub_tasks": 23,
+      "total": 29
+    },
+    "parallel_tasks": 15,
+    "estimated_time": "2-3 weeks (with parallel execution)",
+    "existing_components": [
+      "backend/app/api/v1/endpoints/readings_stream.py",
+      "src/hooks/useStreamingText.ts",
+      "src/components/readings/StreamingInterpretation.tsx"
+    ],
+    "integration_targets": [
+      "src/app/readings/[id]/card/[cardId]/page.tsx",
+      "src/app/readings/quick/card/[cardId]/page.tsx"
+    ],
+    "new_components": [
+      "TTS Player Component",
+      "useTTS Hook",
+      "Auth Dependency Integration",
+      "Timeout Protection Wrapper",
+      "Performance Monitoring Integration"
+    ]
+  }
+}
