@@ -135,6 +135,9 @@ class Settings(BaseSettings):
     ai_cache_ttl: int = Field(3600, env="AI_CACHE_TTL")  # 1 hour
     ai_fallback_to_template: bool = Field(True, env="AI_FALLBACK_TO_TEMPLATE")
 
+    # Streaming Configuration
+    streaming_timeout: int = Field(60, env="STREAMING_TIMEOUT")  # seconds (default 60)
+
     # Performance Settings - Optimized for lower memory usage
     database_pool_size: int = Field(3, env="DATABASE_POOL_SIZE")  # Further reduced from 5 (saves more memory)
     database_max_overflow: int = Field(5, env="DATABASE_MAX_OVERFLOW")  # Allow some overflow for bursts

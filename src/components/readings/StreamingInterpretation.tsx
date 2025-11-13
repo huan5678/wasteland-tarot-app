@@ -2,12 +2,17 @@
  * StreamingInterpretation Component
  * Displays AI-generated tarot interpretations with real-time streaming effect
  * Features typewriter animation, skip functionality, and Fallout theme styling
+ *
+ * Task 2.3: Integrated TTS playback when streaming completes
  */
 
 'use client';
 
 import React, { useEffect } from 'react';
-import { useStreamingText } from '@/hooks/useStreamingText';import { Button } from "@/components/ui/button";
+import { useStreamingText } from '@/hooks/useStreamingText';
+import { Button } from "@/components/ui/button";
+import { TTSPlayer } from './TTSPlayer';
+import { useAudioStore } from '@/lib/audio/audioStore';
 
 export interface StreamingInterpretationProps {
   cardId: string;
@@ -69,6 +74,13 @@ export function StreamingInterpretation({
     onComplete,
     onError
   });
+
+  // Task 2.3: Check audioStore settings for TTS auto-play
+  const isVoiceMuted = useAudioStore((state) => state.muted.voice);
+  const isAudioEnabled = useAudioStore((state) => state.isAudioEnabled);
+
+  // Determine if TTS should be enabled (only when streaming completes)
+  const shouldEnableTTS = streaming.isComplete && !isVoiceMuted && isAudioEnabled;
 
   // Notify parent of completion
   useEffect(() => {
@@ -204,6 +216,21 @@ export function StreamingInterpretation({
           <span>Interpretation complete</span>
         </div>
       }
+
+      {/* Task 2.3: TTS Player Integration - Display when streaming completes */}
+      {streaming.isComplete && streaming.text && !streaming.error && (
+        <div className="mt-4">
+          <TTSPlayer
+            text={streaming.text}
+            enabled={shouldEnableTTS}
+            characterVoice={characterVoice}
+            onPlaybackComplete={() => {
+              console.log('[StreamingInterpretation] TTS playback completed');
+              // Optional: Trigger any additional actions after TTS completes
+            }}
+          />
+        </div>
+      )}
     </div>);
 
 }
@@ -256,6 +283,13 @@ export function MultiCardStreamingInterpretation({
     onComplete,
     onError
   });
+
+  // Task 2.3: Check audioStore settings for TTS auto-play (Multi-card)
+  const isVoiceMuted = useAudioStore((state) => state.muted.voice);
+  const isAudioEnabled = useAudioStore((state) => state.isAudioEnabled);
+
+  // Determine if TTS should be enabled (only when streaming completes)
+  const shouldEnableTTS = streaming.isComplete && !isVoiceMuted && isAudioEnabled;
 
   return (
     <div className="multi-card-streaming-interpretation-container relative">
@@ -377,6 +411,21 @@ export function MultiCardStreamingInterpretation({
           <span>Spread interpretation complete</span>
         </div>
       }
+
+      {/* Task 2.3: TTS Player Integration - Display when streaming completes */}
+      {streaming.isComplete && streaming.text && !streaming.error && (
+        <div className="mt-4">
+          <TTSPlayer
+            text={streaming.text}
+            enabled={shouldEnableTTS}
+            characterVoice={characterVoice}
+            onPlaybackComplete={() => {
+              console.log('[MultiCardStreamingInterpretation] TTS playback completed');
+              // Optional: Trigger any additional actions after TTS completes
+            }}
+          />
+        </div>
+      )}
     </div>);
 
 }

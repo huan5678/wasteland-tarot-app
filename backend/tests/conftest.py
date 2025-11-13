@@ -4,10 +4,29 @@ Pytest Configuration and Fixtures
 Provides shared test fixtures for database sessions, test data, and utilities.
 """
 
-# CRITICAL: Patch JSONB BEFORE any model imports
-from sqlalchemy import JSON
+# CRITICAL: Patch PostgreSQL-specific types BEFORE any model imports
+from sqlalchemy import JSON, String
+from sqlalchemy.types import TypeDecorator, Text
 import sqlalchemy.dialects.postgresql.json as pgjson
+import sqlalchemy.dialects.postgresql.array as pgarray
+import sqlalchemy.dialects.postgresql as pgdialect
+
+# Patch JSONB to use JSON for SQLite compatibility
 pgjson.JSONB = JSON
+pgdialect.JSONB = JSON
+
+# Patch ARRAY to use Text (store as comma-separated string for SQLite)
+class MockArray(TypeDecorator):
+    """Mock ARRAY type for SQLite (stores as comma-separated text)"""
+    impl = Text
+    cache_ok = True
+
+    def __init__(self, *args, **kwargs):
+        """Accept any arguments to be compatible with ARRAY constructor"""
+        super().__init__()
+
+pgarray.ARRAY = MockArray
+pgdialect.ARRAY = MockArray
 
 # Now import the rest
 import pytest

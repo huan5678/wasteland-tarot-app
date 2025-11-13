@@ -29,11 +29,25 @@ class PerformanceMetrics:
     error: Optional[str] = None
 
 
+@dataclass
+class StreamingMetrics:
+    """Streaming-specific performance metrics"""
+    timestamp: float
+    first_token_latency_ms: Optional[float] = None
+    total_duration_ms: Optional[float] = None
+    token_count: Optional[int] = None
+    avg_tokens_per_second: Optional[float] = None
+    provider: Optional[str] = None
+    user_id: Optional[str] = None
+    error: Optional[str] = None
+
+
 class PerformanceMonitor:
     """Performance monitoring and baseline management"""
 
     def __init__(self):
         self.metrics: List[PerformanceMetrics] = []
+        self.streaming_metrics: List[StreamingMetrics] = []
         self.baselines: Dict[str, Dict[str, float]] = {
             "api_response_time": {
                 "target": 200.0,  # ms
@@ -59,6 +73,11 @@ class PerformanceMonitor:
                 "target": 50,  # concurrent requests
                 "warning": 100,
                 "critical": 200
+            },
+            "streaming_first_token": {
+                "target": 1000.0,  # ms
+                "warning": 2000.0,  # ms
+                "critical": 5000.0  # ms
             }
         }
 
@@ -69,6 +88,86 @@ class PerformanceMonitor:
         # Keep only last 1000 metrics in memory
         if len(self.metrics) > 1000:
             self.metrics = self.metrics[-1000:]
+
+    def record_first_token_latency(
+        self,
+        latency_ms: float,
+        provider: Optional[str] = None,
+        user_id: Optional[str] = None
+    ):
+        """Record first token latency for streaming requests"""
+        metric = StreamingMetrics(
+            timestamp=time.time(),
+            first_token_latency_ms=latency_ms,
+            provider=provider,
+            user_id=user_id
+        )
+        self.streaming_metrics.append(metric)
+
+        # Keep only last 1000 streaming metrics
+        if len(self.streaming_metrics) > 1000:
+            self.streaming_metrics = self.streaming_metrics[-1000:]
+
+        # Log warning if latency exceeds threshold
+        status = self.check_threshold("streaming_first_token", latency_ms)
+        if status == "critical":
+            logger.warning(
+                f"Critical first token latency: {latency_ms:.2f}ms (provider: {provider})"
+            )
+        elif status == "warning":
+            logger.info(
+                f"High first token latency: {latency_ms:.2f}ms (provider: {provider})"
+            )
+
+    def record_streaming_completion(
+        self,
+        duration_ms: float,
+        token_count: int,
+        provider: Optional[str] = None,
+        user_id: Optional[str] = None
+    ):
+        """Record successful streaming completion metrics"""
+        avg_tokens_per_second = (token_count / duration_ms * 1000) if duration_ms > 0 else 0
+
+        metric = StreamingMetrics(
+            timestamp=time.time(),
+            total_duration_ms=duration_ms,
+            token_count=token_count,
+            avg_tokens_per_second=avg_tokens_per_second,
+            provider=provider,
+            user_id=user_id
+        )
+        self.streaming_metrics.append(metric)
+
+        # Keep only last 1000 streaming metrics
+        if len(self.streaming_metrics) > 1000:
+            self.streaming_metrics = self.streaming_metrics[-1000:]
+
+        logger.debug(
+            f"Streaming completed: {token_count} tokens in {duration_ms:.2f}ms "
+            f"({avg_tokens_per_second:.2f} tokens/sec, provider: {provider})"
+        )
+
+    def record_streaming_error(
+        self,
+        error: str,
+        provider: Optional[str] = None,
+        user_id: Optional[str] = None
+    ):
+        """Record streaming error"""
+        metric = StreamingMetrics(
+            timestamp=time.time(),
+            error=error,
+            provider=provider,
+            user_id=user_id
+        )
+        self.streaming_metrics.append(metric)
+
+        # Keep only last 1000 streaming metrics
+        if len(self.streaming_metrics) > 1000:
+            self.streaming_metrics = self.streaming_metrics[-1000:]
+
+        logger.error(f"Streaming error: {error} (provider: {provider})")
 
     def get_baseline(self, metric_name: str) -> Dict[str, float]:
         """Get baseline values for a metric"""
@@ -111,16 +210,117 @@ class PerformanceMonitor:
             "total_requests": count
         }
 
+    def get_recent_streaming_metrics(self, minutes: int = 5) -> List[StreamingMetrics]:
+        """Get streaming metrics from the last N minutes"""
+        cutoff_time = time.time() - (minutes * 60)
+        return [m for m in self.streaming_metrics if m.timestamp >= cutoff_time]
+
+    def calculate_streaming_p95_latency(self, provider: Optional[str] = None) -> float:
+        """Calculate P95 first-token latency from recent 1000 requests"""
+        # Filter metrics with first_token_latency
+        metrics = [
+            m for m in self.streaming_metrics
+            if m.first_token_latency_ms is not None
+        ]
+
+        # Filter by provider if specified
+        if provider:
+            metrics = [m for m in metrics if m.provider == provider]
+
+        if not metrics:
+            return 0.0
+
+        # Sort by latency
+        latencies = sorted([m.first_token_latency_ms for m in metrics])
+
+        # Calculate P95 (95th percentile)
+        p95_index = int(len(latencies) * 0.95)
+        if p95_index >= len(latencies):
+            p95_index = len(latencies) - 1
+
+        return latencies[p95_index]
+
+    def calculate_streaming_statistics(
+        self,
+        minutes: int = 5,
+        provider: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Calculate streaming-specific statistics"""
+        recent_metrics = self.get_recent_streaming_metrics(minutes)
+
+        # Filter by provider if specified
+        if provider:
+            recent_metrics = [m for m in recent_metrics if m.provider == provider]
+
+        if not recent_metrics:
+            return {
+                "total_streaming_requests": 0,
+                "avg_first_token_latency_ms": 0.0,
+                "first_token_p95_ms": 0.0,
+                "avg_tokens_per_second": 0.0,
+                "total_tokens": 0,
+                "streaming_error_rate": 0.0,
+                "streaming_errors": 0
+            }
+
+        # Calculate statistics
+        total_requests = len(recent_metrics)
+        errors = [m for m in recent_metrics if m.error is not None]
+        error_count = len(errors)
+
+        # First token latency stats
+        first_token_metrics = [
+            m for m in recent_metrics if m.first_token_latency_ms is not None
+        ]
+        avg_first_token = (
+            sum(m.first_token_latency_ms for m in first_token_metrics) / len(first_token_metrics)
+            if first_token_metrics else 0.0
+        )
+
+        # Token throughput stats
+        completed_metrics = [
+            m for m in recent_metrics
+            if m.avg_tokens_per_second is not None and m.token_count is not None
+        ]
+        avg_tokens_per_sec = (
+            sum(m.avg_tokens_per_second for m in completed_metrics) / len(completed_metrics)
+            if completed_metrics else 0.0
+        )
+        total_tokens = sum(m.token_count for m in completed_metrics if m.token_count)
+
+        return {
+            "total_streaming_requests": total_requests,
+            "avg_first_token_latency_ms": avg_first_token,
+            "first_token_p95_ms": self.calculate_streaming_p95_latency(provider),
+            "avg_tokens_per_second": avg_tokens_per_sec,
+            "total_tokens": total_tokens,
+            "streaming_error_rate": error_count / total_requests if total_requests > 0 else 0.0,
+            "streaming_errors": error_count
+        }
+
     def get_performance_summary(self) -> Dict[str, Any]:
         """Get comprehensive performance summary"""
         recent_5min = self.calculate_averages(5)
         recent_1hour = self.calculate_averages(60)
+
+        # Add streaming metrics
+        streaming_5min = self.calculate_streaming_statistics(5)
+        streaming_1hour = self.calculate_streaming_statistics(60)
+
+        # Calculate per-provider streaming metrics
+        streaming_by_provider = {}
+        providers = set(m.provider for m in self.streaming_metrics if m.provider)
+        for provider in providers:
+            streaming_by_provider[provider] = self.calculate_streaming_statistics(5, provider)
 
         summary = {
             "timestamp": datetime.utcnow().isoformat(),
             "baselines": self.baselines,
             "recent_5min": recent_5min,
             "recent_1hour": recent_1hour,
+            "streaming_5min": streaming_5min,
+            "streaming_1hour": streaming_1hour,
+            "streaming_by_provider": streaming_by_provider,
             "current_system": self._get_current_system_metrics(),
             "health_status": self._calculate_health_status(recent_5min)
         }

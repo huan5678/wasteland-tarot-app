@@ -11,6 +11,7 @@ import { PixelIcon } from "../ui/icons";
 import type { IconName } from "../ui/icons";
 import { filterCharacterVoicesByFaction } from '@/lib/factionVoiceMapping';
 import { useCharacters, useFactions } from '@/hooks/useCharacterVoices';
+import { StreamingInterpretation } from '@/components/readings/StreamingInterpretation';
 /*
   X, Radiation, Zap, Heart, Sword, Coins, Star, AlertTriangle,
   Volume2, VolumeX, BookOpen, Users, Share2, Bookmark, BookmarkCheck,
@@ -1088,83 +1089,31 @@ export function CardDetailModal({
             animate={{ opacity: 1, y: 0 }}
             className="bg-pip-boy-green/5 border border-pip-boy-green/20 p-6 rounded-lg">
 
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <PixelIcon name="message-3" size={20} className="w-5 h-5 text-pip-boy-green" decorative />
-                <h4 className="text-pip-boy-green font-bold">
-                  {getVoiceLabel(selectedVoice.toLowerCase())} 的解讀
-                </h4>
-              </div>
-
-              {enableAudio && audioSupported && filteredVoices[selectedVoice] &&
-              <motion.button
-                onClick={() => handleSpeakText(filteredVoices[selectedVoice])}
-                disabled={isSpeaking}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "p-2 rounded border transition-colors flex items-center gap-2",
-                  isSpeaking ?
-                  "bg-orange-500/20 border-orange-400 text-orange-400 animate-pulse" :
-                  "border-pip-boy-green/40 text-pip-boy-green hover:bg-pip-boy-green/10"
-                )}
-                title="播放角色聲音">
-
-                  {isSpeaking ?
-                <>
-                      <PixelIcon name="volume-mute" size={16} className="w-4 h-4" decorative />
-                      <span className="text-xs">播放中...</span>
-                    </> :
-
-                <>
-                      <PixelIcon name="volume-up" size={16} className="w-4 h-4" decorative />
-                      <span className="text-xs">播放</span>
-                    </>
-                }
-                </motion.button>
-              }
+            <div className="flex items-center gap-2 mb-4">
+              <PixelIcon name="message-3" size={20} className="w-5 h-5 text-pip-boy-green" decorative />
+              <h4 className="text-pip-boy-green font-bold">
+                {getVoiceLabel(selectedVoice.toLowerCase())} 的解讀
+              </h4>
             </div>
 
-            {filteredVoices[selectedVoice] ? (
-              <p className="text-pip-boy-green/90 text-sm leading-relaxed">
-                {filteredVoices[selectedVoice]}
-              </p>
-            ) : (
-              <div className="text-center py-8 space-y-3">
-                <PixelIcon name="info" size={32} className="mx-auto text-pip-boy-green/40" decorative />
-                <p className="text-pip-boy-green/60 text-xs">
-                  該角色的解讀內容尚未完成<br />
-                  請稍後再回來查看
-                </p>
-              </div>
-            )}
-
-            {isSpeaking &&
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mt-4 flex items-center gap-2 text-xs text-orange-400">
-
-                <div className="flex space-x-1">
-                  <motion.div
-                  className="w-1 h-1 bg-orange-400 rounded-full"
-                  animate={{ scale: [1, 1.5, 1] }}
-                  transition={{ duration: 0.6, repeat: Infinity }} />
-
-                  <motion.div
-                  className="w-1 h-1 bg-orange-400 rounded-full"
-                  animate={{ scale: [1, 1.5, 1] }}
-                  transition={{ duration: 0.6, repeat: Infinity, delay: 0.2 }} />
-
-                  <motion.div
-                  className="w-1 h-1 bg-orange-400 rounded-full"
-                  animate={{ scale: [1, 1.5, 1] }}
-                  transition={{ duration: 0.6, repeat: Infinity, delay: 0.4 }} />
-
-                </div>
-                <span>正在播放角色聲音...</span>
-              </motion.div>
-            }
+            {/* StreamingInterpretation Component */}
+            <StreamingInterpretation
+              cardId={card.id.toString()}
+              question={readingContext?.question || "請為我解讀這張卡牌"}
+              characterVoice={selectedVoice.toLowerCase()}
+              karmaAlignment={card.karma_alignment?.toLowerCase() || 'neutral'}
+              factionAlignment={factionInfluence?.toLowerCase() || null}
+              positionMeaning={readingContext?.positionMeaning || null}
+              apiUrl="/api/v1/readings/interpretation/stream"
+              enabled={true}
+              charsPerSecond={40}
+              onComplete={(text) => {
+                console.log('[CardDetailModal] Streaming complete:', text.slice(0, 50) + '...');
+              }}
+              onError={(error) => {
+                console.error('[CardDetailModal] Streaming error:', error);
+              }}
+            />
           </motion.div>
         </div> :
 
