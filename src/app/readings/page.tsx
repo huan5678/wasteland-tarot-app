@@ -1,10 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '塔羅管理中心 | 廢土塔羅 - 個人占卜記錄與數據分析',
-  description: '瀏覽你的所有塔羅占卜記錄，查看詳細解讀內容，追蹤占卜歷史與統計數據。使用進階篩選與搜尋功能快速找到過去的占卜結果。',
-};
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';

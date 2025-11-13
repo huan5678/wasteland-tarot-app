@@ -1,10 +1,3 @@
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '控制台 | 廢土塔羅 - Pip-Boy 個人資料管理系統',
-  description: '查看你的 Pip-Boy 個人資料，管理占卜記錄、業力狀態、成就進度與每日任務。追蹤你在廢土中的生存歷程與靈性成長。',
-};
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
