@@ -13,10 +13,23 @@
 
 import type { Metadata } from 'next';
 
-export const metadata: Metadata = {
-  title: '卡牌瀏覽 | 廢土塔羅 - 探索塔羅牌圖書館',
-  description: '瀏覽廢土塔羅的完整卡牌集合，包含大阿爾克那與四個小阿爾克那花色。每張卡牌都融入 Fallout 世界觀，提供獨特的廢土主題解讀。',
-};
+// 動態生成 metadata（根據花色）
+export async function generateMetadata({ params }: { params: { suit: string } }): Promise<Metadata> {
+  const suitNameMap: Record<string, string> = {
+    'major': '大阿爾克那',
+    'wands': '權杖',
+    'cups': '聖杯',
+    'swords': '寶劍',
+    'pentacles': '錢幣',
+  };
+
+  const suitName = suitNameMap[params.suit] || '卡牌';
+
+  return {
+    title: `${suitName} | 卡牌瀏覽 | 廢土塔羅`,
+    description: `瀏覽廢土塔羅 ${suitName} 的完整卡牌集合。每張卡牌都融入 Fallout 世界觀，提供獨特的廢土主題解讀與生存智慧。`,
+  };
+}
 
 'use client'
 
