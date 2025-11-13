@@ -1,3 +1,10 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: '首頁 | 廢土塔羅 - Pip-Boy 占卜終端機',
+  description: '歡迎來到廢土塔羅，由 Vault-Tec 驅動的後末世塔羅占卜系統。透過神秘的卡牌占卜探索你在廢土中的命運，獲得量子演算法驅動的深度解讀。',
+}
+
 'use client'
 
 import React from 'react'

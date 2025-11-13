@@ -1,3 +1,10 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '廢土賓果簽到 | 廢土塔羅 - 每日簽到領取號碼',
+  description: '每日登入簽到領取賓果號碼，完成三連線獲得豐厚獎勵。系統每月自動重置，號碼每25天循環一次。參與賓果遊戲賺取業力點數與專屬徽章。',
+};
+
 'use client';
 
 import { useEffect, useState } from 'react';

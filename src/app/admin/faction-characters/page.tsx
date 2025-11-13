@@ -9,6 +9,14 @@
  * - 批量管理關聯
  */
 
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: '陣營角色關聯管理 | 廢土塔羅管理後台',
+  description: '管理廢土塔羅的陣營與角色關聯，包含新增、移除關聯，調整角色優先順序與批量管理操作。僅供管理員使用。',
+  robots: 'noindex, nofollow',
+};
+
 'use client';
 
 import { useState, useEffect } from 'react';

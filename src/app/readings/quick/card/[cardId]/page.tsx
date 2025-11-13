@@ -9,6 +9,36 @@
  * - 支援返回到 /readings/quick
  */
 
+import type { Metadata } from 'next';
+
+// 動態生成 metadata（根據卡牌內容）
+export async function generateMetadata({ params }: { params: { cardId: string } }): Promise<Metadata> {
+  try {
+    // 嘗試從 API 獲取卡牌資料
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/cards/${params.cardId}`, {
+      cache: 'force-cache',
+    });
+
+    if (response.ok) {
+      const card = await response.json();
+      const cardName = card.name || '塔羅牌';
+
+      return {
+        title: `${cardName} | 快速占卜卡牌 | 廢土塔羅`,
+        description: `查看快速占卜中抽到的 ${cardName} 詳細資訊，包含卡牌意義、象徵與解讀建議。無需註冊即可體驗。`,
+      };
+    }
+  } catch (error) {
+    console.error('Failed to fetch card for metadata:', error);
+  }
+
+  // 後備 metadata
+  return {
+    title: '快速占卜卡牌 | 廢土塔羅 - 查看卡牌詳情',
+    description: '查看快速占卜中抽到的卡牌詳細資訊，包含卡牌意義、象徵與解讀建議。無需註冊即可體驗。',
+  };
+}
+
 'use client'
 
 import { useEffect, useState } from 'react'
