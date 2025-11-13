@@ -8,14 +8,6 @@
  * - 批量管理解讀
  */
 
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '卡牌解讀管理 | 廢土塔羅管理後台',
-  description: '管理廢土塔羅的卡牌解讀內容，包含為每張卡牌新增、編輯、刪除角色專屬解讀與批量管理操作。僅供管理員使用。',
-  robots: 'noindex, nofollow',
-};
-
 'use client';
 
 import { useState, useEffect } from 'react';

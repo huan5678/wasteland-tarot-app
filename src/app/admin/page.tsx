@@ -4,14 +4,6 @@
  * 顯示系統統計資料和快速操作
  */
 
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: '管理後台 | 廢土塔羅 - 系統管理中心',
-  description: '廢土塔羅管理後台首頁，查看系統統計資料、用戶分析、占卜數據與快速管理操作。僅供管理員使用。',
-  robots: 'noindex, nofollow',
-};
-
 'use client'
 
 import { useEffect, useState } from 'react'
