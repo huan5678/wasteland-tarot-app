@@ -75,8 +75,7 @@ class AchievementBackgroundTasks:
                 f"[Background] Failed to check achievements for user {user_id}: {e}",
                 exc_info=True
             )
-        finally:
-            await engine.dispose()
+        # Note: No need for finally block - AsyncSessionLocal context manager handles cleanup
 
     @staticmethod
     async def check_achievements_with_timeout(

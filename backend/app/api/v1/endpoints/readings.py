@@ -217,40 +217,16 @@ async def create_reading(
             db.add(card_position)
             card_positions.append(card_position)
 
-        # Generate overall interpretation
-        overall_themes = []
-        for pos in card_positions:
-            if pos.position_interpretation:
-                overall_themes.append(f"{pos.position_name}: {pos.position_interpretation[:100]}...")
+        # 🔧 FIX: Don't auto-generate interpretation on creation
+        # AI interpretation should only be generated when user explicitly requests it
+        # via the "請求 AI 解讀" button, which calls the streaming endpoint
 
-        overall_interpretation = f"""
-        Based on your question '{reading_data.question}' and the {spread_template.display_name},
-        the cards reveal a comprehensive picture of your situation.
+        # Leave interpretation fields as NULL initially
+        reading_session.overall_interpretation = None
+        reading_session.summary_message = None
+        reading_session.prediction_confidence = None
 
-        {' '.join(overall_themes)}
-
-        The radiation factor of {reading_data.radiation_factor} has influenced this reading,
-        adding elements of uncertainty and transformation typical of the wasteland environment.
-        """
-
-        # Generate character-specific summary
-        character_summaries = {
-            CharacterVoice.PIP_BOY: "Analysis complete. Statistical probability of positive outcomes: 73.2%. Recommend maintaining current health protocols while pursuing indicated opportunities.",
-            CharacterVoice.SUPER_MUTANT: "CARDS SHOW GOOD THINGS COMING. STAY STRONG. HELP FRIENDS.",
-            CharacterVoice.CODSWORTH: "I do believe these cards indicate rather promising developments ahead, with some challenges to navigate with proper British resolve.",
-            CharacterVoice.VAULT_DWELLER: "The wasteland teaches us that every ending is a new beginning. Trust in your journey and the lessons you've learned.",
-            CharacterVoice.WASTELAND_TRADER: "Smart money says you're on the right track. Keep your caps close and your friends closer."
-        }
-
-        summary_message = character_summaries.get(
-            reading_data.character_voice,
-            "The cards speak of change and opportunity ahead."
-        )
-
-        # Complete the reading session
-        reading_session.overall_interpretation = overall_interpretation.strip()
-        reading_session.summary_message = summary_message
-        reading_session.prediction_confidence = random.uniform(0.7, 0.95)
+        logger.info(f"[DEBUG] Setting overall_interpretation to None for reading {reading_session.id}")
         reading_session.energy_reading = {
             "dominant_energy": random.choice(["positive", "neutral", "transformative"]),
             "secondary_influences": ["growth", "caution", "opportunity"]
@@ -261,7 +237,9 @@ async def create_reading(
         # Update spread usage statistics
         spread_template.usage_count += 1
 
+        logger.info(f"[DEBUG] Before commit: overall_interpretation = {reading_session.overall_interpretation}")
         await db.commit()
+        logger.info(f"[DEBUG] After commit: overall_interpretation = {reading_session.overall_interpretation}")
 
         # ===== Achievement System Integration =====
         # Schedule achievement check as background task to avoid blocking API response
@@ -940,18 +918,79 @@ async def update_reading(
             )
 
         # Check AI interpretation one-time limit
-        is_updating_ai_interpretation = any([
-            update_data.overall_interpretation is not None,
-            update_data.summary_message is not None,
-            update_data.prediction_confidence is not None,
-            update_data.ai_interpretation_requested is not None
-        ])
+        # Allow first-time setting of ai_interpretation_requested (user clicks button)
+        # Allow setting overall_interpretation during streaming or completion
+        # But prevent modifying existing COMPLETED interpretation
+        is_requesting_ai = update_data.ai_interpretation_requested is not None
 
-        if is_updating_ai_interpretation and reading.ai_interpretation_requested:
+        # Block if trying to REQUEST AI when already requested
+        if is_requesting_ai and reading.ai_interpretation_requested:
             raise HTTPException(
                 status_code=403,
-                detail="AI interpretation has already been requested for this reading. Cannot update AI interpretation fields."
+                detail="AI interpretation has already been requested for this reading."
             )
+
+        # Only check for modification if trying to update overall_interpretation
+        # Allow updating summary_message and prediction_confidence without restriction
+        if update_data.overall_interpretation is not None:
+            # Check if current interpretation exists and has content
+            current_has_content = (
+                reading.overall_interpretation is not None and
+                len(reading.overall_interpretation.strip()) > 0
+            )
+
+            # 🔍 DEBUG: Log validation state
+            logger.info(
+                f"Validation check for reading {reading_id}: "
+                f"current_has_content={current_has_content}, "
+                f"current_length={len(reading.overall_interpretation) if reading.overall_interpretation else 0}, "
+                f"new_length={len(update_data.overall_interpretation)}"
+            )
+
+            # Check if trying to update with different content
+            is_modifying = False
+            if current_has_content:
+                new_content = update_data.overall_interpretation.strip()
+                current_content = reading.overall_interpretation.strip()
+
+                # Allow these cases:
+                # 1. New content is exactly the same (redundant update)
+                # 2. New content is longer (completion/retry of interrupted stream)
+                # 3. New content contains the current content as prefix (progressive streaming)
+                #
+                # Only block if:
+                # - New content is shorter AND different (replacement with different content)
+                # - New content doesn't contain current content (completely different text)
+
+                if new_content == current_content:
+                    # Case 1: Redundant update, allow silently
+                    is_modifying = False
+                elif len(new_content) > len(current_content):
+                    # Case 2 & 3: Check if new content builds on current
+                    # Allow if current content is a prefix of new content
+                    is_modifying = not new_content.startswith(current_content)
+                else:
+                    # New content is shorter
+                    # Only allow if it's exactly the same (which we already checked above)
+                    is_modifying = True
+
+                # 🔍 DEBUG: Log modification check
+                logger.info(
+                    f"Modification check: is_modifying={is_modifying}, "
+                    f"new_length={len(new_content)}, current_length={len(current_content)}, "
+                    f"current_preview={current_content[:100]}..., "
+                    f"new_preview={new_content[:100]}..."
+                )
+
+            if current_has_content and is_modifying:
+                logger.warning(
+                    f"BLOCKING modification for reading {reading_id}: "
+                    f"Attempt to replace with shorter different content"
+                )
+                raise HTTPException(
+                    status_code=403,
+                    detail="AI interpretation content cannot be modified once set."
+                )
 
         # Update fields (only update provided fields)
         update_dict = update_data.model_dump(exclude_unset=True)
@@ -960,8 +999,8 @@ async def update_reading(
             if hasattr(reading, field):
                 setattr(reading, field, value)
 
-        # If updating AI interpretation, mark as requested and set timestamp + provider
-        if is_updating_ai_interpretation and not reading.ai_interpretation_requested:
+        # If requesting AI interpretation, mark as requested and set timestamp + provider
+        if is_requesting_ai and not reading.ai_interpretation_requested:
             reading.ai_interpretation_requested = True
             reading.ai_interpretation_at = datetime.now()
 
@@ -976,8 +1015,7 @@ async def update_reading(
         await db.refresh(reading)
 
         # Generate TTS audio for AI interpretation (background task)
-        if (is_updating_ai_interpretation and
-            update_data.overall_interpretation is not None and
+        if (update_data.overall_interpretation is not None and
             len(update_data.overall_interpretation) > 0):
             # Extract character_key from character_voice_used
             character_key = reading.character_voice_used

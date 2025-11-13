@@ -127,7 +127,7 @@ async def stream_card_interpretation(
 
     # Log authenticated user for monitoring
     logger.info(
-        f"User {current_user.id} ({current_user.username}) starting streaming session for card {request.card_id}"
+        f"User {current_user.id} ({current_user.name}) starting streaming session for card {request.card_id}"
     )
 
     # Check if AI service is available
@@ -145,6 +145,10 @@ async def stream_card_interpretation(
 
     if not card:
         raise HTTPException(status_code=404, detail=f"Card not found: {request.card_id}")
+
+    # 🔧 CRITICAL FIX: Close database connection before streaming
+    # Streaming responses keep the connection open, causing pool exhaustion
+    await db.close()
 
     async def generate_stream():
         """Generator function for streaming response with timeout protection and performance monitoring"""
@@ -299,7 +303,7 @@ async def stream_multi_card_interpretation(
 
     # Log authenticated user for monitoring
     logger.info(
-        f"User {current_user.id} ({current_user.username}) starting multi-card streaming session for {len(request.card_ids)} cards"
+        f"User {current_user.id} ({current_user.name}) starting multi-card streaming session for {len(request.card_ids)} cards"
     )
 
     # Check if AI service is available
@@ -329,6 +333,10 @@ async def stream_multi_card_interpretation(
     # Convert UUID to string for consistent key matching
     card_map = {str(card.id): card for card in cards}
     ordered_cards = [card_map[card_id] for card_id in request.card_ids]
+
+    # 🔧 CRITICAL FIX: Close database connection before streaming
+    # Streaming responses keep the connection open, causing pool exhaustion
+    await db.close()
 
     async def generate_stream():
         """Generator function for streaming response with timeout protection and performance monitoring"""

@@ -244,11 +244,12 @@ export default function NewReadingPage() {
     try {
       const sessionState: SessionState = {
         cards_drawn: [],
-        current_card_index: 0,
-        interpretation_progress: {
-          started: false,
-          completed: false
-        }
+        current_card_index: 0
+        // 🔧 FIX: Don't track interpretation progress in session_state
+        // interpretation_progress: {
+        //   started: false,
+        //   completed: false
+        // }
       };
 
       const session = await createSession({
@@ -283,12 +284,14 @@ export default function NewReadingPage() {
         position: card.position,
         drawn_at: new Date().toISOString()
       })),
-      current_card_index: drawnCards.length,
-      interpretation_progress: {
-        started: interpretation.length > 0,
-        completed: !isGeneratingInterpretation && interpretation.length > 0,
-        text: interpretation
-      }
+      current_card_index: drawnCards.length
+      // 🔧 FIX: Don't save interpretation to session_state
+      // AI interpretation should only be generated when user explicitly requests it
+      // interpretation_progress: {
+      //   started: interpretation.length > 0,
+      //   completed: !isGeneratingInterpretation && interpretation.length > 0,
+      //   text: interpretation
+      // }
     };
 
     try {
@@ -320,12 +323,13 @@ export default function NewReadingPage() {
           positionName: positions[index]?.name || `位置 ${index + 1}`,
           positionMeaning: positions[index]?.meaning || ''
         })),
-        current_card_index: drawnCards.length,
-        interpretation_progress: {
-          started: interpretation.length > 0,
-          completed: !isGeneratingInterpretation && interpretation.length > 0,
-          text: interpretation
-        }
+        current_card_index: drawnCards.length
+        // 🔧 FIX: Don't save interpretation to session_state
+        // interpretation_progress: {
+        //   started: interpretation.length > 0,
+        //   completed: !isGeneratingInterpretation && interpretation.length > 0,
+        //   text: interpretation
+        // }
       };
 
       // Update local state only - auto-save will handle the API call
@@ -474,12 +478,13 @@ export default function NewReadingPage() {
           positionName: positions[index]?.name || `位置 ${index + 1}`,
           positionMeaning: positions[index]?.meaning || ''
         })),
-        current_card_index: drawnCards.length,
-        interpretation_progress: {
-          started: interpretation.length > 0,
-          completed: !isGeneratingInterpretation && interpretation.length > 0,
-          text: interpretation
-        }
+        current_card_index: drawnCards.length
+        // 🔧 FIX: Don't save interpretation to session_state
+        // interpretation_progress: {
+        //   started: interpretation.length > 0,
+        //   completed: !isGeneratingInterpretation && interpretation.length > 0,
+        //   text: interpretation
+        // }
       };
 
       console.log('[handleSaveReading] Prepared session_state:', sessionState);
@@ -517,8 +522,10 @@ export default function NewReadingPage() {
       console.log('[handleSaveReading] spreadTemplateId:', spreadTemplateId);
 
       // Complete the session (creates Reading record internally)
+      // 🔧 FIX: Don't pass interpretation - AI interpretation should only be generated
+      // when user explicitly requests it via "請求 AI 解讀" button
       const result = await completeSession(activeSession.id, {
-        interpretation: interpretation,
+        // interpretation: interpretation, // ❌ REMOVED: Don't auto-fill interpretation
         spread_template_id: spreadTemplateId, // ✅ NOW PASSING spread_template_id!
         character_voice: 'pip_boy',
         karma_context: 'neutral',

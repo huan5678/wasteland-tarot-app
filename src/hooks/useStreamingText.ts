@@ -23,6 +23,40 @@ const logger = {
   error: (message: string, ...args: any[]) => console.error(`[useStreamingText] ${message}`, ...args),
 };
 
+// 🔧 FIX: Window-level streaming lock to survive React Strict Mode remounts
+// Using window object ensures the lock persists across component unmount/remount cycles
+declare global {
+  interface Window {
+    __activeStreamingSessions?: Map<string, AbortController>;
+  }
+}
+
+/**
+ * Get or create the global streaming sessions Map on window object
+ * This ensures the Map survives React Strict Mode's unmount/remount cycles
+ */
+function getActiveStreamingSessions(): Map<string, AbortController> {
+  if (typeof window === 'undefined') {
+    // SSR: return empty map (will not be used)
+    return new Map();
+  }
+
+  if (!window.__activeStreamingSessions) {
+    window.__activeStreamingSessions = new Map();
+  }
+
+  return window.__activeStreamingSessions;
+}
+
+/**
+ * Generate a unique key for a streaming session based on URL and request body
+ * @param url - API endpoint URL
+ * @param requestBodyJson - Request body as JSON string (already stringified)
+ */
+function getStreamingSessionKey(url: string, requestBodyJson: string): string {
+  return `${url}::${requestBodyJson}`;
+}
+
 /**
  * 🟢 TDD P2: Error type classification
  */
@@ -653,6 +687,7 @@ export function useStreamingText({
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // 🔧 FIX: Include httpOnly cookies for authentication
         body: JSON.stringify(requestBody),
       },
       timeout
@@ -712,6 +747,7 @@ export function useStreamingText({
               headers: {
                 'Content-Type': 'application/json',
               },
+              credentials: 'include', // 🔧 FIX: Include httpOnly cookies for authentication
               body: JSON.stringify(requestBody),
             },
             timeout
@@ -762,7 +798,45 @@ export function useStreamingText({
    * Start streaming from server
    */
   useEffect(() => {
-    if (!enabled) return;
+    // 🚨 EMERGENCY DEBUG: Log at the very beginning to confirm execution
+    console.log('🚨🚨🚨 [USEEFFECT ENTRY] useStreamingText effect triggered!', {
+      enabled,
+      url,
+      timestamp: new Date().toISOString()
+    });
+
+    if (!enabled) {
+      console.log('🚨 [DISABLED] Effect disabled, returning early');
+      return;
+    }
+
+    // 🔧 FIX: React Strict Mode guard using window-level session lock
+    // Generate unique key for this streaming session
+    const sessionKey = getStreamingSessionKey(url, requestBodyJson);
+    const activeSessions = getActiveStreamingSessions();
+
+    // Check if a session with the same parameters is already active
+    console.log('🔍 [SESSION CHECK]', {
+      sessionKey: sessionKey.substring(0, 100),
+      hasSession: activeSessions.has(sessionKey),
+      allSessions: Array.from(activeSessions.keys()).map(k => k.substring(0, 100))
+    });
+
+    if (activeSessions.has(sessionKey)) {
+      const existingController = activeSessions.get(sessionKey)!;
+
+      console.log('⛔ [BLOCKING DUPLICATE] Cancelling previous request and starting new one');
+      logger.info('Cancelling previous streaming request (React Strict Mode guard)', {
+        sessionKey,
+        activeSessionsCount: activeSessions.size
+      });
+
+      // Cancel the existing request
+      existingController.abort();
+
+      // Remove from active sessions
+      activeSessions.delete(sessionKey);
+    }
 
     // Reset state
     setText('');
@@ -783,7 +857,39 @@ export function useStreamingText({
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    // Register this session immediately to block subsequent invocations
+    activeSessions.set(sessionKey, abortController);
+    console.log('✅ [STARTED] Starting new streaming session', {
+      sessionKey: sessionKey.substring(0, 100),
+      activeSessionsCount: activeSessions.size
+    });
+    logger.info('Starting new streaming session', {
+      sessionKey,
+      activeSessionsCount: activeSessions.size
+    });
+
+    /**
+     * Helper function to clean up session lock when streaming truly completes
+     */
+    const cleanupSessionLock = (reason: string) => {
+      const sessions = getActiveStreamingSessions();
+      sessions.delete(sessionKey);
+
+      console.log('🔓 [SESSION CLEANUP]', {
+        reason,
+        sessionKey: sessionKey.substring(0, 100),
+        activeSessionsCount: sessions.size
+      });
+
+      logger.info('Session lock released', {
+        reason,
+        sessionKey,
+        activeSessionsCount: sessions.size
+      });
+    };
+
     const startStreaming = async () => {
+
       try {
         // 🟢 TDD: Use fetchWithRetry instead of direct fetch
         const response = await fetchWithRetry(abortController.signal);
@@ -808,6 +914,7 @@ export function useStreamingText({
             if (onCompleteRef.current) {
               onCompleteRef.current(fullTextRef.current);
             }
+            cleanupSessionLock('Streaming completed (reader done)');
             break;
           }
 
@@ -828,6 +935,7 @@ export function useStreamingText({
                 if (onCompleteRef.current) {
                   onCompleteRef.current(fullTextRef.current);
                 }
+                cleanupSessionLock('Streaming completed ([DONE] message)');
                 break;
               } else if (content.startsWith('[ERROR]')) {
                 // Error occurred
@@ -835,7 +943,14 @@ export function useStreamingText({
                 throw new Error(errorMsg);
               } else {
                 // Regular content chunk
-                fullTextRef.current += content;
+                // 🔧 FIX: Parse JSON if content is JSON-encoded
+                try {
+                  const parsedContent = JSON.parse(content);
+                  fullTextRef.current += parsedContent;
+                } catch {
+                  // If not JSON, use as-is
+                  fullTextRef.current += content;
+                }
               }
             }
           }
@@ -844,6 +959,7 @@ export function useStreamingText({
         if (err instanceof Error) {
           if (err.name === 'AbortError') {
             // Request was aborted, not an error
+            cleanupSessionLock('Request aborted');
             return;
           }
 
@@ -869,6 +985,8 @@ export function useStreamingText({
                 onCompleteRef.current(fallbackText);
               }
 
+              cleanupSessionLock('Fallback completed successfully');
+
               // Fallback succeeded, return early
               return;
             } catch (fallbackErr) {
@@ -884,6 +1002,8 @@ export function useStreamingText({
                 onErrorRef.current(finalError);
               }
 
+              cleanupSessionLock('Fallback failed');
+
               // Return early after handling fallback error
               return;
             }
@@ -895,6 +1015,8 @@ export function useStreamingText({
           if (onErrorRef.current) {
             onErrorRef.current(err);
           }
+
+          cleanupSessionLock('Streaming failed (no fallback)');
         }
         setIsStreaming(false);
         // 🟢 TDD P0: Clear retry state on final error
@@ -906,6 +1028,16 @@ export function useStreamingText({
 
     // Cleanup
     return () => {
+      // 🔧 FIX: Only abort request in cleanup, don't delete session
+      // Session will be deleted when request actually completes
+      console.log('🧹 [CLEANUP] Aborting streaming request (session lock remains)', {
+        sessionKey: sessionKey.substring(0, 100)
+      });
+
+      logger.info('Aborting streaming request (session lock persists for React Strict Mode)', {
+        sessionKey
+      });
+
       abortController.abort();
       if (typewriterIntervalRef.current) {
         clearInterval(typewriterIntervalRef.current);

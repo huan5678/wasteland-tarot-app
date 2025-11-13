@@ -53,6 +53,12 @@ export function useServiceWorker() {
   }, [])
 
   const registerServiceWorker = async () => {
+    // 🔧 FIX: Only register Service Worker in production to prevent caching issues in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[PWA] Service Worker registration skipped in development mode')
+      return
+    }
+
     try {
       console.log('[PWA] Registering Service Worker...')
 

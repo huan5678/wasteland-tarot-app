@@ -427,7 +427,9 @@ class SessionService:
             "user_id": session.user_id,
             "question": session.question,
             # NOTE: spread_type is tracked via spread_template_id, not directly in CompletedReading
-            "overall_interpretation": interpretation or session_state.get("interpretation", ""),
+            # 🔧 FIX: Don't auto-fill overall_interpretation from session_state
+            # AI interpretation should only be generated when user explicitly requests it
+            "overall_interpretation": interpretation if interpretation else None,
             # Extract optional fields from reading_metadata
             "spread_template_id": reading_metadata.get("spread_template_id") if reading_metadata else None,
             "interpretation_template_id": reading_metadata.get("interpretation_template_id") if reading_metadata else None,

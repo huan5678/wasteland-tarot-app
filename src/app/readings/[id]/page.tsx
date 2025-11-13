@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { readingsAPI } from '@/lib/api';
@@ -30,6 +30,7 @@ import { useMetadataStore } from '@/stores/metadataStore';
 import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer';
 import { use3DTilt } from '@/hooks/tilt/use3DTilt';
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects';
+import { MultiCardStreamingInterpretation } from '@/components/readings/StreamingInterpretation';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // Tab 類型定義（移除 card-${number}，改用 Modal 顯示卡片詳情）
@@ -63,6 +64,12 @@ export default function ReadingDetailPage() {
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai');
   const [isRequestingAI, setIsRequestingAI] = useState(false);
   const [isTTSGenerating, setIsTTSGenerating] = useState(false);
+
+  // 🔧 FIX: Use ref to track if interpretation has been saved (prevents React Strict Mode duplicate saves)
+  const interpretationSavedRef = useRef(false);
+
+  // 🔧 FIX: Use state to control streaming enabled status (prevents multiple concurrent streams)
+  const [isStreamingEnabled, setIsStreamingEnabled] = useState(true);
 
   // Modal 狀態管理
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -476,152 +483,14 @@ export default function ReadingDetailPage() {
     if (!reading || reading.ai_interpretation_requested) return;
 
     setIsRequestingAI(true);
+    // Reset the saved flag when requesting new interpretation
+    interpretationSavedRef.current = false;
 
     try {
-      console.log('[handleRequestAI] 開始請求 AI 解讀');
-      console.log('[handleRequestAI] Reading:', reading);
+      console.log('[handleRequestAI] 標記為請求 AI 解讀');
 
-      // Extract card IDs from current reading (not from store!)
-      const cardIds: string[] = [];
-
-      if ('card_positions' in reading && reading.card_positions && reading.card_positions.length > 0) {
-        cardIds.push(...reading.card_positions.map((pos) => pos.card_id));
-        console.log('[handleRequestAI] 從 card_positions 提取 card IDs:', cardIds);
-      } else if ('cards_drawn' in reading && (reading as any).cards_drawn && (reading as any).cards_drawn.length > 0) {
-        cardIds.push(...(reading as any).cards_drawn.map((card: any) => card.card_id || card.id).filter(Boolean));
-        console.log('[handleRequestAI] 從 cards_drawn 提取 card IDs:', cardIds);
-      }
-
-      if (cardIds.length === 0) {
-        console.error('[handleRequestAI] 找不到卡牌資料');
-        return;
-      }
-
-      // Call backend streaming API directly
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
-      console.log('[handleRequestAI] 呼叫後端 streaming API');
-
-      // Map faction values to backend enum
-      // 統一陣營 key 格式（使用底線）
-      const factionMapping: Record<string, string> = {
-        // 獨立派
-        'independent': 'independent',
-        
-        // 避難所系統
-        'vault-tec': 'vault_dweller',
-        'vault_tec': 'vault_dweller',
-        'vault_dweller': 'vault_dweller',
-        
-        // 主要陣營
-        'brotherhood': 'brotherhood',
-        'brotherhood-of-steel': 'brotherhood',
-        'brotherhood_of_steel': 'brotherhood',
-        'enclave': 'enclave',
-        'ncr': 'ncr',
-        'legion': 'legion',
-        'caesars-legion': 'legion',
-        'caesars_legion': 'legion',
-        
-        // Fallout 4 陣營
-        'minutemen': 'minutemen',
-        'railroad': 'railroad',
-        'institute': 'institute',
-        
-        // 其他陣營
-        'children-of-atom': 'children_of_atom',
-        'children_of_atom': 'children_of_atom',
-        'raiders': 'raiders'
-      };
-
-      const mappedFaction = reading.faction_influence ?
-      factionMapping[reading.faction_influence.toLowerCase()] || null :
-      null;
-
-      console.log('[handleRequestAI] Faction mapping:', {
-        original: reading.faction_influence,
-        mapped: mappedFaction
-      });
-
-      const requestBody = {
-        card_ids: cardIds,
-        question: reading.question || '未指定問題',
-        character_voice: reading.character_voice_used || 'pip_boy',
-        karma_alignment: reading.karma_context || 'neutral',
-        faction_alignment: mappedFaction,
-        spread_type: reading.spread_type || 'three_card'
-      };
-
-      console.log('[handleRequestAI] Request body:', requestBody);
-
-      const response = await fetch(`${API_BASE_URL}/api/v1/readings/interpretation/stream-multi`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('pip-boy-token') || ''}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      // Read SSE stream
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let interpretation = '';
-
-      if (!reader) {
-        throw new Error('無法讀取回應串流');
-      }
-
-      console.log('[handleRequestAI] 開始接收 AI 串流');
-
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-          console.log('[handleRequestAI] 串流結束');
-          break;
-        }
-
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.substring(6).trim();
-
-            if (data === '[DONE]') {
-              console.log('[handleRequestAI] 收到完成信號');
-              break;
-            }
-
-            if (data.startsWith('[ERROR]')) {
-              const errorMsg = data.substring(7).trim();
-              console.error('[handleRequestAI] 收到錯誤:', errorMsg);
-              throw new Error(errorMsg);
-            }
-
-            // Parse JSON-encoded chunk (backend sends JSON to handle newlines)
-            try {
-              const textChunk = JSON.parse(data);
-              interpretation += textChunk;
-            } catch (e) {
-              console.warn('[handleRequestAI] Failed to parse chunk, using raw data:', data);
-              interpretation += data;
-            }
-          }
-        }
-      }
-
-      console.log('[handleRequestAI] AI 解讀完成，長度:', interpretation.length);
-
-      // Save to backend via PATCH
+      // 只標記為已請求，讓 MultiCardStreamingInterpretation 元件處理串流
       const updated = await readingsAPI.patch(readingId, {
-        overall_interpretation: interpretation,
-        summary_message: "AI 已完成解讀",
-        prediction_confidence: 0.85,
         ai_interpretation_requested: true,
         ai_interpretation_at: new Date().toISOString(),
         ai_interpretation_provider: selectedProvider
@@ -629,28 +498,14 @@ export default function ReadingDetailPage() {
 
       if (updated) {
         setReading(updated);
-        console.log('[handleRequestAI] 成功儲存 AI 解讀');
+        console.log('[handleRequestAI] 成功標記，串流將由 MultiCardStreamingInterpretation 元件處理');
+        console.log('[handleRequestAI] Updated reading:', {
+          ai_interpretation_requested: updated.ai_interpretation_requested,
+          overall_interpretation: updated.overall_interpretation,
+          overall_interpretation_length: updated.overall_interpretation?.length,
+          prediction_confidence: updated.prediction_confidence
+        });
         import('@/lib/actionTracker').then((m) => m.track('reading:ai-interpretation', { id: readingId, provider: selectedProvider }));
-
-        // 開始 TTS 生成狀態
-        setIsTTSGenerating(true);
-
-        // 等待 10 秒讓背景任務完成 TTS 音頻生成，然後重新載入資料
-        console.log('[handleRequestAI] 等待 TTS 音頻生成...');
-        setTimeout(async () => {
-          try {
-            const refreshed = await readingsAPI.getById(readingId);
-            if (refreshed) {
-              setReading(refreshed);
-              console.log('[handleRequestAI] 已重新載入資料，音頻 URL:', refreshed.interpretation_audio_url);
-            }
-          } catch (err) {
-            console.error('[handleRequestAI] 重新載入資料失敗:', err);
-          } finally {
-            // TTS 生成完成（無論成功或失敗）
-            setIsTTSGenerating(false);
-          }
-        }, 10000); // 10 秒後重新載入
       }
     } catch (error) {
       console.error('[handleRequestAI] AI interpretation request failed:', error);
@@ -741,76 +596,148 @@ export default function ReadingDetailPage() {
         }
 
         {/* AI 解讀內容 */}
-        {hasAI && reading.overall_interpretation &&
-        <div className="space-y-4">
-            {/* TTS 語音朗讀 */}
-            <div className="bg-pip-boy-green/5 p-4 border border-pip-boy-green/20 rounded">
-              <div className="flex items-center gap-2 mb-3">
-                <PixelIcon name="volume-up" sizePreset="sm" variant="primary" decorative />
-                <h4 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
-                  語音朗讀
-                </h4>
-              </div>
+        {hasAI && (
+          <div className="space-y-4">
+            {/* 🟢 如果已請求 AI 但還沒有完整文字，或文字為空，顯示串流元件 */}
+            {(() => {
+              const shouldStream = reading.ai_interpretation_requested && (!reading.overall_interpretation || reading.overall_interpretation.trim().length === 0);
+              console.log('[renderAIInterpretation] Render decision:', {
+                ai_interpretation_requested: reading.ai_interpretation_requested,
+                overall_interpretation_exists: !!reading.overall_interpretation,
+                overall_interpretation_length: reading.overall_interpretation?.length,
+                overall_interpretation_trimmed_length: reading.overall_interpretation?.trim().length,
+                shouldStream,
+                isStreamingEnabled,
+                willRenderComponent: shouldStream ? 'MultiCardStreamingInterpretation' : 'Static Content'
+              });
+              return shouldStream;
+            })() ? (
+              <MultiCardStreamingInterpretation
+                cardIds={(() => {
+                  if ('card_positions' in reading && reading.card_positions && reading.card_positions.length > 0) {
+                    return reading.card_positions.map((pos) => pos.card_id);
+                  } else if ('cards_drawn' in reading && (reading as any).cards_drawn && (reading as any).cards_drawn.length > 0) {
+                    return (reading as any).cards_drawn.map((card: any) => card.card_id || card.id);
+                  }
+                  return [];
+                })()}
+                question={reading.question || '未指定問題'}
+                characterVoice={reading.character_voice_used || 'pip_boy'}
+                karmaAlignment={reading.karma_context || 'neutral'}
+                factionAlignment={reading.faction_influence}
+                spreadType={reading.spread_type || 'three_card'}
+                apiUrl="/api/v1/readings/interpretation/stream-multi"
+                enabled={isStreamingEnabled}
+                charsPerSecond={40}
+                onComplete={(fullText) => {
+                  // 🔧 FIX: Disable streaming IMMEDIATELY to prevent re-streaming during re-renders
+                  // This must be done BEFORE any async operations or state updates
+                  setIsStreamingEnabled(false);
 
-              {/* TTS 生成中 Loading 狀態 */}
-              {isTTSGenerating && !reading.interpretation_audio_url &&
-            <div className="flex flex-col items-center justify-center gap-3 py-8">
-                  <PixelIcon
-                name="loader"
-                animation="spin"
-                sizePreset="lg"
-                variant="primary"
-                decorative />
+                  // 串流完成後儲存到後端
+                  // 🔧 FIX: Use ref to prevent duplicate saves
+                  if (interpretationSavedRef.current) {
+                    console.log('[onComplete] Already saved (ref check), skipping duplicate save');
+                    return;
+                  }
 
-                  <div className="text-center">
-                    <p className="text-sm text-pip-boy-green font-bold uppercase tracking-wider mb-1">
-                      正在生成語音檔案...
-                    </p>
-                    <p className="text-xs text-pip-boy-green/60">
-                      請稍候，TTS 服務處理中
+                  // Mark as saved immediately to prevent race conditions
+                  interpretationSavedRef.current = true;
+
+                  readingsAPI.patch(readingId, {
+                    overall_interpretation: fullText,
+                    summary_message: "AI 已完成解讀",
+                    prediction_confidence: 0.85
+                  }).then((updated) => {
+                    if (updated) {
+                      setReading(updated);
+                      // 開始 TTS 生成
+                      setIsTTSGenerating(true);
+                      // 等待 10 秒讓背景任務完成 TTS 音頻生成
+                      setTimeout(async () => {
+                        const refreshed = await readingsAPI.getById(readingId);
+                        if (refreshed) {
+                          setReading(refreshed);
+                        }
+                        setIsTTSGenerating(false);
+                      }, 10000);
+                    }
+                  });
+                }}
+              />
+            ) : (
+              /* 🟢 串流完成後，顯示靜態內容 + TTS 播放器 */
+              <>
+                {/* TTS 語音朗讀 */}
+                <div className="bg-pip-boy-green/5 p-4 border border-pip-boy-green/20 rounded">
+                  <div className="flex items-center gap-2 mb-3">
+                    <PixelIcon name="volume-up" sizePreset="sm" variant="primary" decorative />
+                    <h4 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
+                      語音朗讀
+                    </h4>
+                  </div>
+
+                  {/* TTS 生成中 Loading 狀態 */}
+                  {isTTSGenerating && !reading.interpretation_audio_url && (
+                    <div className="flex flex-col items-center justify-center gap-3 py-8">
+                      <PixelIcon
+                        name="loader"
+                        animation="spin"
+                        sizePreset="lg"
+                        variant="primary"
+                        decorative
+                      />
+                      <div className="text-center">
+                        <p className="text-sm text-pip-boy-green font-bold uppercase tracking-wider mb-1">
+                          正在生成語音檔案...
+                        </p>
+                        <p className="text-xs text-pip-boy-green/60">
+                          請稍候，TTS 服務處理中
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 音頻播放器（TTS 完成或已有音頻檔案）*/}
+                  {!isTTSGenerating && (
+                    <StoryAudioPlayer
+                      key={reading.interpretation_audio_url || 'no-audio'}
+                      audioUrl={reading.interpretation_audio_url || ""}
+                      characterName="AI 解讀"
+                      characterKey="ai_interpretation"
+                      storyText={reading.overall_interpretation}
+                      useFallback={!reading.interpretation_audio_url}
+                      volume={0.8}
+                    />
+                  )}
+                </div>
+
+                <div className="bg-black/70 p-4 border border-pip-boy-green/20 rounded">
+                  <p className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
+                    {reading.overall_interpretation}
+                  </p>
+                </div>
+
+                {reading.summary_message && (
+                  <div className="bg-pip-boy-green/5 p-3 border-l-4 border-pip-boy-green rounded">
+                    <p className="text-xs text-pip-boy-green font-bold uppercase tracking-wider">
+                      {reading.summary_message}
                     </p>
                   </div>
-                </div>
-            }
+                )}
 
-              {/* 音頻播放器（TTS 完成或已有音頻檔案）*/}
-              {!isTTSGenerating &&
-            <StoryAudioPlayer
-              key={reading.interpretation_audio_url || 'no-audio'} // 強制重新渲染當 URL 改變
-              audioUrl={reading.interpretation_audio_url || ""}
-              characterName="AI 解讀"
-              characterKey="ai_interpretation"
-              storyText={reading.overall_interpretation}
-              useFallback={!reading.interpretation_audio_url}
-              volume={0.8} />
-
-            }
-            </div>
-
-            <div className="bg-black/70 p-4 border border-pip-boy-green/20 rounded">
-              <p className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
-                {reading.overall_interpretation}
-              </p>
-            </div>
-
-            {reading.summary_message &&
-          <div className="bg-pip-boy-green/5 p-3 border-l-4 border-pip-boy-green rounded">
-                <p className="text-xs text-pip-boy-green font-bold uppercase tracking-wider">
-                  {reading.summary_message}
-                </p>
-              </div>
-          }
-
-            {reading.prediction_confidence !== undefined &&
-          <div className="flex items-center gap-2 text-xs text-pip-boy-green/60">
-                <PixelIcon name="chart" sizePreset="xs" decorative />
-                <span className="uppercase tracking-wider">
-                  預測信心度: {(reading.prediction_confidence * 100).toFixed(0)}%
-                </span>
-              </div>
-          }
+                {reading.prediction_confidence !== undefined && (
+                  <div className="flex items-center gap-2 text-xs text-pip-boy-green/60">
+                    <PixelIcon name="chart" sizePreset="xs" decorative />
+                    <span className="uppercase tracking-wider">
+                      預測信心度: {(reading.prediction_confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        }
+        )}
 
         {/* 未請求時的說明 */}
         {!hasAI && !isRequestingAI &&

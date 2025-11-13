@@ -10,6 +10,12 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
   const [isBackendReady, setIsBackendReady] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 設定客戶端掛載狀態（修復 hydration 錯誤）
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const checkBackendHealth = async () => {
@@ -28,7 +34,7 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
         }
       } catch (err) {
         console.warn(`Backend health check failed (attempt ${retryCount + 1}/${MAX_RETRIES}):`, err);
-        
+
         if (retryCount < MAX_RETRIES) {
           setRetryCount(prev => prev + 1);
           setTimeout(checkBackendHealth, RETRY_DELAY);
@@ -87,16 +93,21 @@ export function BackendHealthCheck({ children }: { children: React.ReactNode }) 
 
           {/* 進度條 */}
           {!error && (
-            <div className="w-full bg-wasteland-dark h-2 rounded overflow-hidden relative">
-              {/* 進度條填充（3 秒循環：0% → 100%） */}
+            <div className={`w-full bg-wasteland-dark h-2 rounded overflow-hidden${isMounted ? ' relative' : ''}`}>
+              {/* 進度條填充（只在客戶端掛載後才啟動動畫，避免 hydration 錯誤） */}
               <div
-                className="h-full bg-pip-boy-green origin-left animate-progress-loop"
+                className={`h-full bg-pip-boy-green transition-all duration-300${
+                  isMounted ? ' origin-left animate-progress-loop' : ''
+                }`}
+                style={isMounted ? {} : { width: '10%' }}
               />
-              {/* 閃爍效果 */}
-              <div
-                className="absolute inset-0 bg-gradient-to-r from-transparent via-pip-boy-green/50 to-transparent animate-pulse"
-                style={{ pointerEvents: 'none' }}
-              />
+              {/* 閃爍效果（只在客戶端掛載後渲染） */}
+              {isMounted && (
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-pip-boy-green/50 to-transparent animate-pulse"
+                  style={{ pointerEvents: 'none' }}
+                />
+              )}
             </div>
           )}
         </div>
