@@ -985,11 +985,12 @@ class TTSService:
             pitch=0.0,          # SSML 已處理，這裡用預設值
         )
 
-        # 呼叫 Google Cloud TTS API
+        # 呼叫 Google Cloud TTS API（60 秒 timeout）
         response = self.client.synthesize_speech(
             input=synthesis_input,
             voice=voice,
-            audio_config=audio_config
+            audio_config=audio_config,
+            timeout=60.0  # 增加到 60 秒以處理較長文本
         )
 
         # 取得音檔內容
@@ -1388,11 +1389,12 @@ class TTSService:
 
         # 執行合成
         try:
-            # 執行 TTS 合成（自訂發音已嵌入 markup_text 中）
+            # 執行 TTS 合成（自訂發音已嵌入 markup_text 中，60 秒 timeout）
             response = self.client.synthesize_speech(
                 input=synthesis_input,
                 voice=voice,
-                audio_config=audio_config
+                audio_config=audio_config,
+                timeout=60.0  # 增加到 60 秒以處理較長文本
             )
 
             # 處理回應

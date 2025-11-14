@@ -60,20 +60,34 @@ export const shareAPI = {
    * 無需登入 - 任何人都可以用 share_token 查看
    *
    * @param shareToken - 分享 token (UUID)
+   * @param password - 可選的密碼（如果分享需要密碼保護）
    * @returns PublicReadingData - 公開的占卜資料（不含私密欄位）
    *
    * @throws {ApiError} 404 - Share link 不存在
+   * @throws {ApiError} 410 - 分享已被撤回
+   * @throws {ApiError} 403 - 密碼錯誤或需要密碼
    * @throws {ApiError} 422 - Token 格式錯誤
    *
    * @example
    * ```ts
+   * // 無密碼的分享
    * const data = await shareAPI.getSharedReading('550e8400-e29b-41d4-a716-446655440000')
    * console.log(data.question)
    * // => "關於工作的問題"
+   *
+   * // 有密碼保護的分享
+   * const data = await shareAPI.getSharedReading('550e8400-e29b-41d4-a716-446655440000', '1234')
    * ```
    */
-  async getSharedReading(shareToken: string): Promise<PublicReadingData> {
-    const data = await apiClient.get(`/api/v1/share/${shareToken}`)
+  async getSharedReading(shareToken: string, password?: string): Promise<PublicReadingData> {
+    // 構建 URL，如果有密碼則加入 query parameter
+    let endpoint = `/api/v1/share/${shareToken}`
+    if (password) {
+      const params = new URLSearchParams({ password })
+      endpoint += `?${params.toString()}`
+    }
+
+    const data = await apiClient.get(endpoint)
     return validateResponse<PublicReadingData>(data, PublicReadingDataSchema)
   },
 }

@@ -31,7 +31,7 @@ import { useMetadataStore } from '@/stores/metadataStore';
 import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer';
 import { use3DTilt } from '@/hooks/tilt/use3DTilt';
 import { TiltVisualEffects } from '@/components/tilt/TiltVisualEffects';
-import { MultiCardStreamingInterpretation } from '@/components/readings/StreamingInterpretation';
+import { MultiCardAIInterpretation } from '@/components/readings/AIInterpretation';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // Tab 類型定義（移除 card-${number}，改用 Modal 顯示卡片詳情）
@@ -71,6 +71,69 @@ export default function ReadingDetailPage() {
 
   // 🔧 FIX: Use state to control streaming enabled status (prevents multiple concurrent streams)
   const [isStreamingEnabled, setIsStreamingEnabled] = useState(true);
+
+  // 🔧 FIX: Memoize cardIds to prevent re-rendering during streaming
+  // Without memoization, inline array creation causes component remount on every parent re-render
+  // Use fine-grained dependencies - only recompute when card positions/draws actually change
+  const streamingCardIds = useMemo(() => {
+    if (!reading) return [];
+    if ('card_positions' in reading && reading.card_positions && reading.card_positions.length > 0) {
+      return reading.card_positions.map((pos) => pos.card_id);
+    } else if ('cards_drawn' in reading && (reading as any).cards_drawn && (reading as any).cards_drawn.length > 0) {
+      return (reading as any).cards_drawn.map((card: any) => card.card_id || card.id);
+    }
+    return [];
+  }, [
+    // Only depend on properties that affect cardIds
+    reading?.card_positions,
+    (reading as any)?.cards_drawn,
+  ]);
+
+  // 🔧 UX: Trigger TTS generation when fetch completes (background)
+  const handleFetchComplete = useCallback((fullText: string) => {
+    console.log('[handleFetchComplete] AI fetch complete, starting TTS generation');
+
+    // 🔧 FIX: Use ref to prevent duplicate TTS generation
+    if (interpretationSavedRef.current) {
+      console.log('[handleFetchComplete] Already processed, skipping');
+      return;
+    }
+
+    // Mark as processed immediately
+    interpretationSavedRef.current = true;
+
+    // Start TTS generation in background
+    setIsTTSGenerating(true);
+
+    // Save interpretation to backend (will trigger TTS generation)
+    readingsAPI.patch(readingId, {
+      overall_interpretation: fullText,
+      summary_message: "AI 已完成解讀",
+      prediction_confidence: 0.85
+    }).then(() => {
+      console.log('[handleFetchComplete] Interpretation saved, TTS generating in background');
+      // Note: Don't update reading state here to avoid re-render
+      // Will refresh after TTS completes
+    });
+  }, [readingId, readingsAPI]);
+
+  // 🔧 UX: Save final state when typewriter completes
+  const handleTypingComplete = useCallback(() => {
+    console.log('[handleTypingComplete] Typewriter animation complete');
+
+    // Disable streaming to switch to static view
+    setIsStreamingEnabled(false);
+
+    // Wait for TTS generation to complete (10 seconds)
+    setTimeout(async () => {
+      const refreshed = await readingsAPI.getById(readingId);
+      if (refreshed) {
+        setReading(refreshed);
+        console.log('[handleTypingComplete] Reading refreshed with TTS audio');
+      }
+      setIsTTSGenerating(false);
+    }, 10000);
+  }, [readingId, readingsAPI]);
 
   // Modal 狀態管理
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -613,15 +676,9 @@ export default function ReadingDetailPage() {
               });
               return shouldStream;
             })() ? (
-              <MultiCardStreamingInterpretation
-                cardIds={(() => {
-                  if ('card_positions' in reading && reading.card_positions && reading.card_positions.length > 0) {
-                    return reading.card_positions.map((pos) => pos.card_id);
-                  } else if ('cards_drawn' in reading && (reading as any).cards_drawn && (reading as any).cards_drawn.length > 0) {
-                    return (reading as any).cards_drawn.map((card: any) => card.card_id || card.id);
-                  }
-                  return [];
-                })()}
+              <MultiCardAIInterpretation
+                key="ai-streaming-component"
+                cardIds={streamingCardIds}
                 question={reading.question || '未指定問題'}
                 characterVoice={reading.character_voice_used || 'pip_boy'}
                 karmaAlignment={reading.karma_context || 'neutral'}
@@ -630,41 +687,8 @@ export default function ReadingDetailPage() {
                 apiUrl="/api/v1/readings/interpretation/stream-multi"
                 enabled={isStreamingEnabled}
                 charsPerSecond={40}
-                onComplete={(fullText) => {
-                  // 🔧 FIX: Disable streaming IMMEDIATELY to prevent re-streaming during re-renders
-                  // This must be done BEFORE any async operations or state updates
-                  setIsStreamingEnabled(false);
-
-                  // 串流完成後儲存到後端
-                  // 🔧 FIX: Use ref to prevent duplicate saves
-                  if (interpretationSavedRef.current) {
-                    console.log('[onComplete] Already saved (ref check), skipping duplicate save');
-                    return;
-                  }
-
-                  // Mark as saved immediately to prevent race conditions
-                  interpretationSavedRef.current = true;
-
-                  readingsAPI.patch(readingId, {
-                    overall_interpretation: fullText,
-                    summary_message: "AI 已完成解讀",
-                    prediction_confidence: 0.85
-                  }).then((updated) => {
-                    if (updated) {
-                      setReading(updated);
-                      // 開始 TTS 生成
-                      setIsTTSGenerating(true);
-                      // 等待 10 秒讓背景任務完成 TTS 音頻生成
-                      setTimeout(async () => {
-                        const refreshed = await readingsAPI.getById(readingId);
-                        if (refreshed) {
-                          setReading(refreshed);
-                        }
-                        setIsTTSGenerating(false);
-                      }, 10000);
-                    }
-                  });
-                }}
+                onFetchComplete={handleFetchComplete}
+                onTypingComplete={handleTypingComplete}
               />
             ) : (
               /* 🟢 串流完成後，顯示靜態內容 + TTS 播放器 */

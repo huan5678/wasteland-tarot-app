@@ -53,38 +53,66 @@ export default function SharePage() {
   const [error, setError] = useState<string | null>(null);
   const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
 
+  // 密碼保護狀態
+  const [requiresPassword, setRequiresPassword] = useState(false);
+  const [password, setPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+
+  // 撤回狀態
+  const [isRevoked, setIsRevoked] = useState(false);
+
   useEffect(() => {
-    const fetchSharedReading = async () => {
-      if (!shareToken) {
-        setError('無效的分享連結');
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const data = await shareAPI.getSharedReading(shareToken);
-        console.log('📊 Shared reading data:', data);
-        setReading(data);
-      } catch (err: any) {
-        console.error('Failed to fetch shared reading:', err);
-
-        if (err.status === 404) {
-          setError('此分享連結不存在或已失效');
-        } else if (err.status === 422) {
-          setError('無效的分享連結格式');
-        } else {
-          setError(err.message || '無法載入分享的占卜結果');
-        }
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchSharedReading();
   }, [shareToken]);
+
+  const fetchSharedReading = async (pwd?: string) => {
+    if (!shareToken) {
+      setError('無效的分享連結');
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await shareAPI.getSharedReading(shareToken, pwd);
+      console.log('📊 Shared reading data:', data);
+      setReading(data);
+      setRequiresPassword(false);
+      setPasswordError('');
+    } catch (err: any) {
+      console.error('Failed to fetch shared reading:', err);
+
+      if (err.status === 410) {
+        // 分享已被撤回
+        setIsRevoked(true);
+      } else if (err.status === 403) {
+        // 需要密碼或密碼錯誤
+        setRequiresPassword(true);
+        if (pwd) {
+          setPasswordError('密碼錯誤，請重試');
+        }
+      } else if (err.status === 404) {
+        setError('此分享連結不存在或已失效');
+      } else if (err.status === 422) {
+        setError('無效的分享連結格式');
+      } else {
+        setError(err.message || '無法載入分享的占卜結果');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password.length >= 4 && password.length <= 8) {
+      fetchSharedReading(password);
+    } else {
+      setPasswordError('密碼必須為 4-8 位數');
+    }
+  };
 
   const handleImageError = (index: number) => {
     setImageErrors((prev) => ({ ...prev, [index]: true }));
@@ -116,6 +144,84 @@ export default function SharePage() {
       };
     }).filter(Boolean);
   }, [reading]);
+
+  // === Revoked State (分享已撤回) ===
+  if (isRevoked) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="border-2 border-red-500 bg-red-500/10 p-8 max-w-md w-full text-center">
+          <div className="mb-6">
+            <PixelIcon name="forbid" sizePreset="xxl" variant="error" animation="pulse" decorative />
+          </div>
+          <h2 className="text-2xl font-bold text-red-400 uppercase mb-4">分享已撤回</h2>
+          <p className="text-red-300 mb-6">此占卜結果已被擁有者撤回，無法繼續查看。</p>
+
+          <Button size="sm" variant="outline"
+            onClick={() => router.push('/')}
+            className="w-full px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider">
+            <span className="flex items-center justify-center gap-2">
+              <PixelIcon name="home" sizePreset="xs" decorative />
+              返回首頁
+            </span>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // === Password Required State (需要密碼) ===
+  if (requiresPassword && !reading) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="border-2 border-pip-boy-green bg-pip-boy-green/5 p-8 max-w-md w-full">
+          <div className="text-center mb-6">
+            <PixelIcon name="lock" sizePreset="xxl" variant="primary" className="mx-auto mb-4" decorative />
+            <h2 className="text-2xl font-bold text-pip-boy-green mb-2">需要密碼</h2>
+            <p className="text-pip-boy-green/70">此分享受密碼保護</p>
+          </div>
+
+          <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="請輸入 4-8 位數密碼"
+                maxLength={8}
+                className="w-full px-4 py-3 bg-black border-2 border-pip-boy-green text-pip-boy-green placeholder-pip-boy-green/40 focus:outline-none focus:ring-2 focus:ring-pip-boy-green"
+                autoFocus
+              />
+              {passwordError && (
+                <p className="text-red-400 text-sm mt-2 flex items-center gap-2">
+                  <PixelIcon name="alert-triangle" sizePreset="xs" variant="error" decorative />
+                  {passwordError}
+                </p>
+              )}
+            </div>
+
+            <Button
+              type="submit"
+              size="sm"
+              variant="default"
+              disabled={isLoading}
+              className="w-full px-6 py-3 transition-all duration-200 uppercase font-bold tracking-wider">
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <PixelIcon name="loader" sizePreset="xs" animation="spin" decorative />
+                  驗證中...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <PixelIcon name="lock-unlock" sizePreset="xs" decorative />
+                  解鎖
+                </span>
+              )}
+            </Button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   // === Loading State ===
   if (isLoading) {

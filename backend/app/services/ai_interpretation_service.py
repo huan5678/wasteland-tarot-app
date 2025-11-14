@@ -453,6 +453,76 @@ class AIInterpretationService:
 
         return "\n".join(prompt_parts)
 
+    async def _build_single_card_prompt_for_stream(
+        self,
+        card: WastelandCard,
+        question: str,
+        karma: KarmaAlignment,
+        faction: Optional[FactionAlignment],
+        spread_type: str
+    ) -> str:
+        """Build prompt for single card interpretation in streaming context"""
+        # Get position meaning from spread type
+        position_meanings = {
+            "single_wasteland": "核心 - 今日的生存建議與核心指引",
+            "single_wasteland_reading": "核心 - 今日的生存建議與核心指引"
+        }
+        position_meaning = position_meanings.get(spread_type, "核心指引")
+
+        prompt_parts = [
+            "【重要】請務必使用繁體中文 (zh-TW) 回答所有內容。",
+            "",
+            f"**Wasteland Card:** {card.name}",
+        ]
+
+        # Add standard tarot name mapping for accurate interpretation
+        if hasattr(card, 'standard_tarot_name') and card.standard_tarot_name:
+            prompt_parts.append(f"**Standard Tarot:** {card.standard_tarot_name_zh} ({card.standard_tarot_name})")
+            prompt_parts.append(f"**Standard Suit:** {card.standard_suit}")
+
+        prompt_parts.extend([
+            f"**Card Meaning:** {card.upright_meaning}",
+            f"**Question Asked:** {question}",
+            f"**Querent's Karma Alignment:** {karma.value}",
+        ])
+
+        if card.suit:
+            prompt_parts.append(f"**Wasteland Suit:** {card.suit}")
+
+        if card.radiation_level:
+            prompt_parts.append(f"**Radiation Level:** {card.radiation_level}/5 (intensity of change/chaos)")
+
+        # Integrate faction style if provided
+        if faction:
+            faction_style = await self._get_faction_style(faction)
+            if faction_style:
+                prompt_parts.append(f"\n**Faction Context: {faction.value}**")
+                prompt_parts.append(f"- Faction Tone: {faction_style.get('tone', 'neutral')}")
+                prompt_parts.append(f"- Faction Perspective: {faction_style.get('perspective', '')}")
+                prompt_parts.append(f"- Key Themes: {', '.join(faction_style.get('key_themes', []))}")
+
+                # Add faction style modifiers as guidance
+                style_modifiers = faction_style.get('style_modifiers', '')
+                if style_modifiers:
+                    prompt_parts.append(f"\n**Style Guidance:** {style_modifiers}")
+            else:
+                prompt_parts.append(f"**Faction Affiliation:** {faction.value}")
+
+        prompt_parts.append(f"\n**Position:** {position_meaning}")
+
+        prompt_parts.append(
+            f"\n【解讀指引】用繁體中文 (zh-TW) 回答，針對單張牌進行深入解讀："
+            f"\n1. 直接回答問題：針對「{question}」給出明確的核心洞見"
+            f"\n2. 牌義闡釋：深入解釋【{card.name}】在當前情境下的意義"
+            f"\n3. 位置意義：說明這張牌作為「{position_meaning}」的特殊指引"
+            f"\n4. 具體建議：基於牌義提供可行的行動方向或警示"
+            f"\n5. 廢土風格：融入 Fallout 世界觀、業力/陣營情境，保持角色扮演"
+            f"\n6. 字數限制：400字以內，深刻且實用"
+            f"\n\n**重要：這是單張卡牌占卜，請專注於這一張牌的完整解讀，不要提及其他牌或牌陣位置（如過去、現在、未來）。**"
+        )
+
+        return "\n".join(prompt_parts)
+
     async def _build_multi_card_prompt(
         self,
         cards: List[WastelandCard],
@@ -463,9 +533,23 @@ class AIInterpretationService:
     ) -> str:
         """Build prompt for multi-card spread interpretation with faction style integration"""
         spread_positions = {
+            # Wasteland-themed spreads
+            "single_wasteland": ["核心"],
+            "single_wasteland_reading": ["核心"],
+            "vault_tec_spread": ["過去", "現在", "未來"],
+            "wasteland_survival": ["自己", "威脅", "資源", "同盟", "結果"],
+            "wasteland_survival_spread": ["自己", "威脅", "資源", "同盟", "結果"],
+            "brotherhood_council": ["戰略", "科技", "情報", "資源", "核心", "防禦", "結論"],
+            "brotherhood_council_spread": ["戰略", "科技", "情報", "資源", "核心", "防禦", "結論"],
+            "raider_chaos": ["混亂", "機會", "生存", "未知"],
+            "raider_chaos_spread": ["混亂", "機會", "生存", "未知"],
+            "ncr_strategic": ["形勢", "民意", "資源", "戰略", "長期", "共和"],
+            "ncr_strategic_spread": ["形勢", "民意", "資源", "戰略", "長期", "共和"],
+
+            # Traditional spreads
             "three_card": ["Past", "Present", "Future"],
-            "celtic_cross": ["Present", "Challenge", "Past", "Future", "Above", "Below",
-                            "Advice", "External", "Hopes", "Outcome"],
+            "celtic_cross": ["現況", "挑戰", "過去", "未來", "顯意識", "潛意識", "自我", "環境", "盼望/恐懼", "最終結果"],
+            "horseshoe": ["過去", "現在", "未來", "建議", "外在影響", "希望與恐懼", "結果"],
             "relationship": ["You", "Them", "The Relationship"],
             "decision": ["Option A", "Option B", "Outcome if A", "Outcome if B"]
         }
@@ -626,16 +710,27 @@ class AIInterpretationService:
                 logger.warning(f"No AI config found for character voice: {character_voice}")
                 return
 
-            # Build multi-card prompt with faction style integration
-            user_prompt = await self._build_multi_card_prompt(
-                cards, question, karma, faction, spread_type
-            )
+            # Check if this is a single card spread
+            is_single_card = (len(cards) == 1) or ("single" in spread_type.lower())
 
-            # Stream from provider with more tokens for multi-card
+            if is_single_card:
+                # Use single card prompt for better focus
+                user_prompt = await self._build_single_card_prompt_for_stream(
+                    cards[0], question, karma, faction, spread_type
+                )
+                max_tokens = self.settings.ai_max_tokens
+            else:
+                # Build multi-card prompt with faction style integration
+                user_prompt = await self._build_multi_card_prompt(
+                    cards, question, karma, faction, spread_type
+                )
+                max_tokens = self.settings.ai_max_tokens * 2
+
+            # Stream from provider
             async for chunk in self.provider.generate_completion_stream(
                 system_prompt=char_prompt["system"],
                 user_prompt=user_prompt,
-                max_tokens=self.settings.ai_max_tokens * 2,
+                max_tokens=max_tokens,
                 temperature=self.settings.ai_temperature
             ):
                 yield chunk

@@ -492,12 +492,21 @@ export default function NewReadingPage() {
       console.log('[handleSaveReading] First card in cards_drawn:', sessionState.cards_drawn[0]);
 
       // CRITICAL: Directly call updateSession API with explicit session_state
+      let updatedSession;
       try {
         console.log('[handleSaveReading] Calling updateSession API...');
-        const updatedSession = await updateSession(activeSession.id, {
+        updatedSession = await updateSession(activeSession.id, {
           session_state: sessionState,
           question: question
         });
+
+        // Check if session was cleared (404/403 errors)
+        if (!updatedSession) {
+          console.error('[handleSaveReading] Session was cleared (not found or forbidden)');
+          toast.error('會話已失效', { description: '無法找到或存取此會話' });
+          throw new Error('Session was cleared');
+        }
+
         console.log('[handleSaveReading] updateSession SUCCESS:', updatedSession);
         console.log('[handleSaveReading] Updated session.session_state.cards_drawn:', updatedSession.session_state?.cards_drawn);
       } catch (updateError) {

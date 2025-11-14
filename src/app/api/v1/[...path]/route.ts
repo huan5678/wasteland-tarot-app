@@ -90,14 +90,11 @@ async function proxyRequest(
       try {
         const contentType = request.headers.get('content-type')
 
-        // For multipart/form-data (file uploads), preserve binary data
-        if (contentType?.includes('multipart/form-data')) {
-          console.log('[API Proxy] Handling multipart/form-data request')
-          body = await request.arrayBuffer()
-        } else {
-          // For other content types (JSON, text, etc.), convert to text
-          body = await request.text()
-        }
+        // 🔧 FIX: Use arrayBuffer() for all non-GET requests to preserve body stream
+        // This is critical for streaming endpoints (SSE) where request.text() would consume the stream
+        console.log(`[API Proxy] Reading ${method} request body (content-type: ${contentType})`)
+        body = await request.arrayBuffer()
+        console.log(`[API Proxy] Body size: ${body.byteLength} bytes`)
       } catch (error) {
         console.warn('[API Proxy] Failed to read request body:', error)
         // Body might be empty

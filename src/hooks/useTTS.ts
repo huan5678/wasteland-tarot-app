@@ -115,7 +115,7 @@ const ERROR_MESSAGES: Record<ErrorType, string> = {
 // ============================================================================
 
 const TTS_API_URL = '/api/v1/audio/synthesize';
-const DEFAULT_TIMEOUT = 30000; // 30 seconds
+const DEFAULT_TIMEOUT = 60000; // 60 seconds (increased for longer texts)
 const DEFAULT_VOICE = 'pip_boy';
 const DEFAULT_LANGUAGE = 'zh-TW';
 const DEFAULT_SPEED = 1.0;
@@ -204,7 +204,13 @@ export function useTTS(options: TTSOptions): TTSState {
    * 設定錯誤狀態
    */
   const setErrorState = useCallback((err: Error, type: ErrorType) => {
-    console.error('[useTTS] Error occurred:', { type, error: err });
+    // 安全地輸出錯誤（避免循環引用）
+    console.error('[useTTS] Error occurred:', {
+      type,
+      message: err?.message || 'Unknown error',
+      name: err?.name || 'Error',
+      stack: err?.stack
+    });
     setError(err);
     setUserFriendlyError(ERROR_MESSAGES[type]);
     setIsLoading(false);
@@ -275,6 +281,7 @@ export function useTTS(options: TTSOptions): TTSState {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+        credentials: 'include', // 包含認證 cookies
         signal,
       });
 
@@ -284,6 +291,11 @@ export function useTTS(options: TTSOptions): TTSState {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         const errorMessage = errorData.detail || `HTTP ${response.status}`;
+
+        console.error('[useTTS] TTS API error:', {
+          status: response.status,
+          detail: errorMessage
+        });
 
         if (response.status >= 400 && response.status < 500) {
           throw new Error(`Client Error: ${errorMessage}`);
@@ -365,8 +377,22 @@ export function useTTS(options: TTSOptions): TTSState {
       });
 
       audio.addEventListener('error', (e) => {
-        console.error('[useTTS] Audio load error:', e);
-        const err = new Error('Audio load error');
+        const target = e.target as HTMLAudioElement;
+
+        // 忽略 cleanup 造成的錯誤（src 被清空）
+        if (!target?.src || target.src === '' || target.src === window.location.href) {
+          console.warn('[useTTS] Audio error ignored (cleanup or empty src)');
+          return;
+        }
+
+        const errorCode = target?.error?.code;
+        const errorMessage = target?.error?.message || 'Audio load error';
+        console.error('[useTTS] Audio load error:', {
+          code: errorCode,
+          message: errorMessage,
+          src: target?.src
+        });
+        const err = new Error(`Audio load error: ${errorMessage} (code: ${errorCode})`);
         setErrorState(err, ErrorType.AUDIO_LOAD_ERROR);
       });
 
@@ -394,22 +420,40 @@ export function useTTS(options: TTSOptions): TTSState {
         await loadAudio();
       }
 
+      // 再次檢查：loadAudio 可能失敗，audioRef.current 仍為 null
+      if (!audioRef.current) {
+        console.warn('[useTTS] Cannot play: audio not loaded');
+        return;
+      }
+
       // 如果已完成，重新開始
       if (isComplete) {
-        audioRef.current!.currentTime = 0;
+        audioRef.current.currentTime = 0;
         setIsComplete(false);
         setProgress(0);
       }
 
-      await audioRef.current!.play();
+      await audioRef.current.play();
       setIsPlaying(true);
       setIsPaused(false);
 
       console.log('[useTTS] Playback started');
 
     } catch (err) {
-      console.error('[useTTS] Play error:', err);
       const error = err instanceof Error ? err : new Error(String(err));
+
+      // 忽略 AbortError（play 被 pause 中斷是正常的 cleanup 行為）
+      if (error.name === 'AbortError') {
+        console.warn('[useTTS] Play interrupted (AbortError ignored):', error.message);
+        return;
+      }
+
+      // 其他錯誤才記錄並設置錯誤狀態
+      console.error('[useTTS] Play error:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       setErrorState(error, ErrorType.AUDIO_LOAD_ERROR);
     }
   }, [loadAudio, isComplete, setErrorState]);
@@ -437,8 +481,20 @@ export function useTTS(options: TTSOptions): TTSState {
         setIsPaused(false);
         console.log('[useTTS] Playback resumed');
       } catch (err) {
-        console.error('[useTTS] Resume error:', err);
         const error = err instanceof Error ? err : new Error(String(err));
+
+        // 忽略 AbortError（play 被 pause 中斷是正常的 cleanup 行為）
+        if (error.name === 'AbortError') {
+          console.warn('[useTTS] Resume interrupted (AbortError ignored):', error.message);
+          return;
+        }
+
+        // 其他錯誤才記錄並設置錯誤狀態
+        console.error('[useTTS] Resume error:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack
+        });
         setErrorState(error, ErrorType.AUDIO_LOAD_ERROR);
       }
     }
@@ -494,9 +550,20 @@ export function useTTS(options: TTSOptions): TTSState {
 
     if (shouldAutoPlay && text && !isPlaying && !isLoading && !error) {
       console.log('[useTTS] Auto-play triggered');
-      play();
+      // 捕獲 promise rejection，防止 React Strict Mode 下的錯誤
+      play().catch((err) => {
+        const error = err instanceof Error ? err : new Error(String(err));
+        console.warn('[useTTS] Auto-play failed (silently handled):', {
+          message: error.message,
+          name: error.name
+        });
+        // 靜默失敗，錯誤已經在 play() 內部處理過了
+      });
     }
-  }, [autoPlay, text, isVoiceMuted, isPlaying, isLoading, error, play]);
+    // 故意不包含 play 在依賴項中，避免無限循環
+    // play() 函數內部已有完整的 null check
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay, text, isVoiceMuted, isPlaying, isLoading, error]);
 
   /**
    * Cleanup on unmount
@@ -505,10 +572,20 @@ export function useTTS(options: TTSOptions): TTSState {
     return () => {
       console.log('[useTTS] Cleanup on unmount');
 
-      // 停止播放
+      // 停止播放並清理 Audio 元素
       if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+        const audio = audioRef.current;
+
+        // 先暫停播放
+        audio.pause();
+
+        // 移除所有事件監聽器（避免觸發錯誤）
+        audio.onloadedmetadata = null;
+        audio.ontimeupdate = null;
+        audio.onended = null;
+        audio.onerror = null;
+
+        // 不要設置 src = ''，直接讓垃圾回收器處理
         audioRef.current = null;
       }
 

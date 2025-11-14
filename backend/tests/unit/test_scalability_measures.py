@@ -6,7 +6,7 @@ Tests for stateless architecture, connection pooling, caching, and database opti
 import pytest
 from unittest.mock import Mock, patch, AsyncMock
 from sqlalchemy.pool import QueuePool
-from app.core.database_pool import (
+from app.db.database import (
     get_pool_class,
     create_engine_with_pool,
     get_pool_stats,
@@ -45,10 +45,10 @@ class TestStatelessArchitecture:
 
     def test_no_module_level_connections(self):
         """Verify no module-level database connections"""
-        from app.core import database_pool
+        from app.db import database
 
         # Engine should be properly initialized, not connected
-        assert hasattr(database_pool, 'engine'), "Engine should exist"
+        assert hasattr(database, 'engine'), "Engine should exist"
         # Pool should not have active connections at import time
         # (connections created on demand)
 
@@ -254,7 +254,7 @@ class TestAutoScalingConfiguration:
 
     def test_stateless_session_management(self):
         """Test sessions don't store state between requests"""
-        from app.core.database_pool import get_db
+        from app.db.database import get_db
         import inspect
 
         # get_db should be a generator (creates new session each time)
@@ -277,7 +277,7 @@ class TestAutoScalingConfiguration:
 
     def test_no_hardcoded_resources(self):
         """Test no hardcoded connection limits that prevent scaling"""
-        from app.core.database_pool import create_engine_with_pool
+        from app.db.database import create_engine_with_pool
 
         # Pool configuration should use settings, not hardcoded values
         # This is tested by checking pool creation uses settings
@@ -315,7 +315,7 @@ class TestPerformanceOptimizations:
 
     def test_async_database_operations(self):
         """Test database operations are async (non-blocking)"""
-        from app.core.database_pool import get_db
+        from app.db.database import get_db
         import inspect
 
         # Database operations should be async
@@ -325,7 +325,7 @@ class TestPerformanceOptimizations:
     def test_connection_pool_monitoring(self):
         """Test connection pool can be monitored"""
         # Pool stats should be available for monitoring
-        from app.core.database_pool import get_pool_stats
+        from app.db.database import get_pool_stats
 
         assert callable(get_pool_stats), \
             "Pool stats should be available for monitoring"
@@ -350,7 +350,7 @@ class TestScalabilityIntegration:
     @pytest.mark.integration
     async def test_concurrent_database_access(self):
         """Test multiple concurrent database accesses"""
-        from app.core.database_pool import get_db
+        from app.db.database import get_db
         from sqlalchemy import text
         import asyncio
 
@@ -376,7 +376,7 @@ class TestScalabilityIntegration:
         initial_stats = await get_pool_stats()
 
         # Perform multiple operations
-        from app.core.database_pool import get_db
+        from app.db.database import get_db
         async for session in get_db():
             await session.execute(text("SELECT 1"))
 

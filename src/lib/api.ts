@@ -92,19 +92,43 @@ async function refreshToken(): Promise<boolean> {
   // Create new refresh promise
   refreshTokenPromise = (async () => {
     try {
+      console.log('[API] 🔄 Attempting token refresh', {
+        timestamp: new Date().toISOString()
+      })
+
       const refreshResponse = await timedFetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
         method: 'POST',
         credentials: 'include',
       })
-      return refreshResponse.ok
+
+      if (!refreshResponse.ok) {
+        const errorData = await refreshResponse.json().catch(() => ({ detail: 'Unknown error' }))
+        console.error('[API] ❌ Token refresh HTTP error', {
+          status: refreshResponse.status,
+          detail: errorData.detail
+        })
+        return false
+      }
+
+      // 成功：等待回應和 cookies 設置
+      const data = await refreshResponse.json()
+      console.log('[API] ✅ Token refresh successful', {
+        message: data.message,
+        timestamp: new Date().toISOString()
+      })
+
+      // 給瀏覽器一點時間完全設置 cookies
+      await new Promise(resolve => setTimeout(resolve, 50))
+
+      return true
     } catch (error) {
-      console.error('Token refresh failed:', error)
+      console.error('[API] ❌ Token refresh network/parse error:', error)
       return false
     } finally {
-      // Clear the lock after 100ms to allow future refreshes
+      // Clear the lock after 500ms to allow future refreshes (increased from 100ms)
       setTimeout(() => {
         refreshTokenPromise = null
-      }, 100)
+      }, 500)
     }
   })()
 
@@ -164,6 +188,9 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               endpoint
             })
 
+            // 給一點時間讓 cookies 完全生效（瀏覽器需要時間處理）
+            await new Promise(resolve => setTimeout(resolve, 100))
+
             // Token 刷新成功，重試原始請求
             const retryResponse = await timedFetch(url, {
               ...options,
@@ -181,13 +208,46 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
               }
               return retryResponse.json()
             } else {
-              // Retry also failed - token might be expired
-              console.warn('[API] ⚠️ Retry after token refresh failed', {
+              // Retry also failed
+              const retryError = await retryResponse.json().catch(() => ({ detail: 'Unknown error' }))
+
+              console.error('[API] ❌ Retry after token refresh failed', {
                 timestamp: new Date().toISOString(),
                 endpoint,
-                status: retryResponse.status
+                status: retryResponse.status,
+                detail: retryError.detail,
+                method: options.method || 'GET'
               })
-              const retryError = await retryResponse.json().catch(() => ({ detail: 'Unknown error' }))
+
+              // 如果重試後仍是 401，這表示 refresh token 也失效了，需要清除 auth state
+              if (retryResponse.status === 401) {
+                console.warn('[API] ⚠️ Refresh token also expired, clearing auth state')
+
+                if (typeof window !== 'undefined') {
+                  localStorage.removeItem('auth-store')
+
+                  import('@/lib/authStore').then(({ useAuthStore }) => {
+                    useAuthStore.setState({
+                      user: null,
+                      isOAuthUser: false,
+                      oauthProvider: null,
+                      profilePicture: null
+                    })
+                  }).catch(err => {
+                    console.error('Failed to clear auth store:', err)
+                  })
+
+                  // 只在受保護路由時重導向
+                  const currentPath = window.location.pathname
+                  const publicPaths = ['/', '/cards', '/readings/quick']
+                  const isPublicPath = publicPaths.some(path => currentPath.startsWith(path))
+
+                  if (!isPublicPath && !currentPath.startsWith('/login') && !currentPath.startsWith('/register')) {
+                    window.location.href = `/login?redirect=${encodeURIComponent(currentPath)}`
+                  }
+                }
+              }
+
               throw new APIError(retryError.detail || `HTTP ${retryResponse.status}`, retryResponse.status)
             }
           } else {

@@ -1,265 +1,338 @@
 /**
  * useTypewriter Hook
+ * Pure client-side typewriter effect for displaying text character by character
  *
- * 管理打字機動畫邏輯，支援打字與刪除雙向動畫
- * 使用 requestAnimationFrame 實作高效能動畫
+ * Designed for AI interpretation display with stable, predictable animation.
+ * Uses interval-based timing for consistent character-per-second speed.
  *
- * @example
+ * Features:
+ * - Configurable typing speed (characters per second)
+ * - Pause/Resume functionality
+ * - Skip to complete text
+ * - Speed multiplier (1x, 2x, etc.)
+ * - Optional typing sound effects
+ * - Completion callback
+ * - Auto-start support
+ *
+ * Usage:
  * ```tsx
- * const { displayText, startTyping, startDeleting } = useTypewriter({
- *   text: 'Hello World',
- *   typingSpeed: 50,
- *   deletingSpeed: 30,
- *   onTypingComplete: () => console.log('Typing done'),
- *   onDeletingComplete: () => console.log('Deleting done')
+ * const { displayedText, isTyping, skip, pause, resume } = useTypewriter({
+ *   text: "Your full text here...",
+ *   speed: 40,
+ *   autoStart: true,
+ *   onComplete: () => console.log('Done!')
  * });
  * ```
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useAudioEffect } from '@/hooks/audio/useAudioEffect';
 
-/**
- * 動畫模式
- */
-export type AnimationMode = 'typing' | 'deleting' | 'idle';
-
-/**
- * Hook 選項
- */
 export interface UseTypewriterOptions {
-  /** 要顯示的文字 */
+  /** The complete text to display with typewriter effect */
   text: string;
-  /** 打字速度（毫秒/字元，預設 50） */
-  typingSpeed?: number;
-  /** 刪除速度（毫秒/字元，預設 30，較快） */
-  deletingSpeed?: number;
-  /** 打字完成回調 */
-  onTypingComplete?: () => void;
-  /** 刪除完成回調 */
-  onDeletingComplete?: () => void;
-  /** 是否啟用動畫（預設 true） */
-  enabled?: boolean;
-  /** 無障礙：減少動畫（預設 false） */
-  prefersReducedMotion?: boolean;
+
+  /** Characters per second (default: 40) */
+  speed?: number;
+
+  /** Auto-start typing when text changes (default: true) */
+  autoStart?: boolean;
+
+  /** Enable typing sound effect (default: false) */
+  enableSound?: boolean;
+
+  /** Typing sound volume (0.0 - 1.0, default: 0.3) */
+  soundVolume?: number;
+
+  /** Sound throttle interval in ms (default: 50) */
+  soundThrottle?: number;
+
+  /** Callback when typing completes */
+  onComplete?: (text: string) => void;
+
+  /** Callback when typing starts */
+  onStart?: () => void;
 }
 
-/**
- * Hook 返回值
- */
 export interface UseTypewriterReturn {
-  /** 當前顯示的文字 */
-  displayText: string;
-  /** 是否正在執行動畫 */
-  isAnimating: boolean;
-  /** 當前動畫模式 */
-  animationMode: AnimationMode;
-  /** 進度（0-1） */
+  /** Currently displayed text */
+  displayedText: string;
+
+  /** Whether currently typing */
+  isTyping: boolean;
+
+  /** Whether typing is paused */
+  isPaused: boolean;
+
+  /** Whether typing has completed */
+  isComplete: boolean;
+
+  /** Current typing progress (0.0 - 1.0) */
   progress: number;
-  /** 開始打字 */
-  startTyping: () => void;
-  /** 開始刪除 */
-  startDeleting: () => void;
-  /** 重置動畫 */
-  reset: () => void;
-  /** 暫停動畫 */
+
+  /** Current speed multiplier */
+  currentSpeed: number;
+
+  /** Skip to full text immediately */
+  skip: () => void;
+
+  /** Pause typing */
   pause: () => void;
-  /** 恢復動畫 */
+
+  /** Resume typing */
   resume: () => void;
+
+  /** Toggle pause/resume */
+  togglePause: () => void;
+
+  /** Set speed multiplier (1 = normal, 2 = 2x speed) */
+  setSpeed: (multiplier: number) => void;
+
+  /** Restart typing from beginning */
+  restart: () => void;
 }
 
-/**
- * useTypewriter Hook
- */
-export function useTypewriter(options: UseTypewriterOptions): UseTypewriterReturn {
-  const {
-    text,
-    typingSpeed = 50,
-    deletingSpeed = 30,
-    onTypingComplete,
-    onDeletingComplete,
-    enabled = true,
-    prefersReducedMotion = false,
-  } = options;
+export function useTypewriter({
+  text,
+  speed = 40,
+  autoStart = true,
+  enableSound = false,
+  soundVolume = 0.3,
+  soundThrottle = 50,
+  onComplete,
+  onStart,
+}: UseTypewriterOptions): UseTypewriterReturn {
+  // State
+  const [displayedText, setDisplayedText] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speedMultiplier, setSpeedMultiplier] = useState(1);
 
-  // 狀態管理
-  const [displayText, setDisplayText] = useState('');
-  const [animationMode, setAnimationMode] = useState<AnimationMode>('idle');
+  // Refs for stable access in intervals
+  const textRef = useRef(text);
+  const indexRef = useRef(0);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const speedRef = useRef(speed);
+  const speedMultiplierRef = useRef(speedMultiplier);
+  const hasStartedRef = useRef(false);
+  const hasCompletedRef = useRef(false);
 
-  // 使用 ref 避免 re-render
-  const charIndexRef = useRef(0);
-  const animationFrameIdRef = useRef<number | null>(null);
-  const lastTimestampRef = useRef<number>(0);
-  const isPausedRef = useRef(false);
+  // Update refs when props change
+  useEffect(() => {
+    textRef.current = text;
+  }, [text]);
 
-  // 計算進度
-  const progress = text.length > 0 ? charIndexRef.current / text.length : 0;
-  const isAnimating = animationMode !== 'idle';
+  useEffect(() => {
+    speedRef.current = speed;
+  }, [speed]);
+
+  useEffect(() => {
+    speedMultiplierRef.current = speedMultiplier;
+  }, [speedMultiplier]);
+
+  // Typing sound effect
+  const { play: playTypingSound } = useAudioEffect({
+    soundId: 'typing-effect',
+    enabled: enableSound,
+    throttle: soundThrottle,
+    volume: soundVolume,
+  });
+
+  // Computed values
+  const isComplete = displayedText === text && text.length > 0;
+  const progress = text.length > 0 ? displayedText.length / text.length : 0;
 
   /**
-   * 取消動畫幀
+   * Clear typing interval
    */
-  const cancelAnimation = useCallback(() => {
-    if (animationFrameIdRef.current !== null) {
-      cancelAnimationFrame(animationFrameIdRef.current);
-      animationFrameIdRef.current = null;
+  const clearTyping = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
   }, []);
 
   /**
-   * requestAnimationFrame 動畫迴圈
+   * Start typing effect
    */
-  const animate = useCallback(
-    (timestamp: number) => {
-      // 如果暫停中，保持當前幀並繼續下一幀
-      if (isPausedRef.current) {
-        animationFrameIdRef.current = requestAnimationFrame(animate);
+  const startTyping = useCallback(() => {
+    if (textRef.current.length === 0) return;
+
+    // Call onStart callback (only once)
+    if (!hasStartedRef.current && onStart) {
+      onStart();
+      hasStartedRef.current = true;
+    }
+
+    setIsTyping(true);
+    setIsPaused(false);
+
+    // Clear any existing interval
+    clearTyping();
+
+    // Calculate interval based on speed and multiplier
+    const charsPerSecond = speedRef.current * speedMultiplierRef.current;
+    const intervalMs = 1000 / charsPerSecond;
+
+    intervalRef.current = setInterval(() => {
+      const currentIndex = indexRef.current;
+      const fullText = textRef.current;
+
+      if (currentIndex >= fullText.length) {
+        // Typing complete
+        clearTyping();
+        setIsTyping(false);
+
+        // Call onComplete callback (only once)
+        if (!hasCompletedRef.current && onComplete) {
+          hasCompletedRef.current = true;
+          onComplete(fullText);
+        }
         return;
       }
 
-      const currentSpeed = animationMode === 'typing' ? typingSpeed : deletingSpeed;
+      // Type next character
+      indexRef.current = currentIndex + 1;
+      const nextText = fullText.slice(0, currentIndex + 1);
+      setDisplayedText(nextText);
 
-      // 時間節流：只在達到指定速度間隔時更新
-      if (timestamp - lastTimestampRef.current >= currentSpeed) {
-        if (animationMode === 'typing') {
-          // 打字模式：逐字增加
-          if (charIndexRef.current < text.length) {
-            charIndexRef.current++;
-            setDisplayText(text.slice(0, charIndexRef.current));
-            lastTimestampRef.current = timestamp;
-          } else {
-            // 打字完成
-            cancelAnimation();
-            setAnimationMode('idle');
-            onTypingComplete?.();
-            return;
-          }
-        } else if (animationMode === 'deleting') {
-          // 刪除模式：逐字減少
-          if (charIndexRef.current > 0) {
-            charIndexRef.current--;
-            setDisplayText(text.slice(0, charIndexRef.current));
-            lastTimestampRef.current = timestamp;
-          } else {
-            // 刪除完成
-            cancelAnimation();
-            setAnimationMode('idle');
-            onDeletingComplete?.();
-            return;
-          }
-        }
+      // Play typing sound
+      if (enableSound) {
+        playTypingSound();
       }
-
-      // 繼續下一幀
-      animationFrameIdRef.current = requestAnimationFrame(animate);
-    },
-    [
-      text,
-      typingSpeed,
-      deletingSpeed,
-      animationMode,
-      onTypingComplete,
-      onDeletingComplete,
-      cancelAnimation,
-    ]
-  );
+    }, intervalMs);
+  }, [clearTyping, enableSound, playTypingSound, onComplete, onStart]);
 
   /**
-   * 開始打字動畫
+   * Skip to full text immediately
    */
-  const startTyping = useCallback(() => {
-    if (!enabled || prefersReducedMotion) {
-      // 無障礙模式：直接顯示完整文字
-      setDisplayText(text);
-      setAnimationMode('idle');
-      charIndexRef.current = text.length;
-      onTypingComplete?.();
-      return;
+  const skip = useCallback(() => {
+    clearTyping();
+    setIsTyping(false);
+    setIsPaused(false);
+    indexRef.current = textRef.current.length;
+    setDisplayedText(textRef.current);
+
+    // Call onComplete callback
+    if (!hasCompletedRef.current && onComplete) {
+      hasCompletedRef.current = true;
+      onComplete(textRef.current);
     }
-
-    // 取消現有動畫
-    cancelAnimation();
-
-    // 重置狀態
-    charIndexRef.current = 0;
-    isPausedRef.current = false;
-    setDisplayText('');
-    setAnimationMode('typing');
-    lastTimestampRef.current = 0;
-
-    // 啟動動畫迴圈
-    animationFrameIdRef.current = requestAnimationFrame(animate);
-  }, [enabled, prefersReducedMotion, text, onTypingComplete, cancelAnimation, animate]);
+  }, [clearTyping, onComplete]);
 
   /**
-   * 開始刪除動畫
-   */
-  const startDeleting = useCallback(() => {
-    if (!enabled || prefersReducedMotion) {
-      // 無障礙模式：直接清空
-      setDisplayText('');
-      setAnimationMode('idle');
-      charIndexRef.current = 0;
-      onDeletingComplete?.();
-      return;
-    }
-
-    // 取消現有動畫
-    cancelAnimation();
-
-    // 從當前顯示文字長度開始刪除
-    charIndexRef.current = displayText.length;
-    isPausedRef.current = false;
-    setAnimationMode('deleting');
-    lastTimestampRef.current = 0;
-
-    // 啟動動畫迴圈
-    animationFrameIdRef.current = requestAnimationFrame(animate);
-  }, [enabled, prefersReducedMotion, displayText, onDeletingComplete, cancelAnimation, animate]);
-
-  /**
-   * 重置動畫
-   */
-  const reset = useCallback(() => {
-    cancelAnimation();
-    setDisplayText('');
-    setAnimationMode('idle');
-    charIndexRef.current = 0;
-    isPausedRef.current = false;
-  }, [cancelAnimation]);
-
-  /**
-   * 暫停動畫
+   * Pause typing
    */
   const pause = useCallback(() => {
-    isPausedRef.current = true;
-  }, []);
+    if (isTyping && !isPaused) {
+      clearTyping();
+      setIsPaused(true);
+    }
+  }, [isTyping, isPaused, clearTyping]);
 
   /**
-   * 恢復動畫
+   * Resume typing
    */
   const resume = useCallback(() => {
-    isPausedRef.current = false;
-    lastTimestampRef.current = performance.now(); // 重置時間戳避免跳幀
-  }, []);
+    if (isPaused) {
+      startTyping();
+    }
+  }, [isPaused, startTyping]);
 
   /**
-   * Cleanup：元件卸載時清理動畫幀
+   * Toggle pause/resume
+   */
+  const togglePause = useCallback(() => {
+    if (isPaused) {
+      resume();
+    } else if (isTyping) {
+      pause();
+    }
+  }, [isPaused, isTyping, pause, resume]);
+
+  /**
+   * Set speed multiplier
+   */
+  const setSpeed = useCallback((multiplier: number) => {
+    setSpeedMultiplier(multiplier);
+
+    // Restart typing with new speed if currently typing
+    if (isTyping && !isPaused) {
+      clearTyping();
+      // Use requestAnimationFrame to avoid state update conflicts
+      requestAnimationFrame(() => {
+        startTyping();
+      });
+    }
+  }, [isTyping, isPaused, clearTyping, startTyping]);
+
+  /**
+   * Restart typing from beginning
+   */
+  const restart = useCallback(() => {
+    clearTyping();
+    indexRef.current = 0;
+    hasStartedRef.current = false;
+    hasCompletedRef.current = false;
+    setDisplayedText('');
+    setIsTyping(false);
+    setIsPaused(false);
+
+    if (autoStart) {
+      // Use setTimeout to avoid immediate re-trigger
+      setTimeout(() => startTyping(), 0);
+    }
+  }, [clearTyping, autoStart, startTyping]);
+
+  /**
+   * Auto-start typing when text changes
+   * 🔧 FIX: Only reset if text content actually changed (not just reference)
+   */
+  useEffect(() => {
+    if (text && text.length > 0 && autoStart) {
+      // 🔧 FIX: Check if text content is different from what we've already typed
+      // This prevents unnecessary resets when parent re-renders with same text
+      const currentlyDisplayed = displayedText;
+      const isNewText = text !== textRef.current || (currentlyDisplayed.length === 0 && !hasStartedRef.current);
+
+      if (isNewText) {
+        // Reset state when text actually changes
+        indexRef.current = 0;
+        hasStartedRef.current = false;
+        hasCompletedRef.current = false;
+        setDisplayedText('');
+
+        // Start typing after a short delay
+        const timer = setTimeout(() => {
+          startTyping();
+        }, 100);
+
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [text, autoStart, startTyping, displayedText]);
+
+  /**
+   * Cleanup on unmount
    */
   useEffect(() => {
     return () => {
-      cancelAnimation();
+      clearTyping();
     };
-  }, [cancelAnimation]);
+  }, [clearTyping]);
 
   return {
-    displayText,
-    isAnimating,
-    animationMode,
+    displayedText,
+    isTyping,
+    isPaused,
+    isComplete,
     progress,
-    startTyping,
-    startDeleting,
-    reset,
+    currentSpeed: speedMultiplier,
+    skip,
     pause,
     resume,
+    togglePause,
+    setSpeed,
+    restart,
   };
 }

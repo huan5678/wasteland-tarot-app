@@ -146,9 +146,8 @@ async def stream_card_interpretation(
     if not card:
         raise HTTPException(status_code=404, detail=f"Card not found: {request.card_id}")
 
-    # 🔧 CRITICAL FIX: Close database connection before streaming
-    # Streaming responses keep the connection open, causing pool exhaustion
-    await db.close()
+    # Note: Don't close database connection here - AI service needs it during streaming
+    # FastAPI's dependency injection will handle cleanup automatically
 
     async def generate_stream():
         """Generator function for streaming response with timeout protection and performance monitoring"""
@@ -334,9 +333,8 @@ async def stream_multi_card_interpretation(
     card_map = {str(card.id): card for card in cards}
     ordered_cards = [card_map[card_id] for card_id in request.card_ids]
 
-    # 🔧 CRITICAL FIX: Close database connection before streaming
-    # Streaming responses keep the connection open, causing pool exhaustion
-    await db.close()
+    # Note: Don't close database connection here - AI service needs it during streaming
+    # FastAPI's dependency injection will handle cleanup automatically
 
     async def generate_stream():
         """Generator function for streaming response with timeout protection and performance monitoring"""

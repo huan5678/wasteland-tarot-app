@@ -288,7 +288,7 @@ pool_settings = {
 #### 連接池監控
 
 ```python
-from app.core.database_pool import get_pool_stats
+from app.db.database import get_pool_stats
 
 stats = await get_pool_stats()
 # {
@@ -303,7 +303,7 @@ stats = await get_pool_stats()
 #### 健康檢查
 
 ```python
-from app.core.database_pool import check_database_health
+from app.db.database import check_database_health
 
 health = await check_database_health()
 # {
@@ -316,7 +316,7 @@ health = await check_database_health()
 
 1. **連接復用**: 使用 dependency injection
 ```python
-from app.core.database_pool import get_db
+from app.db.database import get_db
 
 @app.get("/readings")
 async def list_readings(db: AsyncSession = Depends(get_db)):
@@ -325,18 +325,19 @@ async def list_readings(db: AsyncSession = Depends(get_db)):
     return results
 ```
 
-2. **事務管理**: 使用 context manager
+2. **事務管理**: 已整合至 get_db()
 ```python
-from app.core.database_pool import DatabaseSession
+from app.db.database import get_db
 
-async with DatabaseSession(session) as db:
-    # 自動 commit/rollback
+async def endpoint_with_transaction(db: AsyncSession = Depends(get_db)):
+    # get_db() 已自動處理 commit/rollback
     result = await db.execute(query)
+    # 成功則自動 commit，錯誤則自動 rollback
 ```
 
 3. **連接清理**: 應用關閉時
 ```python
-from app.core.database_pool import close_db_connections
+from app.db.database import close_db_connections
 
 @app.on_event("shutdown")
 async def shutdown():
