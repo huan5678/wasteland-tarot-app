@@ -208,7 +208,8 @@ export function TarotFanDrawer({
       style={{
         position: 'relative',
         width: '100%',
-        height: '60vh',
+        height: '100%',
+        minHeight: deviceType === 'desktop' ? '62vh' : '56vh',
         overflow: 'hidden',
         cursor: isDragging ? 'grabbing' : 'grab',
         userSelect: 'none',

@@ -82,7 +82,7 @@ const FAN_CONFIGS: Record<'desktop' | 'mobile', FanConfig> = {
   desktop: {
     position: 'bottom-center',
     fanAngle: 360, // FULL CIRCLE: All 78 cards arranged in 360°
-    radius: 480, // Increased radius - cards closer to viewport edge
+    radius: 380, // Adjusted radius for 62vh container
     visibleCards: 25, // Number of cards visible in bottom viewport at once
     cardWidth: 120, // Much larger cards (was 100)
     cardHeight: 180, // Much larger cards (was 150)
@@ -92,7 +92,7 @@ const FAN_CONFIGS: Record<'desktop' | 'mobile', FanConfig> = {
   mobile: {
     position: 'bottom-center',
     fanAngle: 360, // FULL CIRCLE: All 78 cards arranged in 360°
-    radius: 410, // Increased radius - cards closer to viewport edge
+    radius: 320, // Adjusted radius for 56vh container
     visibleCards: 12, // Fewer cards for easier interaction
     cardWidth: 110, // Much larger cards (was 90)
     cardHeight: 165, // Much larger cards (was 135)
@@ -183,14 +183,14 @@ function useResponsiveRadius(baseRadius: number, deviceType: 'desktop' | 'mobile
   useEffect(() => {
     const updateRadius = () => {
       if (deviceType === 'desktop') {
-        // Desktop: scale based on viewport width (min 420px, max 560px)
+        // Desktop: scale based on viewport width for 62vh container
         const vw = window.innerWidth;
-        const scaledRadius = Math.min(560, Math.max(420, vw * 0.4));
+        const scaledRadius = Math.min(480, Math.max(320, vw * 0.32));
         setRadius(scaledRadius);
       } else {
-        // Mobile: also scale based on viewport width for bottom fan (min 350px, max 460px)
+        // Mobile: scale based on viewport width for 56vh container
         const vw = window.innerWidth;
-        const scaledRadius = Math.min(460, Math.max(350, vw * 0.52));
+        const scaledRadius = Math.min(380, Math.max(280, vw * 0.45));
         setRadius(scaledRadius);
       }
     };
