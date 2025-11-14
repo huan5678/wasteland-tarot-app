@@ -1,0 +1,143 @@
+# Zeabur Auto-Scaling Configuration
+# For Wasteland Tarot Platform Production Deployment
+
+# Frontend Service Configuration (Next.js)
+frontend:
+  name: wasteland-tarot-frontend
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    NODE_ENV: production
+    NEXT_PUBLIC_API_URL: ${BACKEND_URL}
+
+  # Auto-scaling configuration
+  autoscaling:
+    enabled: true
+    minReplicas: 2        # Minimum instances for high availability
+    maxReplicas: 10       # Maximum instances under load
+    targetCPU: 70         # Scale up when CPU > 70%
+    targetMemory: 80      # Scale up when Memory > 80%
+
+  # Resource limits
+  resources:
+    cpu: 1000m            # 1 CPU core
+    memory: 512Mi         # 512MB RAM
+
+  # Health check
+  healthCheck:
+    path: /api/health
+    interval: 30s
+    timeout: 10s
+    retries: 3
+
+# Backend Service Configuration (FastAPI)
+backend:
+  name: wasteland-tarot-backend
+  build:
+    context: ./backend
+    dockerfile: Dockerfile
+  environment:
+    ENVIRONMENT: production
+    DATABASE_URL: ${DATABASE_URL}
+    SUPABASE_URL: ${SUPABASE_URL}
+    SUPABASE_KEY: ${SUPABASE_KEY}
+
+  # Auto-scaling configuration
+  autoscaling:
+    enabled: true
+    minReplicas: 2        # Minimum instances for high availability
+    maxReplicas: 15       # Higher limit for backend (API-heavy)
+    targetCPU: 75         # Scale up when CPU > 75%
+    targetMemory: 85      # Scale up when Memory > 85%
+    targetRequests: 1000  # Scale up when requests > 1000/min per instance
+
+  # Resource limits
+  resources:
+    cpu: 2000m            # 2 CPU cores (more for AI processing)
+    memory: 1Gi           # 1GB RAM (increased for connection pooling)
+
+  # Health check
+  healthCheck:
+    path: /health
+    interval: 30s
+    timeout: 10s
+    retries: 3
+
+  # Database connection pool configuration (via environment variables)
+  env:
+    DATABASE_POOL_SIZE: "20"       # Connection pool size
+    DATABASE_MAX_OVERFLOW: "10"    # Max overflow connections
+    CACHE_EXPIRE_SECONDS: "3600"   # Cache TTL (1 hour)
+
+# Database Configuration (PostgreSQL via Supabase)
+# Supabase provides managed PostgreSQL with automatic scaling
+# Connection pooling is handled by SQLAlchemy in the backend
+
+# Monitoring and Logging
+monitoring:
+  enabled: true
+  metrics:
+    - cpu_usage
+    - memory_usage
+    - request_rate
+    - response_time
+    - error_rate
+
+  alerts:
+    - type: cpu
+      threshold: 90
+      duration: 5m
+    - type: memory
+      threshold: 90
+      duration: 5m
+    - type: error_rate
+      threshold: 5
+      duration: 5m
+
+# CDN Configuration (for static assets)
+cdn:
+  enabled: true
+  provider: zeabur-cdn
+  cache:
+    ttl: 3600             # 1 hour cache for static assets
+    paths:
+      - /public/*
+      - /_next/static/*
+      - /fonts/*
+
+# Load Balancing
+loadBalancer:
+  algorithm: least-connections  # Route to instance with fewest connections
+  sessionAffinity: none         # Stateless - no session stickiness required
+  healthCheck:
+    enabled: true
+    interval: 10s
+
+# SSL/TLS Configuration
+ssl:
+  enabled: true
+  provider: lets-encrypt
+  autoRenew: true
+
+# Networking
+networking:
+  allowedOrigins:
+    - https://wasteland-tarot.com
+    - https://www.wasteland-tarot.com
+
+  rateLimiting:
+    enabled: true
+    requests: 100
+    window: 1m            # 100 requests per minute per IP
+
+# Backup and Disaster Recovery (via Supabase)
+# Supabase provides automated backups for PostgreSQL
+
+# Notes:
+# 1. Stateless Architecture: Both frontend and backend are stateless
+# 2. Connection Pooling: Configured via environment variables (DATABASE_POOL_SIZE)
+# 3. Caching: In-memory cache (can be replaced with Redis for distributed caching)
+# 4. Auto-scaling: Configured based on CPU, memory, and request metrics
+# 5. High Availability: Minimum 2 replicas for each service
+# 6. Database: Managed by Supabase with automatic scaling and connection pooling
