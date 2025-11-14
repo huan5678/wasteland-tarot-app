@@ -1,50 +1,32 @@
 'use client';
 
 /**
- * ShareButton Component
+ * ShareButton Component (Updated for Task 16)
  * 占卜結果頁面的分享按鈕
  *
  * Features:
- * - 點擊生成分享連結
- * - 顯示 ShareModal
+ * - 點擊開啟分享對話框
+ * - 整合 ShareDialogIntegrated
  * - Loading 狀態
  * - 錯誤處理
  */
 
 import { useState } from 'react';
 import { PixelIcon } from '@/components/ui/icons';
-import { ShareModal } from './ShareModal';
-import { shareAPI } from '@/lib/api/share';
-import type { ShareLinkResponse } from '@/types/api';import { Button } from "@/components/ui/button";
+import { ShareDialogIntegrated } from '@/components/readings/ShareDialogIntegrated';
+import { Button } from "@/components/ui/button";
 
 interface ShareButtonProps {
   readingId: string;
+  reading?: any; // Full reading object if available
   className?: string;
 }
 
-export function ShareButton({ readingId, className = '' }: ShareButtonProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [shareData, setShareData] = useState<ShareLinkResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function ShareButton({ readingId, reading, className = '' }: ShareButtonProps) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const handleShare = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const result = await shareAPI.generateShareLink(readingId);
-      setShareData(result);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '生成分享連結失敗';
-      setError(errorMessage);
-      console.error('Failed to generate share link:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShareData(null);
+  const handleShare = () => {
+    setIsDialogOpen(true);
   };
 
   return (
@@ -53,40 +35,25 @@ export function ShareButton({ readingId, className = '' }: ShareButtonProps) {
         size="sm"
         variant="outline"
         onClick={handleShare}
-        disabled={isLoading}
         className="px-4 py-3 transition-all duration-200 uppercase font-bold tracking-wider"
-
-
-
-
         aria-label="分享占卜結果"
       >
         <span className="flex items-center justify-center gap-2">
           <PixelIcon
-            name="share"
+            name="share-line"
             sizePreset="xs"
             variant="default"
             decorative
           />
-          {isLoading ? '生成中...' : '分享結果'}
+          分享結果
         </span>
       </Button>
 
-      {error &&
-      <div
-        className="mt-2 text-red-500 text-sm"
-        role="alert">
-
-          {error}
-        </div>
-      }
-
-      {shareData &&
-      <ShareModal
-        shareUrl={shareData.share_url}
-        onClose={handleCloseModal} />
-
-      }
-    </>);
-
+      <ShareDialogIntegrated
+        open={isDialogOpen}
+        onClose={() => setIsDialogOpen(false)}
+        reading={reading || null}
+      />
+    </>
+  );
 }

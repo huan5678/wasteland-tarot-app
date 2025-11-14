@@ -4,7 +4,7 @@ Optimized pooling settings for production
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.pool import NullPool, QueuePool, StaticPool
+from sqlalchemy.pool import NullPool, StaticPool, AsyncAdaptedQueuePool
 from typing import AsyncGenerator
 import logging
 
@@ -23,8 +23,8 @@ def get_pool_class():
         # SQLite doesn't support connection pooling well
         return NullPool
     else:
-        # Use QueuePool for PostgreSQL
-        return QueuePool
+        # Use AsyncAdaptedQueuePool for PostgreSQL (async-compatible)
+        return AsyncAdaptedQueuePool
 
 
 def create_engine_with_pool():
@@ -37,11 +37,11 @@ def create_engine_with_pool():
         "poolclass": pool_class,
     }
 
-    # Only add pool parameters for QueuePool
-    if pool_class == QueuePool:
+    # Only add pool parameters for AsyncAdaptedQueuePool
+    if pool_class == AsyncAdaptedQueuePool:
         pool_settings.update({
-            "pool_size": 20,              # Base pool size
-            "max_overflow": 10,            # Additional connections when pool exhausted
+            "pool_size": settings.database_pool_size,  # Configurable pool size
+            "max_overflow": settings.database_max_overflow,  # Configurable overflow
             "pool_timeout": 30,            # Timeout for getting connection
             "pool_recycle": 3600,          # Recycle connections after 1 hour
             "pool_pre_ping": True,         # Test connections before using
@@ -124,9 +124,10 @@ async def close_db_connections():
 async def check_database_health() -> dict:
     """Check database connection health"""
     try:
+        from sqlalchemy import text
         async with AsyncSessionLocal() as session:
             # Simple query to test connection
-            result = await session.execute("SELECT 1")
+            result = await session.execute(text("SELECT 1"))
             result.scalar()
 
             return {
