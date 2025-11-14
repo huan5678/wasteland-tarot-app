@@ -2,8 +2,6 @@
  * StreamingInterpretation Component
  * Displays AI-generated tarot interpretations with real-time streaming effect
  * Features typewriter animation, skip functionality, and Fallout theme styling
- *
- * Task 2.3: Integrated TTS playback when streaming completes
  */
 
 'use client';
@@ -11,8 +9,6 @@
 import React, { useEffect } from 'react';
 import { useStreamingText } from '@/hooks/useStreamingText';
 import { Button } from "@/components/ui/button";
-import { TTSPlayer } from './TTSPlayer';
-import { useAudioStore } from '@/lib/audio/audioStore';
 
 export interface StreamingInterpretationProps {
   cardId: string;
@@ -75,13 +71,6 @@ export function StreamingInterpretation({
     onError
   });
 
-  // Task 2.3: Check audioStore settings for TTS auto-play
-  const isVoiceMuted = useAudioStore((state) => state.muted.voice);
-  const isAudioEnabled = useAudioStore((state) => state.isAudioEnabled);
-
-  // Determine if TTS should be enabled (only when streaming completes)
-  const shouldEnableTTS = streaming.isComplete && !isVoiceMuted && isAudioEnabled;
-
   // Notify parent of completion
   useEffect(() => {
     if (streaming.isComplete && onComplete) {
@@ -118,18 +107,15 @@ export function StreamingInterpretation({
 
       {/* Streaming text with typewriter effect */}
       {streaming.text &&
-      <div className="relative">
+      <div className="relative bg-black/70 p-4 border border-pip-boy-green/20 rounded mb-4">
           {/* Interpretation text */}
           <div
-          className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap mb-4"
-          style={{
-            textShadow: '0 0 10px rgba(251, 191, 36, 0.3)'
-          }}>
+          className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
 
             {streaming.text}
             {/* Blinking cursor during streaming */}
             {streaming.isStreaming &&
-          <span className="inline-block w-2 h-4 ml-1 bg-amber-500 animate-pulse" />
+          <span className="inline-block w-2 h-4 ml-1 bg-pip-boy-green animate-pulse" />
           }
           </div>
 
@@ -216,21 +202,6 @@ export function StreamingInterpretation({
           <span>Interpretation complete</span>
         </div>
       }
-
-      {/* Task 2.3: TTS Player Integration - Display when streaming completes */}
-      {streaming.isComplete && streaming.text && !streaming.error && (
-        <div className="mt-4">
-          <TTSPlayer
-            text={streaming.text}
-            enabled={shouldEnableTTS}
-            characterVoice={characterVoice}
-            onPlaybackComplete={() => {
-              console.log('[StreamingInterpretation] TTS playback completed');
-              // Optional: Trigger any additional actions after TTS completes
-            }}
-          />
-        </div>
-      )}
     </div>);
 
 }
@@ -284,13 +255,6 @@ export function MultiCardStreamingInterpretation({
     onError
   });
 
-  // Task 2.3: Check audioStore settings for TTS auto-play (Multi-card)
-  const isVoiceMuted = useAudioStore((state) => state.muted.voice);
-  const isAudioEnabled = useAudioStore((state) => state.isAudioEnabled);
-
-  // Determine if TTS should be enabled (only when streaming completes)
-  const shouldEnableTTS = streaming.isComplete && !isVoiceMuted && isAudioEnabled;
-
   return (
     <div className="multi-card-streaming-interpretation-container relative">
       {/* Retry state - TDD P0 Integration */}
@@ -315,16 +279,13 @@ export function MultiCardStreamingInterpretation({
 
       {/* Streaming text */}
       {streaming.text &&
-      <div className="relative">
+      <div className="relative bg-black/70 p-4 border border-pip-boy-green/20 rounded mb-4">
           <div
-          className="text-gray-200 text-sm leading-relaxed whitespace-pre-wrap mb-4"
-          style={{
-            textShadow: '0 0 10px rgba(251, 191, 36, 0.3)'
-          }}>
+          className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
 
             {streaming.text}
             {streaming.isStreaming &&
-          <span className="inline-block w-2 h-4 ml-1 bg-amber-500 animate-pulse" />
+          <span className="inline-block w-2 h-4 ml-1 bg-pip-boy-green animate-pulse" />
           }
           </div>
 
@@ -411,21 +372,6 @@ export function MultiCardStreamingInterpretation({
           <span>Spread interpretation complete</span>
         </div>
       }
-
-      {/* Task 2.3: TTS Player Integration - Display when streaming completes */}
-      {streaming.isComplete && streaming.text && !streaming.error && (
-        <div className="mt-4">
-          <TTSPlayer
-            text={streaming.text}
-            enabled={shouldEnableTTS}
-            characterVoice={characterVoice}
-            onPlaybackComplete={() => {
-              console.log('[MultiCardStreamingInterpretation] TTS playback completed');
-              // Optional: Trigger any additional actions after TTS completes
-            }}
-          />
-        </div>
-      )}
     </div>);
 
 }
