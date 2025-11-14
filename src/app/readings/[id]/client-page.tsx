@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { readingsAPI } from '@/lib/api';
@@ -13,7 +13,9 @@ import { useReadingsStore } from '@/lib/readingsStore';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Switch } from '@/components/ui/switch';
 import { ShareButton } from '@/components/share/ShareButton';
+import { ShareLinkManagement } from '@/components/readings/ShareLinkManagement';
 import { CardDetailModal } from '@/components/tarot/CardDetailModal';
+import { MultiCardAIInterpretation } from '@/components/readings/AIInterpretation';
 import type { WastelandCard } from '@/types/database';
 import { useAuthStore } from '@/lib/authStore';
 import { useMetadataStore } from '@/stores/metadataStore';
@@ -53,6 +55,12 @@ export default function ReadingDetailClientPage() {
   const [selectedProvider, setSelectedProvider] = useState<'openai' | 'gemini'>('openai');
   const [isRequestingAI, setIsRequestingAI] = useState(false);
   const [isTTSGenerating, setIsTTSGenerating] = useState(false);
+
+  // 🔧 FIX: Use ref to track if interpretation has been saved (prevents React Strict Mode duplicate saves)
+  const interpretationSavedRef = useRef(false);
+
+  // 🔧 FIX: Use state to control streaming enabled status (prevents multiple concurrent streams)
+  const [isStreamingEnabled, setIsStreamingEnabled] = useState(true);
 
   // Modal 狀態管理
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
@@ -219,6 +227,23 @@ export default function ReadingDetailClientPage() {
       card_index: index
     };
   }, []);
+
+  // 🔧 FIX: Memoize cardIds to prevent re-rendering during streaming
+  // Without memoization, inline array creation causes component remount on every parent re-render
+  // Use fine-grained dependencies - only recompute when card positions/draws actually change
+  const streamingCardIds = useMemo(() => {
+    if (!reading) return [];
+    if ('card_positions' in reading && reading.card_positions && reading.card_positions.length > 0) {
+      return reading.card_positions.map((pos) => pos.card_id);
+    } else if ('cards_drawn' in reading && (reading as any).cards_drawn && (reading as any).cards_drawn.length > 0) {
+      return (reading as any).cards_drawn.map((card: any) => card.card_id || card.id);
+    }
+    return [];
+  }, [
+    // Only depend on properties that affect cardIds
+    reading?.card_positions,
+    (reading as any)?.cards_drawn,
+  ]);
 
   // Memoized 計算 - 支援新舊兩種資料結構
   const cardsData = useMemo(() => {
@@ -461,11 +486,59 @@ export default function ReadingDetailClientPage() {
     }
   };
 
+  // 🔧 UX: Trigger TTS generation when fetch completes (background)
+  const handleFetchComplete = useCallback((fullText: string) => {
+    console.log('[handleFetchComplete] AI fetch complete, starting TTS generation');
+
+    // 🔧 FIX: Use ref to prevent duplicate TTS generation
+    if (interpretationSavedRef.current) {
+      console.log('[handleFetchComplete] Already processed, skipping');
+      return;
+    }
+
+    // Mark as processed immediately
+    interpretationSavedRef.current = true;
+
+    // Start TTS generation in background
+    setIsTTSGenerating(true);
+
+    // Save interpretation to backend (will trigger TTS generation)
+    readingsAPI.patch(readingId, {
+      overall_interpretation: fullText,
+      summary_message: "AI 已完成解讀",
+      prediction_confidence: 0.85
+    }).then(() => {
+      console.log('[handleFetchComplete] Interpretation saved, TTS generating in background');
+      // Note: Don't update reading state here to avoid re-render
+      // Will refresh after TTS completes
+    });
+  }, [readingId]);
+
+  // 🔧 UX: Save final state when typewriter completes
+  const handleTypingComplete = useCallback(() => {
+    console.log('[handleTypingComplete] Typewriter animation complete');
+
+    // Disable streaming to switch to static view
+    setIsStreamingEnabled(false);
+
+    // Wait for TTS generation to complete (10 seconds)
+    setTimeout(async () => {
+      const refreshed = await readingsAPI.getById(readingId);
+      if (refreshed) {
+        setReading(refreshed);
+        console.log('[handleTypingComplete] Reading refreshed with TTS audio');
+      }
+      setIsTTSGenerating(false);
+    }, 10000);
+  }, [readingId]);
+
   // 請求 AI 解讀
   const handleRequestAI = async () => {
     if (!reading || reading.ai_interpretation_requested) return;
 
     setIsRequestingAI(true);
+    // Reset the saved flag when requesting new interpretation
+    interpretationSavedRef.current = false;
 
     try {
       console.log('[handleRequestAI] 開始請求 AI 解讀');
@@ -731,76 +804,109 @@ export default function ReadingDetailClientPage() {
         }
 
         {/* AI 解讀內容 */}
-        {hasAI && reading.overall_interpretation &&
-        <div className="space-y-4">
-            {/* TTS 語音朗讀 */}
-            <div className="bg-pip-boy-green/5 p-4 border border-pip-boy-green/20 rounded">
-              <div className="flex items-center gap-2 mb-3">
-                <PixelIcon name="volume-up" sizePreset="sm" variant="primary" decorative />
-                <h4 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
-                  語音朗讀
-                </h4>
-              </div>
+        {hasAI && (
+          <div className="space-y-4">
+            {/* 🟢 如果已請求 AI 但還沒有完整文字，或文字為空，顯示串流元件 */}
+            {(() => {
+              const shouldStream = reading.ai_interpretation_requested && (!reading.overall_interpretation || reading.overall_interpretation.trim().length === 0);
+              console.log('[renderAIInterpretation] Render decision:', {
+                ai_interpretation_requested: reading.ai_interpretation_requested,
+                overall_interpretation_exists: !!reading.overall_interpretation,
+                overall_interpretation_length: reading.overall_interpretation?.length,
+                overall_interpretation_trimmed_length: reading.overall_interpretation?.trim().length,
+                shouldStream,
+                isStreamingEnabled,
+                willRenderComponent: shouldStream ? 'MultiCardStreamingInterpretation' : 'Static Content'
+              });
+              return shouldStream;
+            })() ? (
+              <MultiCardAIInterpretation
+                key="ai-streaming-component"
+                cardIds={streamingCardIds}
+                question={reading.question || '未指定問題'}
+                characterVoice={reading.character_voice_used || 'pip_boy'}
+                karmaAlignment={reading.karma_context || 'neutral'}
+                factionAlignment={reading.faction_influence}
+                spreadType={reading.spread_type || 'three_card'}
+                apiUrl="/api/v1/readings/interpretation/stream-multi"
+                enabled={isStreamingEnabled}
+                charsPerSecond={40}
+                onFetchComplete={handleFetchComplete}
+                onTypingComplete={handleTypingComplete}
+              />
+            ) : (
+              /* 🟢 串流完成後，顯示靜態內容 + TTS 播放器 */
+              <>
+                {/* TTS 語音朗讀 */}
+                <div className="bg-pip-boy-green/5 p-4 border border-pip-boy-green/20 rounded">
+                  <div className="flex items-center gap-2 mb-3">
+                    <PixelIcon name="volume-up" sizePreset="sm" variant="primary" decorative />
+                    <h4 className="text-sm font-bold text-pip-boy-green uppercase tracking-wider">
+                      語音朗讀
+                    </h4>
+                  </div>
 
-              {/* TTS 生成中 Loading 狀態 */}
-              {isTTSGenerating && !reading.interpretation_audio_url &&
-            <div className="flex flex-col items-center justify-center gap-3 py-8">
-                  <PixelIcon
-                name="loader"
-                animation="spin"
-                sizePreset="lg"
-                variant="primary"
-                decorative />
+                  {/* TTS 生成中 Loading 狀態 */}
+                  {isTTSGenerating && !reading.interpretation_audio_url && (
+                    <div className="flex flex-col items-center justify-center gap-3 py-8">
+                      <PixelIcon
+                        name="loader"
+                        animation="spin"
+                        sizePreset="lg"
+                        variant="primary"
+                        decorative
+                      />
+                      <div className="text-center">
+                        <p className="text-sm text-pip-boy-green font-bold uppercase tracking-wider mb-1">
+                          正在生成語音檔案...
+                        </p>
+                        <p className="text-xs text-pip-boy-green/60">
+                          請稍候，TTS 服務處理中
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-                  <div className="text-center">
-                    <p className="text-sm text-pip-boy-green font-bold uppercase tracking-wider mb-1">
-                      正在生成語音檔案...
-                    </p>
-                    <p className="text-xs text-pip-boy-green/60">
-                      請稍候，TTS 服務處理中
+                  {/* 音頻播放器（TTS 完成或已有音頻檔案）*/}
+                  {!isTTSGenerating && (
+                    <StoryAudioPlayer
+                      key={reading.interpretation_audio_url || 'no-audio'}
+                      audioUrl={reading.interpretation_audio_url || ""}
+                      characterName="AI 解讀"
+                      characterKey="ai_interpretation"
+                      storyText={reading.overall_interpretation}
+                      useFallback={!reading.interpretation_audio_url}
+                      volume={0.8}
+                    />
+                  )}
+                </div>
+
+                <div className="bg-black/70 p-4 border border-pip-boy-green/20 rounded">
+                  <p className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
+                    {reading.overall_interpretation}
+                  </p>
+                </div>
+
+                {reading.summary_message && (
+                  <div className="bg-pip-boy-green/5 p-3 border-l-4 border-pip-boy-green rounded">
+                    <p className="text-xs text-pip-boy-green font-bold uppercase tracking-wider">
+                      {reading.summary_message}
                     </p>
                   </div>
-                </div>
-            }
+                )}
 
-              {/* 音頻播放器（TTS 完成或已有音頻檔案）*/}
-              {!isTTSGenerating &&
-            <StoryAudioPlayer
-              key={reading.interpretation_audio_url || 'no-audio'} // 強制重新渲染當 URL 改變
-              audioUrl={reading.interpretation_audio_url || ""}
-              characterName="AI 解讀"
-              characterKey="ai_interpretation"
-              storyText={reading.overall_interpretation}
-              useFallback={!reading.interpretation_audio_url}
-              volume={0.8} />
-
-            }
-            </div>
-
-            <div className="bg-black/70 p-4 border border-pip-boy-green/20 rounded">
-              <p className="text-sm text-pip-boy-green/90 leading-relaxed whitespace-pre-wrap">
-                {reading.overall_interpretation}
-              </p>
-            </div>
-
-            {reading.summary_message &&
-          <div className="bg-pip-boy-green/5 p-3 border-l-4 border-pip-boy-green rounded">
-                <p className="text-xs text-pip-boy-green font-bold uppercase tracking-wider">
-                  {reading.summary_message}
-                </p>
-              </div>
-          }
-
-            {reading.prediction_confidence !== undefined &&
-          <div className="flex items-center gap-2 text-xs text-pip-boy-green/60">
-                <PixelIcon name="chart" sizePreset="xs" decorative />
-                <span className="uppercase tracking-wider">
-                  預測信心度: {(reading.prediction_confidence * 100).toFixed(0)}%
-                </span>
-              </div>
-          }
+                {reading.prediction_confidence !== undefined && (
+                  <div className="flex items-center gap-2 text-xs text-pip-boy-green/60">
+                    <PixelIcon name="chart" sizePreset="xs" decorative />
+                    <span className="uppercase tracking-wider">
+                      預測信心度: {(reading.prediction_confidence * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-        }
+        )}
 
         {/* 未請求時的說明 */}
         {!hasAI && !isRequestingAI &&
@@ -979,6 +1085,11 @@ export default function ReadingDetailClientPage() {
             </p>
           </div>
       }
+      </div>
+
+      {/* Share Link Management Section */}
+      <div className="mt-8">
+        <ShareLinkManagement readingId={readingId} />
       </div>
     </motion.div>;
 
