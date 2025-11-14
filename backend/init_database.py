@@ -12,7 +12,7 @@
 import asyncio
 import logging
 from sqlalchemy import text
-from app.db.database import engine
+from app.db.session import engine
 from app.models.base import Base
 from app.config import settings
 

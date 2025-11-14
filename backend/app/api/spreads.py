@@ -3,7 +3,7 @@ from typing import List, Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from app.db.database import get_db
+from app.db.session import get_db
 from app.models.reading_enhanced import SpreadTemplate
 
 router = APIRouter(prefix="/spread-templates", tags=["spreads"]) 

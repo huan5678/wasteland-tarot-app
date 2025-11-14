@@ -12,7 +12,7 @@ Task 2.2: Verify Prompt Content Integrity
 import asyncio
 import json
 from sqlalchemy import text
-from app.db.database import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal
 
 
 # 必要關鍵詞定義

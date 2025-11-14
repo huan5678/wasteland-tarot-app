@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from datetime import datetime, timedelta, timezone
 
 from app.core.dependencies import get_current_user
-from app.db.database import get_db
+from app.db.session import get_db
 from app.models.user import User
 from app.services.unified_karma_service import UnifiedKarmaService
 from app.schemas.karma import (

@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import engine, AsyncSessionLocal
+from app.db.session import engine, AsyncSessionLocal
 
 
 # Daily Tasks Initial Data (每日任務定義)

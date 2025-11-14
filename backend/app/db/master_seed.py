@@ -12,7 +12,7 @@ backend_dir = Path(__file__).parent.parent
 sys.path.append(str(backend_dir))
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import AsyncSessionLocal, init_db
+from app.db.session import AsyncSessionLocal, init_db
 from app.db.complete_wasteland_seed import create_complete_wasteland_deck
 from app.db.interpretation_templates_seed import create_interpretation_templates
 from app.db.spread_templates_seed import create_spread_templates

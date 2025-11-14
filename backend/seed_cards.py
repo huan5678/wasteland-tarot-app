@@ -8,7 +8,7 @@
 import asyncio
 import uuid
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
-from app.db.database import engine, AsyncSessionLocal
+from app.db.session import engine, AsyncSessionLocal
 from app.models.wasteland_card import WastelandCard
 
 async def seed_sample_cards():

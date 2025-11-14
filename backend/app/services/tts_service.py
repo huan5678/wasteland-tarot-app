@@ -1154,6 +1154,53 @@ class TTSService:
 
         return " ".join(markup_parts)
 
+    def _get_available_chirp3_voices(self, language_code: str) -> List[str]:
+        """
+        取得指定語言的所有可用 Chirp 3:HD 語音
+
+        Args:
+            language_code: 語言代碼（如 cmn-TW, en-US）
+
+        Returns:
+            可用的 Chirp 3:HD 語音名稱列表
+        """
+        if not self.client:
+            logger.warning("[TTSService] TTS client not initialized, cannot list voices")
+            return []
+
+        try:
+            # 使用緩存避免重複 API 調用
+            cache_key = f"chirp3_voices_{language_code}"
+            if hasattr(self, '_voice_cache') and cache_key in self._voice_cache:
+                return self._voice_cache[cache_key]
+
+            # 查詢可用語音
+            voices = self.client.list_voices(language_code=language_code)
+
+            # 過濾出 Chirp 3:HD 語音
+            chirp3_voices = [
+                voice.name
+                for voice in voices.voices
+                if "Chirp3-HD" in voice.name
+            ]
+
+            # 緩存結果
+            if not hasattr(self, '_voice_cache'):
+                self._voice_cache = {}
+            self._voice_cache[cache_key] = chirp3_voices
+
+            logger.info(
+                f"[TTSService] Found {len(chirp3_voices)} Chirp 3:HD voices for {language_code}"
+            )
+
+            return chirp3_voices
+
+        except Exception as e:
+            logger.error(
+                f"[TTSService] Failed to list voices for {language_code}: {str(e)}"
+            )
+            return []
+
     def _is_chirp3_language_supported(self, language_code: str) -> bool:
         """
         檢查語言是否支援 Chirp 3:HD
@@ -1331,6 +1378,23 @@ class TTSService:
         voice_name = f"{language_code}-Chirp3-HD-{star_name}"
         logger.info(f"[TTSService] Built voice name: {voice_name} (language: {language_code}, star: {star_name})")
 
+        # 驗證語音是否存在，如果不存在則使用該語言的第一個可用 Chirp 3:HD 語音
+        available_voices = self._get_available_chirp3_voices(language_code)
+        if voice_name not in available_voices:
+            if available_voices:
+                fallback_voice = available_voices[0]
+                logger.warning(
+                    f"[TTSService] Voice '{voice_name}' not available. "
+                    f"Using fallback: {fallback_voice}. "
+                    f"Available voices for {language_code}: {', '.join(available_voices[:5])}"
+                )
+                voice_name = fallback_voice
+            else:
+                raise ValueError(
+                    f"No Chirp 3:HD voices available for language '{language_code}'. "
+                    f"This language may not be supported by Chirp 3:HD."
+                )
+
         # 取得語音參數
         pitch, rate = self.convert_voice_params(character_key)
         voice_config = self.get_voice_config(character_key)
@@ -1354,8 +1418,11 @@ class TTSService:
         )
 
         # 創建合成輸入
+        # Chirp 3:HD 單說話者模式：直接使用 text 參數包含 markup tags
+        # Markup tags（如 [pause], [pitch], [pace], [ipa]）會被 API 自動識別
+        # 參考：https://cloud.google.com/text-to-speech/docs/chirp3-hd#markup
         synthesis_input = texttospeech.SynthesisInput(
-            markup=markup_text
+            text=markup_text
         )
 
         # 創建語音參數

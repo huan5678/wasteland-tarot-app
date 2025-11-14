@@ -8,7 +8,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, field_validator
 import re
-from app.db.database import get_db
+from app.db.session import get_db
 from app.services.user_service import UserService, AuthenticationService
 from app.services.karma_service import KarmaService
 from app.core.dependencies import get_current_user, get_current_active_user

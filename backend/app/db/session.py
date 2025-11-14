@@ -42,12 +42,17 @@ else:
         pool_recycle=3600,  # Recycle connections every hour to prevent stale connections
         pool_timeout=30,  # Connection timeout
         connect_args={
+            # Supabase/PgBouncer Transaction Mode optimizations
             "statement_cache_size": 0,  # Disable asyncpg statement cache (CRITICAL for Transaction mode)
             "prepared_statement_cache_size": 0,  # Additional safety
             "prepared_statement_name_func": lambda: f"__pstmt_{uuid.uuid4().hex[:8]}__",  # Generate unique prepared statement names
+            # Timeout settings to prevent "connection closed" errors
+            "command_timeout": 30,  # Command execution timeout (30s)
+            "timeout": 60,  # Connection close timeout (60s, prevents asyncpg.ConnectionDoesNotExistError)
             "server_settings": {
                 "jit": "off",  # Disable JIT compilation to save memory
                 "application_name": "wasteland-tarot",
+                "search_path": "public",  # Set default schema
             }
         },
         # CRITICAL: Disable SQLAlchemy's internal prepared statement optimization
@@ -126,35 +131,33 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
         - Always closes the session when done
         - Thread-safe and async-compatible
     """
-    session: Optional[AsyncSession] = None
+    # 🔧 FIX: Do NOT use async with + yield (prevents proper cleanup)
+    # Create session directly to ensure finally block always executes
+    session = AsyncSessionLocal()
     try:
-        async with AsyncSessionLocal() as session:
-            yield session
-            # Explicit commit on successful completion
-            await session.commit()
+        yield session
+        # Explicit commit on successful completion
+        await session.commit()
     except HTTPException:
         # Re-raise HTTPException without modification (preserve status code)
-        if session:
-            await session.rollback()
-            logger.debug("Session rolled back due to HTTPException")
+        await session.rollback()
+        logger.debug("Session rolled back due to HTTPException")
         raise
     except Exception as e:
         logger.error(
             f"Database session error: {str(e)}",
             exc_info=True,
             extra={
-                "error_type": type(e).__name__,
-                "has_session": session is not None
+                "error_type": type(e).__name__
             }
         )
-        if session:
-            await session.rollback()
-            logger.debug("Session rolled back successfully")
+        await session.rollback()
+        logger.debug("Session rolled back successfully")
         raise DatabaseConnectionError()
     finally:
-        if session:
-            await session.close()
-            logger.debug("Session closed")
+        # Finally block ALWAYS executes, ensuring connection returns to pool
+        await session.close()
+        logger.debug("Session closed")
 
 
 async def get_db_session() -> AsyncSession:
@@ -214,6 +217,66 @@ class DatabaseManager:
         except Exception as e:
             logger.error(f"Error closing database connections: {str(e)}")
 
+    async def get_pool_stats(self) -> dict:
+        """
+        Get connection pool statistics.
+
+        Returns:
+            dict: Pool statistics including size, checked in/out connections
+        """
+        pool = self.engine.pool
+
+        stats = {
+            "pool_size": getattr(pool, 'size', lambda: 0)(),
+            "checked_in": getattr(pool, 'checkedin', lambda: 0)(),
+            "checked_out": getattr(pool, 'checkedout', lambda: 0)(),
+            "overflow": getattr(pool, 'overflow', lambda: 0)(),
+            "max_overflow": getattr(pool, '_max_overflow', 0),
+        }
+
+        return stats
+
+    async def check_database_health(self) -> dict:
+        """
+        Check database connection health with detailed stats.
+
+        Returns:
+            dict: Health status and pool statistics
+        """
+        try:
+            from sqlalchemy import text
+            async with self.session_factory() as session:
+                # Simple query to test connection
+                result = await session.execute(text("SELECT 1"))
+                result.scalar()
+
+                return {
+                    "status": "healthy",
+                    "pool_stats": await self.get_pool_stats()
+                }
+        except Exception as e:
+            logger.error(f"Database health check failed: {str(e)}")
+            return {
+                "status": "unhealthy",
+                "error": str(e)
+            }
+
 
 # Global database manager instance
 db_manager = DatabaseManager()
+
+
+# Module-level functions for backward compatibility
+async def get_pool_stats() -> dict:
+    """Get connection pool statistics (backward compatibility wrapper)."""
+    return await db_manager.get_pool_stats()
+
+
+async def check_database_health() -> dict:
+    """Check database health (backward compatibility wrapper)."""
+    return await db_manager.check_database_health()
+
+
+async def close_db_connections() -> None:
+    """Close all database connections (backward compatibility wrapper)."""
+    await db_manager.close_connections()

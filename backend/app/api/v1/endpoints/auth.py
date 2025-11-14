@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.db.database import get_db
+from app.db.session import get_db
 from app.models.user import User
 from app.core.dependencies import get_current_user
 from app.core.security import (

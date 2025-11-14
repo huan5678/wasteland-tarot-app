@@ -9,7 +9,7 @@
 
 import asyncio
 from sqlalchemy import select, func, update
-from app.db.database import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal
 from app.models.user import User
 from app.models.reading_session import ReadingSession
 

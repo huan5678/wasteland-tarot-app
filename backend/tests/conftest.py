@@ -47,7 +47,7 @@ if 'app.models.user' in sys.modules:
 
 # Now it's safe to import models
 from app.models.base import BaseModel
-from app.db.database import get_db
+from app.db.session import get_db
 
 # Use in-memory SQLite for tests
 SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"

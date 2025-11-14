@@ -13,7 +13,7 @@ import asyncio
 import json
 import re
 from sqlalchemy import text
-from app.db.database import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal
 
 
 # 心理學概念深度檢查

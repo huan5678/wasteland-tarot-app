@@ -9,7 +9,7 @@ from typing import List
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
 
-from app.db.database import async_session_maker
+from app.db.session import AsyncSessionLocal
 from app.services.quest_service import QuestService
 from app.models.user import User
 
@@ -48,7 +48,7 @@ async def daily_quest_reset_task():
     """Task 4.1: Daily Quest Reset - Every day at 00:00 UTC"""
     print(f"[{datetime.now(timezone.utc)}] Starting daily quest reset...")
     
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         try:
             users = await get_active_users(db, limit=10000)
             print(f"Found {len(users)} active users")
@@ -73,7 +73,7 @@ async def weekly_quest_reset_task():
     """Task 4.2: Weekly Quest Reset - Every Monday at 00:00 UTC"""
     print(f"[{datetime.now(timezone.utc)}] Starting weekly quest reset...")
     
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         try:
             users = await get_active_users(db, limit=10000)
             print(f"Found {len(users)} active users")
@@ -98,7 +98,7 @@ async def cleanup_expired_quests_task():
     """Task 4.3: Cleanup Expired Quests - Daily at 01:00 UTC"""
     print(f"[{datetime.now(timezone.utc)}] Starting expired quest cleanup...")
     
-    async with async_session_maker() as db:
+    async with AsyncSessionLocal() as db:
         try:
             query = """
                 UPDATE user_quest_progress

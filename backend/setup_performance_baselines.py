@@ -22,7 +22,7 @@ from app.monitoring.performance import performance_monitor, run_load_test
 from app.services.user_service import UserService, AuthenticationService
 from app.services.wasteland_card_service import WastelandCardService
 from app.services.reading_service import ReadingService
-from app.db.database import get_db
+from app.db.session import get_db
 from app.db.seed_data import seed_database
 
 

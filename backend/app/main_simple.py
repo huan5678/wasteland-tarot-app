@@ -11,7 +11,7 @@ from app.config import settings
 # Import only basic working modules
 from app.api import cards  # Basic cards API
 from app.api.v1 import music_router  # Music system API
-from app.db.database import init_db
+from app.db.session import init_db
 
 
 @asynccontextmanager

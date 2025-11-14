@@ -9,7 +9,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response, Cookie
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr
-from app.db.database import get_db
+from app.db.session import get_db
 from app.services.oauth_service import create_or_update_oauth_user
 from app.services.karma_service import KarmaService
 from app.services.auth_method_coordinator import AuthMethodCoordinatorService

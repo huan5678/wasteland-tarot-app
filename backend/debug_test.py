@@ -9,7 +9,7 @@ from app.main import app
 from app.models.wasteland_card import CharacterVoice
 from app.services.user_service import UserService
 from app.core.security import create_access_token
-from app.db.database import get_db
+from app.db.session import get_db
 import uuid
 
 async def test_reading_creation():

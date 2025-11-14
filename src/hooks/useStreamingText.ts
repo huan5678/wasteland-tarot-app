@@ -89,7 +89,7 @@ export interface StreamingTextOptions {
   // 🟢 TDD P0: Retry options
   maxRetries?: number;      // Maximum number of retries (default: 3)
   retryDelay?: number;      // Initial retry delay in ms (default: 1000)
-  timeout?: number;         // Request timeout in ms (default: 60000)
+  timeout?: number;         // Request timeout in ms (default: 130000, backend timeout: 120s)
   // 🟢 TDD P1: Audio options
   enableTypingSound?: boolean;  // Enable typing sound effect (default: false)
   soundThrottle?: number;       // Sound throttle interval in ms (default: 50)
@@ -166,7 +166,7 @@ export function useStreamingText({
   // 🟢 TDD P0: Retry parameters
   maxRetries = 3,
   retryDelay = 1000,
-  timeout = 60000,  // Increased to 60s for longer AI interpretations
+  timeout = 130000,  // Increased to 130s (backend timeout 120s + 10s buffer)
   // 🟢 TDD P1: Audio parameters
   enableTypingSound = false,
   soundThrottle = 50,

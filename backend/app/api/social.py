@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, Field
 import logging
 
-from app.db.database import get_db
+from app.db.session import get_db
 from app.services.social_service import SocialService
 from app.services.achievement_service import AchievementService
 from app.services.achievement_background_tasks import schedule_achievement_check

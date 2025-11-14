@@ -137,11 +137,14 @@ class Settings(BaseSettings):
     ai_fallback_to_template: bool = Field(True, env="AI_FALLBACK_TO_TEMPLATE")
 
     # Streaming Configuration
-    streaming_timeout: int = Field(60, env="STREAMING_TIMEOUT")  # seconds (default 60)
+    # 增加到 120 秒以應對較長的 AI 解讀（多卡牌陣可能需要更長時間）
+    streaming_timeout: int = Field(120, env="STREAMING_TIMEOUT")  # seconds (default 120)
 
-    # Performance Settings - Optimized for lower memory usage
-    database_pool_size: int = Field(3, env="DATABASE_POOL_SIZE")  # Further reduced from 5 (saves more memory)
-    database_max_overflow: int = Field(5, env="DATABASE_MAX_OVERFLOW")  # Allow some overflow for bursts
+    # Performance Settings - Balanced for concurrent requests
+    # Dashboard 登入時會同時發送多個請求 (achievements, karma, daily check-in)
+    # pool_size=10 + max_overflow=10 = 支援最多 20 個並發請求
+    database_pool_size: int = Field(10, env="DATABASE_POOL_SIZE")  # Increased from 3 to handle concurrent requests
+    database_max_overflow: int = Field(10, env="DATABASE_MAX_OVERFLOW")  # Allow burst traffic
     cache_expire_seconds: int = 3600  # 1 hour
     
     # Feature Flags - Memory Optimization (disable non-critical startup tasks)

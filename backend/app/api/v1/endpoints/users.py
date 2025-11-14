@@ -14,7 +14,7 @@ import httpx
 import hashlib
 from datetime import datetime
 
-from app.db.database import get_db
+from app.db.session import get_db
 from app.core.dependencies import get_current_user
 from app.core.supabase import get_supabase_client
 from app.models.user import User, UserProfile

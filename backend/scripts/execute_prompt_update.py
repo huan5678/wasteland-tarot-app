@@ -5,7 +5,7 @@ import asyncio
 import sys
 from pathlib import Path
 from sqlalchemy import text
-from app.db.database import AsyncSessionLocal
+from app.db.session import AsyncSessionLocal
 
 
 async def execute_sql_update():

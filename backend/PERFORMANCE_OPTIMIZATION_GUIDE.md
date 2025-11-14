@@ -288,7 +288,7 @@ pool_settings = {
 #### 連接池監控
 
 ```python
-from app.db.database import get_pool_stats
+from app.db.session import get_pool_stats
 
 stats = await get_pool_stats()
 # {
@@ -303,7 +303,7 @@ stats = await get_pool_stats()
 #### 健康檢查
 
 ```python
-from app.db.database import check_database_health
+from app.db.session import check_database_health
 
 health = await check_database_health()
 # {
@@ -316,7 +316,7 @@ health = await check_database_health()
 
 1. **連接復用**: 使用 dependency injection
 ```python
-from app.db.database import get_db
+from app.db.session import get_db
 
 @app.get("/readings")
 async def list_readings(db: AsyncSession = Depends(get_db)):
@@ -327,7 +327,7 @@ async def list_readings(db: AsyncSession = Depends(get_db)):
 
 2. **事務管理**: 已整合至 get_db()
 ```python
-from app.db.database import get_db
+from app.db.session import get_db
 
 async def endpoint_with_transaction(db: AsyncSession = Depends(get_db)):
     # get_db() 已自動處理 commit/rollback
@@ -337,7 +337,7 @@ async def endpoint_with_transaction(db: AsyncSession = Depends(get_db)):
 
 3. **連接清理**: 應用關閉時
 ```python
-from app.db.database import close_db_connections
+from app.db.session import close_db_connections
 
 @app.on_event("shutdown")
 async def shutdown():

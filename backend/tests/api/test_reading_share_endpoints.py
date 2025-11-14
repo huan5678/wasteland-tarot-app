@@ -84,7 +84,7 @@ def client(db_session):
     """Create a test client with database session override"""
     from fastapi.testclient import TestClient
     from app.main import app
-    from app.db.database import get_db
+    from app.db.session import get_db
 
     def override_get_db():
         try:

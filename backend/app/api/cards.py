@@ -6,7 +6,7 @@ Enhanced with user authentication support
 from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.database import get_db
+from app.db.session import get_db
 from app.services.wasteland_card_service import WastelandCardService
 from app.core.dependencies import get_current_user, get_optional_user
 from app.models.user import User

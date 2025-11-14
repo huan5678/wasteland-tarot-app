@@ -90,7 +90,7 @@ async def run_user_load_test(
 ):
     """Run load test for user operations (authenticated users only)"""
     from app.services.user_service import UserService
-    from app.db.database import get_db
+    from app.db.session import get_db
 
     async def test_user_operations():
         # Simulate user operations
@@ -125,7 +125,7 @@ async def run_card_load_test(
 ):
     """Run load test for card operations (public endpoint)"""
     from app.services.wasteland_card_service import WastelandCardService
-    from app.db.database import get_db
+    from app.db.session import get_db
 
     async def test_card_operations():
         # Simulate card operations
