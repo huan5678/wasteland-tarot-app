@@ -44,6 +44,8 @@ interface AuthState {
   refreshAuthMethods: () => Promise<void>
   // 頭像管理
   updateAvatarUrl: (avatarUrl: string) => void
+  // Token 自動續期
+  tryRefreshToken: () => Promise<boolean>
 }
 
 // Token 儲存在 httpOnly cookies 中，由後端管理
@@ -277,33 +279,54 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
       reportProgress(100)
 
-      // 重要修正（2025-10-30）：
-      // 如果有持久化的用戶資料且 auth state 有效，暫時保留登入狀態
-      // 但**不啟動監控**，避免過度檢查導致誤判登出
-      // 讓下次 API 請求自然處理 401 錯誤
-      if (hasValidAuthState && get().user) {
-        console.log('[AuthStore] ⚠️ Initialize: Using localStorage fallback', {
+      // 🔧 改進的 fallback 邏輯（2025-11-14）：
+      // 區分 401 認證錯誤 vs 網路錯誤
+      const is401Error = error?.status === 401 || error?.message?.includes('401')
+      const isNetworkError = !error?.status && (
+        error?.message?.includes('fetch') ||
+        error?.message?.includes('network') ||
+        error?.message?.includes('timeout')
+      )
+
+      if (is401Error) {
+        // Token 確實過期，清除登入狀態
+        console.log('[AuthStore] 🔒 Initialize: Token expired (401), clearing auth state', {
+          timestamp: new Date().toISOString(),
+          reason: '401 Unauthorized - Token expired or invalid'
+        })
+        clearAuthState()
+
+        set({
+          user: null,
+          isOAuthUser: false,
+          oauthProvider: null,
+          profilePicture: null,
+          isLoading: false,
+          isInitialized: true,
+        })
+      } else if (isNetworkError && hasValidAuthState && get().user) {
+        // 網路問題，暫時保留登入狀態
+        console.log('[AuthStore] ⚠️ Initialize: Network error, using localStorage fallback', {
           timestamp: new Date().toISOString(),
           hasValidAuthState,
           user: get().user?.email,
-          reason: 'Backend validation failed but localStorage state is valid'
+          reason: 'Network error - temporary failure'
         })
         set({
           isLoading: false,
           isInitialized: true,
           // 保留 user、isOAuthUser 等資料
-          // 不設定 error，避免顯示錯誤訊息
         })
 
-        // 修復：不啟動 token 監控，避免誤判
-        // 原因：後端驗證失敗可能是暫時性網路問題
-        // 應該讓下次 API 請求自然地處理 401 錯誤
-        // get().startTokenExpiryMonitor()  // ⚠️ 已移除
+        // 🔧 嘗試使用 refresh token 續期
+        get().tryRefreshToken().catch(err => {
+          console.warn('[AuthStore] Auto refresh failed:', err)
+        })
       } else {
-        // auth state 已過期或沒有持久化資料，清除登入狀態
+        // 其他錯誤或無有效狀態，清除登入
         console.log('[AuthStore] 🔒 Initialize: Clearing auth state', {
           timestamp: new Date().toISOString(),
-          reason: 'Token expired or invalid',
+          reason: 'Unknown error or invalid state',
           hasValidAuthState,
           hasUser: !!get().user
         })
@@ -316,7 +339,6 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
           profilePicture: null,
           isLoading: false,
           isInitialized: true,
-          // 不設定 error，避免顯示 toast
         })
       }
     }
@@ -530,16 +552,17 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
   },
 
   /**
-   * 啟動 Token 過期監控
+   * 啟動 Token 過期監控（帶自動續期）
    *
-   * 修復日誌（2025-10-30）：
-   * - 降低檢查頻率從 5 分鐘改為 10 分鐘
-   * - 搭配 isAuthStateValid() 的 1 分鐘緩衝
-   * - 避免過於激進的登出檢查
+   * 升級日誌（2025-11-14）：
+   * - 加入自動續期機制：token 剩餘 5 分鐘時自動呼叫 refresh
+   * - 每 3 分鐘檢查一次（平衡效能與及時性）
+   * - 續期失敗時才執行登出
    *
-   * 每 10 分鐘檢查一次 token 狀態：
-   * - 如果 token 過期且使用者仍在登入狀態，自動登出
-   * - 降低檢查頻率以減少效能消耗和誤判機率
+   * 檢查邏輯：
+   * 1. 如果 token 剩餘 > 5 分鐘：繼續監控
+   * 2. 如果 token 剩餘 ≤ 5 分鐘：嘗試自動續期
+   * 3. 如果續期失敗或 token 已過期：自動登出
    */
   startTokenExpiryMonitor: () => {
     // 只在瀏覽器環境執行
@@ -550,27 +573,64 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       clearInterval(tokenExpiryTimerId)
     }
 
-    console.log('[AuthStore] 🔄 Token expiry monitor started', {
+    console.log('[AuthStore] 🔄 Token expiry monitor started (with auto-refresh)', {
       timestamp: new Date().toISOString(),
-      checkInterval: '10 minutes'
+      checkInterval: '3 minutes',
+      autoRefreshThreshold: '5 minutes remaining'
     })
 
-    // 每 10 分鐘檢查一次（降低頻率，避免過度檢查）
-    tokenExpiryTimerId = setInterval(() => {
+    // 每 3 分鐘檢查一次
+    tokenExpiryTimerId = setInterval(async () => {
       const state = get()
 
-      // 如果使用者已登入，檢查 token 是否過期
-      if (state.user && !isAuthStateValid()) {
-        console.warn('[AuthStore] ⚠️ TOKEN EXPIRED - Auto logout triggered by monitor', {
+      // 如果使用者未登入，停止監控
+      if (!state.user) {
+        get().stopTokenExpiryMonitor()
+        return
+      }
+
+      // 檢查 token 狀態
+      const authStateStr = localStorage.getItem('pip-boy-auth-state')
+      if (!authStateStr) {
+        console.warn('[AuthStore] ⚠️ No auth state found, logging out')
+        get().logout()
+        return
+      }
+
+      try {
+        const authState = JSON.parse(authStateStr)
+        const currentTimestamp = Math.floor(Date.now() / 1000)
+        const remainingSeconds = authState.expiresAt - currentTimestamp
+
+        console.log('[AuthStore] ⏰ Token status check', {
           timestamp: new Date().toISOString(),
-          user: state.user.email,
-          authMethod: state.authMethod
+          remainingMinutes: Math.floor(remainingSeconds / 60),
+          expiresAt: new Date(authState.expiresAt * 1000).toISOString()
         })
 
-        // 自動登出
-        get().logout()
+        // 如果 token 剩餘 ≤ 5 分鐘，嘗試自動續期
+        if (remainingSeconds <= 5 * 60 && remainingSeconds > 0) {
+          console.log('[AuthStore] 🔄 Token expiring soon, attempting auto-refresh')
+          const refreshSuccess = await get().tryRefreshToken()
+
+          if (!refreshSuccess) {
+            console.warn('[AuthStore] ⚠️ Auto-refresh failed, logging out')
+            get().logout()
+          } else {
+            console.log('[AuthStore] ✅ Token auto-refreshed successfully')
+          }
+        } else if (remainingSeconds <= 0) {
+          // Token 已過期
+          console.warn('[AuthStore] ⚠️ TOKEN EXPIRED - Auto logout triggered', {
+            timestamp: new Date().toISOString(),
+            user: state.user.email
+          })
+          get().logout()
+        }
+      } catch (error) {
+        console.error('[AuthStore] ❌ Error checking token status:', error)
       }
-    }, 10 * 60 * 1000) // 10 分鐘 = 600 秒（原本 5 分鐘過於頻繁）
+    }, 3 * 60 * 1000) // 3 分鐘檢查一次
   },
 
   /**
@@ -743,6 +803,48 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         avatar_url: avatarUrl
       }
     })
+  },
+
+  /**
+   * 嘗試使用 refresh token 續期
+   *
+   * 呼叫後端 /api/v1/auth/refresh 端點，使用 httpOnly cookie 中的 refresh_token
+   * 來獲取新的 access_token 和 refresh_token。
+   *
+   * @returns Promise<boolean> - 成功返回 true，失敗返回 false
+   */
+  tryRefreshToken: async () => {
+    console.log('[AuthStore] 🔄 嘗試使用 refresh token 續期...')
+
+    try {
+      // 呼叫後端 refresh API（會自動使用 httpOnly cookie 中的 refresh_token）
+      const response = await fetch('/api/v1/auth/refresh', {
+        method: 'POST',
+        credentials: 'include', // 確保發送 cookies
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        console.warn('[AuthStore] ⚠️ Refresh token 續期失敗:', response.status)
+        return false
+      }
+
+      const data = await response.json()
+      console.log('[AuthStore] ✅ Token 續期成功')
+
+      // 從 response header 中提取新的 token 過期時間
+      // 注意：後端會自動設定新的 httpOnly cookies，我們只需要更新 localStorage
+      // 假設 token 有效期為 1 小時
+      const newExpiresAt = Math.floor(Date.now() / 1000) + 3600 // 當前時間 + 1 小時
+      saveAuthState(newExpiresAt)
+
+      return true
+    } catch (error) {
+      console.error('[AuthStore] ❌ Refresh token 續期失敗:', error)
+      return false
+    }
   }
 }), {
   name: 'auth-store',

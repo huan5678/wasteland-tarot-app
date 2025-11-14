@@ -238,44 +238,50 @@ async def list_reading_shares(
     - **id**: Reading ID
     - **active_only**: Filter only active shares
     """
-    # Get reading and verify ownership
-    result = await db.execute(select(CompletedReading).where(CompletedReading.id == id))
-    reading = result.scalar_one_or_none()
+    # WORKAROUND: Use Supabase SDK to avoid SQLAlchemy prepared statement issues with Supabase pooler
+    from app.core.supabase import get_supabase_client
+    supabase = get_supabase_client()
 
-    if not reading:
+    # Get reading and verify ownership using Supabase SDK
+    reading_result = supabase.table("completed_readings").select("id, user_id").eq("id", id).execute()
+
+    if not reading_result.data or len(reading_result.data) == 0:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="找不到此解讀記錄",
         )
 
+    reading = reading_result.data[0]
+
     # Verify ownership
-    if str(reading.user_id) != str(current_user.id):
+    if str(reading["user_id"]) != str(current_user.id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="無權查看此解讀的分享記錄",
         )
 
-    # Get shares
-    query = select(ReadingShare).where(ReadingShare.reading_id == id)
+    # Get shares using Supabase SDK
+    shares_query = supabase.table("reading_shares").select("*").eq("reading_id", id)
 
     if active_only:
-        query = query.where(ReadingShare.is_active == True)
+        shares_query = shares_query.eq("is_active", True)
 
-    query = query.order_by(ReadingShare.created_at.desc())
-    result = await db.execute(query)
-    shares = result.scalars().all()
+    shares_query = shares_query.order("created_at", desc=True)
+    shares_result = shares_query.execute()
+
+    shares_data = shares_result.data if shares_result.data else []
 
     # Convert to response format
     share_list = [
         ShareListItem(
-            uuid=share.uuid,
-            url=f"https://wasteland-tarot.com/share/{share.uuid}",
-            access_count=share.access_count,
-            is_active=share.is_active,
-            created_at=share.created_at,
-            has_password=share.password_hash is not None,
+            uuid=share["uuid"],
+            url=f"https://wasteland-tarot.com/share/{share['uuid']}",
+            access_count=share["access_count"],
+            is_active=share["is_active"],
+            created_at=datetime.fromisoformat(share["created_at"].replace("Z", "+00:00")),
+            has_password=share["password_hash"] is not None,
         )
-        for share in shares
+        for share in shares_data
     ]
 
     return {"shares": share_list}

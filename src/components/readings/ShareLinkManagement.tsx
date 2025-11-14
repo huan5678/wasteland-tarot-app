@@ -16,6 +16,7 @@
 import React, { useState, useEffect } from 'react';
 import { useShareReading } from '@/hooks/useShareReading';
 import { PixelIcon } from '@/components/ui/icons';
+import { useAuthStore } from '@/lib/authStore';
 
 interface Share {
   uuid: string;
@@ -41,11 +42,17 @@ export const ShareLinkManagement: React.FC<ShareLinkManagementProps> = ({
   const [copyStatus, setCopyStatus] = useState<string | null>(null);
 
   const { listShares, revokeShareLink, loading, error } = useShareReading();
+  const { user, isInitialized } = useAuthStore();
 
-  // Load shares on mount and when filter changes
+  // Load shares on mount and when filter changes (only if user is logged in and auth is initialized)
   useEffect(() => {
-    loadShares();
-  }, [readingId, showActiveOnly]);
+    // Only load shares if:
+    // 1. Auth is initialized (avoid loading with stale localStorage data)
+    // 2. User is logged in (has valid token)
+    if (isInitialized && user) {
+      loadShares();
+    }
+  }, [readingId, showActiveOnly, user, isInitialized]);
 
   const loadShares = async () => {
     try {
@@ -90,6 +97,40 @@ export const ShareLinkManagement: React.FC<ShareLinkManagementProps> = ({
       minute: '2-digit',
     });
   };
+
+  // If auth is not initialized or user is not logged in, show a message
+  if (!isInitialized || !user) {
+    return (
+      <div className="bg-pip-boy-dark border-2 border-pip-boy-green rounded-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-pip-boy-green">分享管理</h3>
+          {onClose && (
+            <button
+              onClick={onClose}
+              aria-label="關閉"
+              className="text-pip-boy-green hover:text-radiation-orange transition-colors"
+            >
+              <PixelIcon name="close-line" sizePreset="sm" />
+            </button>
+          )}
+        </div>
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <PixelIcon
+            name="login-circle-line"
+            sizePreset="xl"
+            variant="muted"
+            className="mb-4"
+          />
+          <p className="text-pip-boy-green text-opacity-70 mb-2">
+            請先登入以管理分享連結
+          </p>
+          <p className="text-pip-boy-green text-opacity-50 text-sm">
+            登入後可以建立、查看和撤銷分享連結
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-pip-boy-dark border-2 border-pip-boy-green rounded-lg p-6">
