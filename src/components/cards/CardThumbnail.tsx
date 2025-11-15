@@ -343,7 +343,7 @@ export function CardThumbnail({
                 >
                   {/* 卡牌圖片容器 - 逆位時旋轉 180 度 */}
                   <div className={cn(
-                    "relative aspect-[2/3] bg-black overflow-hidden rounded-lg",
+                    "relative aspect-[2/3] bg-black overflow-hidden rounded-lg card-crt-scanlines",
                     position === 'reversed' && 'rotate-180'
                   )}>
                     {/* 載入中骨架屏 */}
@@ -494,7 +494,7 @@ export function CardThumbnail({
           />
         )}
         {/* 卡牌圖片容器 */}
-        <div className="relative aspect-[2/3] bg-black overflow-hidden">
+        <div className="relative aspect-[2/3] bg-black overflow-hidden card-crt-scanlines">
           {/* 載入中骨架屏 */}
           {!imageLoaded && (
             <div className="absolute inset-0 flex items-center justify-center bg-pip-boy-green/10 animate-pulse">
@@ -678,7 +678,7 @@ export function CardThumbnailList({ card, className }: CardThumbnailListProps) {
       role="listitem"
     >
       {/* 縮圖 */}
-      <div className="relative w-12 h-16 flex-shrink-0 bg-black overflow-hidden">
+      <div className="relative w-12 h-16 flex-shrink-0 bg-black overflow-hidden card-crt-scanlines">
         <Image
           src={imageUrl}
           alt={imageAlt}

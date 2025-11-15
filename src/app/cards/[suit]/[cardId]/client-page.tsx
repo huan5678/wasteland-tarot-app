@@ -154,7 +154,7 @@ export default function CardDetailClientPage() {
           <div className="flex flex-col items-center">
             {/* 卡牌圖片 */}
             <PipBoyCard padding="sm" className="w-full max-w-md">
-              <div className="relative aspect-[2/3] bg-black overflow-hidden">
+              <div className="relative aspect-[2/3] bg-black overflow-hidden card-crt-scanlines">
                 <Image
                   key={card.id}
                   src={imageUrl}
@@ -164,15 +164,6 @@ export default function CardDetailClientPage() {
                   className="object-contain"
                   priority
                   onError={handleImageError}
-                />
-
-                {/* Pip-Boy 掃描線效果 */}
-                <div
-                  className="absolute inset-0 pointer-events-none opacity-20"
-                  style={{
-                    backgroundImage:
-                      'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(51, 255, 51, 0.1) 2px, rgba(51, 255, 51, 0.1) 4px)',
-                  }}
                 />
               </div>
             </PipBoyCard>

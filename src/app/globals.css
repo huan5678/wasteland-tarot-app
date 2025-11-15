@@ -2686,6 +2686,72 @@
   }
 }
 
+/* === CRT 掃描線效果 - 用於卡片圖片 === */
+/**
+ * 為卡片圖片添加 Pip-Boy 風格的雙層掃描線效果
+ *
+ * 效果層次（由下至上）：
+ * 1. 卡片圖片（底層）
+ * 2. 黑色半透明遮罩 + 靜態背景橫線（::after）- 模擬 CRT 螢幕變暗效果與背景網格
+ * 3. 動畫掃描線（::before，opacity: 0.6）- 向下移動的掃描效果
+ *
+ * 使用方式：在包含卡片圖片的容器上加上 .card-crt-scanlines class
+ * 例如：<div className="card-crt-scanlines"><Image ... /></div>
+ */
+.card-crt-scanlines {
+  position: relative;
+}
+
+/* 黑色遮罩 + 靜態背景橫線層（中層） */
+.card-crt-scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9;
+  background-color: rgba(0, 0, 0, 0.25);  /* 黑色半透明遮罩 */
+  background-image: linear-gradient(
+    transparent 50%,
+    rgba(0, 255, 136, 0.15) 50%  /* 橫線效果 */
+  );
+  background-size: 100% 4px;
+}
+
+/* 動畫掃描線層（頂層） */
+.card-crt-scanlines::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 136, 0.08) 2px,
+    rgba(0, 255, 136, 0.08) 4px
+  );
+  animation: scanline-move 8s linear infinite;
+  opacity: 0.6;
+}
+
+/* 掃描線移動動畫 */
+@keyframes scanline-move {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* 減少動畫支援 - 卡片掃描線 */
+@media (prefers-reduced-motion: reduce) {
+  .card-crt-scanlines::before {
+    animation: none;
+  }
+}
+
 /* End of CRT Effects */
 
 /* === MOBILE NATIVE APP LAYOUT STYLES === */
