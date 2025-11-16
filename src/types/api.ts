@@ -490,3 +490,25 @@ export const PublicReadingDataSchema = z.object({
 })
 
 export type PublicReadingData = z.infer<typeof PublicReadingDataSchema>
+
+// ============================================================================
+// Landing Stats Types
+// ============================================================================
+
+/**
+ * Landing Stats Response Schema
+ * 首頁統計數據回應格式
+ *
+ * @property {number} users - 總用戶數（非負整數）
+ * @property {number} readings - 總占卜次數（非負整數）
+ * @property {number} cards - 卡牌總數（固定 78）
+ * @property {number} providers - AI 供應商數（固定 3）
+ */
+export const LandingStatsResponseSchema = z.object({
+  users: z.number().int().nonnegative(),
+  readings: z.number().int().nonnegative(),
+  cards: z.number().int().default(78),
+  providers: z.number().int().default(3),
+})
+
+export type LandingStatsResponse = z.infer<typeof LandingStatsResponseSchema>

@@ -35,6 +35,7 @@ from app.api.v1.endpoints import (
     levels,
     quests,
     tags,
+    landing_stats,
 )
 from app.api import oauth, webauthn
 
@@ -230,4 +231,10 @@ api_router.include_router(
     tags.router,
     prefix="/tags",
     tags=["🏷️ Tags"]
+)
+
+# Landing Stats endpoints - 首頁統計資料 (Public API)
+api_router.include_router(
+    landing_stats.router,
+    tags=["🏠 Landing Page"]
 )
