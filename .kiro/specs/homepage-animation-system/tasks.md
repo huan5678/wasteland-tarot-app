@@ -16,35 +16,39 @@
 
 ### 1. 安裝動畫庫依賴並驗證載入
 
-- [ ] 1.1 (P) 安裝 GSAP 與 ScrollTrigger plugin
+- [x] 1.1 (P) 安裝 GSAP 與 ScrollTrigger plugin
   - 使用 Bun 安裝 `gsap@3.12.5`（或更新版本）
   - 驗證 GSAP 與 ScrollTrigger plugin 可在 Next.js 15 App Router 環境正確載入
   - 建立簡單的測試元件驗證 GSAP Timeline 可建立與執行
   - _Requirements: 1.1, 1.4_
+  - **完成**: GSAP 3.13.0 安裝成功，測試通過 (5/5 tests)
 
-- [ ] 1.2 (P) 驗證 Framer Motion 整合
+- [x] 1.2 (P) 驗證 Framer Motion 整合
   - 確認 `motion` package v12.23.22 已安裝（專案既有依賴）
   - 建立簡單的 `motion.div` 測試元件驗證基本動畫功能
   - 測試 `AnimatePresence` 與 `variants` 系統運作正常
   - _Requirements: 2.1, 2.2_
+  - **完成**: Framer Motion 驗證通過 (6/6 tests)
 
 ### 2. 建立動畫配置模組
 
-- [ ] 2.1 (P) 建立 GSAP 配置檔案 `gsapConfig.ts`
+- [x] 2.1 (P) 建立 GSAP 配置檔案 `gsapConfig.ts`
   - 建立 `/src/lib/animations/gsapConfig.ts` 檔案
   - 定義所有 GSAP 動畫參數（durations、easings、staggers、scrollTrigger、parallax、performance、colors）
   - 使用 TypeScript `as const` 確保 readonly
   - 匯出型別定義 `GSAPConfig`
   - _Requirements: 1.7, 14.1, 14.2, 14.4, 15.1_
+  - **完成**: 配置檔案建立，測試通過 (16/16 tests)
 
-- [ ] 2.2 (P) 建立 Framer Motion variants 配置檔案 `motionVariants.ts`
+- [x] 2.2 (P) 建立 Framer Motion variants 配置檔案 `motionVariants.ts`
   - 建立 `/src/lib/animations/motionVariants.ts` 檔案
   - 定義常用 variants（fadeIn、slideUp、scaleIn、breathingGlow、featureCardHover、featureIconHover、faqExpand、faqArrow）
   - 定義 `reducedMotionTransition` 供無障礙模式使用
   - 使用 Framer Motion 的 `Variants` 型別
   - _Requirements: 2.5, 7.2, 8.1, 9.1, 14.2, 14.4, 15.1_
+  - **完成**: Variants 配置檔案建立，測試通過 (13/13 tests)
 
-- [ ] 2.3 (P) 建立動畫工具函式 `animationUtils.ts`
+- [x] 2.3 (P) 建立動畫工具函式 `animationUtils.ts`
   - 建立 `/src/lib/animations/animationUtils.ts` 檔案
   - 實作 `isInViewport()` - 檢測元素是否在 viewport 內
   - 實作 `FPSMonitor` class - 效能監控工具
@@ -53,6 +57,7 @@
   - 實作 `isGSAPAvailable()` - 檢測 GSAP 是否可用（graceful degradation）
   - 實作 `getElementFullHeight()` - 計算元素完整高度（包含 margin）
   - _Requirements: 12.1, 12.5_
+  - **完成**: 工具函式建立，測試通過 (8/8 tests)
 
 ---
 
