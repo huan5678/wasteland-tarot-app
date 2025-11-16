@@ -1,16 +1,16 @@
 {
   "feature_name": "homepage-animation-system",
   "created_at": "2025-11-16T17:26:35Z",
-  "updated_at": "2025-11-16T17:26:35Z",
-  "language": "en",
-  "phase": "initialized",
+  "updated_at": "2025-11-17T09:15:00Z",
+  "language": "zh-tw",
+  "phase": "design",
   "approvals": {
     "requirements": {
-      "generated": false,
+      "generated": true,
       "approved": false
     },
     "design": {
-      "generated": false,
+      "generated": true,
       "approved": false
     },
     "tasks": {
