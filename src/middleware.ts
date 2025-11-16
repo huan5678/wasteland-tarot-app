@@ -72,6 +72,11 @@ function checkTokenExists(request: NextRequest): { isValid: boolean } {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // 排除 Next.js 內部路徑（開發模式的 stack frames、HMR 等）
+  if (pathname.startsWith('/__nextjs')) {
+    return NextResponse.next()
+  }
+
   // 首頁總是允許訪問（不需驗證）
   if (pathname === '/') {
     return NextResponse.next()

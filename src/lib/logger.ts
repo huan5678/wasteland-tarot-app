@@ -360,7 +360,7 @@ async function sendErrorToExternalService(errorEvent: LogEvent) {
   try {
     // Example: send to backend logging endpoint
     if (typeof fetch !== 'undefined') {
-      await fetch('/api/logs/errors', {
+      await fetch('/api/v1/monitoring/logs/errors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(errorEvent)
@@ -402,7 +402,7 @@ export function stopBatchLogging() {
 async function sendBatchToServer(data: { events: LogEvent[], errors: LogEvent[] }) {
   try {
     if (typeof fetch !== 'undefined' && process.env.NODE_ENV === 'production') {
-      await fetch('/api/logs/batch', {
+      await fetch('/api/v1/monitoring/logs/batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)

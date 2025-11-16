@@ -12,25 +12,22 @@
 
 import type { Metadata } from 'next';
 import CardDetailClientPage from './client-page';
+import { serverApi } from '@/lib/serverApi';
+import { getSuitDisplayName } from '@/types/suits';
 
 // 動態生成 metadata（根據卡牌內容）
-export async function generateMetadata({ params }: { params: { suit: string; cardId: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ suit: string; cardId: string }> }): Promise<Metadata> {
+  const { cardId } = await params;
+
   try {
-    // 嘗試從 API 獲取卡牌資料
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/cards/${params.cardId}`, {
-      cache: 'force-cache',
-    });
+    const card = await serverApi.cards.getCard(cardId);
+    const cardName = card.name || '塔羅牌';
+    const suitName = getSuitDisplayName(card.suit);
 
-    if (response.ok) {
-      const card = await response.json();
-      const cardName = card.name || '塔羅牌';
-      const suitName = card.suit_display_name || '';
-
-      return {
-        title: `${cardName} | 卡牌詳情 | 廢土塔羅`,
-        description: `深入了解 ${suitName}${cardName} 的象徵意義、正逆位解讀與廢土主題背景故事。結合 Fallout 世界觀的獨特生存智慧與靈性指引。`,
-      };
-    }
+    return {
+      title: `${cardName} | ${suitName} | 卡牌詳情 | 廢土塔羅 - 探索塔羅牌意義與解讀`,
+      description: `深入了解 ${suitName}${cardName} 的象徵意義、正逆位解讀與廢土主題背景故事。結合 Fallout 世界觀的獨特生存智慧與靈性指引。`,
+    };
   } catch (error) {
     console.error('Failed to fetch card for metadata:', error);
   }
@@ -42,6 +39,12 @@ export async function generateMetadata({ params }: { params: { suit: string; car
   };
 }
 
-export default function CardDetailPage() {
-  return <CardDetailClientPage />;
+export default async function CardDetailPage({
+  params,
+}: {
+  params: Promise<{ suit: string; cardId: string }>;
+}) {
+  const { suit, cardId } = await params;
+
+  return <CardDetailClientPage suit={suit} cardId={cardId} />;
 }

@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   private async logErrorToBackend(errorLog: any) {
     try {
-      await fetch('/api/v1/logs/errors', {
+      await fetch('/api/v1/monitoring/logs/errors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(errorLog)

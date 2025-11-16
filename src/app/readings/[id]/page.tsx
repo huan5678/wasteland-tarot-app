@@ -10,25 +10,21 @@
 
 import type { Metadata } from 'next';
 import ReadingDetailClientPage from './client-page';
+import { serverApi } from '@/lib/serverApi';
 
 // 動態生成 metadata（根據占卜內容）
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params;
+
   try {
-    // 嘗試從 API 獲取占卜資料
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/readings/${params.id}`, {
-      cache: 'no-store',
-    });
+    const reading = await serverApi.readings.getReading(id);
+    const question = reading.question || '占卜記錄';
+    const spreadName = reading.spread_template?.display_name || '占卜';
 
-    if (response.ok) {
-      const reading = await response.json();
-      const question = reading.question || '占卜記錄';
-      const spreadName = reading.spread_template?.display_name || '占卜';
-
-      return {
-        title: `${question} | 占卜詳情 | 廢土塔羅`,
-        description: `查看「${question}」的 ${spreadName} 占卜詳細記錄，包含牌陣配置、每張卡牌解讀與完整占卜結果。`,
-      };
-    }
+    return {
+      title: `${question} | 占卜詳情 | 廢土塔羅 - 查看占卜記錄與解讀`,
+      description: `查看「${question}」的 ${spreadName} 占卜詳細記錄，包含牌陣配置、每張卡牌解讀與完整占卜結果。`,
+    };
   } catch (error) {
     console.error('Failed to fetch reading for metadata:', error);
   }
@@ -40,6 +36,12 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default function ReadingDetailPage() {
-  return <ReadingDetailClientPage />;
+export default async function ReadingDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  return <ReadingDetailClientPage readingId={id} />;
 }

@@ -124,6 +124,14 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Failed to shutdown scheduler: {str(e)}")
 
+    # Gracefully close database connections
+    try:
+        from app.db.session import close_db_connections
+        await close_db_connections()
+        logger.info("💾 Database connections closed gracefully")
+    except Exception as e:
+        logger.error(f"Failed to close database connections: {str(e)}")
+
     logger.info("🚪 Shutting down Wasteland Tarot API...")
 
 

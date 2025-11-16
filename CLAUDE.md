@@ -298,6 +298,192 @@ return (
 **Linus 的評價**
 > "If you copy-paste code three times, you're not a programmer, you're a monkey with a keyboard."
 
+#### 2.3.2 Next.js 頁面架構規範 (SEO Optimization Pattern)
+
+**核心原則**: Server Component 負責 SEO 與資料，Client Component 負責互動與 UI
+
+為了優化 SEO 和效能，專案採用以下頁面架構模式：
+
+**架構模式**
+```
+/app/[route]/
+├── page.tsx          # Server Component (SEO + 資料獲取)
+└── client-page.tsx   # Client Component (互動 + UI)
+```
+
+**1. Server Component (`page.tsx`)**
+
+職責：
+- ✅ 生成動態 SEO metadata (`generateMetadata`)
+- ✅ 伺服器端資料獲取（透過 `serverApi`）
+- ✅ 靜態渲染優化
+- ❌ 不包含任何互動邏輯
+
+```tsx
+// ✅ 正確範例：app/cards/[suit]/[cardId]/page.tsx
+import type { Metadata } from 'next';
+import CardDetailClientPage from './client-page';
+import { serverApi } from '@/lib/serverApi';
+import { getSuitDisplayName } from '@/types/suits';
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ suit: string; cardId: string }>
+}): Promise<Metadata> {
+  const { cardId } = await params;  // Next.js 15: params is Promise
+
+  try {
+    const card = await serverApi.cards.getCard(cardId);
+    const suitName = getSuitDisplayName(card.suit);
+
+    return {
+      title: `${card.name} | ${suitName} | 卡牌詳情 | 廢土塔羅`,
+      description: `深入了解 ${suitName}${card.name} 的象徵意義...`,
+    };
+  } catch (error) {
+    console.error('Failed to fetch card for metadata:', error);
+  }
+
+  return {
+    title: '卡牌詳情 | 廢土塔羅',
+    description: '探索塔羅牌的象徵意義...',
+  };
+}
+
+export default async function CardDetailPage({
+  params
+}: {
+  params: Promise<{ suit: string; cardId: string }>
+}) {
+  const { suit, cardId } = await params;
+
+  return <CardDetailClientPage suit={suit} cardId={cardId} />;
+}
+```
+
+**2. Client Component (`client-page.tsx`)**
+
+職責：
+- ✅ 使用者互動（useState, useEffect）
+- ✅ 事件處理
+- ✅ 動態 UI 渲染
+- ✅ 客戶端資料獲取（透過 `api.ts`）
+- ❌ 不生成 metadata
+
+```tsx
+// ✅ 正確範例：app/cards/[suit]/[cardId]/client-page.tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { api } from '@/lib/api';
+import type { TarotCard } from '@/types/api';
+
+interface CardDetailClientPageProps {
+  suit: string;
+  cardId: string;
+}
+
+export default function CardDetailClientPage({
+  suit,
+  cardId
+}: CardDetailClientPageProps) {
+  const [card, setCard] = useState<TarotCard | null>(null);
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  useEffect(() => {
+    // 客戶端資料獲取（用於動態互動）
+    api.cards.getCard(cardId).then(setCard);
+  }, [cardId]);
+
+  const handleFlip = () => setIsFlipped(!isFlipped);
+
+  if (!card) return <LoadingSpinner />;
+
+  return (
+    <div onClick={handleFlip}>
+      <CardImage card={card} isFlipped={isFlipped} />
+      {/* 互動式 UI 元件 */}
+    </div>
+  );
+}
+```
+
+**3. 資料獲取分層**
+
+**Server-side** (在 `page.tsx` 中)
+- 使用 `serverApi` (位於 `/src/lib/serverApi.ts`)
+- 透過 Next.js API route (`/api/v1/...`)
+- 適用於 SEO metadata 生成
+- 支援 `cache: 'force-cache'` 或 `'no-store'`
+
+**Client-side** (在 `client-page.tsx` 中)
+- 使用 `api` (位於 `/src/lib/api.ts`)
+- 直接呼叫 Next.js API route
+- 適用於互動式資料更新
+- 支援 Supabase realtime subscriptions
+
+```tsx
+// serverApi.ts - Server-side only
+export const serverApi = {
+  cards: {
+    getCard: (cardId: string): Promise<TarotCard> =>
+      fetchApi(`/cards/${cardId}`, { cache: 'force-cache' }),
+  },
+};
+
+// api.ts - Client-side only
+export const api = {
+  cards: {
+    getCard: async (cardId: string): Promise<TarotCard> => {
+      const res = await fetch(`/api/v1/cards/${cardId}`);
+      return res.json();
+    },
+  },
+};
+```
+
+**4. Next.js 15 重要變更**
+
+**Params 現在是 Promise**
+```tsx
+// ❌ 錯誤：Next.js 14 寫法
+export async function generateMetadata({ params }: Props) {
+  const card = await serverApi.cards.getCard(params.cardId);
+  // ...
+}
+
+// ✅ 正確：Next.js 15 寫法
+export async function generateMetadata({ params }: Props) {
+  const { cardId } = await params;  // MUST await params
+  const card = await serverApi.cards.getCard(cardId);
+  // ...
+}
+```
+
+**5. 適用頁面**
+
+此架構模式已套用於以下頁面：
+- `/app/cards/[suit]/[cardId]/` - 卡牌詳情頁
+- `/app/cards/[suit]/` - 卡牌列表頁
+- `/app/readings/[id]/` - 解讀詳情頁
+- `/app/readings/[id]/card/[cardId]/` - 解讀卡牌詳情頁
+- `/app/readings/quick/card/[cardId]/` - 快速解讀卡牌詳情頁
+- `/app/share/[token]/` - 分享頁面
+
+**6. 開發檢查清單**
+
+新增動態頁面時，確保：
+- ✅ `page.tsx` 實作 `generateMetadata()` 函數
+- ✅ `params` 使用 `await` 解構（Next.js 15）
+- ✅ Metadata 使用 `serverApi` 獲取資料
+- ✅ `client-page.tsx` 包含 `'use client'` directive
+- ✅ 互動邏輯在 `client-page.tsx` 實作
+- ✅ 客戶端使用 `api` 而非 `serverApi`
+
+**Linus 的評價**
+> "Separation of concerns. Server does SEO, client does UI. Don't mix them up, or you'll create a mess."
+
 ### 2.4 檔案搜尋政策 (File Search Policy)
 
 To ensure reliable, efficient, and reproducible file search behavior across all CLI-based operations, agents **MUST** strictly use the following tools:

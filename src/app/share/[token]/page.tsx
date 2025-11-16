@@ -12,25 +12,21 @@
 
 import type { Metadata } from 'next';
 import ShareClientPage from './client-page';
+import { serverApi } from '@/lib/serverApi';
 
 // 動態生成 metadata（根據分享的占卜內容）
-export async function generateMetadata({ params }: { params: { token: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params;
+
   try {
-    // 嘗試從 API 獲取分享的占卜資料
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/readings/shared/${params.token}`, {
-      cache: 'no-store',
-    });
+    const reading = await serverApi.readings.getSharedReading(token);
+    const question = reading.question || '占卜記錄';
+    const spreadName = reading.spread_template?.display_name || '占卜';
 
-    if (response.ok) {
-      const reading = await response.json();
-      const question = reading.question || '占卜記錄';
-      const spreadName = reading.spread_template?.display_name || '占卜';
-
-      return {
-        title: `${question} | 分享占卜 | 廢土塔羅`,
-        description: `查看「${question}」的 ${spreadName} 占卜分享。無需登入即可瀏覽完整的占卜結果與解讀內容。`,
-      };
-    }
+    return {
+      title: `${question} | 分享占卜 | 廢土塔羅 - 查看公開占卜記錄`,
+      description: `查看「${question}」的 ${spreadName} 占卜分享。無需登入即可瀏覽完整的占卜結果與解讀內容。`,
+    };
   } catch (error) {
     console.error('Failed to fetch shared reading for metadata:', error);
   }
@@ -42,6 +38,12 @@ export async function generateMetadata({ params }: { params: { token: string } }
   };
 }
 
-export default function SharePage() {
-  return <ShareClientPage />;
+export default async function SharePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+
+  return <ShareClientPage token={token} />;
 }

@@ -183,7 +183,7 @@ export const spreadPositionMeanings: Record<string, Array<{ name: string; meanin
     { name: '混亂', meaning: '不確定與變數' },
     { name: '機會', meaning: '可能的突破口' },
     { name: '生存', meaning: '生存的關鍵要素' },
-    { name: '未知', meaning: '意外的轉折' }
+    { name: '萬能牌', meaning: '完全未知的因素' }
   ],
   ncr_strategic: [
     { name: '形勢', meaning: '當前局勢分析' },
@@ -201,7 +201,7 @@ export const spreadPositionMeanings: Record<string, Array<{ name: string; meanin
     { name: '混亂', meaning: '不確定與變數' },
     { name: '機會', meaning: '可能的突破口' },
     { name: '生存', meaning: '生存的關鍵要素' },
-    { name: '未知', meaning: '意外的轉折' }
+    { name: '萬能牌', meaning: '完全未知的因素' }
   ],
   ncr_strategic_spread: [
     { name: '形勢', meaning: '當前局勢分析' },
@@ -279,13 +279,13 @@ export const defaultLayouts: Record<string, SpreadPosition[]> = {
     { id: 'chaos', label: '混亂', x: 0.25, y: 0.4, rotation: -25, animationDelay: 0 },
     { id: 'opportunity', label: '機會', x: 0.75, y: 0.35, rotation: 15, animationDelay: 150 },
     { id: 'survival', label: '生存', x: 0.35, y: 0.7, rotation: 10, animationDelay: 300 },
-    { id: 'wild_card', label: '未知', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
+    { id: 'wild_card', label: '萬能牌', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
   ],
   raider_chaos_spread: [
     { id: 'chaos', label: '混亂', x: 0.25, y: 0.4, rotation: -25, animationDelay: 0 },
     { id: 'opportunity', label: '機會', x: 0.75, y: 0.35, rotation: 15, animationDelay: 150 },
     { id: 'survival', label: '生存', x: 0.35, y: 0.7, rotation: 10, animationDelay: 300 },
-    { id: 'wild_card', label: '未知', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
+    { id: 'wild_card', label: '萬能牌', x: 0.65, y: 0.65, rotation: -20, scale: 1.05, zIndex: 5, animationDelay: 450 }
   ],
   ncr_strategic: [
     { id: 'situation', label: '形勢', x: 0.22, y: 0.15, animationDelay: 0 },

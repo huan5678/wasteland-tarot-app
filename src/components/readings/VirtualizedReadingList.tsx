@@ -1,8 +1,12 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Reading } from '@/types/database';
+import { PixelIcon } from '@/components/ui/icons';
+import { Badge } from '@/components/ui/badge';
+import { useReadingsStore } from '@/lib/readingsStore';
+import { ShareDialogIntegrated } from '@/components/readings/ShareDialogIntegrated';
 
 interface VirtualizedReadingListProps {
   readings: Reading[];
@@ -154,8 +158,10 @@ export function VirtualizedReadingList({
  *
  * Individual reading item with:
  * - Date, spread type, question
+ * - AI interpretation badge
  * - Card thumbnails
  * - Tags and category
+ * - Action menu (delete)
  * - Click to select
  */
 function ReadingListItem({
@@ -165,9 +171,43 @@ function ReadingListItem({
   reading: Reading;
   onSelect?: (readingId: string) => void;
 }) {
-  const handleClick = () => {
+  const [showMenu, setShowMenu] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const deleteReading = useReadingsStore((s) => s.deleteReading);
+
+  const handleClick = (e: React.MouseEvent) => {
+    // 不要在點擊選單時觸發選擇
+    if ((e.target as HTMLElement).closest('.action-menu')) {
+      return;
+    }
     if (onSelect) {
       onSelect(reading.id);
+    }
+  };
+
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowShareDialog(true);
+    setShowMenu(false);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!confirm('確定要刪除這筆解讀記錄嗎？此操作無法復原。')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteReading(reading.id);
+    } catch (error) {
+      console.error('Failed to delete reading:', error);
+      alert('刪除失敗，請稍後再試');
+    } finally {
+      setIsDeleting(false);
+      setShowMenu(false);
     }
   };
 
@@ -180,19 +220,82 @@ function ReadingListItem({
   return (
     <div
       onClick={handleClick}
-      className="border border-pip-boy-green/30 rounded-lg p-4 hover:bg-pip-boy-green/5 cursor-pointer transition-colors"
+      className="border border-pip-boy-green/30 rounded-lg p-4 hover:bg-pip-boy-green/5 cursor-pointer transition-colors relative"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
         <div className="text-sm text-pip-boy-green/60">{createdDate}</div>
-        <div className="text-sm font-mono text-pip-boy-green/80 uppercase">
-          {reading.spread_type}
+        <div className="flex items-center gap-2">
+          <div className="text-sm font-mono text-pip-boy-green/80 uppercase">
+            {reading.spread_type}
+          </div>
+
+          {/* Action Menu Button */}
+          <div className="action-menu relative">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              className="p-1 hover:bg-pip-boy-green/10 rounded transition-colors"
+              aria-label="更多選項"
+            >
+              <PixelIcon name="more-2" sizePreset="xs" className="text-pip-boy-green" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showMenu && (
+              <>
+                {/* Backdrop */}
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(false);
+                  }}
+                />
+
+                {/* Menu */}
+                <div className="absolute right-0 top-8 z-20 bg-black border border-pip-boy-green/30 rounded shadow-lg min-w-[140px]">
+                  <button
+                    onClick={handleShare}
+                    className="w-full px-4 py-2 text-left text-sm text-pip-boy-green hover:bg-pip-boy-green/10 transition-colors flex items-center gap-2"
+                  >
+                    <PixelIcon name="share-line" sizePreset="xs" />
+                    <span>分享記錄</span>
+                  </button>
+                  <div className="border-t border-pip-boy-green/20" />
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-pip-boy-green/10 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PixelIcon name="delete-bin" sizePreset="xs" />
+                    <span>{isDeleting ? '刪除中...' : '刪除記錄'}</span>
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Question */}
-      <div className="text-lg text-pip-boy-green font-medium mb-3">
-        {reading.question || '未命名解讀'}
+      {/* Question & AI Badge */}
+      <div className="mb-3">
+        <div className="text-lg text-pip-boy-green font-medium mb-2">
+          {reading.question || '未命名解讀'}
+        </div>
+
+        {/* AI Interpretation Badge */}
+        {reading.ai_interpretation_requested && (
+          <Badge
+            variant="default"
+            className="bg-pip-boy-green/20 text-pip-boy-green border-pip-boy-green/30 text-xs"
+          >
+            <PixelIcon name="ai-generate" sizePreset="xs" className="mr-1" decorative />
+            AI 已解讀
+          </Badge>
+        )}
       </div>
 
       {/* Card Thumbnails */}
@@ -220,6 +323,13 @@ function ReadingListItem({
           )}
         </div>
       </div>
+
+      {/* Share Dialog */}
+      <ShareDialogIntegrated
+        open={showShareDialog}
+        onClose={() => setShowShareDialog(false)}
+        reading={reading}
+      />
     </div>
   );
 }

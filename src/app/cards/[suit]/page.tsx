@@ -12,7 +12,9 @@ import type { Metadata } from 'next';
 import CardListClientPage from './client-page';
 
 // 動態生成 metadata（根據花色）
-export async function generateMetadata({ params }: { params: { suit: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ suit: string }> }): Promise<Metadata> {
+  const { suit } = await params;
+
   const suitNameMap: Record<string, string> = {
     'major': '大阿爾克那',
     'wands': '權杖',
@@ -21,10 +23,10 @@ export async function generateMetadata({ params }: { params: { suit: string } })
     'pentacles': '錢幣',
   };
 
-  const suitName = suitNameMap[params.suit] || '卡牌';
+  const suitName = suitNameMap[suit] || '卡牌';
 
   return {
-    title: `${suitName} | 卡牌瀏覽 | 廢土塔羅`,
+    title: `${suitName} | 卡牌瀏覽 | 廢土塔羅 - 探索塔羅牌意義與解讀`,
     description: `瀏覽廢土塔羅 ${suitName} 的完整卡牌集合。每張卡牌都融入 Fallout 世界觀，提供獨特的廢土主題解讀與生存智慧。`,
   };
 }
@@ -32,6 +34,12 @@ export async function generateMetadata({ params }: { params: { suit: string } })
 /**
  * CardListPage Component (Server Component wrapper)
  */
-export default function CardListPage() {
-  return <CardListClientPage />;
+export default async function CardListPage({
+  params,
+}: {
+  params: Promise<{ suit: string }>;
+}) {
+  const { suit } = await params;
+
+  return <CardListClientPage suit={suit} />;
 }

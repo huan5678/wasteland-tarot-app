@@ -79,7 +79,8 @@
       "SlashCommand(/kiro:spec-init \"修復認證 token 錯誤：(1) 賓果頁面出現 'No access token provided' 錯誤，導致無法正常載入賓果資料；(2) 成就系統頁面出現 'ReferenceError: token is not defined' 錯誤，導致頁面崩潰。這兩個錯誤都是因為前端未正確處理 Supabase 認證 token 的取得與傳遞。需要確保所有需要認證的頁面都能正確從 Supabase Auth 取得 access token，並在 API 請求中正確帶入 Authorization header。修復應該包含錯誤處理機制，當 token 不存在時應導向登入頁面而非顯示錯誤。\")",
       "Bash(test:*)",
       "Bash(fdfind:*)",
-      "Bash(xargs rg:*)"
+      "Bash(xargs rg:*)",
+      "Bash(rg:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

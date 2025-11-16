@@ -15,6 +15,7 @@ from sqlalchemy import select
 
 from app.models.wasteland_card import WastelandCard, CharacterVoice, KarmaAlignment, FactionAlignment
 from app.models.character_voice import Character, Faction
+from app.models.reading_enhanced import SpreadTemplate
 from app.config import Settings
 from app.services.ai_providers import AIProvider, create_ai_provider
 from app.services.ai_providers.factory import auto_select_provider
@@ -224,6 +225,35 @@ class AIInterpretationService:
             logger.error(f"Failed to load faction style for {faction.value}: {e}", exc_info=True)
             return None
 
+    async def _get_spread_positions(self, spread_type: str) -> List[str]:
+        """
+        從資料庫讀取牌陣位置定義
+
+        Args:
+            spread_type: 牌陣類型名稱（例如：'vault_tec_spread', 'wasteland_survival'）
+
+        Returns:
+            List of position chinese names, or fallback generic positions
+        """
+        try:
+            result = await self.db_session.execute(
+                select(SpreadTemplate).where(SpreadTemplate.name == spread_type)
+            )
+            template = result.scalar_one_or_none()
+
+            if template and template.positions:
+                # Extract chinese_name from positions array, sorted by number
+                positions_list = sorted(template.positions, key=lambda p: p.get('number', 0))
+                return [pos.get('chinese_name', f"位置 {pos.get('number', i+1)}")
+                       for i, pos in enumerate(positions_list)]
+            else:
+                logger.warning(f"No spread template found for '{spread_type}', using fallback")
+                return None
+
+        except Exception as e:
+            logger.error(f"Failed to load spread positions for {spread_type}: {e}", exc_info=True)
+            return None
+
     async def generate_interpretation(
         self,
         card: WastelandCard,
@@ -371,7 +401,7 @@ class AIInterpretationService:
             logger.warning(f"No AI config found for character voice: {character_voice}")
             return None
 
-        user_prompt = self._build_multi_card_prompt(
+        user_prompt = await self._build_multi_card_prompt(
             cards, question, karma, faction, spread_type
         )
 
@@ -532,29 +562,13 @@ class AIInterpretationService:
         spread_type: str
     ) -> str:
         """Build prompt for multi-card spread interpretation with faction style integration"""
-        spread_positions = {
-            # Wasteland-themed spreads
-            "single_wasteland": ["核心"],
-            "single_wasteland_reading": ["核心"],
-            "vault_tec_spread": ["過去", "現在", "未來"],
-            "wasteland_survival": ["自己", "威脅", "資源", "同盟", "結果"],
-            "wasteland_survival_spread": ["自己", "威脅", "資源", "同盟", "結果"],
-            "brotherhood_council": ["戰略", "科技", "情報", "資源", "核心", "防禦", "結論"],
-            "brotherhood_council_spread": ["戰略", "科技", "情報", "資源", "核心", "防禦", "結論"],
-            "raider_chaos": ["混亂", "機會", "生存", "未知"],
-            "raider_chaos_spread": ["混亂", "機會", "生存", "未知"],
-            "ncr_strategic": ["形勢", "民意", "資源", "戰略", "長期", "共和"],
-            "ncr_strategic_spread": ["形勢", "民意", "資源", "戰略", "長期", "共和"],
+        # Get spread positions from database
+        positions = await self._get_spread_positions(spread_type)
 
-            # Traditional spreads
-            "three_card": ["Past", "Present", "Future"],
-            "celtic_cross": ["現況", "挑戰", "過去", "未來", "顯意識", "潛意識", "自我", "環境", "盼望/恐懼", "最終結果"],
-            "horseshoe": ["過去", "現在", "未來", "建議", "外在影響", "希望與恐懼", "結果"],
-            "relationship": ["You", "Them", "The Relationship"],
-            "decision": ["Option A", "Option B", "Outcome if A", "Outcome if B"]
-        }
-
-        positions = spread_positions.get(spread_type, [f"Position {i+1}" for i in range(len(cards))])
+        # Fallback to generic positions if not found
+        if positions is None:
+            positions = [f"位置 {i+1}" for i in range(len(cards))]
+            logger.warning(f"Using fallback generic positions for spread_type '{spread_type}'")
 
         # 根據卡牌數量動態設定字數限制
         card_count = len(cards)

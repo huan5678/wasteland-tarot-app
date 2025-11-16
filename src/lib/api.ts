@@ -103,7 +103,8 @@ async function refreshToken(): Promise<boolean> {
 
       if (!refreshResponse.ok) {
         const errorData = await refreshResponse.json().catch(() => ({ detail: 'Unknown error' }))
-        console.error('[API] ❌ Token refresh HTTP error', {
+        // 使用 warn 而非 error，因為沒有 token 時這是預期行為（例如在 /auth/callback 頁面）
+        console.warn('[API] ⚠️ Token refresh failed (expected if not logged in)', {
           status: refreshResponse.status,
           detail: errorData.detail
         })

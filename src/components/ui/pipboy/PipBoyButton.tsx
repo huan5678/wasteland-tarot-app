@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * PipBoyButton Component
  * Pip-Boy 風格按鈕元件 - 使用 CVA 變體系統重構

@@ -48,7 +48,7 @@ else:
             "prepared_statement_name_func": lambda: f"__pstmt_{uuid.uuid4().hex[:8]}__",  # Generate unique prepared statement names
             # Timeout settings to prevent "connection closed" errors
             "command_timeout": 30,  # Command execution timeout (30s)
-            "timeout": 60,  # Connection close timeout (60s, prevents asyncpg.ConnectionDoesNotExistError)
+            "timeout": 120,  # Connection close timeout (120s, prevents TimeoutError during cleanup)
             "server_settings": {
                 "jit": "off",  # Disable JIT compilation to save memory
                 "application_name": "wasteland-tarot",

@@ -11,24 +11,20 @@
 
 import type { Metadata } from 'next';
 import QuickCardDetailClientPage from './client-page';
+import { serverApi } from '@/lib/serverApi';
 
 // 動態生成 metadata（根據卡牌內容）
-export async function generateMetadata({ params }: { params: { cardId: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ cardId: string }> }): Promise<Metadata> {
+  const { cardId } = await params;
+
   try {
-    // 嘗試從 API 獲取卡牌資料
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/cards/${params.cardId}`, {
-      cache: 'force-cache',
-    });
+    const card = await serverApi.cards.getCard(cardId);
+    const cardName = card.name || '塔羅牌';
 
-    if (response.ok) {
-      const card = await response.json();
-      const cardName = card.name || '塔羅牌';
-
-      return {
-        title: `${cardName} | 快速占卜卡牌 | 廢土塔羅`,
-        description: `查看快速占卜中抽到的 ${cardName} 詳細資訊，包含卡牌意義、象徵與解讀建議。無需註冊即可體驗。`,
-      };
-    }
+    return {
+      title: `${cardName} | 快速占卜卡牌 | 廢土塔羅 - 查看卡牌詳情`,
+      description: `查看快速占卜中抽到的 ${cardName} 詳細資訊，包含卡牌意義、象徵與解讀建議。無需註冊即可體驗。`,
+    };
   } catch (error) {
     console.error('Failed to fetch card for metadata:', error);
   }
@@ -40,6 +36,12 @@ export async function generateMetadata({ params }: { params: { cardId: string } 
   };
 }
 
-export default function QuickCardDetailPage() {
-  return <QuickCardDetailClientPage />;
+export default async function QuickCardDetailPage({
+  params,
+}: {
+  params: Promise<{ cardId: string }>;
+}) {
+  const { cardId } = await params;
+
+  return <QuickCardDetailClientPage cardId={cardId} />;
 }

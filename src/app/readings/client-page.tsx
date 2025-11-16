@@ -18,6 +18,15 @@ import { Button } from '@/components/ui/button';
 import { PullToRefresh } from '@/components/mobile';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import type { Reading } from '@/types/database';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 export default function ReadingsClientPage() {
   // ✅ 統一認證檢查（自動處理初始化、重導向、日誌）
@@ -33,6 +42,11 @@ export default function ReadingsClientPage() {
   // Filter state management
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<Partial<FilterCriteria>>({});
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  // Pagination state management
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // CRITICAL FIX: Always fetch readings when page mounts OR when navigating back
   // This ensures we see newly created readings immediately
@@ -135,6 +149,21 @@ export default function ReadingsClientPage() {
     return result;
   }, [readings, searchQuery, filters]);
 
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredReadings.length / itemsPerPage);
+
+  // Paginated readings (slice the filtered results)
+  const paginatedReadings = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredReadings.slice(startIndex, endIndex);
+  }, [filteredReadings, currentPage, itemsPerPage]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filters]);
+
   // Filter manipulation functions
   const handleRemoveFilter = (filterType: keyof FilterCriteria, value: any) => {
     const newFilters = { ...filters };
@@ -159,6 +188,17 @@ export default function ReadingsClientPage() {
   const handleClearAllFilters = () => {
     setFilters({});
     setSearchQuery('');
+  };
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (value: number) => {
+    setItemsPerPage(value);
+    setCurrentPage(1);
   };
 
   // ✅ 統一載入畫面（認證驗證 + 資料載入）
@@ -247,21 +287,153 @@ export default function ReadingsClientPage() {
                 />
               )}
 
+              {/* 篩選面板切換按鈕 */}
+              <button
+                onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                className="w-full px-4 py-3 bg-black/90 border border-pip-boy-green/30 hover:border-pip-boy-green/60 transition-colors flex items-center justify-between group"
+                aria-expanded={isFilterExpanded}
+                aria-controls="filter-panel"
+              >
+                <div className="flex items-center gap-2">
+                  <PixelIcon
+                    name="filter"
+                    sizePreset="sm"
+                    variant="primary"
+                    decorative
+                  />
+                  <span className="text-pip-boy-green font-mono text-sm font-bold">
+                    篩選條件
+                  </span>
+                  {(filters.tags?.length || filters.categories?.length || filters.favoriteOnly || filters.archivedOnly) && (
+                    <span className="px-2 py-0.5 bg-radiation-orange text-black text-xs font-mono font-bold">
+                      已啟用
+                    </span>
+                  )}
+                </div>
+                <PixelIcon
+                  name={isFilterExpanded ? 'arrow-up' : 'arrow-down'}
+                  sizePreset="xs"
+                  className="text-pip-boy-green group-hover:text-radiation-orange transition-colors"
+                  decorative
+                />
+              </button>
+
               {/* 篩選面板 */}
-              <FilterPanel
-                availableTags={availableTags}
-                availableCategories={availableCategories}
-                filters={filters}
-                onChange={setFilters}
-              />
+              <div
+                id="filter-panel"
+                className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                  isFilterExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'
+                }`}
+              >
+                <FilterPanel
+                  availableTags={availableTags}
+                  availableCategories={availableCategories}
+                  filters={filters}
+                  onChange={setFilters}
+                />
+              </div>
+
+              {/* 每頁項目數選擇器 & 結果統計 */}
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-pip-boy-green/70 font-mono">每頁顯示：</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
+                    className="px-3 py-1.5 bg-black/90 border border-pip-boy-green/30 text-pip-boy-green font-mono text-sm focus:outline-none focus:border-pip-boy-green transition-colors"
+                  >
+                    <option value={10}>10 筆</option>
+                    <option value={20}>20 筆</option>
+                    <option value={50}>50 筆</option>
+                    <option value={100}>100 筆</option>
+                  </select>
+                </div>
+                <div className="text-sm text-pip-boy-green/70 font-mono">
+                  共 {filteredReadings.length} 筆記錄
+                  {totalPages > 1 && ` / 第 ${currentPage} 頁，共 ${totalPages} 頁`}
+                </div>
+              </div>
 
               {/* 虛擬化列表 */}
               <VirtualizedReadingList
-                readings={filteredReadings}
-                enableVirtualization={filteredReadings.length >= 100}
+                readings={paginatedReadings}
+                enableVirtualization={false}
                 onSelect={(id) => router.push(`/readings/${id}`)}
                 isLoading={isLoading}
               />
+
+              {/* 分頁元件 */}
+              {totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                          className={
+                            currentPage === 1
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+
+                      {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                        let pageNumber: number;
+
+                        if (totalPages <= 7) {
+                          // 顯示所有頁碼
+                          pageNumber = i + 1;
+                        } else {
+                          // 智能顯示頁碼
+                          if (i === 0) pageNumber = 1;
+                          else if (i === 6) pageNumber = totalPages;
+                          else if (currentPage <= 4) pageNumber = i + 1;
+                          else if (currentPage >= totalPages - 3) pageNumber = totalPages - 6 + i;
+                          else pageNumber = currentPage - 3 + i;
+                        }
+
+                        // 檢查是否需要省略符號
+                        const showEllipsis =
+                          totalPages > 7 &&
+                          ((i === 1 && currentPage > 4) ||
+                           (i === 5 && currentPage < totalPages - 3));
+
+                        if (showEllipsis) {
+                          return (
+                            <PaginationItem key={`ellipsis-${i}`}>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          );
+                        }
+
+                        return (
+                          <PaginationItem key={pageNumber}>
+                            <PaginationLink
+                              onClick={() => handlePageChange(pageNumber)}
+                              isActive={currentPage === pageNumber}
+                              className="cursor-pointer"
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                          className={
+                            currentPage === totalPages
+                              ? 'pointer-events-none opacity-50'
+                              : 'cursor-pointer'
+                          }
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </div>
           </PipBoyTabsContent>
 
