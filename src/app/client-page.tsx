@@ -1,13 +1,112 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '@/lib/authStore'
 import { PixelIcon } from '@/components/ui/icons'
 import { DynamicHeroTitle, DynamicHeroTitleErrorBoundary } from '@/components/hero'
 import { PipBoyButton, PipBoyCard, PipBoyCardHeader, PipBoyCardTitle, PipBoyCardContent } from '@/components/ui/pipboy'
+import { StepCard } from '@/components/landing/StepCard'
+import { StatCounter } from '@/components/landing/StatCounter'
+import { TestimonialCard } from '@/components/landing/TestimonialCard'
+import { landingStatsAPI } from '@/lib/api'
+
+// How It Works steps data
+const HOW_IT_WORKS_STEPS = [
+  {
+    id: 1,
+    icon: 'layout-grid',
+    title: '選擇牌陣',
+    description: '從多種廢土主題牌陣中選擇適合的占卜方式',
+  },
+  {
+    id: 2,
+    icon: 'shuffle',
+    title: '洗牌抽卡',
+    description: '透過量子演算法隨機抽取塔羅牌',
+  },
+  {
+    id: 3,
+    icon: 'hand',
+    title: '查看解讀',
+    description: '獲得結合 Fallout 世界觀的詳細牌義解析',
+  },
+  {
+    id: 4,
+    icon: 'cpu',
+    title: '追蹤進度',
+    description: '記錄占卜歷史並追蹤你的廢土業力',
+  },
+] as const
+
+// Testimonials data
+const TESTIMONIALS = [
+  {
+    id: 1,
+    avatar: 'user-3',
+    username: 'Vault111_X',
+    rating: 5,
+    review: '這個 AI 占卜系統準得可怕，完全預測到我在廢土中會遇到的挑戰。Pip-Boy 風格的介面也超有沉浸感！',
+  },
+  {
+    id: 2,
+    avatar: 'user-6',
+    username: 'WastelandWanderer',
+    rating: 5,
+    review: '結合量子演算法和塔羅占卜的概念很新穎，解讀也很深入。作為 Fallout 粉絲，這個主題設計讓我很滿意。',
+  },
+  {
+    id: 3,
+    avatar: 'skull',
+    username: 'NukaEnthusiast',
+    rating: 4,
+    review: '占卜結果很有參考價值，幫助我在廢土生存中做出更好的決策。希望未來能加入更多牌陣選擇。',
+  },
+] as const
+
+// FAQ data
+const FAQ_ITEMS = [
+  {
+    id: 1,
+    question: '什麼是廢土塔羅？',
+    answer: '廢土塔羅是結合 Fallout 世界觀的獨特塔羅占卜系統，使用量子演算法提供準確的牌義解讀，幫助你在廢土世界中找到生存智慧。',
+  },
+  {
+    id: 2,
+    question: '我需要註冊才能使用嗎？',
+    answer: '不需要！你可以直接使用「快速占卜」功能體驗服務。註冊帳號後可以保存占卜記錄、追蹤業力進度並解鎖更多進階功能。',
+  },
+  {
+    id: 3,
+    question: '如何解讀占卜結果？',
+    answer: '每次占卜都會提供詳細的牌義解析，結合 Fallout 世界觀的故事背景，幫助你理解卡牌的象徵意義並應用到實際生活中。',
+  },
+  {
+    id: 4,
+    question: '占卜結果準確嗎？',
+    answer: '我們使用先進的量子演算法確保隨機性和準確性。塔羅占卜本質上是一種自我反思的工具，準確度取決於你如何解讀和應用結果。',
+  },
+] as const
 
 export default function ClientPage() {
   const user = useAuthStore(s => s.user)
+  const [stats, setStats] = useState({ users: 0, readings: 0, cards: 78, providers: 3 })
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null)
+
+  // Fetch landing stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await landingStatsAPI.getStats()
+        setStats(data)
+      } catch (error) {
+        console.error('Failed to fetch landing stats:', error)
+        // Fallback values
+        setStats({ users: 1000, readings: 5000, cards: 78, providers: 3 })
+      }
+    }
+
+    fetchStats()
+  }, [])
 
   const handleGetStarted = () => {
     if (user) {
@@ -24,6 +123,10 @@ export default function ClientPage() {
       // 未登入用戶導向快速占卜頁面，不需要註冊
       window.location.href = '/readings/quick'
     }
+  }
+
+  const toggleFaq = (id: number) => {
+    setExpandedFaq(expandedFaq === id ? null : id)
   }
 
   return (
@@ -141,12 +244,105 @@ export default function ClientPage() {
         </div>
       </section>
 
+      {/* How It Works Section */}
+      <section className="border-t-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-pip-boy-green mb-4">
+              如何使用
+            </h2>
+            <p className="text-pip-boy-green/70">
+              四個簡單步驟開始你的廢土占卜之旅
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {HOW_IT_WORKS_STEPS.map((step) => (
+              <StepCard
+                key={step.id}
+                stepNumber={step.id}
+                icon={step.icon}
+                title={step.title}
+                description={step.description}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Counter Section */}
+      <section className="border-t-2 border-pip-boy-green">
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-pip-boy-green mb-4">
+              即時數據統計
+            </h2>
+            <p className="text-pip-boy-green/70">
+              加入數千名 Vault Dweller 的占卜社群
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <StatCounter
+              icon="user"
+              value={stats.users}
+              label="總用戶數"
+              suffix="+"
+            />
+            <StatCounter
+              icon="file-list-2"
+              value={stats.readings}
+              label="占卜次數"
+              suffix="+"
+            />
+            <StatCounter
+              icon="grid"
+              value={stats.cards}
+              label="塔羅牌"
+              suffix="張"
+            />
+            <StatCounter
+              icon="cpu"
+              value={stats.providers}
+              label="AI 供應商"
+              suffix="家"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof Section */}
+      <section className="border-t-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
+        <div className="max-w-6xl mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-pip-boy-green mb-4">
+              用戶評價
+            </h2>
+            <p className="text-pip-boy-green/70">
+              看看其他 Vault Dweller 怎麼說
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((testimonial) => (
+              <TestimonialCard
+                key={testimonial.id}
+                avatar={testimonial.avatar}
+                username={testimonial.username}
+                rating={testimonial.rating}
+                review={testimonial.review}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section className="border-t-2 border-pip-boy-green" style={{backgroundColor: 'var(--color-pip-boy-green-5)'}}>
         <div className="max-w-6xl mx-auto px-4 py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-pip-boy-green mb-4">
-              終端機功能
+              核心功能
             </h2>
             <p className="text-pip-boy-green/70">
               由戰前量子計算技術驅動
@@ -193,6 +389,55 @@ export default function ClientPage() {
         </div>
       </section>
 
+      {/* FAQ Section */}
+      <section className="border-t-2 border-pip-boy-green">
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-pip-boy-green mb-4">
+              常見問題
+            </h2>
+            <p className="text-pip-boy-green/70">
+              關於廢土塔羅的一切你需要知道的
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            {FAQ_ITEMS.map((faq) => (
+              <div
+                key={faq.id}
+                className="border-2 border-pip-boy-green bg-[var(--color-pip-boy-green-10)]"
+              >
+                {/* Question Button */}
+                <button
+                  onClick={() => toggleFaq(faq.id)}
+                  className="w-full flex items-center justify-between p-4 text-left hover:bg-[var(--color-pip-boy-green-20)] transition-colors"
+                  aria-expanded={expandedFaq === faq.id}
+                >
+                  <span className="font-semibold text-pip-boy-green pr-4">
+                    {faq.question}
+                  </span>
+                  <PixelIcon
+                    name={expandedFaq === faq.id ? 'arrow-up-s' : 'arrow-down-s'}
+                    sizePreset="sm"
+                    className="flex-shrink-0 text-pip-boy-green"
+                    aria-hidden="true"
+                  />
+                </button>
+
+                {/* Answer Panel */}
+                {expandedFaq === faq.id && (
+                  <div className="border-t-2 border-pip-boy-green p-4 bg-black/20 animate-fade-in">
+                    <p className="text-pip-boy-green/80 text-sm leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="border-t-2 border-pip-boy-green">
         <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -209,7 +454,7 @@ export default function ClientPage() {
                 variant="default"
                 size="lg"
                 onClick={() => window.location.href = '/auth/register'}
-                className="hover:scale-105"
+                className="hover:scale-105 transition-transform"
               >
                 註冊 Vault 帳號
               </PipBoyButton>
@@ -217,7 +462,7 @@ export default function ClientPage() {
                 variant="outline"
                 size="lg"
                 onClick={() => window.location.href = '/cards'}
-                className="hover:scale-105"
+                className="hover:scale-105 transition-transform"
               >
                 瀏覽卡牌圖書館
               </PipBoyButton>

@@ -754,4 +754,14 @@ export const analyticsAPI = {
   },
 }
 
+// Landing Stats API
+export const landingStatsAPI = {
+  getStats: (): Promise<{
+    users: number
+    readings: number
+    cards: number
+    providers: number
+  }> => apiRequest('/api/v1/landing-stats'),
+}
+
 export type { TarotCard, Reading, User, APIError }

@@ -1,4 +1,4 @@
-import { beforeAll, afterEach } from 'bun:test';
+import { beforeAll, afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import '@testing-library/jest-dom';
 

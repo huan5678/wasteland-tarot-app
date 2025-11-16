@@ -80,7 +80,11 @@
       "Bash(test:*)",
       "Bash(fdfind:*)",
       "Bash(xargs rg:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(timeout 60 uv run pytest:*)",
+      "Bash(bunx vitest:*)",
+      "Bash(timeout 90 uv run pytest:*)",
+      "Bash(npx vitest:*)"
     ]
   },
   "enableAllProjectMcpServers": true,

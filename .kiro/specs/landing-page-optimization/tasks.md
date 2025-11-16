@@ -10,7 +10,7 @@
 
 本波次建立測試基礎設施並實作後端 API 測試，所有任務可平行執行。
 
-- [ ] 1. (P) Create Backend Landing Stats API Tests
+- [x] 1. (P) Create Backend Landing Stats API Tests
   - 建立整合測試檔案於 `backend/tests/api/test_landing_stats_endpoints.py`
   - 撰寫測試案例：驗證 API 回傳正確 JSON 結構（users, readings, cards, providers 鍵值）
   - 撰寫測試案例：模擬資料庫連線失敗時回傳 fallback 值（users: 1000, readings: 5000）
@@ -18,14 +18,14 @@
   - 使用 pytest fixtures 建立測試資料庫 session 和 API client
   - _Requirements: 11.4, 11.5_
 
-- [ ] 2. (P) Create Frontend API Types with Validation
+- [x] 2. (P) Create Frontend API Types with Validation
   - 建立 Zod schema `LandingStatsResponseSchema` 於 `src/types/api.ts`
   - 定義 TypeScript interface `LandingStatsResponse` 並從 Zod schema 推導型別
   - 設定驗證規則：users >= 0, readings >= 0, cards = 78, providers = 3
-  - 匯出 schema 和 type 供前端元件使用
+  - 匯出 schema and type 供前端元件使用
   - _Requirements: 5.11, 9.9_
 
-- [ ] 3. (P) Create StepCard Component Tests
+- [x] 3. (P) Create StepCard Component Tests
   - 建立單元測試檔案於 `src/components/landing/__tests__/StepCard.test.tsx`
   - 撰寫測試案例：驗證所有 props 正確渲染（stepNumber, icon, title, description）
   - 撰寫測試案例：驗證 PixelIcon 整合（icon name, size 40px, decorative 屬性）
@@ -34,7 +34,7 @@
   - 使用 Testing Library 和 Jest 進行元件測試
   - _Requirements: 11.1_
 
-- [ ] 4. (P) Create StatCounter Component Tests
+- [x] 4. (P) Create StatCounter Component Tests
   - 建立單元測試檔案於 `src/components/landing/__tests__/StatCounter.test.tsx`
   - 撰寫測試案例：驗證動畫從 0 到目標值（使用 jest.useFakeTimers 模擬時間）
   - 撰寫測試案例：驗證 easeOutQuad 緩動函數應用
@@ -43,7 +43,7 @@
   - 撰寫測試案例：驗證 React.memo 效能優化（防止不必要的重渲染）
   - _Requirements: 11.2_
 
-- [ ] 5. (P) Create TestimonialCard Component Tests
+- [x] 5. (P) Create TestimonialCard Component Tests
   - 建立單元測試檔案於 `src/components/landing/__tests__/TestimonialCard.test.tsx`
   - 撰寫測試案例：驗證 rating 值對應正確的填充星星數（0-5 星）
   - 撰寫測試案例：驗證空星星和填充星星使用正確的 PixelIcon variant（muted vs primary）
@@ -56,7 +56,7 @@
 
 本波次實作後端 API 和前端共用元件，所有任務可平行執行（需依賴 Wave 1 測試完成以遵循 TDD）。
 
-- [ ] 6. (P) Implement Backend Landing Stats Service
+- [x] 6. (P) Implement Backend Landing Stats Service
   - 實作 `LandingStatsService` 類別於 `backend/app/services/landing_stats_service.py`
   - 實作靜態方法 `get_landing_stats(db: Session)` 執行資料庫 COUNT 查詢
   - 查詢 users 表和 reading_sessions 表總數
@@ -65,7 +65,7 @@
   - 新增錯誤日誌記錄（使用 logging 模組）
   - _Requirements: 5.11, 5.12, 5.13, 5.14_
 
-- [ ] 7. (P) Implement Backend Landing Stats API Endpoint
+- [x] 7. (P) Implement Backend Landing Stats API Endpoint
   - 建立 FastAPI router 於 `backend/app/api/v1/endpoints/landing_stats.py`
   - 實作 GET 端點 `/api/v1/landing-stats` 回傳 `LandingStatsResponse` schema
   - 整合 `LandingStatsService.get_landing_stats()` 並注入資料庫 session 依賴
@@ -74,14 +74,14 @@
   - 註冊 router 至主應用程式
   - _Requirements: 5.11, 5.14_
 
-- [ ] 8. (P) Create Backend Landing Stats Pydantic Schema
+- [x] 8. (P) Create Backend Landing Stats Pydantic Schema
   - 建立 `LandingStatsResponse` 模型於 `backend/app/schemas/landing_stats.py`
   - 定義欄位：users (int), readings (int), cards (int), providers (int)
   - 設定驗證規則：users >= 0, readings >= 0, cards = 78, providers = 3
   - 新增 `Config.json_schema_extra` 範例資料供 API 文件使用
   - _Requirements: 5.11_
 
-- [ ] 9. (P) Implement StepCard Component
+- [x] 9. (P) Implement StepCard Component
   - 建立 React 元件於 `src/components/landing/StepCard.tsx` 並加上 'use client' directive
   - 定義 `StepCardProps` interface：stepNumber, icon, title, description
   - 使用 PipBoyCard 作為基礎容器並覆蓋樣式（border-2 border-pip-boy-green）
@@ -91,7 +91,7 @@
   - 匯出 StepCard 元件和 StepCardProps 型別
   - _Requirements: 2.2, 2.7, 2.8, 2.9, 10.2_
 
-- [ ] 10. (P) Implement StatCounter Component
+- [x] 10. (P) Implement StatCounter Component
   - 建立 React 元件於 `src/components/landing/StatCounter.tsx` 並加上 'use client' directive
   - 定義 `StatCounterProps` interface：icon, value, label, suffix (可選)
   - 實作動畫邏輯：使用 requestAnimationFrame 從 0 動畫到目標值（2 秒）
@@ -102,7 +102,7 @@
   - 使用 React.memo 包裝元件以防止不必要的重渲染
   - _Requirements: 5.3, 5.4, 5.6, 5.9, 5.10, 12.6, 12.10_
 
-- [ ] 11. (P) Implement TestimonialCard Component
+- [x] 11. (P) Implement TestimonialCard Component
   - 建立 React 元件於 `src/components/landing/TestimonialCard.tsx` 並加上 'use client' directive
   - 定義 `TestimonialCardProps` interface：avatar, username, rating, review
   - 使用 PipBoyCard 作為基礎容器（border-2 border-pip-boy-green）
@@ -270,14 +270,14 @@
 
 本波次確保架構和樣式規範符合性，所有任務可平行執行。
 
-- [ ] 28. (P) Implement Server Component SEO Metadata
+- [x] 28. (P) Implement Server Component SEO Metadata
   - 更新 `src/app/page.tsx` 實作 generateMetadata() 函數以生成靜態 SEO 優化
   - 生成 metadata 包含首頁的 title, description, keywords
   - 確保 Server Component 不包含 useState, useEffect 或其他 React hooks
   - 從 Server Component 渲染 Client Component（不執行客戶端邏輯）
   - _Requirements: 9.1, 9.2, 9.5_
 
-- [ ] 29. (P) Update Client Component Structure
+- [x] 29. (P) Update Client Component Structure
   - 確保 `src/app/client-page.tsx` 檔案頂部包含 'use client' directive
   - 整合所有新區塊（How It Works, Social Proof, Stats Counter, FAQ, Footer）至 client component
   - 使用客戶端 API 工具 (`src/lib/api.ts`) 進行資料獲取（不使用 serverApi.ts）
@@ -285,7 +285,7 @@
   - 驗證所有共用元件（StepCard, StatCounter, TestimonialCard）包含 'use client' directive
   - _Requirements: 9.3, 9.4, 9.6, 9.7, 9.8, 9.9_
 
-- [ ] 30. (P) Apply Consistent Fallout Aesthetic
+- [x] 30. (P) Apply Consistent Fallout Aesthetic
   - 驗證 Cubic 11 字型於所有首頁元件自動繼承（無顯式 font-family 宣告）
   - 確保所有圖示獨家使用 PixelIcon 元件（無 lucide-react 匯入）
   - 應用 Pip-Boy 色彩配置使用 Tailwind 工具類別（text-pip-boy-green, text-radiation-orange, border colors）
@@ -301,7 +301,7 @@
 
 本波次實作端對端測試和無障礙性測試，所有任務可平行執行。
 
-- [ ] 31. (P) Implement E2E Navigation Tests
+- [x] 31. (P) Implement E2E Navigation Tests
   - 建立 Playwright 測試於 `tests/e2e/landing-page.spec.ts`
   - 撰寫測試案例：驗證點擊 Hero "進入 Vault" 按鈕導向 `/auth/login`（未認證使用者）
   - 撰寫測試案例：驗證點擊 "快速占卜" 按鈕導向 `/readings/quick`（未認證使用者）
@@ -310,7 +310,7 @@
   - 撰寫測試案例：驗證頁尾連結導航功能
   - _Requirements: 11.6, 11.7, 11.8_
 
-- [ ] 32. (P) Implement Accessibility Tests
+- [x] 32. (P) Implement Accessibility Tests
   - 建立無障礙性測試於 `tests/accessibility/landing-page-a11y.spec.ts` 使用 axe-core
   - 撰寫測試案例：驗證所有首頁區塊符合 WCAG AA 色彩對比要求
   - 撰寫測試案例：驗證所有互動元素支援鍵盤導航
@@ -323,7 +323,7 @@
 
 本波次進行效能優化和最終驗證，需依賴所有實作完成。
 
-- [ ] 33. Optimize Landing Page Performance
+- [x] 33. Optimize Landing Page Performance
   - 確保 Server Component 預渲染達成 TTFB < 500ms
   - 優化 Client Component 水合以達成 FCP < 1.5s 和 LCP < 2.5s
   - 實作圖片延遲載入（如有圖片）使用 loading="lazy" 屬性
