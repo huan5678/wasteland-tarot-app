@@ -1,17 +1,64 @@
 /**
- * Framer Motion Animation Variants
- * Reusable animation variants for consistent styling
- * 遵循 Fallout 主題風格
+ * Framer Motion Animation Variants Module
+ *
+ * @module lib/animations/motionVariants
+ * @description 定義可重用的 Framer Motion 動畫 variants，確保全站動畫風格一致性
+ * 遵循 Fallout 主題風格（Pip-Boy Green, Radiation Orange）
+ *
+ * @example
+ * ```typescript
+ * import { fadeInVariants, breathingGlowVariants } from '@/lib/animations/motionVariants';
+ * import { motion } from 'motion/react';
+ *
+ * // 使用淡入動畫
+ * <motion.div
+ *   variants={fadeInVariants}
+ *   initial="hidden"
+ *   animate="visible"
+ * >
+ *   Content
+ * </motion.div>
+ *
+ * // 使用呼吸發光動畫
+ * <motion.button
+ *   variants={breathingGlowVariants}
+ *   initial="initial"
+ *   animate="animate"
+ * >
+ *   CTA Button
+ * </motion.button>
+ * ```
+ *
+ * @remarks
+ * - 所有 variants 使用 TypeScript `Variants` 型別確保型別安全
+ * - 提供 `reducedMotionTransition` 供無障礙模式使用
+ * - 色彩遵循 Fallout 主題：Pip-Boy Green (#00ff88), Radiation Orange (#ff8800)
+ *
+ * @see {@link https://www.framer.com/motion/animation/#variants|Framer Motion Variants Documentation}
  */
 
-import type { Variants, Transition } from 'motion/react';
+import type { Variants, Transition} from 'motion/react';
 
 /**
- * Framer Motion 動畫 Variants
- * 遵循 Fallout 主題風格
+ * 淡入動畫 Variant（通用）
+ *
+ * @constant
+ * @type {Variants}
+ *
+ * @property {object} hidden - 隱藏狀態（opacity: 0）
+ * @property {object} visible - 可見狀態（opacity: 1, duration: 0.6s, ease: easeOut）
+ *
+ * @example
+ * ```tsx
+ * <motion.div
+ *   variants={fadeInVariants}
+ *   initial="hidden"
+ *   animate="visible"
+ * >
+ *   Fade in content
+ * </motion.div>
+ * ```
  */
-
-/** 淡入動畫（通用） */
 export const fadeInVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -20,7 +67,26 @@ export const fadeInVariants: Variants = {
   },
 };
 
-/** 向上滑入動畫（卡片入場） */
+/**
+ * 向上滑入動畫 Variant（卡片入場）
+ *
+ * @constant
+ * @type {Variants}
+ *
+ * @property {object} hidden - 隱藏狀態（opacity: 0, y: 40px）
+ * @property {object} visible - 可見狀態（opacity: 1, y: 0, duration: 0.6s, ease: easeOut）
+ *
+ * @example
+ * ```tsx
+ * <motion.div
+ *   variants={slideUpVariants}
+ *   initial="hidden"
+ *   animate="visible"
+ * >
+ *   Card content
+ * </motion.div>
+ * ```
+ */
 export const slideUpVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
   visible: {

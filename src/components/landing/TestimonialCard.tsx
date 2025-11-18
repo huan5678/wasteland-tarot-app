@@ -10,13 +10,16 @@
  * - Rating stars (0-5, filled vs empty)
  * - Review text
  * - PipBoyCard base container with Pip-Boy themed styling
+ * - Hover animation (scale 1.02 + shadow enhancement)
+ * - Image load detection (prevents content flashing)
  *
- * Requirements: 4.2, 4.7, 4.9, 4.10, 10.2, 12.10
+ * Requirements: 4.2, 4.7, 4.9, 4.10, 10.1, 10.2, 10.3, 12.10
  */
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons';
 import { PipBoyCard, PipBoyCardContent } from '@/components/ui/pipboy';
 
@@ -49,9 +52,14 @@ export interface TestimonialCardProps {
 /**
  * TestimonialCard Component
  * User review card with avatar, rating stars, and testimonial text
+ * Task 10.2: Hover effect (scale 1.02 + shadow enhancement)
+ * Task 10.3: Image load detection
  */
 export const TestimonialCard = React.memo<TestimonialCardProps>(
   ({ avatar, username, rating, review }) => {
+    // Task 10.3: Track image load state
+    const [imageLoaded, setImageLoaded] = useState(false);
+
     // Clamp rating between 0 and 5
     const clampedRating = Math.max(0, Math.min(5, Math.floor(rating)));
 
@@ -70,34 +78,58 @@ export const TestimonialCard = React.memo<TestimonialCardProps>(
       );
     });
 
-    return (
-      <PipBoyCard variant="default" padding="lg">
-        <PipBoyCardContent>
-          {/* Header: Avatar + Username + Rating */}
-          <div className="flex items-start gap-4 mb-4">
-            {/* Avatar Icon */}
-            <div className="flex-shrink-0">
-              <PixelIcon name={avatar} sizePreset="md" decorative />
-            </div>
+    // Task 10.2: Hover animation variants
+    const hoverVariants = {
+      scale: 1.02,
+      boxShadow: '0 0 15px rgba(0, 255, 136, 0.4), 0 0 30px rgba(0, 255, 136, 0.2)',
+      transition: { duration: 0.3, ease: 'easeOut' },
+    };
 
-            {/* Username and Rating */}
-            <div className="flex-1 min-w-0">
-              {/* Username */}
-              <div className="font-semibold text-pip-boy-green mb-2">
-                {username}
+    return (
+      <motion.div
+        className="testimonial-card"
+        whileHover={hoverVariants}
+        data-image-loaded={imageLoaded}
+        style={{ opacity: imageLoaded ? 1 : 0 }}
+      >
+        <PipBoyCard variant="default" padding="lg">
+          <PipBoyCardContent>
+            {/* Header: Avatar + Username + Rating */}
+            <div className="flex items-start gap-4 mb-4">
+              {/* Avatar Icon */}
+              <div className="flex-shrink-0">
+                <div
+                  data-testid="avatar-icon"
+                  onLoad={() => setImageLoaded(true)}
+                >
+                  <PixelIcon
+                    name={avatar}
+                    sizePreset="md"
+                    decorative
+                    onLoad={() => setImageLoaded(true)}
+                  />
+                </div>
               </div>
 
-              {/* Rating Stars */}
-              <div className="flex items-center gap-1">{stars}</div>
-            </div>
-          </div>
+              {/* Username and Rating */}
+              <div className="flex-1 min-w-0">
+                {/* Username */}
+                <div className="font-semibold text-pip-boy-green mb-2">
+                  {username}
+                </div>
 
-          {/* Review Text */}
-          <p className="text-pip-boy-green/60 text-sm leading-relaxed">
-            {review}
-          </p>
-        </PipBoyCardContent>
-      </PipBoyCard>
+                {/* Rating Stars */}
+                <div className="flex items-center gap-1">{stars}</div>
+              </div>
+            </div>
+
+            {/* Review Text */}
+            <p className="text-pip-boy-green/60 text-sm leading-relaxed">
+              {review}
+            </p>
+          </PipBoyCardContent>
+        </PipBoyCard>
+      </motion.div>
     );
   }
 );

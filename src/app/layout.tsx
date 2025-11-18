@@ -49,14 +49,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-Hant" className="dark">
+    <html lang="zh-Hant" className="dark h-screen overflow-hidden">
       {/*
         font-cubic: Cubic 11 像素字體，完整支援中英文
         使用 className 驅動的字體整合策略，所有子元件透過 inherit 繼承字體設定
         參考: .kiro/specs/cubic-11-font-integration/design.md
+
+        ✅ h-screen overflow-hidden: 防止外層出現捲軸，只有 #main-content 有捲軸
       */}
       <body
-        className={cn("font-cubic", "text-pip-boy-green", "antialiased", "overflow-x-hidden")}
+        className={cn("font-cubic", "text-pip-boy-green", "antialiased", "h-screen", "overflow-hidden")}
         style={{backgroundColor: 'var(--color-wasteland-darker)'}}
         suppressHydrationWarning
       >

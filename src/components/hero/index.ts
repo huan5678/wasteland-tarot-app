@@ -9,3 +9,5 @@ export { CarouselIndicator } from './CarouselIndicator';
 export type { CarouselIndicatorProps } from './CarouselIndicator';
 
 export { DynamicHeroTitleErrorBoundary } from './DynamicHeroTitleErrorBoundary';
+
+export { HeroSection } from './HeroSection';

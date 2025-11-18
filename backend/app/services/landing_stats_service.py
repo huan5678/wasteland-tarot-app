@@ -9,8 +9,8 @@ Landing Stats Service
 import logging
 from typing import Dict, Any
 
-from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.user import User
@@ -39,7 +39,7 @@ class LandingStatsService:
     FALLBACK_PROVIDERS = 3
 
     @staticmethod
-    def get_landing_stats(db: Session) -> Dict[str, Any]:
+    async def get_landing_stats(db: AsyncSession) -> Dict[str, Any]:
         """
         獲取首頁統計數據
 
@@ -47,7 +47,7 @@ class LandingStatsService:
         如果資料庫查詢失敗，回傳預設的 fallback 值，確保 API 不會中斷服務。
 
         Args:
-            db: Database session (SQLAlchemy ORM session)
+            db: Database session (SQLAlchemy AsyncSession)
 
         Returns:
             統計數據字典:
@@ -60,17 +60,19 @@ class LandingStatsService:
             None - All exceptions are caught and fallback values are returned
 
         Example:
-            >>> from sqlalchemy.orm import Session
-            >>> stats = LandingStatsService.get_landing_stats(db_session)
+            >>> from sqlalchemy.ext.asyncio import AsyncSession
+            >>> stats = await LandingStatsService.get_landing_stats(db_session)
             >>> print(stats)
             {'users': 1234, 'readings': 5678, 'cards': 78, 'providers': 3}
         """
         try:
             # Query total users from users table
-            users_count = db.query(func.count(User.id)).scalar()
+            users_result = await db.execute(select(func.count(User.id)))
+            users_count = users_result.scalar()
 
             # Query total readings from reading_sessions table
-            readings_count = db.query(func.count(ReadingSession.id)).scalar()
+            readings_result = await db.execute(select(func.count(ReadingSession.id)))
+            readings_count = readings_result.scalar()
 
             # Static product constants (不會改變的產品常數)
             cards_count = 78  # 22 Major Arcana + 56 Minor Arcana
@@ -118,12 +120,12 @@ class LandingStatsService:
 
 
 # Convenience function for backward compatibility
-async def get_landing_stats(db: Session) -> Dict[str, Any]:
+async def get_landing_stats(db: AsyncSession) -> Dict[str, Any]:
     """
     Async wrapper for LandingStatsService.get_landing_stats
 
     提供 async/await 語法支援的便利函數。
-    實際上呼叫同步的 LandingStatsService.get_landing_stats 方法。
+    實際上呼叫 LandingStatsService.get_landing_stats 方法。
 
     Args:
         db: Database session
@@ -131,4 +133,4 @@ async def get_landing_stats(db: Session) -> Dict[str, Any]:
     Returns:
         Statistics dictionary with keys: users, readings, cards, providers
     """
-    return LandingStatsService.get_landing_stats(db)
+    return await LandingStatsService.get_landing_stats(db)

@@ -13,6 +13,7 @@ export function DynamicMainContent({
   className
 }: DynamicMainContentProps) {
   const [headerHeight, setHeaderHeight] = useState(0)
+  const mainRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     // Listen to header height changes
@@ -27,30 +28,34 @@ export function DynamicMainContent({
     }
   }, [])
 
-  // Broadcast window scroll position for Header scroll-hide behavior
+  // Broadcast main content scroll position for Header scroll-hide behavior
   useEffect(() => {
+    const mainElement = mainRef.current
+    if (!mainElement) return
+
     const handleScroll = () => {
       window.dispatchEvent(
         new CustomEvent('main-scroll', {
-          detail: { scrollY: window.scrollY }
+          detail: { scrollY: mainElement.scrollTop }
         })
       )
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    mainElement.addEventListener('scroll', handleScroll, { passive: true })
 
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      mainElement.removeEventListener('scroll', handleScroll)
     }
   }, [])
 
   return (
     <main
+      ref={mainRef}
+      id="main-content"
       className={cn(
         "w-full flex-1 overflow-y-auto",
-        // Mobile: limit height to keep MobileBottomNav visible
-        // Desktop: no limit, let content flow naturally
-        "max-h-[calc(100vh-104px)] sm:max-h-none",
+        // ✅ overflow-y-auto: Main content has its own scrollbar
+        // ✅ ScrollTrigger will use this element as scroller via id="main-content"
         className
       )}
       style={{

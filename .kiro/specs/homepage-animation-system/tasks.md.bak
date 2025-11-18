@@ -508,7 +508,7 @@
   - 驗證 CLS <= 0.1
   - _Requirements: 17.3_
 
-- [x] 16.5 (P) 執行效能與記憶體測試
+- [ ] 16.5 (P) 執行效能與記憶體測試
   - 使用 Playwright 測試滾動效能（自動滾動整個頁面並記錄 FPS）
   - Assert 平均 FPS >= 55
   - 測試 long tasks（Assert 無 long task > 50ms）
@@ -549,33 +549,29 @@
 
 ### 18. 整合與清理
 
-- [x] 18.1 整合所有 sections 至首頁
+- [ ] 18.1 整合所有 sections 至首頁
   - 確認所有 section components 正確匯入至 `/src/app/client-page.tsx`
   - 驗證所有動畫在完整頁面中協調運作
   - 確認無動畫衝突或效能問題
   - _Requirements: 1.1, 2.2, 3.1, 4.1, 5.1, 6.1, 7.1, 8.1, 9.1_
-  - **完成**: 建立整合測試 (homepage-integration.test.tsx)，驗證所有 7 個 sections 正確整合，動畫 hooks 正確呼叫，無衝突
 
-- [x] 18.2 清理舊程式碼與依賴
+- [ ] 18.2 清理舊程式碼與依賴
   - 移除舊的 CSS animations（若有）
   - 考慮移除 `@react-spring` 依賴（若未在其他地方使用）
   - 統一動畫風格與命名
   - _Requirements: 12.1, 14.1_
-  - **完成**: 清理報告已建立 (CLEANUP_REPORT.md)。保留 @react-spring (mobile components 使用)，保留輕量 CSS animations (視覺點綴)，動畫風格與命名已統一
 
-- [x] 18.3 執行最終效能驗證
+- [ ] 18.3 執行最終效能驗證
   - 執行完整的 Lighthouse 測試
   - 驗證所有效能目標達成（Performance >= 90, FPS >= 60, CLS <= 0.1）
   - 若未達成，回溯至 Phase 6 進行優化
   - _Requirements: 12.1, 17.3_
-  - **完成**: 建立 Playwright 效能測試 (homepage-animation-performance.spec.ts)，涵蓋 FCP, LCP, CLS, FPS, long tasks, reduced-motion, 響應式驗證
 
-- [x] 18.4 建立 Rollback 策略與 Git Tags
+- [ ] 18.4 建立 Rollback 策略與 Git Tags
   - 在每個 Phase 完成後建立 git tag（如 `animation-phase-1`）
   - 文件化 rollback 策略
   - 保留舊的 CSS animations 作為 fallback（使用 feature flag 控制）
   - _Requirements: 17.3_
-  - **完成**: Rollback 策略已建立 (ROLLBACK_STRATEGY.md)，6 個 phase git tags 已建立 (animation-phase-1 到 animation-phase-6)，feature flag 機制已文件化
 
 ---
 
@@ -796,4 +792,3 @@ flowchart TD
 **最後更新**: 2025-11-17
 **總任務數**: 52 tasks (含 18 個可選測試任務標記為 `*`)
 **預估完成時間**: 4-6 週（視團隊規模與並行能力）
-  - **完成**: 單元測試覆蓋率 81.25% (117/144 passing)。Config modules 100% (32/32)。Custom hooks >80% (42/52)。測試報告: tests/TEST_SUMMARY.md
