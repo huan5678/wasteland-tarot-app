@@ -22,6 +22,8 @@ import { AnalyticsProvider } from '@/components/providers/AnalyticsProvider'
 import { NotificationProvider } from '@/components/providers/NotificationProvider'
 import { TiltConfigProvider } from '@/contexts/TiltConfigContext'
 import { DailyCardBackProvider } from '@/components/providers/DailyCardBackProvider'
+import { AnimationProvider } from '@/components/providers/AnimationProvider'
+import { CRTScreenEffect } from '@/components/ui/CRTScreenEffect'
 
 // Initializers
 import { MetricsInitializer } from '@/components/system/MetricsInitializer'
@@ -93,21 +95,28 @@ function UIProviders({ children }: { children: ReactNode }) {
       {/* 啟用所有使用 'framer-motion/m' 的組件動畫功能 */}
       {/* domAnimation: 輕量版 features，包含大部分常用動畫功能 */}
       {/* strict: 關閉以允許混用 motion 和 m components */}
-      <LazyMotion features={domAnimation}>
-        {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
-        {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
-        <TiltConfigProvider>
-          {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
-          <DailyCardBackProvider>
-            {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
-            <MusicPlayerInitializer />
+    <LazyMotion features={domAnimation}>
+        {/* AnimationProvider: 管理全域動畫狀態（如 CRT 開關機效果） */}
+        <AnimationProvider>
+          {/* TiltConfigProvider: 為所有卡片元件提供 3D 傾斜效果全域配置 */}
+          {/* 自動偵測裝置效能並設定降級策略（低效能裝置減少角度、停用光澤） */}
+          <TiltConfigProvider>
+            {/* DailyCardBackProvider: 提供每日隨機卡背功能，自動在換日時更新 */}
+            <DailyCardBackProvider>
+              {/* MusicPlayerInitializer: 初始化音樂播放器並從 localStorage 恢復狀態 */}
+              {/* 暫時禁用：修復無限 API 請求循環導致頁面卡死 */}
+              {/* <MusicPlayerInitializer /> */}
 
-            {children}
+              {/* CRT 螢幕特效層 (Z-Index: 9999) */}
+              <CRTScreenEffect />
 
-            {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
-            <MusicPlayerDrawer />
-          </DailyCardBackProvider>
-        </TiltConfigProvider>
+              {children}
+
+              {/* MusicPlayerDrawer: 全域音樂播放器 Drawer，固定在右下角 */}
+              <MusicPlayerDrawer />
+            </DailyCardBackProvider>
+          </TiltConfigProvider>
+        </AnimationProvider>
       </LazyMotion>
     </>
   )

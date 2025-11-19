@@ -1,23 +1,14 @@
 /**
  * useEntranceAnimation Hook
  * 專門處理頁面載入時的入場動畫（不使用 ScrollTrigger）
- *
- * 適用於：
- * - Hero Section（頁面頂部）
- * - 任何一開始就在 viewport 內的元素
- *
- * 與 useScrollAnimation 的差異：
- * - useEntranceAnimation: 頁面載入後立即播放
- * - useScrollAnimation: 滾動到指定位置時才觸發
+ * Refactored to use @gsap/react useGSAP hook
  */
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import type { RefObject } from 'react';
 import { useReducedMotion } from './useReducedMotion';
-import { gsapConfig } from './gsapConfig';
-
-// ✅ Import GSAP directly (like useStagger does)
 import { gsap } from 'gsap';
+import { useGSAP } from '@gsap/react';
 
 /**
  * Animation configuration for entrance animation
@@ -63,31 +54,6 @@ export interface UseEntranceAnimationReturn {
 
 /**
  * useEntranceAnimation - 頁面載入時的入場動畫（無 ScrollTrigger）
- *
- * @param options - Animation configuration options
- * @returns Animation control instances and status
- *
- * @example
- * ```tsx
- * const containerRef = useRef<HTMLDivElement>(null);
- *
- * useEntranceAnimation({
- *   containerRef,
- *   animations: [
- *     {
- *       target: '.hero-title',
- *       from: { opacity: 0, y: -20 },
- *       to: { opacity: 1, y: 0, duration: 0.8 }
- *     },
- *     {
- *       target: '.hero-cta',
- *       to: { opacity: 1, scale: 1, duration: 0.6 },
- *       position: '+=0.3'
- *     }
- *   ],
- *   delay: 0.2 // 延遲 0.2 秒播放
- * });
- * ```
  */
 export function useEntranceAnimation(
   options: UseEntranceAnimationOptions
@@ -101,46 +67,30 @@ export function useEntranceAnimation(
 
   // State
   const [isReady, setIsReady] = useState(false);
-
-  // Refs to store GSAP instances
-  const timelineRef = useRef<gsap.core.Timeline | null>(null);
+  const [timeline, setTimeline] = useState<gsap.core.Timeline | null>(null);
 
   // Check reduced motion preference
   const prefersReducedMotion = useReducedMotion();
 
-  // Cleanup function stored in ref
-  const cleanupRef = useRef<(() => void) | null>(null);
+  useGSAP(
+    () => {
+      // Early return if not enabled or no container
+      if (!enabled || !containerRef.current || !animations || animations.length === 0) {
+        setIsReady(false);
+        return;
+      }
 
-  // useLayoutEffect to initialize animations after DOM is ready
-  useLayoutEffect(() => {
-    // Early return if not enabled
-    if (!enabled) {
-      setIsReady(false);
-      return;
-    }
+      try {
+        // ✅ Immediately set initial 'from' state to prevent flash of unstyled content (FOUC)
+        animations.forEach((animation) => {
+          const { target, from } = animation;
+          if (from) {
+            gsap.set(target, from); // Set initial state before animation starts
+          }
+        });
 
-    // Check if containerRef is valid
-    if (!containerRef.current) {
-      console.warn(
-        '[useEntranceAnimation] containerRef.current is null. Animation will not be initialized.'
-      );
-      setIsReady(false);
-      return;
-    }
-
-    // Check if animations array is not empty
-    if (!animations || animations.length === 0) {
-      console.warn('[useEntranceAnimation] No animations provided.');
-      setIsReady(false);
-      return;
-    }
-
-    try {
-
-      // ✅ Use gsap.context() to scope selectors to container element
-      const ctx = gsap.context(() => {
         // Create Timeline with delay (paused initially to prevent immediate play)
-        const timeline = gsap.timeline({
+        const tl = gsap.timeline({
           paused: true, // Start paused, will play after delay
           delay: delay,
         });
@@ -161,76 +111,67 @@ export function useEntranceAnimation(
           if (from) {
             // fromTo animation
             if (position !== undefined) {
-              timeline.fromTo(target, from, toVars, position);
+              tl.fromTo(target, from, toVars, position);
             } else {
-              timeline.fromTo(target, from, toVars);
+              tl.fromTo(target, from, toVars);
             }
           } else {
             // to animation only
             if (position !== undefined) {
-              timeline.to(target, toVars, position);
+              tl.to(target, toVars, position);
             } else {
-              timeline.to(target, toVars);
+              tl.to(target, toVars);
             }
           }
         });
 
-        // Store timeline in ref
-        timelineRef.current = timeline;
+        // Store timeline
+        setTimeline(tl);
 
         // Play timeline after setup
+        // Note: useGSAP handles cleanup automatically, so no need to worry about unmount
         requestAnimationFrame(() => {
-          timeline.play();
+            tl.play();
         });
-      }, containerRef); // ✅ Scope context to containerRef
 
-      // Mark as ready
-      setIsReady(true);
+        // Mark as ready
+        setIsReady(true);
 
-      // Setup cleanup function
-      cleanupRef.current = () => {
-        if (timelineRef.current) {
-          timelineRef.current.kill();
-        }
-        // gsap.context() auto-cleanup will handle the rest
-      };
-    } catch (error) {
-      console.error('[useEntranceAnimation] Failed to initialize GSAP animation:', error);
-      setIsReady(false);
-    }
-
-    // Cleanup on unmount
-    return () => {
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
+      } catch (error) {
+        console.error('[useEntranceAnimation] Failed to initialize GSAP animation:', error);
+        setIsReady(false);
       }
-    };
-  }, [
-    containerRef,
-    animations,
-    delay,
-    enabled,
-    prefersReducedMotion,
-  ]);
+    },
+    {
+      scope: containerRef, // ✅ Scope selectors to containerRef
+      dependencies: [
+        containerRef, // ✅ Keep: RefObject is stable, needed for DOM ready detection
+        // ❌ Removed: animations (causes infinite loop when passed as inline array literal)
+        delay,
+        enabled,
+        prefersReducedMotion,
+      ],
+    }
+  );
 
   // Control functions
   const play = () => {
-    if (timelineRef.current) {
-      timelineRef.current.play();
+    if (timeline) {
+      timeline.play();
     }
   };
 
   const pause = () => {
-    if (timelineRef.current) {
-      timelineRef.current.pause();
+    if (timeline) {
+      timeline.pause();
     }
   };
 
   return {
-    timeline: timelineRef.current,
+    timeline,
     isReady,
     play,
     pause,
   };
 }
+

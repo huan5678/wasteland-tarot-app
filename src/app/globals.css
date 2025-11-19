@@ -137,6 +137,26 @@
   animation: wiggle 0.5s ease-in-out infinite;
 }
 
+/* Border Expand Animation - 邊框展開效果（Hero Section 標題） */
+/**
+ * 從中間往左右展開的寬度動畫
+ * 用於 Hero Section 的 DynamicHeroTitle 元件
+ * 配合 margin: 0 auto 實現中心展開效果
+ */
+@keyframes hero-border-expand {
+  from {
+    width: 1px; /* 初始：垂直線 */
+  }
+  to {
+    width: 100%; /* 展開：完整寬度 */
+  }
+}
+
+.animate-hero-border-expand {
+  animation: hero-border-expand 1s ease-out forwards;
+  animation-delay: 0s; /* 立即開始，不等 JavaScript */
+}
+
 /* Float Animation - 懸浮效果（適合提示） */
 @keyframes float {
   0%, 100% {

@@ -7,7 +7,7 @@ import { ConditionalLayout } from '@/components/layout/ConditionalLayout';
 import { StagedAuthProvider } from '@/components/providers/StagedAuthProvider';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { LoadingStrategy } from '@/components/providers/LoadingStrategy';
-import { BackendHealthCheck } from '@/components/providers/BackendHealthCheck';
+// import { BackendHealthCheck } from '@/components/providers/BackendHealthCheck'; // 已移除：改為非阻塞式檢查
 import { PWAProvider } from '@/components/providers/PWAProvider';
 import { cn } from '@/lib/utils';
 // import { doto } from '@/lib/fonts'; // Doto font removed - using Noto Sans TC
@@ -80,26 +80,25 @@ export default function RootLayout({
           - Providers 只包裹 {children}，不包裹整個 HTML
           - 按需載入，減少不必要的初始化
         */}
-        <BackendHealthCheck>
-          <StagedAuthProvider requireAuth={false}>
-            <AppProviders>
-              <LoadingStrategy>
-                <PWAProvider>
-                  <div className="relative z-10">
-                    <ClientLayout>
-                      {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
-                      {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
-                      {/* ConditionalLayout 內部有自己的 flex flex-col min-h-screen 結構 */}
-                      <ConditionalLayout>
-                        {children}
-                      </ConditionalLayout>
-                    </ClientLayout>
-                  </div>
-                </PWAProvider>
-              </LoadingStrategy>
-            </AppProviders>
-          </StagedAuthProvider>
-        </BackendHealthCheck>
+        <StagedAuthProvider requireAuth={false}>
+          <AppProviders>
+            {/* 暫時停用 LoadingStrategy 來排除問題 */}
+            {/* <LoadingStrategy> */}
+              <PWAProvider>
+                <div className="relative z-10">
+                  <ClientLayout>
+                    {/* ConditionalLayout: 根據路由決定是否顯示 Header 和 Footer */}
+                    {/* 404 頁面不顯示 Header 和 Footer，完全獨立渲染 */}
+                    {/* ConditionalLayout 內部有自己的 flex flex-col min-h-screen 結構 */}
+                    <ConditionalLayout>
+                      {children}
+                    </ConditionalLayout>
+                  </ClientLayout>
+                </div>
+              </PWAProvider>
+            {/* </LoadingStrategy> */}
+          </AppProviders>
+        </StagedAuthProvider>
       </body>
     </html>
   );

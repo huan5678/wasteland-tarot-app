@@ -255,8 +255,11 @@ export function useCounterAnimation(
         const scrollTrigger = ScrollTrigger.create({
           trigger: triggerRef.current,
           animation: tween,
-          // ✅ Use all defaults from gsapConfig (including scrub)
-          ...gsapConfig.scrollTrigger,
+          // ✅ Use start/end from gsapConfig, but override scrub for one-time play
+          start: gsapConfig.scrollTrigger.start,
+          end: gsapConfig.scrollTrigger.end,
+          toggleActions: gsapConfig.scrollTrigger.toggleActions,
+          scrub: false, // ✅ Disable scrub for one-time animation (not scroll-linked)
           scroller: scrollerElement, // ✅ Pass element reference, not string
           onEnter: () => console.log('[useCounterAnimation] ScrollTrigger ENTER - starting animation'),
           onLeave: () => console.log('[useCounterAnimation] ScrollTrigger LEAVE'),

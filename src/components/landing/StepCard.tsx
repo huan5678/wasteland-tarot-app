@@ -24,6 +24,7 @@ import { motion } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons';
 import { PipBoyCard, PipBoyCardContent } from '@/components/ui/pipboy';
 import { useReducedMotion } from '@/lib/animations/useReducedMotion';
+import { HolographicCard } from '@/components/ui/HolographicCard';
 
 export interface StepCardProps {
   /**
@@ -70,43 +71,45 @@ export const StepCard = React.memo<StepCardProps>(
           ease: 'easeInOut',
         },
       },
-    };
+    } as const;
 
     return (
-      <PipBoyCard
-        variant="default"
-        padding="lg"
-        className="step-card text-center hover:scale-105 transition-transform duration-300 min-h-[280px]"
-        role="article"
-      >
-        <PipBoyCardContent>
-          {/* Step Number Badge */}
-          <div className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-pip-boy-green bg-black/60 text-2xl font-bold text-pip-boy-green mb-4 mx-auto">
-            {stepNumber}
-          </div>
+      <HolographicCard className="h-full" intensity={10}>
+        <PipBoyCard
+          variant="default"
+          padding="lg"
+          className="step-card text-center transition-transform duration-300 min-h-[280px] h-full"
+          role="article"
+        >
+          <PipBoyCardContent>
+            {/* Step Number Badge */}
+            <div className="flex items-center justify-center w-12 h-12 rounded-full border-2 border-pip-boy-green bg-black/60 text-2xl font-bold text-pip-boy-green mb-4 mx-auto">
+              {stepNumber}
+            </div>
 
-          {/* Step Icon with Rotation Animation */}
-          <motion.div
-            variants={iconRotationVariant}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.5 }}
-            className="mb-4"
-          >
-            <PixelIcon name={icon} size={40} className="mx-auto text-pip-boy-green" decorative />
-          </motion.div>
+            {/* Step Icon with Rotation Animation */}
+            <motion.div
+              variants={iconRotationVariant}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.5 }}
+              className="mb-4"
+            >
+              <PixelIcon name={icon} size={48} className="mx-auto text-pip-boy-green" decorative />
+            </motion.div>
 
-          {/* Step Title */}
-          <h3 className="text-lg font-bold text-pip-boy-green mb-2">
-            {title}
-          </h3>
+            {/* Step Title */}
+            <h3 className="text-lg font-bold text-pip-boy-green mb-2">
+              {title}
+            </h3>
 
-          {/* Step Description */}
-          <p className="text-pip-boy-green/60 text-sm leading-relaxed">
-            {description}
-          </p>
-        </PipBoyCardContent>
-      </PipBoyCard>
+            {/* Step Description */}
+            <p className="text-pip-boy-green/60 text-sm leading-relaxed">
+              {description}
+            </p>
+          </PipBoyCardContent>
+        </PipBoyCard>
+      </HolographicCard>
     );
   }
 );

@@ -1,30 +1,18 @@
 'use client'
 
 import React from 'react'
-import dynamic from 'next/dynamic'
-import { logError } from '@/lib/logger'
-
-const GlobalErrorDisplay = dynamic(() => import('@/components/common/GlobalErrorDisplay').then(m => m.GlobalErrorDisplay), { ssr: false })
-const MetricsInitializer = dynamic(async () => {
-  try {
-    const m = await import('@/components/system/MetricsInitializer')
-    return m.MetricsInitializer
-  } catch (e) {
-    logError(e, { component: 'MetricsInitializerDynamicImport' })
-    return () => null
-  }
-}, { ssr: false })
 
 interface ClientLayoutProps {
   children: React.ReactNode
 }
 
+/**
+ * ClientLayout - 暫時簡化以修復 SSR 錯誤
+ *
+ * 修復說明：
+ * - 移除了 dynamic import 以避免 "Bail out to client-side rendering" 錯誤
+ * - GlobalErrorDisplay 和 MetricsInitializer 已在 AppProviders 中處理
+ */
 export function ClientLayout({ children }: ClientLayoutProps) {
-  return (
-    <>
-      <GlobalErrorDisplay />
-      <MetricsInitializer />
-      {children}
-    </>
-  )
+  return <>{children}</>
 }

@@ -119,6 +119,7 @@ export default function ClientPage() {
   const featuresSectionRef = useRef<HTMLDivElement>(null)
 
   // ✅ Hero Section entrance animation（頁面載入時播放，不使用 ScrollTrigger）
+  // Note: .hero-title 的 border 展開使用 CSS animation（立即執行，不等 JS）
   useEntranceAnimation({
     containerRef: heroSectionRef,
     animations: [
@@ -126,12 +127,7 @@ export default function ClientPage() {
         target: '.hero-header',
         from: { opacity: 0, y: -30 },
         to: { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-      },
-      {
-        target: '.hero-title',
-        from: { opacity: 0, y: -20 },
-        to: { opacity: 1, y: 0, duration: 0.8, ease: 'power2.out' },
-        position: '+=0.2',
+        position: 0, // 第一個開始播放
       },
       {
         target: '.hero-cta',
@@ -140,7 +136,7 @@ export default function ClientPage() {
         position: '+=0.3',
       },
     ],
-    delay: 0.2, // 延遲 0.2 秒播放
+    delay: 0, // 立即開始，不延遲
   })
 
   // Task 8.1: Integrate useStagger hook for How It Works section
@@ -286,7 +282,7 @@ export default function ClientPage() {
         <div className="max-w-6xl mx-auto px-4 py-16">
           {/* Terminal Header */}
           <div className="text-center mb-12">
-            <div className="hero-header border-2 border-pip-boy-green p-4 inline-block mb-8" style={{backgroundColor: 'var(--color-pip-boy-green-10)'}}>
+            <div className="hero-header opacity-0 border-2 border-pip-boy-green p-4 inline-block mb-8" style={{backgroundColor: 'var(--color-pip-boy-green-10)'}}>
               <div className="flex items-center gap-2 sm:gap-4 text-xs">
                 <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse flex-shrink-0"></div>
                 {/* 手機版：簡化顯示 */}
@@ -301,15 +297,24 @@ export default function ClientPage() {
             </div>
 
             {/* 動態標題元件 */}
-            <div className="hero-title">
+            <div
+              className="hero-title animate-hero-border-expand"
+              style={{
+                width: '1px', // 初始寬度：1px 顯示垂直 border 線
+                maxWidth: '100%', // 最大寬度 100%
+                margin: '0 auto', // 水平居中
+                opacity: 1,
+                overflow: 'hidden' // 隱藏超出部分（文字）
+              }}
+            >
               <DynamicHeroTitleErrorBoundary>
-                <DynamicHeroTitle />
+                <DynamicHeroTitle initialDelay={1000} />
               </DynamicHeroTitleErrorBoundary>
             </div>
           </div>
 
           {/* Primary Actions - Fallout Terminal Style */}
-          <div className="hero-cta flex flex-col sm:flex-row gap-4 max-w-4xl mx-auto mb-16 justify-center">
+          <div className="hero-cta opacity-0 flex flex-col sm:flex-row gap-4 max-w-4xl mx-auto mb-16 justify-center">
             {/* Primary CTA */}
             <button
               onClick={handleGetStarted}

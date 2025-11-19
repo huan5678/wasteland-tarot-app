@@ -1,17 +1,19 @@
 /**
  * useScrollAnimation Hook
  * 統一管理 GSAP ScrollTrigger 滾動動畫（移除 pin 功能）
+ * Refactored to use @gsap/react useGSAP hook
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useReducedMotion } from './useReducedMotion';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useGSAP } from '@gsap/react';
 
 // Register plugin immediately
 if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
+  gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
 /**
@@ -97,72 +99,36 @@ export function useScrollAnimation(
   // Check reduced motion preference
   const prefersReducedMotion = useReducedMotion();
 
-  // Cleanup function stored in ref
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  // useEffect to initialize animations after DOM is ready
-  useEffect(() => {
-    // Early return if not enabled
-    if (!enabled) {
-      setIsReady(false);
-      return;
-    }
-
-    // Check if triggerRef is valid
-    if (!triggerRef.current) {
-      console.warn('[useScrollAnimation] triggerRef.current is null. Animation will not be initialized.');
-      setIsReady(false);
-      return;
-    }
-
-    // Check if animations array is not empty
-    if (!animations || animations.length === 0) {
-      console.warn('[useScrollAnimation] No animations provided.');
-      setIsReady(false);
-      return;
-    }
-
-    // ✅ Check if scroller element exists (if scroller is a string selector)
-    if (typeof scroller === 'string') {
-      const scrollerElement = document.querySelector(scroller);
-      if (!scrollerElement) {
-        console.warn(`[useScrollAnimation] Scroller element "${scroller}" not found. Animation will not be initialized.`);
+  useGSAP(
+    () => {
+      // Early return if not enabled or no trigger
+      if (!enabled || !triggerRef.current || !animations || animations.length === 0) {
         setIsReady(false);
         return;
       }
-    }
 
-    // ✅ Use setTimeout to ensure DOM is fully ready (more aggressive than requestAnimationFrame)
-    const timerId = setTimeout(() => {
-      // ✅ Double-check scroller element exists before initializing
+      // ✅ Check if scroller element exists (if scroller is a string selector)
+      let scrollerElement: HTMLElement | Window | undefined = undefined;
       if (typeof scroller === 'string') {
-        const scrollerElement = document.querySelector(scroller);
-        if (!scrollerElement) {
-          console.warn(`[useScrollAnimation] Scroller element "${scroller}" still not found after delay. Aborting.`);
+        const el = document.querySelector(scroller);
+        if (!el) {
+          console.warn(`[useScrollAnimation] Scroller element "${scroller}" not found. Animation will not be initialized.`);
           setIsReady(false);
           return;
         }
+        scrollerElement = el as HTMLElement;
+      } else if (scroller) {
+        scrollerElement = scroller;
       }
 
       try {
         // Determine toggleActions based on once parameter
         const toggleActions = once ? 'play none none none' : 'play reverse play reverse';
 
-        // ✅ Get scroller element reference (not string)
-        let scrollerElement: HTMLElement | Window | undefined = undefined;
-        if (typeof scroller === 'string') {
-          const el = document.querySelector(scroller);
-          if (!el) {
-            console.error(`[useScrollAnimation] Scroller element "${scroller}" not found after delay`);
-            setIsReady(false);
-            return;
-          }
-          scrollerElement = el as HTMLElement;
-        } else if (scroller) {
-          scrollerElement = scroller;
-        }
-
-        console.log('[useScrollAnimation] Using scroller:', scrollerElement);
+        console.log('[useScrollAnimation] Initializing with useGSAP:', {
+          trigger: triggerRef.current,
+          scroller: scrollerElement,
+        });
 
         // ✅ Create Timeline with embedded ScrollTrigger (no pin)
         const timeline = gsap.timeline({
@@ -172,19 +138,10 @@ export function useScrollAnimation(
             end,
             toggleActions,
             scrub: scrub || false,
-            scroller: scrollerElement, // ✅ Pass element reference, not string
+            scroller: scrollerElement,
             markers,
             id: `scroll-anim-${Math.random()}`,
           },
-        });
-
-        console.log('[useScrollAnimation] Timeline created:', {
-          trigger: triggerRef.current,
-          start,
-          end,
-          toggleActions,
-          scrub,
-          timeline,
         });
 
         // ✅ Apply animations to timeline
@@ -198,13 +155,6 @@ export function useScrollAnimation(
           if (prefersReducedMotion && 'duration' in toVars) {
             toVars.duration = 0;
           }
-
-          console.log(`[useScrollAnimation] Adding animation ${index}:`, {
-            target,
-            from,
-            toVars,
-            position,
-          });
 
           // Use .fromTo() if 'from' is provided, otherwise use .to()
           if (from) {
@@ -226,57 +176,31 @@ export function useScrollAnimation(
         timelineRef.current = timeline;
         scrollTriggerRef.current = timeline.scrollTrigger || null;
 
-        console.log('[useScrollAnimation] ScrollTrigger instance:', {
-          scrollTrigger: timeline.scrollTrigger,
-          progress: timeline.progress(),
-          paused: timeline.paused(),
-          animations: animations.length,
-        });
+        // Mark as ready
+        setIsReady(true);
 
-        // ✅ Immediately refresh ScrollTrigger after creation
-        if (timeline.scrollTrigger) {
-          requestAnimationFrame(() => {
-            timeline.scrollTrigger?.refresh();
-            console.log('[useScrollAnimation] ScrollTrigger refreshed immediately after creation');
-          });
-        }
-
-      // Mark as ready
-      setIsReady(true);
-
-        // Setup cleanup function
-        cleanupRef.current = () => {
-          if (timelineRef.current) {
-            timelineRef.current.kill();
-          }
-        };
       } catch (error) {
         console.error('[useScrollAnimation] Failed to initialize GSAP animation:', error);
         setIsReady(false);
       }
-    }, 300); // ✅ 300ms delay to ensure DOM is ready and painted
-
-    // Cleanup on unmount
-    return () => {
-      clearTimeout(timerId);
-      if (cleanupRef.current) {
-        cleanupRef.current();
-        cleanupRef.current = null;
-      }
-    };
-  }, [
-    triggerRef,
-    targetRef,
-    animations,
-    start,
-    end,
-    scrub,
-    once,
-    enabled,
-    markers,
-    scroller,
-    prefersReducedMotion,
-  ]);
+    },
+    {
+      scope: triggerRef, // ✅ Scope selectors to triggerRef
+      dependencies: [
+        triggerRef, // ✅ Keep: RefObject is stable, needed for DOM ready detection
+        targetRef,  // ✅ Keep: RefObject is stable
+        // ❌ Removed: animations (causes infinite loop when passed as inline array literal)
+        start,
+        end,
+        scrub,
+        once,
+        enabled,
+        markers,
+        scroller,
+        prefersReducedMotion,
+      ],
+    }
+  );
 
   // Refresh function
   const refresh = () => {
@@ -294,3 +218,4 @@ export function useScrollAnimation(
     refresh,
   };
 }
+

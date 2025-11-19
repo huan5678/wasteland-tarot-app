@@ -59,9 +59,16 @@ export function DynamicMainContent({
         className
       )}
       style={{
-        paddingTop: headerHeight > 0 ? `${headerHeight}px` : undefined
+        // ✅ Fix scroll bounce: Use scroll-padding-top instead of paddingTop
+        // scroll-padding-top doesn't affect scrollHeight calculation
+        // but still prevents content from being hidden behind fixed header
+        scrollPaddingTop: headerHeight > 0 ? `${headerHeight}px` : undefined
       }}
     >
+      {/* ✅ Spacer to prevent content from being hidden behind fixed header */}
+      {headerHeight > 0 && (
+        <div style={{ height: `${headerHeight}px` }} aria-hidden="true" />
+      )}
       {children}
     </main>
   )
