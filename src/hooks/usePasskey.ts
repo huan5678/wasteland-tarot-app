@@ -22,12 +22,14 @@ import type {
   PublicKeyCredentialRequestOptionsJSON,
 } from '@simplewebauthn/types';
 import type { PasskeyCredential } from '@/types/api';
+import { getClientApiBaseUrl } from '@/lib/config/api';
 
 // ============================================================================
 // Types
 // ============================================================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+// CRITICAL: Use getClientApiBaseUrl() which returns '' to route through Next.js proxy
+const API_BASE_URL = getClientApiBaseUrl();
 
 interface WebAuthnOptionsResponse {
   options: PublicKeyCredentialCreationOptionsJSON | PublicKeyCredentialRequestOptionsJSON;

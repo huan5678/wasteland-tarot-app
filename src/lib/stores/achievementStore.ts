@@ -102,8 +102,9 @@ export type AchievementListResponse = z.infer<typeof AchievementListResponseSche
 export type UserProgressSummaryResponse = z.infer<typeof UserProgressSummaryResponseSchema>
 export type ClaimRewardResponse = z.infer<typeof ClaimRewardResponseSchema>
 
-// 使用環境變數或預設值
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// CRITICAL: Use empty string to route through Next.js API proxy
+// This ensures all requests go through /api/v1/[...path] proxy
+const API_BASE_URL = ''
 
 // ============================================================================
 // Types & Interfaces

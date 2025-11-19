@@ -53,7 +53,7 @@ class APIClient {
     const isBrowser = typeof window !== 'undefined';
     this.baseURL = isBrowser
       ? '' // Browser: relative path → Next.js proxy
-      : process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || 'http://localhost:8000'; // SSR: direct backend
+      : process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'; // SSR: direct backend
   }
 
   /**

@@ -69,7 +69,7 @@ export class ApiClient {
     const isBrowser = typeof window !== 'undefined'
     const defaultBaseURL = isBrowser
       ? '' // Browser: use relative path → Next.js proxy at /api/v1/[...path]
-      : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000' // SSR: direct backend
+      : process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000' // SSR: direct backend
 
     this.baseURL = config.baseURL !== undefined ? config.baseURL : defaultBaseURL
     this.defaultTimeout = config.timeout || 30000 // 30 seconds

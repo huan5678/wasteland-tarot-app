@@ -423,7 +423,7 @@ export const profileAPI = {
 
     // 注意：不能使用 apiClient.post()，因為它會自動 JSON.stringify body
     // 必須直接使用底層的 request() 方法並傳入 FormData
-    const url = `${typeof window !== 'undefined' ? '' : process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/users/avatar`
+    const url = `${typeof window !== 'undefined' ? '' : process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'}/api/v1/users/avatar`
 
     const response = await fetch(url, {
       method: 'POST',

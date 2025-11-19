@@ -1,18 +1,20 @@
 /**
  * Authentication Server Actions
  *
- * ( Next.js Server Actions UçI^N¢6Ô cookie P6
- * ( Server-side ( cookies() API -ö httpOnly cookies
+ * ( Next.js Server Actions UÔøΩI^NÔøΩ6ÔøΩ cookie P6
+ * ( Server-side ( cookies() API -ÔøΩ httpOnly cookies
  */
 
 'use server'
 
 import { cookies } from 'next/headers'
+import { getServerApiBaseUrl } from '@/lib/config/api'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// CRITICAL: Server actions MUST use getServerApiBaseUrl() to access internal backend
+const BACKEND_URL = getServerApiBaseUrl()
 
 /**
- * „ê Set-Cookie header W2
+ * ÔøΩ Set-Cookie header W2
  * <: "name=value; HttpOnly; Secure; Max-Age=3600; Path=/; SameSite=lax"
  */
 function parseCookieHeader(cookieHeader: string): {
@@ -35,7 +37,7 @@ function parseCookieHeader(cookieHeader: string): {
   }
 
   const [name, ...valueParts] = nameValue.split('=')
-  const value = valueParts.join('=') // U value -Ô˝+ '='
+  const value = valueParts.join('=') // U value -ÔøΩÔøΩ+ '='
 
   const options = {
     httpOnly: false,
@@ -65,7 +67,7 @@ function parseCookieHeader(cookieHeader: string): {
 }
 
 /**
- * ûåÔ response -–÷&-ö cookies
+ * ÔøΩÔøΩÔøΩ response -ÔøΩÔøΩ&-ÔøΩ cookies
  */
 async function setCookiesFromResponse(response: Response): Promise<void> {
   const setCookieHeaders = response.headers.getSetCookie()
@@ -93,7 +95,7 @@ async function setCookiesFromResponse(response: Response): Promise<void> {
 }
 
 /**
- * ;ä Server Action
+ * ;ÔøΩ Server Action
  */
 export async function registerAction(formData: {
   email: string
@@ -123,7 +125,7 @@ export async function registerAction(formData: {
       }
     }
 
-    // -ö cookiesaccess_token, refresh_token	
+    // -ÔøΩ cookiesaccess_token, refresh_token	
     await setCookiesFromResponse(response)
 
     console.log('[Server Actions]  Register successful:', formData.email)
@@ -172,7 +174,7 @@ export async function loginAction(formData: {
       }
     }
 
-    // -ö cookiesaccess_token, refresh_token	
+    // -ÔøΩ cookiesaccess_token, refresh_token	
     await setCookiesFromResponse(response)
 
     console.log('[Server Actions]  Login successful:', formData.email)
@@ -193,7 +195,7 @@ export async function loginAction(formData: {
 }
 
 /**
- * {˙ Server Action
+ * {ÔøΩ Server Action
  */
 export async function logoutAction() {
   console.log('[Server Actions] Logout action called')
@@ -201,11 +203,11 @@ export async function logoutAction() {
   try {
     const cookieStore = await cookies()
 
-    // ÷ó˛	Ñ access_token Â|ÎåÔ{˙ API
+    // ÷óÔøΩ	ÔøΩ access_token ÔøΩ|ÔøΩÔøΩ{ÔøΩ API
     const accessToken = cookieStore.get('access_token')
 
     if (accessToken) {
-      // |ÎåÔ{˙ APIÇú	Ê\	
+      // |ÔøΩÔøΩ{ÔøΩ APIÔøΩÔøΩ	ÔøΩ\	
       try {
         await fetch(`${BACKEND_URL}/api/v1/auth/logout`, {
           method: 'POST',
@@ -218,7 +220,7 @@ export async function logoutAction() {
       }
     }
 
-    // d@	çI¯‹Ñ cookies
+    // d@	ÔøΩIÔøΩ‹Ñ cookies
     cookieStore.delete('access_token')
     cookieStore.delete('refresh_token')
 
