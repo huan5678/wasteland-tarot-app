@@ -429,9 +429,8 @@ export const useReadingsStore = create<ReadingsState>((set, get) => {
           faction: current.faction_influence,
         })
 
-        // Call backend streaming API
-        const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
-        const response = await fetch(`${API_BASE_URL}/api/v1/readings/interpretation/stream-multi`, {
+        // Call backend streaming API (use relative path to route through Next.js proxy)
+        const response = await fetch(`/api/v1/readings/interpretation/stream-multi`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -5,7 +5,8 @@
 
 import { create } from 'zustand'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000'
+// CRITICAL: Use empty string to route through Next.js API proxy
+const API_BASE_URL = ''
 
 // ============================================================================
 // Types

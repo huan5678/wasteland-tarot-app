@@ -560,8 +560,7 @@ export default function ReadingDetailClientPage() {
         return;
       }
 
-      // Call backend streaming API directly
-      const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+      // Call backend streaming API through Next.js proxy (use relative path)
       console.log('[handleRequestAI] 呼叫後端 streaming API');
 
       // Map faction values to backend enum
@@ -616,7 +615,7 @@ export default function ReadingDetailClientPage() {
 
       console.log('[handleRequestAI] Request body:', requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/readings/interpretation/stream-multi`, {
+      const response = await fetch(`/api/v1/readings/interpretation/stream-multi`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
