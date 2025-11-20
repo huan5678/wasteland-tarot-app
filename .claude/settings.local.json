@@ -84,7 +84,12 @@
       "Bash(timeout 60 uv run pytest:*)",
       "Bash(bunx vitest:*)",
       "Bash(timeout 90 uv run pytest:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(vitest run:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(bun vitest:*)",
+      "WebFetch(domain:medium.com)",
+      "mcp__fetch__fetch"
     ]
   },
   "enableAllProjectMcpServers": true,

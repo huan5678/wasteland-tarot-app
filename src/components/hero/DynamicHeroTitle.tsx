@@ -2,12 +2,12 @@
  * DynamicHeroTitle 元件
  *
  * Hero Section 動態標題系統主元件
- * 流程：主標題打字 → 副標題打字 → 內容打字 → 等待 3 秒 → 1 秒內全部刪除 → 下一組
+ * 流程：主標題解碼 → 副標題解碼 → 內容解碼 → 等待 3 秒 → 全部反向解碼消失 → 下一組
  */
 
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import type { HeroTitle, HeroTitlesCollection } from '@/types/hero';
 import { FALLBACK_TITLE } from '@/types/hero';
 import { loadHeroTitles, filterEnabledTitles, getRandomTitles } from '@/lib/heroTitlesLoader';
@@ -16,6 +16,7 @@ import { useGlitch } from '@/hooks/useGlitch';
 import { CarouselIndicator } from './CarouselIndicator';
 import { cn } from '@/lib/utils';
 import styles from './DynamicHeroTitle.module.css';
+import { useTextScramble } from '@/lib/animations/useTextScramble';
 
 /**
  * 元件 Props
@@ -25,7 +26,7 @@ export interface DynamicHeroTitleProps {
   defaultIndex?: number;
   /** 是否啟用自動輪播（預設 true） */
   autoPlay?: boolean;
-  /** 打字速度（毫秒/字元，預設 80） */
+  /** 打字速度（毫秒/字元，預設 80）- 在 Scramble 效果中對應 speed */
   typingSpeed?: number;
   /** 刪除速度（毫秒/字元，預設 30） */
   deletingSpeed?: number;
@@ -33,40 +34,31 @@ export interface DynamicHeroTitleProps {
   waitBeforeDelete?: number;
   /** 測試模式：跳過動畫直接顯示（預設 false） */
   testMode?: boolean;
+  /** 初始延遲時間（毫秒，預設 0）- 用於等待其他動畫完成 */
+  initialDelay?: number;
 }
 
-type AnimationPhase =
-  | 'typing-title'
-  | 'typing-subtitle'
-  | 'typing-description'
-  | 'waiting'
-  | 'deleting-all'
-  | 'idle';
-
-/**
- * DynamicHeroTitle 元件
- */
 export function DynamicHeroTitle({
   defaultIndex = 0,
   autoPlay = true,
-  typingSpeed = 80,
-  deletingSpeed = 30,
+  typingSpeed = 40, // Scramble 效果通常快一點
   waitBeforeDelete = 3000,
   testMode = false,
+  initialDelay = 0,
 }: DynamicHeroTitleProps) {
   // 狀態管理
   const [titles, setTitles] = useState<HeroTitle[]>([FALLBACK_TITLE]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false); // 修復：設為 false 避免卡在 loading 畫面
   const [currentIndex, setCurrentIndex] = useState(defaultIndex);
-  const [phase, setPhase] = useState<AnimationPhase>('idle');
+  
+  // 控制各個部分顯示的目標文字
+  const [targetTitle, setTargetTitle] = useState('');
+  const [targetSubtitle, setTargetSubtitle] = useState('');
+  const [targetDescription, setTargetDescription] = useState('');
 
-  // 顯示文字狀態
-  const [displayTitle, setDisplayTitle] = useState('');
-  const [displaySubtitle, setDisplaySubtitle] = useState('');
-  const [displayDescription, setDisplayDescription] = useState('');
-
-  // 刪除階段追蹤：記錄當前正在刪除哪個部分
-  const [deletingSection, setDeletingSection] = useState<'description' | 'subtitle' | 'title' | null>(null);
+  // 流程控制
+  const [isWaiting, setIsWaiting] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // 偵測無障礙偏好
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -83,12 +75,6 @@ export function DynamicHeroTitle({
     isMobile,
   });
 
-  // Refs
-  const animationFrameRef = useRef<number | null>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isPausedRef = useRef<boolean>(false);
-  const currentTitleRef = useRef<HeroTitle | null>(null);
-
   /**
    * 載入文案資料
    */
@@ -96,15 +82,12 @@ export function DynamicHeroTitle({
     loadHeroTitles()
       .then((collection: HeroTitlesCollection) => {
         const enabledTitles = filterEnabledTitles(collection);
-
         if (enabledTitles.length > 0) {
-          // 從啟用的文案中隨機選擇 10 個
           const randomTitles = getRandomTitles(enabledTitles, 10);
           setTitles(randomTitles);
         } else {
           setTitles([FALLBACK_TITLE]);
         }
-
         setIsLoading(false);
       })
       .catch((err) => {
@@ -119,19 +102,11 @@ export function DynamicHeroTitle({
    */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
-
-    const handleChange = (e: MediaQueryListEvent) => {
-      setPrefersReducedMotion(e.matches);
-    };
-
+    const handleChange = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
     mediaQuery.addEventListener('change', handleChange);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   /**
@@ -139,247 +114,144 @@ export function DynamicHeroTitle({
    */
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // 初始偵測
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
-
-    // 監聽視窗大小變化
     window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
+  // 清理計時器
+  useEffect(() => {
     return () => {
-      window.removeEventListener('resize', checkMobile);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
 
-  /**
-   * 分頁可見性控制
-   */
-  useEffect(() => {
-    isPausedRef.current = !isVisible;
-  }, [isVisible]);
-
-  /**
-   * 清理所有動畫和計時器
-   */
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (timeoutRef.current !== null) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-
-  /**
-   * 主要動畫控制邏輯
-   */
+  // 當 currentIndex 改變時，開始新的序列
   useEffect(() => {
     if (isLoading || titles.length === 0) return;
+    if (!isVisible) return;
 
     const currentTitle = titles[currentIndex];
-    if (!currentTitle) return;
 
-    currentTitleRef.current = currentTitle;
+    // ✅ 初始延遲：只在第一次（currentIndex === defaultIndex）時延遲
+    const isFirstRender = currentIndex === defaultIndex;
+    const delay = isFirstRender ? initialDelay : 0;
 
-    // 清理之前的動畫
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
+    const timer = setTimeout(() => {
+      // 重置狀態，開始顯示標題
+      setTargetTitle(currentTitle.title);
+      setTargetSubtitle('');
+      setTargetDescription('');
+      setIsWaiting(false);
+    }, delay);
 
-    // 重置顯示狀態
-    setDisplayTitle('');
-    setDisplaySubtitle('');
-    setDisplayDescription('');
-    setDeletingSection(null);
+    return () => clearTimeout(timer);
 
-    // 如果偏好減少動畫或測試模式，直接顯示
-    if (prefersReducedMotion || testMode) {
-      setDisplayTitle(currentTitle.title);
-      setDisplaySubtitle(currentTitle.subtitle);
-      setDisplayDescription(currentTitle.description);
-      setPhase('waiting');
+  }, [currentIndex, isLoading, titles, isVisible, defaultIndex, initialDelay]);
 
-      if (autoPlay && !testMode && titles.length > 1) {
-        timeoutRef.current = setTimeout(() => {
-          setCurrentIndex((prev) => (prev + 1) % titles.length);
-        }, waitBeforeDelete);
+  // 定義 Scramble Hooks
+  // 標題完成 -> 觸發副標題
+  const titleAnim = useTextScramble({
+    text: targetTitle,
+    speed: typingSpeed,
+    autoStart: true,
+    onComplete: () => {
+      if (targetTitle && !prefersReducedMotion && !testMode) {
+        // 標題顯示完成，開始顯示副標題
+        setTargetSubtitle(titles[currentIndex].subtitle);
       }
-      return;
     }
+  });
 
-    // 開始打字動畫序列
-    let charIndex = 0;
-    let lastTimestamp = performance.now();
-    let currentPhase: AnimationPhase = 'typing-title';
-    let targetText = currentTitle.title;
-    let deletedChars = 0;
-
-    const animate = (timestamp: number) => {
-      // 如果暫停，繼續下一幀
-      if (isPausedRef.current) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-        return;
+  // 副標題完成 -> 觸發描述
+  const subtitleAnim = useTextScramble({
+    text: targetSubtitle,
+    speed: typingSpeed,
+    autoStart: true,
+    onComplete: () => {
+      if (targetSubtitle && !prefersReducedMotion && !testMode) {
+        // 副標題顯示完成，開始顯示描述
+        setTargetDescription(titles[currentIndex].description);
       }
+    }
+  });
 
-      const currentSpeed =
-        currentPhase === 'deleting-all' ? deletingSpeed : typingSpeed;
+  // 描述完成 -> 等待 -> 逆序清除（描述 → 副標題 → 主標題）
+  const descAnim = useTextScramble({
+    text: targetDescription,
+    speed: typingSpeed,
+    autoStart: true,
+    onComplete: () => {
+      if (targetDescription && !isWaiting && !prefersReducedMotion && !testMode) {
+        // 全部顯示完成，進入等待狀態
+        setIsWaiting(true);
 
-      if (timestamp - lastTimestamp >= currentSpeed) {
-        lastTimestamp = timestamp;
-
-        // 根據階段執行不同邏輯
-        if (currentPhase === 'typing-title') {
-          charIndex++;
-          setDisplayTitle(targetText.slice(0, charIndex));
-
-          if (charIndex >= targetText.length) {
-            // 主標題完成，開始副標題
-            currentPhase = 'typing-subtitle';
-            setPhase('typing-subtitle');
-            targetText = currentTitle.subtitle;
-            charIndex = 0;
-          }
-        } else if (currentPhase === 'typing-subtitle') {
-          charIndex++;
-          setDisplaySubtitle(targetText.slice(0, charIndex));
-
-          if (charIndex >= targetText.length) {
-            // 副標題完成，開始內容
-            currentPhase = 'typing-description';
-            setPhase('typing-description');
-            targetText = currentTitle.description;
-            charIndex = 0;
-          }
-        } else if (currentPhase === 'typing-description') {
-          charIndex++;
-          setDisplayDescription(targetText.slice(0, charIndex));
-
-          if (charIndex >= targetText.length) {
-            // 內容完成，開始等待
-            currentPhase = 'waiting';
-            setPhase('waiting');
-
-            // 設定等待計時器
-            timeoutRef.current = setTimeout(() => {
-              currentPhase = 'deleting-all';
-              setPhase('deleting-all');
-              deletedChars = 0;
-              // 繼續動畫
-              animationFrameRef.current = requestAnimationFrame(animate);
-            }, waitBeforeDelete);
-
-            // 暫時停止動畫循環
-            return;
-          }
-        } else if (currentPhase === 'deleting-all') {
-          deletedChars++;
-
-          const descLen = currentTitle.description.length;
-          const subLen = currentTitle.subtitle.length;
-          const titleLen = currentTitle.title.length;
-          const totalChars = descLen + subLen + titleLen;
-
-          // 從下往上刪除：description → subtitle → title
-          if (deletedChars <= descLen) {
-            setDeletingSection('description');
-            setDisplayDescription(
-              currentTitle.description.slice(0, descLen - deletedChars)
-            );
-          } else if (deletedChars <= descLen + subLen) {
-            setDeletingSection('subtitle');
-            setDisplayDescription('');
-            setDisplaySubtitle(
-              currentTitle.subtitle.slice(0, subLen - (deletedChars - descLen))
-            );
-          } else {
-            setDeletingSection('title');
-            setDisplayDescription('');
-            setDisplaySubtitle('');
-            setDisplayTitle(
-              currentTitle.title.slice(
-                0,
-                titleLen - (deletedChars - descLen - subLen)
-              )
-            );
-          }
-
-          if (deletedChars >= totalChars) {
-            // 刪除完成，切換到下一組
-            setDisplayTitle('');
-            setDisplaySubtitle('');
-            setDisplayDescription('');
-            setPhase('idle');
-
-            if (autoPlay && titles.length > 1) {
-              setCurrentIndex((prev) => (prev + 1) % titles.length);
-            }
-            return;
-          }
+        if (autoPlay && titles.length > 1) {
+          timeoutRef.current = setTimeout(() => {
+            // ✅ 開始逆序清除：先清除描述
+            setTargetDescription('');
+          }, waitBeforeDelete);
         }
       }
+    }
+  });
 
-      // 繼續動畫循環
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
+  // ✅ 新增：描述清除完成 -> 清除副標題
+  useEffect(() => {
+    if (isWaiting && targetDescription === '' && targetSubtitle !== '' && !prefersReducedMotion && !testMode) {
+      // 描述已清除，開始清除副標題（延遲確保動畫完成）
+      const timer = setTimeout(() => {
+        setTargetSubtitle('');
+      }, 1500); // 等待描述清除動畫完成（1.5秒）
 
-    // 啟動動畫
-    setPhase('typing-title');
-    animationFrameRef.current = requestAnimationFrame(animate);
+      return () => clearTimeout(timer);
+    }
+  }, [isWaiting, targetDescription, targetSubtitle, prefersReducedMotion, testMode]);
 
-    // 清理函式
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
-      if (timeoutRef.current !== null) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    };
-  }, [
-    currentIndex,
-    isLoading,
-    titles,
-    typingSpeed,
-    deletingSpeed,
-    waitBeforeDelete,
-    autoPlay,
-    prefersReducedMotion,
-    testMode,
-  ]);
+  // ✅ 新增：副標題清除完成 -> 清除主標題
+  useEffect(() => {
+    if (isWaiting && targetDescription === '' && targetSubtitle === '' && targetTitle !== '' && !prefersReducedMotion && !testMode) {
+      // 副標題已清除，開始清除主標題（延遲確保動畫完成）
+      const timer = setTimeout(() => {
+        setTargetTitle('');
+      }, 1500); // 等待副標題清除動畫完成（1.5秒）
+
+      return () => clearTimeout(timer);
+    }
+  }, [isWaiting, targetDescription, targetSubtitle, targetTitle, prefersReducedMotion, testMode]);
+
+  // ✅ 新增：主標題清除完成 -> 切換到下一個 index
+  useEffect(() => {
+    if (isWaiting && targetDescription === '' && targetSubtitle === '' && targetTitle === '' && !prefersReducedMotion && !testMode) {
+      // 所有文字已清除，切換到下一個標題（延遲確保動畫完成）
+      const timer = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % titles.length);
+        setIsWaiting(false); // 重置等待狀態
+      }, 1500); // 等待主標題清除動畫完成（1.5秒）
+
+      return () => clearTimeout(timer);
+    }
+  }, [isWaiting, targetDescription, targetSubtitle, targetTitle, titles.length, prefersReducedMotion, testMode]);
+
+  // 處理 Reduced Motion 和 Test Mode
+  useEffect(() => {
+    if ((prefersReducedMotion || testMode) && titles[currentIndex]) {
+      setTargetTitle(titles[currentIndex].title);
+      setTargetSubtitle(titles[currentIndex].subtitle);
+      setTargetDescription(titles[currentIndex].description);
+    }
+  }, [prefersReducedMotion, testMode, currentIndex, titles]);
 
   /**
    * 手動切換文案
    */
   const handleDotClick = (index: number) => {
     if (index === currentIndex) return;
-
-    // 清理當前動畫
-    if (animationFrameRef.current !== null) {
-      cancelAnimationFrame(animationFrameRef.current);
-      animationFrameRef.current = null;
-    }
-    if (timeoutRef.current !== null) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setCurrentIndex(index);
   };
 
-  // Loading 狀態
   if (isLoading) {
     return (
       <div className="text-center mb-12" aria-live="polite" aria-busy="true">
@@ -388,9 +260,19 @@ export function DynamicHeroTitle({
     );
   }
 
+  // ✅ 終端機風格游標邏輯：只顯示一個游標，模擬真實終端
+  // 規則：使用 displayText（實際顯示的文字）而非 targetText（目標狀態）
+  // 這樣刪除時游標會跟隨文字縮短
+  const showDescCursor = descAnim.displayText !== '';
+  const showSubtitleCursor = subtitleAnim.displayText !== '' && descAnim.displayText === '';
+  const showTitleCursor = titleAnim.displayText !== '' && subtitleAnim.displayText === '' && descAnim.displayText === '';
+
+  // 特殊：初始狀態（全空），顯示標題位置的空白游標
+  const showInitialCursor = titleAnim.displayText === '' && subtitleAnim.displayText === '' && descAnim.displayText === '';
+
   return (
     <div className={cn('text-center mb-12', testMode && 'test-mode')}>
-      {/* CRT 視覺特效容器 - 包裹主標題、副標題、描述（承載 ::after RGB 網格疊加層） */}
+      {/* CRT 視覺特效容器 */}
       <div className={styles['hero-title-container']}>
         {/* 主標題 */}
         <div
@@ -401,8 +283,9 @@ export function DynamicHeroTitle({
           aria-live="polite"
         >
           <h1 className={cn('inline', styles['hero-title-text'])}>
-            {displayTitle}
-            {!testMode && (phase === 'typing-title' || deletingSection === 'title') && (
+            {titleAnim.displayText}
+            {/* ✅ 終端機游標：初始狀態或標題是最後有內容的區塊時顯示 */}
+            {(showInitialCursor || showTitleCursor) && (
               <span className={styles['typing-cursor-inline']} aria-hidden="true" />
             )}
           </h1>
@@ -411,8 +294,9 @@ export function DynamicHeroTitle({
         {/* 副標題 */}
         <div className="text-xl md:text-2xl mb-8 text-pip-boy-green/80 min-h-[2rem] flex items-center justify-center">
           <p className={cn('inline', styles['hero-subtitle-text'])}>
-            {displaySubtitle}
-            {!testMode && (phase === 'typing-subtitle' || deletingSection === 'subtitle') && (
+            {subtitleAnim.displayText}
+            {/* ✅ 終端機游標：副標題是最後有內容的區塊時顯示 */}
+            {showSubtitleCursor && (
               <span className={styles['typing-cursor-inline']} aria-hidden="true" />
             )}
           </p>
@@ -421,8 +305,9 @@ export function DynamicHeroTitle({
         {/* 描述段落 */}
         <div className="text-sm text-pip-boy-green/60 max-w-2xl mx-auto leading-relaxed min-h-[3rem] flex items-center justify-center">
           <p className={cn('inline', styles['hero-description-text'])}>
-            {displayDescription}
-            {!testMode && (phase === 'typing-description' || phase === 'waiting' || deletingSection === 'description') && (
+            {descAnim.displayText}
+            {/* ✅ 終端機游標：內文是最後有內容的區塊時顯示（打字完成後停留在最後） */}
+            {showDescCursor && (
               <span className={styles['typing-cursor-inline']} aria-hidden="true" />
             )}
           </p>

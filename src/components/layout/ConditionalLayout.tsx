@@ -60,8 +60,9 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   // Unified responsive layout
   // Three-layer flex structure: Header -> Content (flex-1) -> Footer/MobileBottomNav
+  // ✅ h-screen: Fixed viewport height, MainContent will have its own scrollbar
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className="flex flex-col h-screen">
       <Header />
 
       <DynamicMainContent>

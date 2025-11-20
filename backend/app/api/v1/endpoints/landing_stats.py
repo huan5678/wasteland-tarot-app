@@ -11,7 +11,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db
 from app.schemas.landing_stats import LandingStatsResponse
@@ -41,8 +41,8 @@ router = APIRouter()
     response_description="Landing page statistics",
     tags=["Landing Page"],
 )
-def get_landing_stats(
-    db: Session = Depends(get_db)
+async def get_landing_stats(
+    db: AsyncSession = Depends(get_db)
 ) -> Any:
     """
     Get landing page statistics
@@ -60,7 +60,7 @@ def get_landing_stats(
               資料庫錯誤時會優雅降級至 fallback 值
     """
     try:
-        stats = LandingStatsService.get_landing_stats(db)
+        stats = await LandingStatsService.get_landing_stats(db)
         return stats
 
     except Exception as e:

@@ -3,23 +3,25 @@
 /**
  * StatCounter Component
  *
- * Animated number counter component that animates from 0 to target value
- * over 2 seconds using requestAnimationFrame for smooth 60fps animation.
+ * Animated number counter component using GSAP with ScrollTrigger integration.
+ * Features background pulse effect via Framer Motion.
  *
  * Features:
- * - EaseOutQuad easing function for natural deceleration
- * - PixelIcon integration for decorative icons
- * - Suffix support for units (e.g., "+", "張", "家")
- * - React.memo optimization to prevent unnecessary re-renders
- * - Pip-Boy themed styling
- *
- * Requirements Coverage: 5.3, 5.4, 5.6, 5.9, 5.10, 12.6, 12.10
+ * - GSAP-based number scrolling animation (0 → target value)
+ * - Intl.NumberFormat for thousand separators
+ * - Framer Motion background pulse during animation
+ * - ScrollTrigger integration (animates when entering viewport)
+ * - Reduced motion support
+ * - PixelIcon integration
  *
  * @module StatCounter
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useRef, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { PixelIcon } from '@/components/ui/icons';
+import { useCounterAnimation } from '@/lib/animations/useCounterAnimation';
+import { useReducedMotion } from '@/lib/animations/useReducedMotion';
 
 /**
  * StatCounter Component Props
@@ -48,24 +50,18 @@ export interface StatCounterProps {
    * @example "+", "張", "家"
    */
   suffix?: string;
-}
 
-/**
- * EaseOutQuad easing function
- *
- * Provides smooth deceleration for counter animation.
- * Formula: t * (2 - t)
- *
- * @param t - Progress from 0 to 1
- * @returns Eased progress value
- */
-const easeOutQuad = (t: number): number => t * (2 - t);
+  /**
+   * Scroller element (預設 window，傳入 '#main-content' 使用 main content scrollbar)
+   */
+  scroller?: string | HTMLElement;
+}
 
 /**
  * StatCounter Component
  *
  * Displays an animated statistic counter with icon and label.
- * Animates from 0 to target value over 2 seconds using requestAnimationFrame.
+ * Uses GSAP for number scrolling and Framer Motion for background pulse.
  *
  * @component
  * @example
@@ -83,53 +79,60 @@ const StatCounterComponent: React.FC<StatCounterProps> = ({
   value,
   label,
   suffix = '',
+  scroller,
 }) => {
-  const [displayValue, setDisplayValue] = useState(0);
-  const animationFrameRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number | null>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const prefersReducedMotion = useReducedMotion();
 
-  useEffect(() => {
-    // Reset to 0 when value changes
-    setDisplayValue(0);
-    startTimeRef.current = null;
+  // ✅ Stabilize config objects to prevent re-initialization
+  const formatOptions = useMemo(() => ({
+    useGrouping: true, // Enable thousand separators
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+    locale: 'zh-TW',
+  }), []);
 
-    const duration = 2000; // 2 seconds animation duration
+  // ✅ Empty config - all defaults from gsapConfig.scrollTrigger
+  // No need to pass anything, useCounterAnimation will use gsapConfig defaults
+  const scrollTriggerConfig = useMemo(() => ({}), []);
 
-    const animate = (currentTime: number) => {
-      // Initialize start time on first frame
-      if (startTimeRef.current === null) {
-        startTimeRef.current = currentTime;
-      }
+  // Use GSAP counter animation with ScrollTrigger
+  const { formattedValue, isComplete } = useCounterAnimation({
+    triggerRef,
+    targetValue: value,
+    formatOptions,
+    scrollTriggerConfig,
+    scroller, // ✅ Pass scroller parameter
+  });
 
-      const elapsed = currentTime - startTimeRef.current;
-      const progress = Math.min(elapsed / duration, 1);
-
-      // Apply easeOutQuad easing
-      const easedProgress = easeOutQuad(progress);
-
-      // Calculate current value
-      const currentValue = Math.floor(easedProgress * value);
-      setDisplayValue(currentValue);
-
-      // Continue animation if not complete
-      if (progress < 1) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
-    };
-
-    // Start animation
-    animationFrameRef.current = requestAnimationFrame(animate);
-
-    // Cleanup on unmount or value change
-    return () => {
-      if (animationFrameRef.current !== null) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, [value]);
+  // Background pulse animation variants
+  const pulseVariants = {
+    idle: {
+      backgroundColor: 'rgba(0, 255, 136, 0.05)',
+    },
+    animating: {
+      backgroundColor: [
+        'rgba(0, 255, 136, 0.05)',
+        'rgba(0, 255, 136, 0.15)',
+        'rgba(0, 255, 136, 0.05)',
+      ],
+      transition: {
+        duration: 1.5,
+        repeat: Infinity,
+        ease: 'easeInOut',
+      },
+    },
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center text-center space-y-2">
+    <motion.div
+      ref={triggerRef}
+      data-testid="stat-counter-pulse"
+      className="flex flex-col items-center justify-center text-center space-y-2 p-4 rounded-lg"
+      variants={pulseVariants}
+      initial="idle"
+      animate={isComplete || prefersReducedMotion ? 'idle' : 'animating'}
+    >
       {/* Icon */}
       <PixelIcon
         name={icon}
@@ -140,14 +143,14 @@ const StatCounterComponent: React.FC<StatCounterProps> = ({
 
       {/* Number with suffix */}
       <div className="text-4xl font-bold text-pip-boy-green">
-        {displayValue}{suffix}
+        {formattedValue}{suffix}
       </div>
 
       {/* Label */}
       <div className="text-sm text-pip-boy-green/70 uppercase tracking-wide">
         {label}
       </div>
-    </div>
+    </motion.div>
   );
 };
 
@@ -155,9 +158,7 @@ const StatCounterComponent: React.FC<StatCounterProps> = ({
  * Memoized StatCounter Component
  *
  * Prevents unnecessary re-renders when parent component re-renders
- * with the same props. Only re-renders when icon, value, label, or suffix changes.
- *
- * Requirements: 12.10
+ * with the same props.
  */
 export const StatCounter = React.memo(StatCounterComponent);
 

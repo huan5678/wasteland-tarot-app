@@ -134,6 +134,10 @@ export function Header() {
 
       const currentScrollY = event.detail.scrollY;
 
+      // ✅ Dead zone: Prevent jitter from small scroll movements
+      const scrollDiff = Math.abs(currentScrollY - lastScrollY);
+      if (scrollDiff < 3) return; // Ignore movements < 3px
+
       // 向下滾動 且 超過 threshold
       if (currentScrollY > lastScrollY && currentScrollY > 80) {
         setIsHeaderVisible(false);
@@ -169,10 +173,10 @@ export function Header() {
   // 通知 Sidebar Header 的顯示/隱藏狀態（包含高度）
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // 計算實際應該使用的高度
-      const effectiveHeight = isHeaderVisible && headerRef.current ?
-      headerRef.current.offsetHeight :
-      0;
+      // ✅ Fix jitter: Keep spacer height fixed even when header is hidden
+      // Header uses transform: translateY() to hide, so offsetHeight stays the same
+      // This prevents scroll position changes that trigger jitter
+      const effectiveHeight = headerRef.current ? headerRef.current.offsetHeight : 0;
 
       window.dispatchEvent(
         new CustomEvent('header-height-change', {

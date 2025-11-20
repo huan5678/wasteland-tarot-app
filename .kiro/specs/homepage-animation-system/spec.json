@@ -1,0 +1,40 @@
+{
+  "feature_name": "homepage-animation-system",
+  "created_at": "2025-11-16T17:26:35Z",
+  "updated_at": "2025-11-17T08:15:00Z",
+  "language": "zh-tw",
+  "phase": "completed",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true,
+  "implementation_completed": true,
+  "phases_completed": {
+    "phase_1": "基礎動畫架構建立",
+    "phase_2": "Custom Animation Hooks 開發",
+    "phase_3": "Hero Section 動畫升級",
+    "phase_4": "中間 Sections 動畫升級",
+    "phase_5": "Features、FAQ、CTA Sections 動畫升級",
+    "phase_6": "效能優化、無障礙支援與測試",
+    "phase_7": "整合與清理"
+  },
+  "git_tags": [
+    "animation-phase-1",
+    "animation-phase-2",
+    "animation-phase-3",
+    "animation-phase-4",
+    "animation-phase-5",
+    "animation-phase-6"
+  ]
+}

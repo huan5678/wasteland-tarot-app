@@ -96,8 +96,9 @@ export function LoadingStrategy({ children }: LoadingStrategyProps) {
     setMounted(true)
   }, [])
 
-  // 404 和公開頁面：直接渲染，不管 auth 狀態
-  if (pageType === 'not-found' || pageType === 'public') {
+  // 404、公開頁面、首頁：直接渲染，不管 auth 狀態
+  // 首頁改為非阻塞模式，提升使用者體驗
+  if (pageType === 'not-found' || pageType === 'public' || pageType === 'home') {
     return <>{children}</>
   }
 

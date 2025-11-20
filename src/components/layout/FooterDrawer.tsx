@@ -83,7 +83,9 @@ export function FooterDrawer() {
                 "hover:bg-pip-boy-green/10",
                 "hover:shadow-[0_-4px_12px_rgba(0,255,136,0.2)]",
                 "transition-all duration-200",
-                "cursor-pointer"
+                "cursor-pointer",
+                "z-50", // ✅ Ensure trigger stays above main content
+                "relative" // ✅ Establish stacking context
               )}
               initial={{ y: 100, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
