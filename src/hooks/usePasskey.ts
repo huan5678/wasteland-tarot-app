@@ -28,9 +28,6 @@ import { getClientApiBaseUrl } from '@/lib/config/api';
 // Types
 // ============================================================================
 
-// CRITICAL: Use getClientApiBaseUrl() which returns '' to route through Next.js proxy
-const API_BASE_URL = getClientApiBaseUrl();
-
 interface WebAuthnOptionsResponse {
   options: PublicKeyCredentialCreationOptionsJSON | PublicKeyCredentialRequestOptionsJSON;
 }
@@ -139,7 +136,7 @@ export function usePasskey(): UsePasskeyReturn {
 
       try {
         // Step 1: 取得註冊選項
-        const optionsResponse = await fetch(`${API_BASE_URL}/api/webauthn/register-new/options`, {
+        const optionsResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/register-new/options`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -159,7 +156,7 @@ export function usePasskey(): UsePasskeyReturn {
         );
 
         // Step 3: 將憑證送回後端驗證並建立帳號
-        const verifyResponse = await fetch(`${API_BASE_URL}/api/webauthn/register-new/verify`, {
+        const verifyResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/register-new/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -210,7 +207,7 @@ export function usePasskey(): UsePasskeyReturn {
 
       try {
         // Step 1: 取得驗證選項
-        const optionsResponse = await fetch(`${API_BASE_URL}/api/webauthn/authenticate/options`, {
+        const optionsResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/authenticate/options`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -231,7 +228,7 @@ export function usePasskey(): UsePasskeyReturn {
         );
 
         // Step 3: 將憑證送回後端驗證
-        const verifyResponse = await fetch(`${API_BASE_URL}/api/webauthn/authenticate/verify`, {
+        const verifyResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/authenticate/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -281,7 +278,7 @@ export function usePasskey(): UsePasskeyReturn {
 
       try {
         // Step 1: 取得註冊選項
-        const optionsResponse = await fetch(`${API_BASE_URL}/api/webauthn/register/options`, {
+        const optionsResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/register/options`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -300,7 +297,7 @@ export function usePasskey(): UsePasskeyReturn {
         );
 
         // Step 3: 將憑證送回後端驗證
-        const verifyResponse = await fetch(`${API_BASE_URL}/api/webauthn/register/verify`, {
+        const verifyResponse = await fetch(`${getClientApiBaseUrl()}/api/webauthn/register/verify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
