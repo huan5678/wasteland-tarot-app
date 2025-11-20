@@ -4,11 +4,10 @@
  * Refactored to use @gsap/react useGSAP hook
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { RefObject } from 'react';
 import { useReducedMotion } from './useReducedMotion';
 import { gsap } from 'gsap';
-import { useGSAP } from '@gsap/react';
 
 /**
  * Animation configuration for entrance animation
@@ -72,87 +71,87 @@ export function useEntranceAnimation(
   // Check reduced motion preference
   const prefersReducedMotion = useReducedMotion();
 
-  useGSAP(
-    () => {
-      // Early return if not enabled or no container
-      if (!enabled || !containerRef.current || !animations || animations.length === 0) {
-        setIsReady(false);
-        return;
-      }
-
-      try {
-        // ✅ Immediately set initial 'from' state to prevent flash of unstyled content (FOUC)
-        animations.forEach((animation) => {
-          const { target, from } = animation;
-          if (from) {
-            gsap.set(target, from); // Set initial state before animation starts
-          }
-        });
-
-        // Create Timeline with delay (paused initially to prevent immediate play)
-        const tl = gsap.timeline({
-          paused: true, // Start paused, will play after delay
-          delay: delay,
-        });
-
-        // Apply animations to timeline (selectors are scoped to containerRef.current)
-        animations.forEach((animation) => {
-          const { target, from, to, position } = animation;
-
-          // Clone the 'to' object to avoid mutation
-          const toVars = { ...to };
-
-          // Override duration to 0 if reduced motion is enabled
-          if (prefersReducedMotion && 'duration' in toVars) {
-            toVars.duration = 0;
-          }
-
-          // Apply animation based on whether 'from' is provided
-          if (from) {
-            // fromTo animation
-            if (position !== undefined) {
-              tl.fromTo(target, from, toVars, position);
-            } else {
-              tl.fromTo(target, from, toVars);
-            }
-          } else {
-            // to animation only
-            if (position !== undefined) {
-              tl.to(target, toVars, position);
-            } else {
-              tl.to(target, toVars);
-            }
-          }
-        });
-
-        // Store timeline
-        setTimeline(tl);
-
-        // Play timeline after setup
-        // Note: useGSAP handles cleanup automatically, so no need to worry about unmount
-        requestAnimationFrame(() => {
-            tl.play();
-        });
-
-        // Mark as ready
-        setIsReady(true);
-
-      } catch (error) {
-        console.error('[useEntranceAnimation] Failed to initialize GSAP animation:', error);
-        setIsReady(false);
-      }
-    },
-    {
-      scope: containerRef, // ✅ Scope selectors to containerRef
-      dependencies: [
-        containerRef, // ✅ Keep: RefObject is stable, needed for DOM ready detection
-        // ❌ Removed: animations (causes infinite loop when passed as inline array literal)
-        delay,
-        enabled,
-        prefersReducedMotion,
-      ],
+  useEffect(() => {
+    // Early return if not enabled or no container
+    if (!enabled || !containerRef.current || !animations || animations.length === 0) {
+      setIsReady(false);
+      return;
     }
-  );
+
+    try {
+      // ✅ Immediately set initial 'from' state to prevent flash of unstyled content (FOUC)
+      animations.forEach((animation) => {
+        const { target, from } = animation;
+        if (from) {
+          gsap.set(target, from); // Set initial state before animation starts
+        }
+      });
+
+      // Create Timeline with delay (paused initially to prevent immediate play)
+      const tl = gsap.timeline({
+        paused: true, // Start paused, will play after delay
+        delay: delay,
+      });
+
+      // Apply animations to timeline (selectors are scoped to containerRef.current)
+      animations.forEach((animation) => {
+        const { target, from, to, position } = animation;
+
+        // Clone the 'to' object to avoid mutation
+        const toVars = { ...to };
+
+        // Override duration to 0 if reduced motion is enabled
+        if (prefersReducedMotion && 'duration' in toVars) {
+          toVars.duration = 0;
+        }
+
+        // Apply animation based on whether 'from' is provided
+        if (from) {
+          // fromTo animation
+          if (position !== undefined) {
+            tl.fromTo(target, from, toVars, position);
+          } else {
+            tl.fromTo(target, from, toVars);
+          }
+        } else {
+          // to animation only
+          if (position !== undefined) {
+            tl.to(target, toVars, position);
+          } else {
+            tl.to(target, toVars);
+          }
+        }
+      });
+
+      // Store timeline
+      setTimeline(tl);
+
+      // Play timeline after setup
+      requestAnimationFrame(() => {
+          tl.play();
+      });
+
+      // Mark as ready
+      setIsReady(true);
+
+      // ✅ Cleanup function
+      return () => {
+        tl.kill();
+        setTimeline(null);
+        setIsReady(false);
+      };
+
+    } catch (error) {
+      console.error('[useEntranceAnimation] Failed to initialize GSAP animation:', error);
+      setIsReady(false);
+    }
+  }, [
+    containerRef,
+    // ❌ Removed: animations (causes infinite loop when passed as inline array literal)
+    delay,
+    enabled,
+    prefersReducedMotion,
+  ]);
 
   // Control functions
   const play = () => {

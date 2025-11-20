@@ -5,10 +5,9 @@
  * Refactored to use @gsap/react useGSAP hook
  */
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useGSAP } from '@gsap/react';
 import { gsapConfig } from './gsapConfig';
 import { useReducedMotion } from './useReducedMotion';
 
@@ -75,97 +74,98 @@ export function useStagger(options: UseStaggerOptions): void {
 
   const prefersReducedMotion = useReducedMotion();
 
-  useGSAP(
-    () => {
-      // Early return if disabled or no container
-      if (!enabled || !containerRef.current) {
+  useEffect(() => {
+    // Early return if disabled or no container
+    if (!enabled || !containerRef.current) {
+      return;
+    }
+
+    const container = containerRef.current;
+    const children = container.querySelectorAll(childrenSelector);
+
+    // Early return if no children found
+    if (children.length === 0) {
+      console.warn('[useStagger] No children found with selector:', childrenSelector);
+      return;
+    }
+
+    // ✅ Check if scroller element exists (if scroller is a string selector)
+    let scrollerElement: HTMLElement | Window | undefined = undefined;
+    if (typeof scroller === 'string') {
+      const el = document.querySelector(scroller);
+      if (!el) {
+        console.warn(`[useStagger] Scroller element "${scroller}" not found. Animation will not be initialized.`);
         return;
       }
+      scrollerElement = el as HTMLElement;
+    } else if (scroller) {
+      scrollerElement = scroller;
+    }
 
-      const container = containerRef.current;
-      const children = container.querySelectorAll(childrenSelector);
+    // Determine stagger delay based on viewport width
+    const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+    const finalStagger = isMobile
+      ? (stagger ?? gsapConfig.staggers.normal) * 0.5  // Mobile: reduce by 50%
+      : (stagger ?? gsapConfig.staggers.normal);       // Desktop/Tablet: normal
 
-      // Early return if no children found
-      if (children.length === 0) {
-        console.warn('[useStagger] No children found with selector:', childrenSelector);
-        return;
-      }
+    const finalDuration = prefersReducedMotion ? 0 : (duration ?? gsapConfig.durations.normal);
 
-      // ✅ Check if scroller element exists (if scroller is a string selector)
-      let scrollerElement: HTMLElement | Window | undefined = undefined;
-      if (typeof scroller === 'string') {
-        const el = document.querySelector(scroller);
-        if (!el) {
-          console.warn(`[useStagger] Scroller element "${scroller}" not found. Animation will not be initialized.`);
-          return;
-        }
-        scrollerElement = el as HTMLElement;
-      } else if (scroller) {
-        scrollerElement = scroller;
-      }
+    // ✅ Create timeline with ScrollTrigger (no pin)
+    const toggleActions = once ? 'play none none none' : 'play reverse play reverse';
 
-      // Determine stagger delay based on viewport width
-      const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
-      const finalStagger = isMobile
-        ? (stagger ?? gsapConfig.staggers.normal) * 0.5  // Mobile: reduce by 50%
-        : (stagger ?? gsapConfig.staggers.normal);       // Desktop/Tablet: normal
-
-      const finalDuration = prefersReducedMotion ? 0 : (duration ?? gsapConfig.durations.normal);
-
-      // ✅ Create timeline with ScrollTrigger (no pin)
-      const toggleActions = once ? 'play none none none' : 'play reverse play reverse';
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: container,
-          start,
-          end,
-          toggleActions,
-          scrub: scrub || false,
-          scroller: scrollerElement,
-          markers: false,
-          id: `stagger-anim-${Date.now()}`,
-        },
-      });
-
-      // ✅ Add stagger animation to timeline
-      tl.fromTo(
-        children,
-        from ?? { opacity: 0, y: 40 },
-        {
-          ...(to ?? { opacity: 1, y: 0 }),
-          duration: finalDuration,
-          stagger: finalStagger,
-          ease: gsapConfig.easings.out,
-        }
-      );
-
-      // ✅ Immediately refresh ScrollTrigger after creation
-      if (tl.scrollTrigger) {
-        requestAnimationFrame(() => {
-          tl.scrollTrigger?.refresh();
-        });
-      }
-
-    },
-    {
-      scope: containerRef, // ✅ Scope selectors to containerRef
-      dependencies: [
-        containerRef,
-        childrenSelector,
-        stagger,
-        from,
-        to,
-        duration,
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: container,
         start,
         end,
-        scrub,
-        once,
-        enabled,
-        scroller,
-        prefersReducedMotion,
-      ],
+        toggleActions,
+        scrub: scrub || false,
+        scroller: scrollerElement,
+        markers: false,
+        id: `stagger-anim-${Date.now()}`,
+      },
+    });
+
+    // ✅ Add stagger animation to timeline
+    tl.fromTo(
+      children,
+      from ?? { opacity: 0, y: 40 },
+      {
+        ...(to ?? { opacity: 1, y: 0 }),
+        duration: finalDuration,
+        stagger: finalStagger,
+        ease: gsapConfig.easings.out,
+      }
+    );
+
+    // ✅ Immediately refresh ScrollTrigger after creation
+    if (tl.scrollTrigger) {
+      requestAnimationFrame(() => {
+        tl.scrollTrigger?.refresh();
+      });
     }
-  );
+
+    // ✅ Cleanup function
+    return () => {
+      tl.kill();
+      if (tl.scrollTrigger) {
+        tl.scrollTrigger.kill();
+      }
+    };
+  }, [
+    containerRef,
+    childrenSelector,
+    stagger,
+    from,
+    to,
+    duration,
+    start,
+    end,
+    scrub,
+    once,
+    enabled,
+    scroller,
+    prefersReducedMotion,
+  ]);
 }
 
