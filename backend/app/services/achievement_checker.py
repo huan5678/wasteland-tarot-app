@@ -285,8 +285,6 @@ class AchievementChecker:
         2. 從最近的簽到日期開始往回計算連續天數
         3. 只有當最近簽到是今天或昨天時，才計入連續
         """
-        from datetime import date as date_type
-
         today = datetime.utcnow().date()
 
         # 獲取所有簽到記錄，按日期降序排列
@@ -381,6 +379,10 @@ class AchievementChecker:
             count = result.scalar_one()
             return count
         else:
+            # 優先使用預載的快取數據
+            if 'favorited_cards' in self._stats_cache:
+                return len(self._stats_cache['favorited_cards'])
+            
             # 計算收藏的卡牌數（用於 CARD_EXPLORER 等成就）
             query = select(UserAnalytics.favorited_cards).where(
                 UserAnalytics.user_id == user_id
