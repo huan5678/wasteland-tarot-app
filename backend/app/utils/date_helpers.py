@@ -61,13 +61,16 @@ def parse_month_year(month_str: str) -> date:
         >>> parse_month_year('2025-10')
         date(2025, 10, 1)
     """
+    parts = month_str.split('-')
+    if len(parts) != 2:
+        raise ValueError(f"Invalid format: expected 'YYYY-MM', got '{month_str}'")
+    
     try:
-        parts = month_str.split('-')
-        if len(parts) != 2:
-            raise ValueError(f"Invalid format: expected 'YYYY-MM', got '{month_str}'")
         year, month = int(parts[0]), int(parts[1])
-        if not (1 <= month <= 12):
-            raise ValueError(f"Invalid month value: {month} in '{month_str}'")
-        return date(year, month, 1)
     except (ValueError, TypeError) as e:
         raise ValueError(f"Invalid month_year format: {month_str}") from e
+    
+    if not (1 <= month <= 12):
+        raise ValueError(f"Invalid month value: {month} in '{month_str}'")
+    
+    return date(year, month, 1)

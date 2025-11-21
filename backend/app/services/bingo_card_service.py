@@ -59,7 +59,7 @@ class BingoCardManagerService:
         # Check if user already has a card for this month
         if await self.has_card_for_month(user_id, month_year):
             raise CardAlreadyExistsError(
-                f"User already has a bingo card for {month_year.strftime('%Y-%m')}"
+                f"User already has a bingo card for {format_month_year(month_year)}"
             )
 
         # Create new card
@@ -75,7 +75,7 @@ class BingoCardManagerService:
         await self.db.refresh(card)
 
         logger.info(
-            f"Created bingo card for user {user_id} for month {month_year.strftime('%Y-%m')}"
+            f"Created bingo card for user {user_id} for month {format_month_year(month_year)}"
         )
 
         return card
