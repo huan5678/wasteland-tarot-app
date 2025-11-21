@@ -6,7 +6,7 @@ Handles card creation, validation, and retrieval
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, update
 from sqlalchemy.orm import selectinload
 import logging
 
@@ -227,8 +227,6 @@ class BingoCardManagerService:
         Returns:
             Number of cards deactivated
         """
-        from sqlalchemy import update
-
         month_year = get_month_start(month_year)
 
         # Bulk update - single query instead of N+1
@@ -246,7 +244,7 @@ class BingoCardManagerService:
         await self.db.commit()
 
         row_count = result.rowcount
-        logger.info(f"Deactivated {row_count} cards for month {month_year.strftime('%Y-%m')}")
+        logger.info(f"Deactivated {row_count} cards for month {format_month_year(month_year)}")
         return row_count
 
     def card_to_response(self, card: UserBingoCard) -> BingoCardResponse:
