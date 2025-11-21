@@ -296,6 +296,25 @@ class KarmaService:
         self.db.add(karma_history)
         await self.db.commit()
 
+        # 觸發 Karma 相關成就檢查（延遲導入避免循環依賴）
+        try:
+            from app.services.achievement_service import AchievementService
+            achievement_service = AchievementService(self.db)
+            await achievement_service.unlock_achievements_for_user(
+                user_id=user.id,
+                trigger_event='karma_changed',
+                event_context={
+                    'karma_before': karma_before,
+                    'karma_after': karma_after,
+                    'karma_change': actual_change,
+                    'reason': reason.value
+                }
+            )
+        except Exception as e:
+            # 成就檢查失敗不應影響 karma 變化的主要流程
+            import logging
+            logging.getLogger(__name__).warning(f"Failed to check achievements after karma change: {e}")
+
         return karma_history
 
     async def get_user_karma_history(

@@ -276,6 +276,7 @@ class AchievementService:
             List of relevant Achievement objects
         """
         # 事件與成就類型的映射
+        # None 表示檢查所有類別（用於 karma 變化等可能影響多種成就的事件）
         event_category_map = {
             'reading_completed': AchievementCategory.READING,
             'friend_added': AchievementCategory.SOCIAL,
@@ -284,11 +285,16 @@ class AchievementService:
             'login': AchievementCategory.BINGO,  # 連續簽到
             'card_viewed': AchievementCategory.EXPLORATION,
             'playlist_created': AchievementCategory.EXPLORATION,
+            'karma_changed': AchievementCategory.KARMA,  # Karma 成就
+            'card_collected': AchievementCategory.READING,  # 卡牌收集（大阿卡納）
         }
 
         category = event_category_map.get(trigger_event)
 
-        if category:
+        if trigger_event == 'check_all':
+            # 特殊事件：檢查所有類別的成就
+            return await self.get_all_achievements(include_hidden=True)
+        elif category:
             return await self.get_all_achievements(category=category, include_hidden=True)
         else:
             # 未知事件，不檢查任何成就
