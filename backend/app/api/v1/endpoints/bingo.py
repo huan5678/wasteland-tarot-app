@@ -58,6 +58,7 @@ from app.services.daily_claim_service import DailyClaimService
 from app.services.line_detection_service import LineDetectionService
 from app.services.daily_number_generator_service import DailyNumberGeneratorService
 from app.services.achievement_service import AchievementService
+from app.utils.date_helpers import get_month_start
 from app.services.achievement_background_tasks import schedule_achievement_check
 
 logger = logging.getLogger(__name__)
@@ -376,8 +377,6 @@ async def get_line_status(
 
     Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    from app.utils.date_helpers import get_month_start
-
     line_service = LineDetectionService(db)
     month_year = get_month_start()
 
