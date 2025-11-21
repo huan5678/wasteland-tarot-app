@@ -20,10 +20,84 @@ class AchievementChecker:
     """
     成就條件檢查引擎
     負責計算使用者對各類成就的進度並判斷是否達成解鎖條件
+
+    優化特性：
+    - 支援批次預載統計數據以減少 N+1 queries
+    - 使用 _stats_cache 避免重複查詢
     """
 
     def __init__(self, db: AsyncSession):
         self.db = db
+        self._stats_cache: Dict[str, Any] = {}  # 用於快取預載的統計數據
+
+    async def _preload_user_stats(self, user_id: UUID) -> Dict[str, Any]:
+        """
+        批次預載使用者的常用統計數據，減少後續的 N+1 queries
+
+        Returns:
+            Dict 包含各類統計數據
+        """
+        from app.models.user import User
+        from app.models.bingo import BingoReward
+
+        stats = {}
+
+        # 批次查詢 1：基礎統計（reading_count, karma, friend_count, shares_count）
+        basic_query = select(
+            func.count(CompletedReading.id).label('reading_count')
+        ).where(CompletedReading.user_id == user_id)
+
+        result = await self.db.execute(basic_query)
+        row = result.fetchone()
+        stats['reading_count'] = row[0] if row else 0
+
+        # 批次查詢 2：好友數量
+        friend_query = select(func.count(UserFriendship.id)).where(
+            and_(
+                or_(
+                    UserFriendship.requester_id == user_id,
+                    UserFriendship.recipient_id == user_id
+                ),
+                UserFriendship.status == FriendshipStatus.ACCEPTED.value
+            )
+        )
+        result = await self.db.execute(friend_query)
+        stats['friend_count'] = result.scalar_one()
+
+        # 批次查詢 3：UserAnalytics 數據
+        analytics_query = select(
+            UserAnalytics.shares_count,
+            UserAnalytics.favorited_cards,
+            UserAnalytics.reading_times
+        ).where(UserAnalytics.user_id == user_id)
+
+        result = await self.db.execute(analytics_query)
+        analytics_row = result.fetchone()
+        if analytics_row:
+            stats['shares_count'] = analytics_row[0] or 0
+            stats['favorited_cards'] = analytics_row[1] or []
+            stats['reading_times'] = analytics_row[2] or []
+        else:
+            stats['shares_count'] = 0
+            stats['favorited_cards'] = []
+            stats['reading_times'] = []
+
+        # 批次查詢 4：Karma
+        user_query = select(User.karma_score).where(User.id == user_id)
+        result = await self.db.execute(user_query)
+        stats['karma_score'] = result.scalar_one_or_none() or 0
+
+        # 批次查詢 5：Bingo 連線數
+        bingo_query = select(func.count(BingoReward.id)).where(BingoReward.user_id == user_id)
+        result = await self.db.execute(bingo_query)
+        stats['bingo_line_count'] = result.scalar_one()
+
+        self._stats_cache = stats
+        return stats
+
+    def _clear_stats_cache(self):
+        """清除統計快取"""
+        self._stats_cache = {}
 
     async def check_achievement_progress(
         self,
@@ -122,8 +196,12 @@ class AchievementChecker:
     ) -> int:
         """
         檢查社交分享次數
-        從 UserAnalytics 獲取分享數量
+        優先使用快取，否則從 UserAnalytics 獲取分享數量
         """
+        # 優先使用預載的快取數據
+        if 'shares_count' in self._stats_cache:
+            return self._stats_cache['shares_count']
+
         query = select(UserAnalytics.shares_count).where(
             UserAnalytics.user_id == user_id
         )
@@ -139,8 +217,12 @@ class AchievementChecker:
     ) -> int:
         """
         檢查好友數量
-        只計算已接受的好友關係
+        優先使用快取，否則只計算已接受的好友關係
         """
+        # 優先使用預載的快取數據
+        if 'friend_count' in self._stats_cache:
+            return self._stats_cache['friend_count']
+
         query = select(func.count(UserFriendship.id)).where(
             and_(
                 or_(
@@ -162,12 +244,16 @@ class AchievementChecker:
     ) -> int:
         """
         檢查 Bingo 連線次數
+        優先使用快取（無 filter 時），否則查詢 BingoReward
 
         Filters支援:
         - month_year: 特定月份 (YYYY-MM)
         """
+        # 優先使用預載的快取數據（僅限無 filter 時）
+        if 'bingo_line_count' in self._stats_cache and 'month_year' not in filters:
+            return self._stats_cache['bingo_line_count']
+
         # 這需要查詢 BingoReward 表來計算連線次數
-        # 由於 BingoReward 記錄每次連線獎勵，可以直接計數
         from app.models.bingo import BingoReward
 
         query = select(func.count(BingoReward.id)).where(
@@ -193,15 +279,19 @@ class AchievementChecker:
         """
         檢查連續簽到天數
         從 Bingo 系統的 UserNumberClaim 計算連續簽到
-        """
-        # 獲取最近 30 天的簽到記錄
-        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
 
+        計算邏輯：
+        1. 獲取所有簽到記錄（不限制時間範圍）
+        2. 從最近的簽到日期開始往回計算連續天數
+        3. 只有當最近簽到是今天或昨天時，才計入連續
+        """
+        from datetime import date as date_type
+
+        today = datetime.utcnow().date()
+
+        # 獲取所有簽到記錄，按日期降序排列
         query = select(UserNumberClaim.claim_date).where(
-            and_(
-                UserNumberClaim.user_id == user_id,
-                UserNumberClaim.claim_date >= thirty_days_ago.date()
-            )
+            UserNumberClaim.user_id == user_id
         ).order_by(desc(UserNumberClaim.claim_date))
 
         result = await self.db.execute(query)
@@ -210,17 +300,26 @@ class AchievementChecker:
         if not claim_dates:
             return 0
 
-        # 計算連續天數
-        consecutive_days = 1
-        for i in range(len(claim_dates) - 1):
-            current_date = claim_dates[i]
-            next_date = claim_dates[i + 1]
+        # 轉換為 set 以便快速查找（處理可能的重複）
+        claim_date_set = set(claim_dates)
 
-            # 檢查是否連續（相差 1 天）
-            if (current_date - next_date).days == 1:
-                consecutive_days += 1
-            else:
-                break
+        # 確定起始日期：如果今天有簽到就從今天開始，否則從昨天開始
+        # 如果昨天也沒簽到，則連續記錄已中斷，返回 0
+        if today in claim_date_set:
+            start_date = today
+        elif (today - timedelta(days=1)) in claim_date_set:
+            start_date = today - timedelta(days=1)
+        else:
+            # 連續已中斷
+            return 0
+
+        # 從起始日期往回計算連續天數
+        consecutive_days = 0
+        current_date = start_date
+
+        while current_date in claim_date_set:
+            consecutive_days += 1
+            current_date = current_date - timedelta(days=1)
 
         return consecutive_days
 
@@ -231,8 +330,12 @@ class AchievementChecker:
     ) -> int:
         """
         檢查 Karma 分數
-        直接從 User 表獲取當前 Karma
+        優先使用快取，否則從 User 表獲取當前 Karma
         """
+        # 優先使用預載的快取數據
+        if 'karma_score' in self._stats_cache:
+            return self._stats_cache['karma_score']
+
         from app.models.user import User
 
         query = select(User.karma_score).where(User.id == user_id)
@@ -247,29 +350,49 @@ class AchievementChecker:
         filters: Dict[str, Any]
     ) -> int:
         """
-        檢查卡牌查看次數
-        從 UserAnalytics 的 favorited_cards 計算
+        檢查卡牌收藏或抽到的數量
 
         Filters支援:
         - card_suit: 特定花色 (major_arcana, cups, swords, etc.)
+          若有 card_suit，則計算「抽到」的不同卡牌數（從 ReadingCardPosition）
+        - 若無 card_suit，則計算「收藏」的卡牌數（從 UserAnalytics.favorited_cards）
         """
-        query = select(UserAnalytics.favorited_cards).where(
-            UserAnalytics.user_id == user_id
-        )
-
-        result = await self.db.execute(query)
-        favorited = result.scalar_one_or_none()
-
-        if not favorited:
-            return 0
-
-        # 如果有花色篩選，需要進一步過濾
         if 'card_suit' in filters:
-            # 這需要 join WastelandCard 來篩選花色
-            # 為簡化，暫時返回總數
-            return len(favorited)
+            # 計算抽到的不同卡牌數（用於 MAJOR_ARCANA_COLLECTOR 等成就）
+            from app.models.reading_enhanced import CompletedReading, ReadingCardPosition
+            from app.models.wasteland_card import WastelandCard
 
-        return len(favorited)
+            card_suit = filters['card_suit']
+
+            # 查詢使用者抽到的不同卡牌 ID（根據花色過濾）
+            query = (
+                select(func.count(func.distinct(ReadingCardPosition.card_id)))
+                .join(CompletedReading, ReadingCardPosition.completed_reading_id == CompletedReading.id)
+                .join(WastelandCard, ReadingCardPosition.card_id == WastelandCard.id)
+                .where(
+                    and_(
+                        CompletedReading.user_id == user_id,
+                        WastelandCard.suit == card_suit
+                    )
+                )
+            )
+
+            result = await self.db.execute(query)
+            count = result.scalar_one()
+            return count
+        else:
+            # 計算收藏的卡牌數（用於 CARD_EXPLORER 等成就）
+            query = select(UserAnalytics.favorited_cards).where(
+                UserAnalytics.user_id == user_id
+            )
+
+            result = await self.db.execute(query)
+            favorited = result.scalar_one_or_none()
+
+            if not favorited:
+                return 0
+
+            return len(favorited)
 
     async def _check_playlist_create(
         self,
@@ -341,6 +464,10 @@ class AchievementChecker:
         """
         檢查並解鎖使用者的成就
 
+        優化：
+        - 批次預載使用者統計數據（減少 N+1 queries）
+        - 批次獲取所有 UserAchievementProgress 記錄
+
         Args:
             user_id: 使用者 ID
             achievement_codes: 要檢查的成就代碼列表（None = 檢查所有）
@@ -348,58 +475,74 @@ class AchievementChecker:
         Returns:
             List of newly unlocked achievements
         """
-        # 獲取要檢查的成就
-        query = select(Achievement).where(Achievement.is_active == True)
-        if achievement_codes:
-            query = query.where(Achievement.code.in_(achievement_codes))
+        # 優化：預載使用者統計數據
+        await self._preload_user_stats(user_id)
 
-        result = await self.db.execute(query)
-        achievements = result.scalars().all()
+        try:
+            # 獲取要檢查的成就
+            query = select(Achievement).where(Achievement.is_active == True)
+            if achievement_codes:
+                query = query.where(Achievement.code.in_(achievement_codes))
 
-        newly_unlocked = []
+            result = await self.db.execute(query)
+            achievements = list(result.scalars().all())
 
-        for achievement in achievements:
-            # 檢查使用者進度
+            if not achievements:
+                return []
+
+            # 優化：批次獲取所有 UserAchievementProgress 記錄
+            achievement_ids = [a.id for a in achievements]
             progress_query = select(UserAchievementProgress).where(
                 and_(
                     UserAchievementProgress.user_id == user_id,
-                    UserAchievementProgress.achievement_id == achievement.id
+                    UserAchievementProgress.achievement_id.in_(achievement_ids)
                 )
             )
             progress_result = await self.db.execute(progress_query)
-            user_progress = progress_result.scalar_one_or_none()
+            progress_list = progress_result.scalars().all()
 
-            # 計算最新進度
-            progress_data = await self.check_achievement_progress(user_id, achievement)
+            # 建立 achievement_id -> progress 的映射
+            progress_map = {p.achievement_id: p for p in progress_list}
 
-            if not user_progress:
-                # 建立新的進度記錄
-                user_progress = UserAchievementProgress(
-                    user_id=user_id,
-                    achievement_id=achievement.id,
-                    current_progress=progress_data['current_progress'],
-                    target_progress=progress_data['target_progress'],
-                    status=AchievementStatus.IN_PROGRESS.value
-                )
-                self.db.add(user_progress)
-            else:
-                # 更新現有進度
-                user_progress.current_progress = progress_data['current_progress']
-                user_progress.target_progress = progress_data['target_progress']
+            newly_unlocked = []
 
-            # 檢查是否達成解鎖條件
-            if progress_data['is_completed'] and user_progress.status == AchievementStatus.IN_PROGRESS.value:
-                user_progress.status = AchievementStatus.UNLOCKED.value
-                user_progress.unlocked_at = datetime.utcnow()
+            for achievement in achievements:
+                user_progress = progress_map.get(achievement.id)
 
-                newly_unlocked.append({
-                    'achievement': achievement,
-                    'progress': user_progress
-                })
+                # 計算最新進度（使用預載的統計數據）
+                progress_data = await self.check_achievement_progress(user_id, achievement)
 
-        await self.db.commit()
+                if not user_progress:
+                    # 建立新的進度記錄
+                    user_progress = UserAchievementProgress(
+                        user_id=user_id,
+                        achievement_id=achievement.id,
+                        current_progress=progress_data['current_progress'],
+                        target_progress=progress_data['target_progress'],
+                        status=AchievementStatus.IN_PROGRESS.value
+                    )
+                    self.db.add(user_progress)
+                else:
+                    # 更新現有進度
+                    user_progress.current_progress = progress_data['current_progress']
+                    user_progress.target_progress = progress_data['target_progress']
 
-        return newly_unlocked
+                # 檢查是否達成解鎖條件
+                if progress_data['is_completed'] and user_progress.status == AchievementStatus.IN_PROGRESS.value:
+                    user_progress.status = AchievementStatus.UNLOCKED.value
+                    user_progress.unlocked_at = datetime.utcnow()
+
+                    newly_unlocked.append({
+                        'achievement': achievement,
+                        'progress': user_progress
+                    })
+
+            await self.db.commit()
+
+            return newly_unlocked
+        finally:
+            # 清除統計快取
+            self._clear_stats_cache()
 
     async def get_user_progress_summary(
         self,
