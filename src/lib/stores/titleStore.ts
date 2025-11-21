@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { apiRequest } from '@/lib/api'
+import { api } from '@/lib/apiClient'
 import { z } from 'zod'
 
 // ============================================================================
@@ -44,9 +44,8 @@ export const useTitleStore = create<TitleState>((set, get) => ({
   fetchTitles: async () => {
     set({ isLoading: true, error: null })
     try {
-      const data = await apiRequest<UserTitlesResponse>('/api/v1/users/me/titles', {
-        method: 'GET',
-      })
+      // api.get automatically adds /api/v1 prefix
+      const data = await api.get<UserTitlesResponse>('/users/me/titles')
 
       // Validate response
       const validated = UserTitlesResponseSchema.parse(data)
@@ -68,10 +67,8 @@ export const useTitleStore = create<TitleState>((set, get) => ({
   setTitle: async (title: string | null) => {
     set({ isLoading: true, error: null })
     try {
-      const data = await apiRequest<SetTitleResponse>('/api/v1/users/me/title', {
-        method: 'PUT',
-        body: JSON.stringify({ title }),
-      })
+      // api.put automatically adds /api/v1 prefix
+      const data = await api.put<SetTitleResponse>('/users/me/title', { title })
 
       // Validate response
       const validated = SetTitleResponseSchema.parse(data)

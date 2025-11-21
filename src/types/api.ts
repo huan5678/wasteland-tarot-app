@@ -330,6 +330,8 @@ export const UserSchema = z.object({
   isOAuthUser: z.boolean().optional(),
   oauthProvider: z.string().nullable().optional(),
   profilePicture: z.string().nullable().optional(),
+  // 用戶自行上傳的頭像
+  avatar_url: z.string().nullable().optional(),
 })
 
 export type User = z.infer<typeof UserSchema>

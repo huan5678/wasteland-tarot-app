@@ -109,7 +109,7 @@ describe('FilterChips Integration Tests', () => {
       const onRemove = jest.fn();
       const user = userEvent.setup();
 
-      render(<FilterChips filters={mockFilters} onRemove=onRemove} onClearAll={jest.fn()} />);
+      render(<FilterChips filters={mockFilters} onRemove={onRemove} onClearAll={jest.fn()} />);
 
       const favoriteChip = screen.getByText(/只顯示收藏/i).closest('[role="button"]');
       const removeButton = favoriteChip?.querySelector('[aria-label*="移除"]');

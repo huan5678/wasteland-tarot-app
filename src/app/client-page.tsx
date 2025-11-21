@@ -11,7 +11,7 @@ import { TestimonialCard } from '@/components/landing/TestimonialCard'
 import { useTestimonialAnimation } from '@/components/landing/useTestimonialAnimation'
 import { FAQSection } from '@/components/landing/FAQSection'
 import { FeatureCard } from '@/components/landing/FeatureCard'
-import { landingStatsAPI } from '@/lib/api'
+import { AnalyticsService } from '@/services/analytics.service'
 import { useStagger } from '@/lib/animations/useStagger'
 import { useScrollAnimation } from '@/lib/animations/useScrollAnimation'
 import { useEntranceAnimation } from '@/lib/animations/useEntranceAnimation'
@@ -215,7 +215,7 @@ export default function ClientPage() {
 
     const fetchStats = async () => {
       try {
-        const data = await landingStatsAPI.getStats()
+        const data = await AnalyticsService.getLandingStats()
         console.log('[HomePage] Fetched landing stats:', data)
 
         // ✅ Only update if API returns larger values than fallback

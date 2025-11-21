@@ -3,7 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/authStore';
-import { readingsAPI, cardsAPI, analyticsAPI } from '@/lib/api';
+import { ReadingService } from '@/services/readings.service';
+import { CardService } from '@/services/cards.service';
+import { AnalyticsService } from '@/services/analytics.service';
 import { PixelIcon } from '@/components/ui/icons';
 import { IncompleteSessionsList } from '@/components/session/IncompleteSessionsList';
 import { useActivityTracker } from '@/hooks/useActivityTracker';
@@ -122,7 +124,7 @@ export default function DashboardClientPage() {
         let totalReadings = 0;
 
         try {
-          const response = await readingsAPI.getUserReadings(user.id);
+      const readingsData = await ReadingService.getUserReadings();
 
           // Transform API data to match component interface
           transformedReadings = response.readings.map((reading) => ({
@@ -174,7 +176,7 @@ export default function DashboardClientPage() {
         let favoriteCard = null;
         let cardDrawCount = 0;
         try {
-          const analytics = await analyticsAPI.getUserAnalytics();
+      const analyticsData = await AnalyticsService.getUserAnalytics();
           const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
 
           if (mostDrawnCards.length > 0) {
@@ -317,7 +319,7 @@ export default function DashboardClientPage() {
     try {
       // Reload all dashboard data
       const [readingsResponse, favCardData, analyticsData] = await Promise.all([
-        readingsAPI.getUserReadings(user.id).catch(() => ({ readings: [], total_count: 0 })),
+        ReadingService.getUserReadings(user.id).catch(() => ({ readings: [], total_count: 0 })),
         cardsAPI.getUserFavoriteCard(user.id).catch(() => null),
         analyticsAPI.getUserAnalytics(user.id).catch(() => ({ days_in_vault: 0 }))
       ]);

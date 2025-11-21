@@ -5,8 +5,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { CardDetailModal } from '@/components/tarot/CardDetailModal'
 import type { DetailedTarotCard, ReadingContext } from '@/components/tarot/CardDetailModal'
 import { PixelIcon } from '@/components/ui/icons'
-import { readingsAPI } from '@/lib/api'
-import type { Reading } from '@/lib/api'
+import { ReadingService } from '@/services/readings.service'
+import type { Reading } from '@/types/api'
 import { useAuthStore } from '@/lib/authStore'
 import { getCardImageUrl } from '@/lib/utils/cardImages'
 
@@ -72,7 +72,7 @@ export default function ReadingCardDetailClientPage() {
 
       try {
         // 載入完整的占卜記錄
-        const data = await readingsAPI.getById(readingId)
+      const reading = await ReadingService.getById(readingId)
 
         if (!data) {
           throw new Error('找不到此占卜記錄')

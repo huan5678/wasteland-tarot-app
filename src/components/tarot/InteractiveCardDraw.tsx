@@ -24,7 +24,7 @@ import { useSessionRecovery } from '@/hooks/useSessionRecovery';
 import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider';
 import { Button } from '@/components/ui/button';
 import { PixelIcon } from '@/components/ui/icons';
-import { cardsAPI } from '@/lib/api';
+import { CardService } from '@/services/cards.service';
 import { ShuffleAnimation } from './ShuffleAnimation';
 import { CardThumbnail } from '@/components/cards/CardThumbnail';
 import { CardSpreadLayout } from './CardSpreadLayout';
@@ -262,7 +262,7 @@ export function InteractiveCardDraw({
 
     try {
       // Fetch full deck to reconstruct shuffled deck from IDs
-      const fullDeck = await cardsAPI.getAll();
+      const fullDeck = await CardService.getAll();
       const idToCard = new Map(fullDeck.map(card => [card.id, card]));
 
       // Reconstruct shuffled deck from saved IDs
@@ -326,7 +326,7 @@ export function InteractiveCardDraw({
     try {
       // Step 1: Fetch full deck from API
       setDrawingState('shuffling');
-      const fullDeck = await cardsAPI.getAll();
+      const fullDeck = await CardService.getAll();
 
       // Step 2: Shuffle the deck using Fisher-Yates
       const shuffled = shuffle(fullDeck);

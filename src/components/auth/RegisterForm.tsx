@@ -10,7 +10,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PixelIcon } from '@/components/ui/icons';
 import { useOAuth } from '@/hooks/useOAuth';
-import { authAPI } from '@/lib/api';
+import { AuthService } from '@/services/auth.service';
 import { useAuthStore } from '@/lib/authStore';
 import { toast } from 'sonner';
 import { useFactions } from '@/hooks/useCharacterVoices';
@@ -138,7 +138,7 @@ export function RegisterForm({ hideHeader = false }: RegisterFormProps) {
     try {
       // 使用 API 服務層呼叫註冊端點
       // authAPI.register 會自動處理 httpOnly cookies
-      const data = await authAPI.register({
+      const response = await AuthService.register({
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirmPassword,

@@ -8,7 +8,10 @@ import { useAuthStore } from '@/lib/authStore';
 import { useAudioStore } from '@/lib/audio/audioStore';
 import { useAchievementStore } from '@/lib/stores/achievementStore';
 import { PixelIcon } from '@/components/ui/icons';
-import { profileAPI, analyticsAPI, readingsAPI, cardsAPI } from '@/lib/api/services';
+import { AnalyticsService } from '@/services/analytics.service';
+import { ReadingService } from '@/services/readings.service';
+import { CardService } from '@/services/cards.service';
+import { ProfileService } from '@/services/profile.service';
 import { useFactions } from '@/hooks/useCharacterVoices';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { TitleSelector } from '@/components/profile/TitleSelector';
@@ -112,7 +115,7 @@ export function ProfilePageContent() {
 
         try {
           // 載入 analytics 數據（收藏卡片資料）
-          const analytics = await analyticsAPI.getUserAnalytics();
+          const analytics = await AnalyticsService.getUserAnalytics();
           console.log('[Profile] 📈 Analytics 資料:', analytics);
           const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
           favoritedCount = (analytics.user_analytics.favorited_cards || []).length;
@@ -121,7 +124,7 @@ export function ProfilePageContent() {
           if (mostDrawnCards.length > 0) {
             try {
               const mostDrawnCardId = mostDrawnCards[0];
-              const card = await cardsAPI.getById(mostDrawnCardId);
+              const card = await CardService.getById(mostDrawnCardId);
               favoriteCardName = card.name;
             } catch (err) {
               console.warn('Failed to load favorite card:', err);
@@ -130,7 +133,7 @@ export function ProfilePageContent() {
 
           // ✅ 使用後端統計 API（總數與本月由後端計算）
           try {
-            const stats = await readingsAPI.getPersonalStats();
+            const stats = await ReadingService.getPersonalStats();
             console.log('[Profile] 📊 Reading 統計資料 (後端):', stats);
 
             totalReadingsCount = stats.total_readings;
@@ -229,7 +232,7 @@ export function ProfilePageContent() {
 
     try {
       // 調用後端 API 更新 profile
-      const response = await profileAPI.updateProfile({
+      const response = await ProfileService.updateProfile({
         faction_alignment: editForm.faction
         // 未來可擴展其他欄位
         // display_name: editForm.username,
@@ -298,8 +301,8 @@ export function ProfilePageContent() {
       
       // Reload all profile data
       const [analytics, stats] = await Promise.all([
-        analyticsAPI.getUserAnalytics().catch(() => null),
-        readingsAPI.getPersonalStats().catch(() => null)
+        AnalyticsService.getUserAnalytics().catch(() => null),
+        ReadingService.getPersonalStats().catch(() => null)
       ]);
 
       let favoriteCardName = '無';
@@ -311,7 +314,7 @@ export function ProfilePageContent() {
         
         if (mostDrawnCards.length > 0) {
           try {
-            const card = await cardsAPI.getById(mostDrawnCards[0]);
+            const card = await CardService.getById(mostDrawnCards[0]);
             favoriteCardName = card.name;
           } catch {}
         }

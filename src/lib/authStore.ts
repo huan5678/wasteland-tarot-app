@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { authAPI, User } from '@/lib/api'
+import { AuthService } from '@/services/auth.service'
+import type { User } from '@/types/api'
 
 interface AuthState {
   user: User | null
@@ -220,7 +221,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     try {
       // 呼叫後端 /me 端點（會自動使用 httpOnly cookie 中的 token）
       console.log('[AuthStore] 📡 呼叫後端 /me 驗證...')
-      const response = await authAPI.getCurrentUser()
+      const response = await AuthService.getCurrentUser()
       apiCompleted = true
 
       console.log('[AuthStore] ✅ Initialize: Backend validation successful', {
@@ -356,7 +357,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     set({ isLoading: true, error: null })
     try {
       // 呼叫後端登入 API（會自動設定 httpOnly cookies）
-      const res = await authAPI.login({ email, password })
+      const res = await AuthService.login({ email, password })
 
       // 儲存登入狀態與過期時間至 localStorage
       if (res.token_expires_at) {
@@ -415,7 +416,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       get().stopTokenExpiryMonitor()
 
       // 呼叫後端 logout API（會清除 httpOnly cookies）
-      await authAPI.logout()
+      await AuthService.logout()
     } catch (e) {
       console.error('[AuthStore] ❌ Backend logout failed:', e)
       // 繼續執行本地登出，即使後端失敗
@@ -659,7 +660,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
     try {
       // 呼叫後端 API
-      const response = await authAPI.extendToken({
+      const response = await AuthService.extendToken({
         extension_type: 'activity',
         activity_duration: activityDuration,
       })
@@ -692,7 +693,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
 
     try {
       // 呼叫後端 API
-      const response = await authAPI.extendToken({
+      const response = await AuthService.extendToken({
         extension_type: 'loyalty',
       })
 
@@ -735,7 +736,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     }
 
     try {
-      const status = await authAPI.getLoyaltyStatus()
+      const status = await AuthService.getLoyaltyStatus()
       return status
     } catch (error: any) {
       console.error('❌ 查詢忠誠度狀態失敗:', error.message || error)
@@ -770,7 +771,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     }
 
     try {
-      const methods = await authAPI.getAuthMethods()
+      const methods = await AuthService.getAuthMethods()
       set({
         hasPasskey: methods.has_passkey,
         hasPassword: methods.has_password,

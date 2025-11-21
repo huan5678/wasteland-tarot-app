@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { spreadTemplatesAPI } from '@/lib/api'
+import { SpreadService } from '@/services/spreads.service'
 
 export interface SpreadTemplate {
   id: string
@@ -34,8 +34,9 @@ export const useSpreadTemplatesStore = create<SpreadTemplateState>((set, get) =>
     if (!force && state.templates.length && (Date.now() - (state as any)._ts < TTL)) return
     set({ isLoading: true, error: null })
     try {
-      const response = await spreadTemplatesAPI.getAll()
+      const response = await SpreadService.getAll()
       // API 回傳格式: { spreads: [...], total_count: N, page: 1, page_size: 20 }
+      // Note: Service type says SpreadTemplate[] but runtime might be object if backend is paginated
       const data = Array.isArray(response) ? response : (response as any).spreads || []
       const map: Record<string, SpreadTemplate> = {}
       data.forEach((t: SpreadTemplate) => { map[t.id] = t })

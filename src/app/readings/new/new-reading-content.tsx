@@ -5,7 +5,7 @@ import { CardDraw } from '@/components/tarot/CardDraw';
 import { CardThumbnail } from '@/components/cards/CardThumbnail';
 import { PixelIcon } from '@/components/ui/icons';
 import { PipBoyButton, PipBoyCard, PipBoyCardHeader, PipBoyCardTitle, PipBoyCardContent } from '@/components/ui/pipboy';
-import { readingsAPI } from '@/lib/api';
+import { ReadingService } from '@/services/readings.service';
 import { SpreadSelector } from '@/components/readings/SpreadSelector';
 import { SpreadLayoutPreview } from '@/components/readings/SpreadLayoutPreview';
 import { toCanonical } from '@/lib/spreadMapping';
@@ -153,11 +153,11 @@ export function NewReadingContent() {
               // Fetch full card data from API based on card_ids
               const fetchFullCards = async () => {
                 try {
-                  const { cardsAPI } = await import('@/lib/api/services');
+                  const { CardService } = await import('@/services/cards.service');
                   const cardPromises = sessionState.cards_drawn!.map(async (card) => {
                     try {
                       // Fetch full card data from API using UUID
-                      const fullCard = await cardsAPI.getById(card.card_id);
+                      const fullCard = await CardService.getById(card.card_id);
                       return {
                         ...fullCard,
                         // Keep both UUID (for storage) and number ID (for UI compatibility)

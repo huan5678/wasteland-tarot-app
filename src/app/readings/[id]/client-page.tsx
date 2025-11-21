@@ -3,9 +3,9 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { readingsAPI } from '@/lib/api';
-import { PixelIcon } from '@/components/ui/icons';
-import type { Reading } from '@/lib/api';
+import { ReadingService } from '@/services/readings.service';
+import { useAuthStore } from '@/lib/authStore';
+import type { Reading } from '@/types/api';
 import type { ReadingCard } from '@/components/readings/ReadingCardDetail';
 import { cn } from '@/lib/utils';
 import { getCardImageUrl, getCardImageAlt } from '@/lib/utils/cardImages';
@@ -136,8 +136,7 @@ export default function ReadingDetailClientPage() {
       setError(null);
 
       try {
-        const data = await readingsAPI.getById(readingId);
-        console.log('📊 Reading data:', data);
+                const data = await ReadingService.getById(id);        console.log('📊 Reading data:', data);
         console.log('🤖 AI requested?:', data.ai_interpretation_requested);
         console.log('🤖 AI at?:', data.ai_interpretation_at);
         // 檢查新舊資料結構
@@ -503,7 +502,7 @@ export default function ReadingDetailClientPage() {
     setIsTTSGenerating(true);
 
     // Save interpretation to backend (will trigger TTS generation)
-    readingsAPI.patch(readingId, {
+ReadingService.patch(readingId, {
       overall_interpretation: fullText,
       summary_message: "AI 已完成解讀",
       prediction_confidence: 0.85

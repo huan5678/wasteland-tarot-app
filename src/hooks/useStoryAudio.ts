@@ -9,7 +9,8 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { generateStoryAudio, type GenerateStoryAudioResponse } from '@/lib/api'
+import { CardService } from '@/services/cards.service'
+import type { GenerateStoryAudioResponse } from '@/types/database'
 
 interface UseStoryAudioOptions {
   cardId: string
@@ -60,7 +61,7 @@ export function useStoryAudio({
       const defaultCharacters = ['pip_boy', 'vault_dweller']
 
       // Call API to generate story audio
-      const response: GenerateStoryAudioResponse = await generateStoryAudio(
+      const response: GenerateStoryAudioResponse = await CardService.generateStoryAudio(
         cardId,
         defaultCharacters
       )

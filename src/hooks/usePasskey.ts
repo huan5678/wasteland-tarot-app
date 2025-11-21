@@ -9,14 +9,22 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/authStore';
-import { passkeyAPI } from '@/lib/api/services';
-import { ApiError } from '@/lib/api/client';
+// import { passkeyAPI } from '@/lib/api/services'; // Removed
+// import { ApiError } from '@/lib/api/client'; // Removed
+import { APIError } from '@/lib/apiClient'; // Added
 import {
   startRegistration,
   startAuthentication,
   isWebAuthnSupported,
   getLocalizedErrorMessage,
 } from '@/lib/webauthn';
+// Import functions from webauthn API directly
+import {
+  getCredentials,
+  updateCredentialName as apiUpdateCredentialName,
+  deleteCredential as apiDeleteCredential
+} from '@/lib/webauthn/api';
+
 import type {
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
@@ -85,7 +93,7 @@ export function usePasskey(): UsePasskeyReturn {
   const handleError = useCallback((err: unknown, context: string) => {
     let errorMessage = `${context}失敗`;
 
-    if (err instanceof ApiError) {
+    if (err instanceof APIError) { // Updated to APIError
       errorMessage = err.message;
     } else if (err instanceof Error) {
       errorMessage = getLocalizedErrorMessage(err);
@@ -113,7 +121,8 @@ export function usePasskey(): UsePasskeyReturn {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: '未知錯誤' }));
-      throw new ApiError(errorData.detail || `HTTP ${response.status}`, response.status);
+      // Updated to APIError (status code is 2nd arg)
+      throw new APIError(errorData.detail || `HTTP ${response.status}`, response.status);
     }
 
     return response.json();
@@ -339,8 +348,9 @@ export function usePasskey(): UsePasskeyReturn {
     setError(null);
 
     try {
-      const credentials = await passkeyAPI.listCredentials();
-      return credentials;
+      // Use getCredentials from api
+      const credentials = await getCredentials();
+      return credentials as unknown as PasskeyCredential[]; // Type alignment might be needed
     } catch (err) {
       handleError(err, '取得 Passkey 列表');
       return [];
@@ -363,7 +373,8 @@ export function usePasskey(): UsePasskeyReturn {
       setError(null);
 
       try {
-        await passkeyAPI.updateCredentialName(credentialId, newName);
+        // Use apiUpdateCredentialName from api
+        await apiUpdateCredentialName(credentialId, newName);
         // 成功更新，可以在這裡顯示成功訊息
         console.log('[usePasskey] 裝置名稱已更新');
       } catch (err) {
@@ -388,7 +399,8 @@ export function usePasskey(): UsePasskeyReturn {
     setError(null);
 
     try {
-      await passkeyAPI.deleteCredential(credentialId);
+      // Use apiDeleteCredential from api
+      await apiDeleteCredential(credentialId);
       console.log('[usePasskey] Passkey 已刪除');
     } catch (err) {
       handleError(err, '刪除 Passkey');

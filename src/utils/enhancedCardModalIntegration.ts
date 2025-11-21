@@ -1,2 +1,360 @@
-/**\n * Enhanced Card Modal Integration Utilities\n * Provides initialization and integration functions for the complete card modal system\n */\n\nimport React from 'react'
-import { initializeSpeechHandler, cleanupSpeechHandler } from './speechHandler'\n\n// Types for the enhanced card modal system\nexport interface EnhancedCardModalConfig {\n  enableAudio: boolean\n  enableMobileOptimization: boolean\n  enableAnalytics: boolean\n  apiEndpoint?: string\n  userId?: string\n  enableOfflineMode: boolean\n}\n\nexport interface CardModalAnalytics {\n  cardViews: Map<string, number>\n  sessionDuration: number\n  interactionCounts: {\n    bookmarks: number\n    shares: number\n    studySessions: number\n    voicePlaybacks: number\n  }\n  mostViewedCards: string[]\n  averageSessionTime: number\n}\n\nclass EnhancedCardModalSystem {\n  private config: EnhancedCardModalConfig\n  private analytics: CardModalAnalytics\n  private isInitialized = false\n  private sessionStartTime: Date | null = null\n\n  constructor(config: EnhancedCardModalConfig) {\n    this.config = config\n    this.analytics = {\n      cardViews: new Map(),\n      sessionDuration: 0,\n      interactionCounts: {\n        bookmarks: 0,\n        shares: 0,\n        studySessions: 0,\n        voicePlaybacks: 0\n      },\n      mostViewedCards: [],\n      averageSessionTime: 0\n    }\n  }\n\n  // Initialize the enhanced card modal system\n  async initialize(): Promise<boolean> {\n    if (this.isInitialized) {\n      console.warn('Enhanced Card Modal System already initialized')\n      return true\n    }\n\n    try {\n      console.log('Initializing Enhanced Card Modal System...')\n\n      // Initialize speech system\n      if (this.config.enableAudio) {\n        const speechInitialized = initializeSpeechHandler()\n        if (speechInitialized) {\n          console.log('✅ Speech synthesis initialized')\n        } else {\n          console.warn('⚠️  Speech synthesis not available')\n        }\n      }\n\n      // Initialize analytics tracking\n      if (this.config.enableAnalytics) {\n        this.setupAnalyticsTracking()\n        console.log('✅ Analytics tracking initialized')\n      }\n\n      // Initialize offline mode\n      if (this.config.enableOfflineMode) {\n        this.setupOfflineSupport()\n        console.log('✅ Offline support initialized')\n      }\n\n      // Setup mobile optimizations\n      if (this.config.enableMobileOptimization) {\n        this.setupMobileOptimizations()\n        console.log('✅ Mobile optimizations initialized')\n      }\n\n      this.sessionStartTime = new Date()\n      this.isInitialized = true\n      console.log('🎉 Enhanced Card Modal System fully initialized')\n      return true\n\n    } catch (error) {\n      console.error('❌ Failed to initialize Enhanced Card Modal System:', error)\n      return false\n    }\n  }\n\n  // Track card interactions\n  trackCardInteraction(cardId: string, interactionType: 'view' | 'bookmark' | 'share' | 'study' | 'voice') {\n    if (!this.config.enableAnalytics) return\n\n    switch (interactionType) {\n      case 'view':\n        const currentViews = this.analytics.cardViews.get(cardId) || 0\n        this.analytics.cardViews.set(cardId, currentViews + 1)\n        this.updateMostViewedCards()\n        break\n      case 'bookmark':\n        this.analytics.interactionCounts.bookmarks++\n        break\n      case 'share':\n        this.analytics.interactionCounts.shares++\n        break\n      case 'study':\n        this.analytics.interactionCounts.studySessions++\n        break\n      case 'voice':\n        this.analytics.interactionCounts.voicePlaybacks++\n        break\n    }\n\n    // Log to console for development\n    console.log(`📊 Card interaction tracked: ${cardId} - ${interactionType}`)\n  }\n\n  // Setup analytics tracking\n  private setupAnalyticsTracking() {\n    // Track page visibility for session duration\n    document.addEventListener('visibilitychange', () => {\n      if (document.hidden) {\n        this.pauseSessionTimer()\n      } else {\n        this.resumeSessionTimer()\n      }\n    })\n\n    // Track before page unload\n    window.addEventListener('beforeunload', () => {\n      this.finalizeSession()\n    })\n  }\n\n  // Setup offline support\n  private setupOfflineSupport() {\n    // Register service worker for offline caching\n    if ('serviceWorker' in navigator) {\n      navigator.serviceWorker.register('/sw-card-modal.js')\n        .then(registration => {\n          console.log('Service Worker registered for card modal caching')\n        })\n        .catch(error => {\n          console.warn('Service Worker registration failed:', error)\n        })\n    }\n\n    // Handle online/offline events\n    window.addEventListener('online', () => {\n      console.log('🌐 Connection restored - syncing data')\n      this.syncOfflineData()\n    })\n\n    window.addEventListener('offline', () => {\n      console.log('📴 Connection lost - enabling offline mode')\n    })\n  }\n\n  // Setup mobile optimizations\n  private setupMobileOptimizations() {\n    // Prevent zoom on input focus (iOS)\n    const viewport = document.querySelector('meta[name=viewport]')\n    if (viewport) {\n      viewport.setAttribute('content', \n        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'\n      )\n    }\n\n    // Optimize touch interactions\n    document.addEventListener('touchstart', () => {}, { passive: true })\n    document.addEventListener('touchmove', () => {}, { passive: true })\n\n    // Handle device orientation changes\n    window.addEventListener('orientationchange', () => {\n      setTimeout(() => {\n        window.scrollTo(0, 0)\n      }, 100)\n    })\n  }\n\n  // Update most viewed cards\n  private updateMostViewedCards() {\n    this.analytics.mostViewedCards = Array.from(this.analytics.cardViews.entries())\n      .sort(([,a], [,b]) => b - a)\n      .slice(0, 10)\n      .map(([cardId]) => cardId)\n  }\n\n  // Session timer methods\n  private pauseSessionTimer() {\n    if (this.sessionStartTime) {\n      this.analytics.sessionDuration += Date.now() - this.sessionStartTime.getTime()\n    }\n  }\n\n  private resumeSessionTimer() {\n    this.sessionStartTime = new Date()\n  }\n\n  private finalizeSession() {\n    if (this.sessionStartTime) {\n      this.analytics.sessionDuration += Date.now() - this.sessionStartTime.getTime()\n      this.analytics.averageSessionTime = this.analytics.sessionDuration\n    }\n  }\n\n  // Sync offline data when connection is restored\n  private async syncOfflineData() {\n    if (!this.config.apiEndpoint || !this.config.userId) return\n\n    try {\n      // Get offline stored data\n      const offlineData = localStorage.getItem('cardModalOfflineData')\n      if (!offlineData) return\n\n      // Sync with server\n      const response = await fetch(`${this.config.apiEndpoint}/sync`, {\n        method: 'POST',\n        headers: {\n          'Content-Type': 'application/json',\n          'Authorization': `Bearer ${this.config.userId}`\n        },\n        body: offlineData\n      })\n\n      if (response.ok) {\n        localStorage.removeItem('cardModalOfflineData')\n        console.log('✅ Offline data synced successfully')\n      }\n    } catch (error) {\n      console.error('❌ Failed to sync offline data:', error)\n    }\n  }\n\n  // Get analytics data\n  getAnalytics(): CardModalAnalytics {\n    return { ...this.analytics }\n  }\n\n  // Export analytics data\n  exportAnalytics(): string {\n    return JSON.stringify({\n      ...this.analytics,\n      cardViews: Object.fromEntries(this.analytics.cardViews),\n      exportedAt: new Date().toISOString(),\n      sessionId: this.sessionStartTime?.getTime() || 0\n    }, null, 2)\n  }\n\n  // Cleanup system\n  cleanup() {\n    if (!this.isInitialized) return\n\n    console.log('🧹 Cleaning up Enhanced Card Modal System...')\n    \n    // Cleanup speech handler\n    if (this.config.enableAudio) {\n      cleanupSpeechHandler()\n    }\n\n    // Finalize analytics\n    if (this.config.enableAnalytics) {\n      this.finalizeSession()\n    }\n\n    // Reset state\n    this.isInitialized = false\n    this.sessionStartTime = null\n    \n    console.log('✅ Enhanced Card Modal System cleanup complete')\n  }\n\n  // Check if system is ready\n  isReady(): boolean {\n    return this.isInitialized\n  }\n}\n\n// Global instance\nlet globalSystem: EnhancedCardModalSystem | null = null\n\n// Initialize the global system\nexport function initializeEnhancedCardModal(config: EnhancedCardModalConfig): Promise<boolean> {\n  if (globalSystem) {\n    console.warn('Enhanced Card Modal System already exists')\n    return Promise.resolve(globalSystem.isReady())\n  }\n\n  globalSystem = new EnhancedCardModalSystem(config)\n  return globalSystem.initialize()\n}\n\n// Get the global system instance\nexport function getEnhancedCardModalSystem(): EnhancedCardModalSystem | null {\n  return globalSystem\n}\n\n// Track card interaction (convenience function)\nexport function trackCardInteraction(\n  cardId: string, \n  interactionType: 'view' | 'bookmark' | 'share' | 'study' | 'voice'\n) {\n  globalSystem?.trackCardInteraction(cardId, interactionType)\n}\n\n// Cleanup global system\nexport function cleanupEnhancedCardModal() {\n  if (globalSystem) {\n    globalSystem.cleanup()\n    globalSystem = null\n  }\n}\n\n// Default configuration\nexport const DEFAULT_CONFIG: EnhancedCardModalConfig = {\n  enableAudio: true,\n  enableMobileOptimization: true,\n  enableAnalytics: true,\n  enableOfflineMode: true\n}\n\n// React hook for system integration\nexport function useEnhancedCardModal(config: Partial<EnhancedCardModalConfig> = {}) {\n  const [isReady, setIsReady] = React.useState(false)\n  const [system, setSystem] = React.useState<EnhancedCardModalSystem | null>(null)\n\n  React.useEffect(() => {\n    const fullConfig = { ...DEFAULT_CONFIG, ...config }\n    \n    initializeEnhancedCardModal(fullConfig).then(ready => {\n      setIsReady(ready)\n      setSystem(getEnhancedCardModalSystem())\n    })\n\n    return () => {\n      cleanupEnhancedCardModal()\n    }\n  }, [])\n\n  return {\n    isReady,\n    system,\n    trackInteraction: trackCardInteraction\n  }\n}\n\nexport default EnhancedCardModalSystem
+/**
+ * Enhanced Card Modal Integration Utilities
+ * Provides initialization and integration functions for the complete card modal system
+ */
+
+import React from 'react'
+import { initializeSpeechHandler, cleanupSpeechHandler } from './speechHandler'
+
+// Types for the enhanced card modal system
+export interface EnhancedCardModalConfig {
+  enableAudio: boolean
+  enableMobileOptimization: boolean
+  enableAnalytics: boolean
+  apiEndpoint?: string
+  userId?: string
+  enableOfflineMode: boolean
+}
+
+export interface CardModalAnalytics {
+  cardViews: Map<string, number>
+  sessionDuration: number
+  interactionCounts: {
+    bookmarks: number
+    shares: number
+    studySessions: number
+    voicePlaybacks: number
+  }
+  mostViewedCards: string[]
+  averageSessionTime: number
+}
+
+class EnhancedCardModalSystem {
+  private config: EnhancedCardModalConfig
+  private analytics: CardModalAnalytics
+  private isInitialized = false
+  private sessionStartTime: Date | null = null
+
+  constructor(config: EnhancedCardModalConfig) {
+    this.config = config
+    this.analytics = {
+      cardViews: new Map(),
+      sessionDuration: 0,
+      interactionCounts: {
+        bookmarks: 0,
+        shares: 0,
+        studySessions: 0,
+        voicePlaybacks: 0
+      },
+      mostViewedCards: [],
+      averageSessionTime: 0
+    }
+  }
+
+  // Initialize the enhanced card modal system
+  async initialize(): Promise<boolean> {
+    if (this.isInitialized) {
+      console.warn('Enhanced Card Modal System already initialized')
+      return true
+    }
+
+    try {
+      console.log('Initializing Enhanced Card Modal System...')
+
+      // Initialize speech system
+      if (this.config.enableAudio) {
+        const speechInitialized = initializeSpeechHandler()
+        if (speechInitialized) {
+          console.log('✅ Speech synthesis initialized')
+        } else {
+          console.warn('⚠️  Speech synthesis not available')
+        }
+      }
+
+      // Initialize analytics tracking
+      if (this.config.enableAnalytics) {
+        this.setupAnalyticsTracking()
+        console.log('✅ Analytics tracking initialized')
+      }
+
+      // Initialize offline mode
+      if (this.config.enableOfflineMode) {
+        this.setupOfflineSupport()
+        console.log('✅ Offline support initialized')
+      }
+
+      // Setup mobile optimizations
+      if (this.config.enableMobileOptimization) {
+        this.setupMobileOptimizations()
+        console.log('✅ Mobile optimizations initialized')
+      }
+
+      this.sessionStartTime = new Date()
+      this.isInitialized = true
+      console.log('🎉 Enhanced Card Modal System fully initialized')
+      return true
+
+    } catch (error) {
+      console.error('❌ Failed to initialize Enhanced Card Modal System:', error)
+      return false
+    }
+  }
+
+  // Track card interactions
+  trackCardInteraction(cardId: string, interactionType: 'view' | 'bookmark' | 'share' | 'study' | 'voice') {
+    if (!this.config.enableAnalytics) return
+
+    switch (interactionType) {
+      case 'view':
+        const currentViews = this.analytics.cardViews.get(cardId) || 0
+        this.analytics.cardViews.set(cardId, currentViews + 1)
+        this.updateMostViewedCards()
+        break
+      case 'bookmark':
+        this.analytics.interactionCounts.bookmarks++
+        break
+      case 'share':
+        this.analytics.interactionCounts.shares++
+        break
+      case 'study':
+        this.analytics.interactionCounts.studySessions++
+        break
+      case 'voice':
+        this.analytics.interactionCounts.voicePlaybacks++
+        break
+    }
+
+    // Log to console for development
+    console.log(`📊 Card interaction tracked: ${cardId} - ${interactionType}`)
+  }
+
+  // Setup analytics tracking
+  private setupAnalyticsTracking() {
+    // Track page visibility for session duration
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.pauseSessionTimer()
+      } else {
+        this.resumeSessionTimer()
+      }
+    })
+
+    // Track before page unload
+    window.addEventListener('beforeunload', () => {
+      this.finalizeSession()
+    })
+  }
+
+  // Setup offline support
+  private setupOfflineSupport() {
+    // Register service worker for offline caching
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw-card-modal.js')
+        .then(registration => {
+          console.log('Service Worker registered for card modal caching')
+        })
+        .catch(error => {
+          console.warn('Service Worker registration failed:', error)
+        })
+    }
+
+    // Handle online/offline events
+    window.addEventListener('online', () => {
+      console.log('🌐 Connection restored - syncing data')
+      this.syncOfflineData()
+    })
+
+    window.addEventListener('offline', () => {
+      console.log('📴 Connection lost - enabling offline mode')
+    })
+  }
+
+  // Setup mobile optimizations
+  private setupMobileOptimizations() {
+    // Prevent zoom on input focus (iOS)
+    const viewport = document.querySelector('meta[name=viewport]')
+    if (viewport) {
+      viewport.setAttribute('content', 
+        'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'
+      )
+    }
+
+    // Optimize touch interactions
+    document.addEventListener('touchstart', () => {}, { passive: true })
+    document.addEventListener('touchmove', () => {}, { passive: true })
+
+    // Handle device orientation changes
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        window.scrollTo(0, 0)
+      }, 100)
+    })
+  }
+
+  // Update most viewed cards
+  private updateMostViewedCards() {
+    this.analytics.mostViewedCards = Array.from(this.analytics.cardViews.entries())
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 10)
+      .map(([cardId]) => cardId)
+  }
+
+  // Session timer methods
+  private pauseSessionTimer() {
+    if (this.sessionStartTime) {
+      this.analytics.sessionDuration += Date.now() - this.sessionStartTime.getTime()
+    }
+  }
+
+  private resumeSessionTimer() {
+    this.sessionStartTime = new Date()
+  }
+
+  private finalizeSession() {
+    if (this.sessionStartTime) {
+      this.analytics.sessionDuration += Date.now() - this.sessionStartTime.getTime()
+      this.analytics.averageSessionTime = this.analytics.sessionDuration
+    }
+  }
+
+  // Sync offline data when connection is restored
+  private async syncOfflineData() {
+    if (!this.config.apiEndpoint || !this.config.userId) return
+
+    try {
+      // Get offline stored data
+      const offlineData = localStorage.getItem('cardModalOfflineData')
+      if (!offlineData) return
+
+      // Sync with server
+      const response = await fetch(`${this.config.apiEndpoint}/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.config.userId}`
+        },
+        body: offlineData
+      })
+
+      if (response.ok) {
+        localStorage.removeItem('cardModalOfflineData')
+        console.log('✅ Offline data synced successfully')
+      }
+    } catch (error) {
+      console.error('❌ Failed to sync offline data:', error)
+    }
+  }
+
+  // Get analytics data
+  getAnalytics(): CardModalAnalytics {
+    return { ...this.analytics }
+  }
+
+  // Export analytics data
+  exportAnalytics(): string {
+    return JSON.stringify({
+      ...this.analytics,
+      cardViews: Object.fromEntries(this.analytics.cardViews),
+      exportedAt: new Date().toISOString(),
+      sessionId: this.sessionStartTime?.getTime() || 0
+    }, null, 2)
+  }
+
+  // Cleanup system
+  cleanup() {
+    if (!this.isInitialized) return
+
+    console.log('🧹 Cleaning up Enhanced Card Modal System...')
+    
+    // Cleanup speech handler
+    if (this.config.enableAudio) {
+      cleanupSpeechHandler()
+    }
+
+    // Finalize analytics
+    if (this.config.enableAnalytics) {
+      this.finalizeSession()
+    }
+
+    // Reset state
+    this.isInitialized = false
+    this.sessionStartTime = null
+    
+    console.log('✅ Enhanced Card Modal System cleanup complete')
+  }
+
+  // Check if system is ready
+  isReady(): boolean {
+    return this.isInitialized
+  }
+}
+
+// Global instance
+let globalSystem: EnhancedCardModalSystem | null = null
+
+// Initialize the global system
+export function initializeEnhancedCardModal(config: EnhancedCardModalConfig): Promise<boolean> {
+  if (globalSystem) {
+    console.warn('Enhanced Card Modal System already exists')
+    return Promise.resolve(globalSystem.isReady())
+  }
+
+  globalSystem = new EnhancedCardModalSystem(config)
+  return globalSystem.initialize()
+}
+
+// Get the global system instance
+export function getEnhancedCardModalSystem(): EnhancedCardModalSystem | null {
+  return globalSystem
+}
+
+// Track card interaction (convenience function)
+export function trackCardInteraction(
+  cardId: string, 
+  interactionType: 'view' | 'bookmark' | 'share' | 'study' | 'voice'
+) {
+  globalSystem?.trackCardInteraction(cardId, interactionType)
+}
+
+// Cleanup global system
+export function cleanupEnhancedCardModal() {
+  if (globalSystem) {
+    globalSystem.cleanup()
+    globalSystem = null
+  }
+}
+
+// Default configuration
+export const DEFAULT_CONFIG: EnhancedCardModalConfig = {
+  enableAudio: true,
+  enableMobileOptimization: true,
+  enableAnalytics: true,
+  enableOfflineMode: true
+}
+
+// React hook for system integration
+export function useEnhancedCardModal(config: Partial<EnhancedCardModalConfig> = {}) {
+  const [isReady, setIsReady] = React.useState(false)
+  const [system, setSystem] = React.useState<EnhancedCardModalSystem | null>(null)
+
+  React.useEffect(() => {
+    const fullConfig = { ...DEFAULT_CONFIG, ...config }
+    
+    initializeEnhancedCardModal(fullConfig).then(ready => {
+      setIsReady(ready)
+      setSystem(getEnhancedCardModalSystem())
+    })
+
+    return () => {
+      cleanupEnhancedCardModal()
+    }
+  }, [])
+
+  return {
+    isReady,
+    system,
+    trackInteraction: trackCardInteraction
+  }
+}
+
+export default EnhancedCardModalSystem

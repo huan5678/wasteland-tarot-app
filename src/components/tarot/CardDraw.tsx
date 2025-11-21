@@ -8,7 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { CardThumbnail } from '@/components/cards/CardThumbnail';
 import { CardDetailModal, DetailedTarotCard } from './CardDetailModal';
-import { cardsAPI } from '@/lib/api';
+import { CardService } from '@/services/cards.service';
 import { enhanceCardBasic } from '@/hooks/useCardEnhancement';
 import { PixelIcon } from '@/components/ui/icons';
 import { useDailyCardBackContext } from '@/components/providers/DailyCardBackProvider';
@@ -151,7 +151,7 @@ export function CardDraw({
 
       // Use real API to draw cards
       const cardCount = getCardCount();
-      const apiCards = await cardsAPI.drawRandom(cardCount);
+      const drawnCards = await CardService.drawRandom(count);
 
       // Add position (upright/reversed) and meta label
       const cardsWithPositions: TarotCardWithPosition[] = apiCards.map((card, idx) => ({

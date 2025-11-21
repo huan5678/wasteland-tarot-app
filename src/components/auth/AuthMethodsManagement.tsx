@@ -15,7 +15,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuthStore } from '@/lib/authStore';
-import { authAPI } from '@/lib/api';
+import { AuthService } from '@/services/auth.service';
 import { PixelIcon } from '@/components/ui/icons';
 import { toast } from 'sonner';
 import { useOAuth } from '@/hooks/useOAuth';
@@ -73,7 +73,7 @@ export function AuthMethodsManagement() {
     const loadAuthMethods = async () => {
       setIsLoading(true);
       try {
-        const methods = await authAPI.getAuthMethods();
+        const methods = await AuthService.getAuthMethods();
         setAuthMethods(methods);
       } catch (error) {
         console.error('Failed to load auth methods:', error);

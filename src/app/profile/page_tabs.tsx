@@ -9,7 +9,10 @@ import { useAuthStore } from '@/lib/authStore';
 import { useAudioStore } from '@/lib/audio/audioStore';
 import { useAchievementStore, AchievementStatus } from '@/lib/stores/achievementStore';
 import { PixelIcon } from '@/components/ui/icons';
-import { profileAPI, analyticsAPI, readingsAPI, cardsAPI } from '@/lib/api/services';
+import { ProfileService } from '@/services/profile.service';
+import { AnalyticsService } from '@/services/analytics.service';
+import { ReadingService } from '@/services/readings.service';
+import { CardService } from '@/services/cards.service';
 import { useFactions } from '@/hooks/useCharacterVoices';
 import { AvatarUpload } from '@/components/profile/AvatarUpload';
 import { TitleSelector } from '@/components/profile/TitleSelector';
@@ -92,7 +95,7 @@ export default function ProfilePage() {
         let favoritedCount = 0;
 
         try {
-          const analytics = await analyticsAPI.getUserAnalytics();
+          const analytics = await AnalyticsService.getUserAnalytics();
           const mostDrawnCards = analytics.user_analytics.most_drawn_cards || [];
           favoritedCount = (analytics.user_analytics.favorited_cards || []).length;
 
@@ -100,7 +103,7 @@ export default function ProfilePage() {
           if (mostDrawnCards.length > 0) {
             try {
               const mostDrawnCardId = mostDrawnCards[0];
-              const card = await cardsAPI.getById(mostDrawnCardId);
+              const card = await CardService.getById(mostDrawnCardId);
               favoriteCardName = card.name;
             } catch (err) {
               console.warn('Failed to load favorite card:', err);
@@ -109,7 +112,7 @@ export default function ProfilePage() {
 
           // 計算本月占卜次數
           try {
-            const response = await readingsAPI.getUserReadings(user.id);
+            const response = await ReadingService.getUserReadings(user.id);
             const now = new Date();
             const thisMonth = now.getMonth();
             const thisYear = now.getFullYear();
@@ -199,7 +202,7 @@ export default function ProfilePage() {
 
     try {
       // 調用後端 API 更新 profile
-      const response = await profileAPI.updateProfile({
+      const response = await ProfileService.updateProfile({
         faction_alignment: editForm.faction
         // 未來可擴展其他欄位
         // display_name: editForm.username,

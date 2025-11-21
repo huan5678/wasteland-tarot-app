@@ -9,7 +9,8 @@
 import { useEffect, useState } from 'react'
 import { PixelIcon } from '@/components/ui/icons'
 import { useCharacters, useFactions } from '@/hooks/useCharacterVoices'
-import { cardsAPI, interpretationsAPI } from '@/lib/api'
+import { CardService } from '@/services/cards.service'
+import { AnalyticsService } from '@/services/analytics.service'
 
 interface SystemStats {
   totalCharacters: number
@@ -32,7 +33,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchCardsCount = async () => {
       try {
-        const cards = await cardsAPI.getAll()
+        const cardsData = await CardService.getAll({ limit: 100 })
         setCardsCount(cards.length)
       } catch (error) {
         console.error('Failed to fetch cards:', error)
@@ -48,7 +49,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchInterpretationsStats = async () => {
       try {
-        const stats = await interpretationsAPI.getStats()
+        const stats = await AnalyticsService.getInterpretationStats()
         setInterpretationsCount(stats.total_interpretations)
       } catch (error) {
         console.error('Failed to fetch interpretations stats:', error)

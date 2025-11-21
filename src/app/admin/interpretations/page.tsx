@@ -13,7 +13,7 @@
 import { useState, useEffect } from 'react';
 import { PixelIcon } from '@/components/ui/icons';
 import { useCharacters } from '@/hooks/useCharacterVoices';
-import { cardsAPI } from '@/lib/api';
+import { CardService } from '@/services/cards.service';
 import {
   getInterpretationsByCard,
   createInterpretation,
@@ -51,7 +51,7 @@ export default function InterpretationsPage() {
   useEffect(() => {
     const loadCards = async () => {
       try {
-        const data = await cardsAPI.getAll();
+        const allCards = await CardService.getAll({ limit: 100 });
         // Check if data is paginated response or array
         const cardsArray = Array.isArray(data) ?
         data :

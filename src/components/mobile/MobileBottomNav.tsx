@@ -24,7 +24,7 @@ import { useSafeArea } from '@/hooks/useSafeArea';
 import { useHapticFeedback } from '@/hooks/useHapticFeedback';
 import { useRippleEffect, RippleVariants } from '@/hooks/useRippleEffect';
 import { useAuthStore } from '@/lib/authStore';
-import type { User } from '@/lib/api';
+import type { User } from '@/types/api';
 import { cn } from '@/lib/utils';
 import {
   Sheet,
