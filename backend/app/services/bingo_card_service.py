@@ -6,12 +6,13 @@ Handles card creation, validation, and retrieval
 from typing import List, Optional, Dict, Any
 from datetime import date, datetime
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, and_, func
+from sqlalchemy import select, and_, func, update
 from sqlalchemy.orm import selectinload
 import logging
 
 from app.models.bingo import UserBingoCard
 from app.schemas.bingo import BingoCardCreate, BingoCardResponse
+from app.utils.date_helpers import get_month_start, format_month_year
 from app.core.exceptions import (
     CardAlreadyExistsError,
     NoCardFoundError,
@@ -48,12 +49,8 @@ class BingoCardManagerService:
             CardAlreadyExistsError: If user already has a card for this month
             InvalidCardNumbersError: If card numbers are invalid
         """
-        # Default to current month
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            # Ensure it's the first day of the month
-            month_year = month_year.replace(day=1)
+        # Default to current month, ensure first day
+        month_year = get_month_start(month_year)
 
         # Validate card numbers
         if not self.validate_card_numbers(numbers):
@@ -62,7 +59,7 @@ class BingoCardManagerService:
         # Check if user already has a card for this month
         if await self.has_card_for_month(user_id, month_year):
             raise CardAlreadyExistsError(
-                f"User already has a bingo card for {month_year.strftime('%Y-%m')}"
+                f"User already has a bingo card for {format_month_year(month_year)}"
             )
 
         # Create new card
@@ -78,7 +75,7 @@ class BingoCardManagerService:
         await self.db.refresh(card)
 
         logger.info(
-            f"Created bingo card for user {user_id} for month {month_year.strftime('%Y-%m')}"
+            f"Created bingo card for user {user_id} for month {format_month_year(month_year)}"
         )
 
         return card
@@ -98,10 +95,7 @@ class BingoCardManagerService:
         Returns:
             UserBingoCard if exists, None otherwise
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         result = await self.db.execute(
             select(UserBingoCard)
@@ -130,7 +124,7 @@ class BingoCardManagerService:
         Returns:
             True if card exists, False otherwise
         """
-        month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         result = await self.db.execute(
             select(func.count(UserBingoCard.id))
@@ -149,6 +143,8 @@ class BingoCardManagerService:
         """
         Validate bingo card numbers
 
+        Delegates to UserBingoCard.validate_card_data() to avoid code duplication.
+
         Rules:
         - Must be 5x5 grid
         - All numbers must be 1-25
@@ -161,40 +157,14 @@ class BingoCardManagerService:
         Returns:
             True if valid, False otherwise
         """
-        try:
-            # Must be 5x5 grid
-            if len(numbers) != 5:
-                logger.warning("Card validation failed: Not 5 rows")
-                return False
+        # Create temporary card instance for validation
+        temp_card = UserBingoCard(card_data=numbers)
+        is_valid = temp_card.validate_card_data()
 
-            # Flatten to check numbers
-            all_numbers = []
-            for row in numbers:
-                if not isinstance(row, list) or len(row) != 5:
-                    logger.warning("Card validation failed: Row length not 5")
-                    return False
-                all_numbers.extend(row)
+        if not is_valid:
+            logger.warning("Card validation failed")
 
-            # Must have exactly 25 numbers
-            if len(all_numbers) != 25:
-                logger.warning("Card validation failed: Not 25 numbers")
-                return False
-
-            # All numbers must be integers 1-25
-            if not all(isinstance(n, int) and 1 <= n <= 25 for n in all_numbers):
-                logger.warning("Card validation failed: Numbers not in range 1-25")
-                return False
-
-            # No duplicates
-            if len(set(all_numbers)) != 25:
-                logger.warning("Card validation failed: Duplicate numbers found")
-                return False
-
-            return True
-
-        except Exception as e:
-            logger.error(f"Card validation error: {e}")
-            return False
+        return is_valid
 
     async def get_active_cards_count(self, month_year: Optional[date] = None) -> int:
         """
@@ -206,10 +176,7 @@ class BingoCardManagerService:
         Returns:
             Number of active cards
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         result = await self.db.execute(
             select(func.count(UserBingoCard.id))
@@ -252,36 +219,33 @@ class BingoCardManagerService:
         """
         Deactivate all cards for specified month (used in monthly reset)
 
+        Uses bulk UPDATE for better performance instead of N+1 pattern.
+
         Args:
             month_year: Month to deactivate (defaults to current month)
 
         Returns:
             Number of cards deactivated
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
+        # Bulk update - single query instead of N+1
         result = await self.db.execute(
-            select(UserBingoCard)
+            update(UserBingoCard)
             .where(
                 and_(
                     UserBingoCard.month_year == month_year,
                     UserBingoCard.is_active == True
                 )
             )
+            .values(is_active=False)
         )
-
-        cards = result.scalars().all()
-
-        for card in cards:
-            card.is_active = False
 
         await self.db.commit()
 
-        logger.info(f"Deactivated {len(cards)} cards for month {month_year.strftime('%Y-%m')}")
-        return len(cards)
+        row_count = result.rowcount
+        logger.info(f"Deactivated {row_count} cards for month {format_month_year(month_year)}")
+        return row_count
 
     def card_to_response(self, card: UserBingoCard) -> BingoCardResponse:
         """
@@ -296,7 +260,7 @@ class BingoCardManagerService:
         return BingoCardResponse(
             id=str(card.id),
             user_id=str(card.user_id),
-            month_year=card.month_year.strftime('%Y-%m'),
+            month_year=format_month_year(card.month_year),
             card_data=card.card_data,
             is_active=card.is_active,
             created_at=card.created_at.isoformat() if card.created_at else None
