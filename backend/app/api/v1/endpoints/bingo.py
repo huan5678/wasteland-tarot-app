@@ -123,70 +123,23 @@ async def create_bingo_card(
     """
     建立使用者的賓果卡
 
-    Args:
-        card_data: 賓果卡資料（5x5 數字陣列）
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        BingoCardResponse: 建立的賓果卡資料
-
-    Raises:
-        CardAlreadyExistsError: 本月已建立賓果卡
-        InvalidCardNumbersError: 卡片號碼不符合規則
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        card_service = BingoCardManagerService(db)
+    card_service = BingoCardManagerService(db)
 
-        # Create card for current user
-        card = await card_service.create_card(
-            user_id=current_user.id,
-            numbers=card_data.numbers,
-            month_year=None  # Defaults to current month
-        )
+    # Create card for current user (may raise CardAlreadyExistsError, InvalidCardNumbersError)
+    card = await card_service.create_card(
+        user_id=current_user.id,
+        numbers=card_data.numbers,
+        month_year=None  # Defaults to current month
+    )
 
-        # Convert to response
-        response = card_service.card_to_response(card)
+    logger.info(
+        f"Created bingo card for user {current_user.id} - "
+        f"card_id: {card.id}, month: {card.month_year.strftime('%Y-%m')}"
+    )
 
-        logger.info(
-            f"Created bingo card for user {current_user.id} - "
-            f"card_id: {card.id}, month: {card.month_year.strftime('%Y-%m')}"
-        )
-
-        return response
-
-    except CardAlreadyExistsError as e:
-        logger.warning(f"Card already exists for user {current_user.id}")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=format_error_response(
-                error_code="CARD_ALREADY_EXISTS",
-                message=e.message,
-                path="/api/v1/bingo/card"
-            )
-        )
-
-    except InvalidCardNumbersError as e:
-        logger.warning(f"Invalid card numbers from user {current_user.id}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=format_error_response(
-                error_code="INVALID_CARD_NUMBERS",
-                message=e.message,
-                path="/api/v1/bingo/card"
-            )
-        )
-
-    except Exception as e:
-        logger.error(f"Error creating card for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="建立賓果卡時發生錯誤",
-                path="/api/v1/bingo/card"
-            )
-        )
+    return card_service.card_to_response(card)
 
 
 @router.get(
@@ -210,51 +163,19 @@ async def get_bingo_card(
     """
     取得使用者的賓果卡
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        BingoCardResponse: 賓果卡資料
-
-    Raises:
-        NoCardFoundError: 尚未設定本月賓果卡
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        card_service = BingoCardManagerService(db)
+    card_service = BingoCardManagerService(db)
 
-        # Get user's card for current month
-        card = await card_service.get_user_card(
-            user_id=current_user.id,
-            month_year=None  # Current month
-        )
+    card = await card_service.get_user_card(
+        user_id=current_user.id,
+        month_year=None
+    )
 
-        if not card:
-            raise NoCardFoundError(user_id=current_user.id)
+    if not card:
+        raise NoCardFoundError(user_id=current_user.id)
 
-        response = card_service.card_to_response(card)
-        return response
-
-    except NoCardFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=format_error_response(
-                error_code="NO_CARD_FOUND",
-                message=e.message,
-                path="/api/v1/bingo/card"
-            )
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting card for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="取得賓果卡時發生錯誤",
-                path="/api/v1/bingo/card"
-            )
-        )
+    return card_service.card_to_response(card)
 
 
 @router.get(
@@ -285,48 +206,29 @@ async def get_bingo_status(
     """
     取得使用者的賓果遊戲狀態
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        BingoStatusResponse: 遊戲狀態摘要
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        claim_service = DailyClaimService(db)
-        card_service = BingoCardManagerService(db)
+    claim_service = DailyClaimService(db)
+    card_service = BingoCardManagerService(db)
 
-        # Get comprehensive status
-        status_data = await claim_service.get_user_status(
-            user_id=current_user.id,
-            month_year=None  # Current month
-        )
+    status_data = await claim_service.get_user_status(
+        user_id=current_user.id,
+        month_year=None
+    )
 
-        # Format card response if exists
-        card_response = None
-        if status_data["card"]:
-            card_response = card_service.card_to_response(status_data["card"])
+    card_response = None
+    if status_data["card"]:
+        card_response = card_service.card_to_response(status_data["card"])
 
-        return BingoStatusResponse(
-            has_card=status_data["has_card"],
-            card=card_response,
-            claimed_numbers=status_data["claimed_numbers"],
-            line_count=status_data["line_count"],
-            has_reward=status_data["has_reward"],
-            today_claimed=status_data["today_claimed"],
-            daily_number=status_data["daily_number"]
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting status for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="取得遊戲狀態時發生錯誤",
-                path="/api/v1/bingo/status"
-            )
-        )
+    return BingoStatusResponse(
+        has_card=status_data["has_card"],
+        card=card_response,
+        claimed_numbers=status_data["claimed_numbers"],
+        line_count=status_data["line_count"],
+        has_reward=status_data["has_reward"],
+        today_claimed=status_data["today_claimed"],
+        daily_number=status_data["daily_number"]
+    )
 
 
 # Task 14: Daily Claim Endpoint
@@ -363,113 +265,43 @@ async def claim_daily_number(
     """
     領取每日號碼
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        ClaimResponse: 領取結果（包含號碼、連線數、獎勵等）
-
-    Raises:
-        NoCardFoundError: 尚未設定賓果卡
-        NoDailyNumberError: 今日號碼尚未產生
-        AlreadyClaimedError: 今日已領取
-        PastDateClaimError: 嘗試領取過期號碼
+    Exceptions (NoCardFoundError, NoDailyNumberError, AlreadyClaimedError, PastDateClaimError)
+    are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        claim_service = DailyClaimService(db)
+    claim_service = DailyClaimService(db)
 
-        # Claim daily number (defaults to today)
-        result = await claim_service.claim_daily_number(
+    # Claim daily number (may raise NoCardFoundError, NoDailyNumberError, etc.)
+    result = await claim_service.claim_daily_number(
+        user_id=current_user.id,
+        claim_date=None
+    )
+
+    logger.info(
+        f"User {current_user.id} claimed number {result.daily_number} - "
+        f"lines: {result.line_count}, reward: {result.has_reward}"
+    )
+
+    # Schedule achievement check if got a new line
+    if result.line_count > 0:
+        background_tasks.add_task(
+            schedule_achievement_check,
             user_id=current_user.id,
-            claim_date=None  # Today
+            trigger_event='bingo_line',
+            event_context={
+                'line_count': result.line_count,
+                'claimed_number': result.daily_number
+            }
         )
 
-        # Convert to response
-        response = ClaimResponse(
-            success=result.success,
-            daily_number=result.daily_number,
-            is_on_card=result.is_on_card,
-            line_count=result.line_count,
-            has_reward=result.has_reward,
-            reward=result.reward,
-            claimed_at=result.claimed_at.isoformat()
-        )
-
-        logger.info(
-            f"User {current_user.id} claimed number {result.daily_number} - "
-            f"lines: {result.line_count}, reward: {result.has_reward}"
-        )
-
-        # ===== Achievement System Integration =====
-        # Schedule achievement check as background task if got a new line
-        if result.line_count > 0:
-            background_tasks.add_task(
-                schedule_achievement_check,
-                user_id=current_user.id,
-                trigger_event='bingo_line',
-                event_context={
-                    'line_count': result.line_count,
-                    'claimed_number': result.daily_number
-                }
-            )
-            logger.debug(
-                f"Scheduled achievement check for user {current_user.id} "
-                f"after Bingo line completion (lines: {result.line_count})"
-            )
-
-        return response
-
-    except NoCardFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=format_error_response(
-                error_code="NO_CARD_FOUND",
-                message=e.message,
-                path="/api/v1/bingo/claim"
-            )
-        )
-
-    except NoDailyNumberError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=format_error_response(
-                error_code="NO_DAILY_NUMBER",
-                message=e.message,
-                path="/api/v1/bingo/claim"
-            )
-        )
-
-    except AlreadyClaimedError as e:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=format_error_response(
-                error_code="ALREADY_CLAIMED",
-                message=e.message,
-                path="/api/v1/bingo/claim"
-            )
-        )
-
-    except PastDateClaimError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=format_error_response(
-                error_code="PAST_DATE_CLAIM",
-                message=e.message,
-                path="/api/v1/bingo/claim"
-            )
-        )
-
-    except Exception as e:
-        logger.error(f"Error claiming number for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="領取號碼時發生錯誤",
-                path="/api/v1/bingo/claim"
-            )
-        )
+    return ClaimResponse(
+        success=result.success,
+        daily_number=result.daily_number,
+        is_on_card=result.is_on_card,
+        line_count=result.line_count,
+        has_reward=result.has_reward,
+        reward=result.reward,
+        claimed_at=result.claimed_at.isoformat()
+    )
 
 
 # Task 15: Query Endpoints
@@ -495,54 +327,24 @@ async def get_daily_number(
     """
     取得今日的每日號碼
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        DailyNumberResponse: 今日號碼資料
-
-    Raises:
-        NoDailyNumberError: 今日號碼尚未產生
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        result = await db.execute(
-            select(DailyBingoNumber)
-            .where(DailyBingoNumber.date == date.today())
-        )
-        daily_number = result.scalar_one_or_none()
+    result = await db.execute(
+        select(DailyBingoNumber)
+        .where(DailyBingoNumber.date == date.today())
+    )
+    daily_number = result.scalar_one_or_none()
 
-        if not daily_number:
-            raise NoDailyNumberError()
+    if not daily_number:
+        raise NoDailyNumberError()
 
-        return DailyNumberResponse(
-            id=daily_number.id,
-            date=daily_number.date.isoformat(),
-            number=daily_number.number,
-            cycle_number=daily_number.cycle_number,
-            generated_at=daily_number.generated_at.isoformat()
-        )
-
-    except NoDailyNumberError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=format_error_response(
-                error_code="NO_DAILY_NUMBER",
-                message=e.message,
-                path="/api/v1/bingo/daily-number"
-            )
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting daily number: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="取得今日號碼時發生錯誤",
-                path="/api/v1/bingo/daily-number"
-            )
-        )
+    return DailyNumberResponse(
+        id=daily_number.id,
+        date=daily_number.date.isoformat(),
+        number=daily_number.number,
+        cycle_number=daily_number.cycle_number,
+        generated_at=daily_number.generated_at.isoformat()
+    )
 
 
 @router.get(
@@ -572,74 +374,45 @@ async def get_line_status(
     """
     取得使用者的連線狀態
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        LineCheckResult: 連線檢測結果
-
-    Raises:
-        NoCardFoundError: 賓果卡未找到
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        line_service = LineDetectionService(db)
-        month_year = date.today().replace(day=1)
+    from app.utils.date_helpers import get_month_start
 
-        # Check if user has card
-        result = await db.execute(
-            select(UserBingoCard)
-            .where(
-                and_(
-                    UserBingoCard.user_id == current_user.id,
-                    UserBingoCard.month_year == month_year
-                )
+    line_service = LineDetectionService(db)
+    month_year = get_month_start()
+
+    # Check if user has card
+    result = await db.execute(
+        select(UserBingoCard)
+        .where(
+            and_(
+                UserBingoCard.user_id == current_user.id,
+                UserBingoCard.month_year == month_year
             )
         )
-        card = result.scalar_one_or_none()
+    )
+    card = result.scalar_one_or_none()
 
-        if not card:
-            raise NoCardFoundError(user_id=current_user.id)
+    if not card:
+        raise NoCardFoundError(user_id=current_user.id)
 
-        # Check lines
-        line_count, line_types = await line_service.check_lines(
-            user_id=current_user.id,
-            month_year=month_year
-        )
+    # Check lines (may raise NoCardFoundError)
+    line_count, line_types = await line_service.check_lines(
+        user_id=current_user.id,
+        month_year=month_year
+    )
 
-        # Check if reward issued
-        reward_issued = await line_service.has_received_reward(
-            user_id=current_user.id,
-            month_year=month_year
-        )
+    reward_issued = await line_service.has_received_reward(
+        user_id=current_user.id,
+        month_year=month_year
+    )
 
-        return LineCheckResult(
-            line_count=line_count,
-            line_types=line_types,
-            has_three_lines=line_count >= 3,
-            reward_issued=reward_issued
-        )
-
-    except NoCardFoundError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=format_error_response(
-                error_code="NO_CARD_FOUND",
-                message=e.message,
-                path="/api/v1/bingo/lines"
-            )
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting lines for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="取得連線狀態時發生錯誤",
-                path="/api/v1/bingo/lines"
-            )
-        )
+    return LineCheckResult(
+        line_count=line_count,
+        line_types=line_types,
+        has_three_lines=line_count >= 3,
+        reward_issued=reward_issued
+    )
 
 
 @router.get(
@@ -877,44 +650,24 @@ async def get_rewards(
     """
     取得使用者的所有獎勵記錄
 
-    Args:
-        db: 資料庫 session
-        current_user: 當前使用者
-
-    Returns:
-        List[RewardResponse]: 獎勵記錄列表
+    Exceptions are handled by global exception handler in middleware/error_handler.py
     """
-    try:
-        # Query all rewards for user
-        result = await db.execute(
-            select(BingoReward)
-            .where(BingoReward.user_id == current_user.id)
-            .order_by(BingoReward.issued_at.desc())
+    result = await db.execute(
+        select(BingoReward)
+        .where(BingoReward.user_id == current_user.id)
+        .order_by(BingoReward.issued_at.desc())
+    )
+    rewards = result.scalars().all()
+
+    return [
+        RewardResponse(
+            id=reward.id,
+            user_id=reward.user_id,
+            card_id=reward.card_id,
+            month_year=reward.month_year.strftime("%Y-%m"),
+            line_types=reward.line_types,
+            line_count=reward.get_line_count(),
+            issued_at=reward.issued_at.isoformat()
         )
-        rewards = result.scalars().all()
-
-        # Convert to response list
-        response_list = []
-        for reward in rewards:
-            response_list.append(RewardResponse(
-                id=reward.id,
-                user_id=reward.user_id,
-                card_id=reward.card_id,
-                month_year=reward.month_year.strftime("%Y-%m"),
-                line_types=reward.line_types,
-                line_count=reward.get_line_count(),
-                issued_at=reward.issued_at.isoformat()
-            ))
-
-        return response_list
-
-    except Exception as e:
-        logger.error(f"Error getting rewards for user {current_user.id}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=format_error_response(
-                error_code="INTERNAL_ERROR",
-                message="取得獎勵記錄時發生錯誤",
-                path="/api/v1/bingo/rewards"
-            )
-        )
+        for reward in rewards
+    ]

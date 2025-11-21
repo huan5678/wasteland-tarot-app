@@ -17,6 +17,7 @@ from app.models.bingo import (
     BingoReward
 )
 from app.schemas.bingo import ClaimResult
+from app.utils.date_helpers import get_month_start
 from app.core.exceptions import (
     NoCardFoundError,
     AlreadyClaimedError,
@@ -38,9 +39,20 @@ class DailyClaimService:
     3. 達成三連線時自動發放獎勵
     """
 
-    def __init__(self, db_session: AsyncSession):
+    def __init__(
+        self,
+        db_session: AsyncSession,
+        line_detection_service: Optional[LineDetectionService] = None
+    ):
+        """
+        初始化每日領取服務
+
+        Args:
+            db_session: 資料庫 session
+            line_detection_service: 連線檢測服務（可選，預設自動建立）
+        """
         self.db = db_session
-        self.line_detection_service = LineDetectionService(db_session)
+        self.line_detection_service = line_detection_service or LineDetectionService(db_session)
 
     async def claim_daily_number(
         self,
@@ -85,7 +97,7 @@ class DailyClaimService:
             raise PastDateClaimError(claim_date.isoformat())
 
         # 取得當月月份
-        month_year = claim_date.replace(day=1)
+        month_year = get_month_start(claim_date)
 
         # 1. 檢查每日號碼是否存在
         daily_number = await self._get_daily_number(claim_date)
@@ -234,10 +246,7 @@ class DailyClaimService:
         Returns:
             已領取號碼列表
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         # 取得使用者賓果卡
         card = await self._get_user_card(user_id, month_year)
@@ -273,10 +282,7 @@ class DailyClaimService:
         Returns:
             領取記錄列表
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         # 取得使用者賓果卡
         card = await self._get_user_card(user_id, month_year)
@@ -311,10 +317,7 @@ class DailyClaimService:
         Returns:
             狀態摘要字典
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         # 檢查賓果卡
         card = await self._get_user_card(user_id, month_year)
@@ -372,7 +375,7 @@ class DailyClaimService:
         month_year: date
     ) -> Optional[UserBingoCard]:
         """取得使用者指定月份的賓果卡"""
-        month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         result = await self.db.execute(
             select(UserBingoCard)

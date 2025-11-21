@@ -10,6 +10,7 @@ from sqlalchemy import select, and_
 import logging
 
 from app.models.bingo import UserBingoCard, UserNumberClaim, BingoReward
+from app.utils.date_helpers import get_month_start
 from app.core.exceptions import NoCardFoundError
 
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ class LineDetectionService:
 
     # 對角線連線 (Diagonal lines)
     DIAG_MAIN = 0b1000001000001000001000001  # 主對角線：0, 6, 12, 18, 24
-    DIAG_ANTI = 0b0000100001000010000100001  # 反對角線：4, 8, 12, 16, 20
+    DIAG_ANTI = 0b100010001000100010000      # 反對角線：4, 8, 12, 16, 20 (= 1118480)
 
     # 所有連線模式字典（用於迭代檢測）
     LINE_PATTERNS: Dict[str, int] = {
@@ -149,10 +150,7 @@ class LineDetectionService:
         Raises:
             NoCardFoundError: 使用者無賓果卡
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         # 查詢使用者賓果卡
         card_result = await self.db.execute(
@@ -224,7 +222,7 @@ class LineDetectionService:
             - 記錄獎勵發放時間與連線類型
         """
         # 確保 month_year 為月初
-        month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         # 檢查使用者本月是否已領取獎勵
         existing_reward_result = await self.db.execute(
@@ -279,10 +277,7 @@ class LineDetectionService:
         Returns:
             BingoReward 實例或 None
         """
-        if month_year is None:
-            month_year = date.today().replace(day=1)
-        else:
-            month_year = month_year.replace(day=1)
+        month_year = get_month_start(month_year)
 
         result = await self.db.execute(
             select(BingoReward)
