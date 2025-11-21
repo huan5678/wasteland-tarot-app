@@ -7,7 +7,7 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { sessionsAPI } from './api'
+import { sessionsAPI } from '@/lib/api/sessions'
 import type {
   ReadingSession,
   SessionMetadata,

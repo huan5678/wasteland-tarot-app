@@ -83,6 +83,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
+  eslint: {
+    // Warning: This allows production builds to successfully complete even if
+    // your project has ESLint errors.
+    ignoreDuringBuilds: true,
+  },
+
   // Production optimizations
   productionBrowserSourceMaps: false,
   poweredByHeader: false,

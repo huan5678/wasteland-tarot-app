@@ -208,9 +208,15 @@ class APIClient {
 
     const url = `${this.baseURL}${this.apiPrefix}${endpoint}`;
     
-    const defaultHeaders = {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+
+    const defaultHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
     };
+    
+    if (isFormData) {
+      delete defaultHeaders['Content-Type'];
+    }
 
     const fetchOptions: RequestInit = {
       method,
@@ -225,7 +231,7 @@ class APIClient {
     }
 
     if (body !== undefined) {
-      fetchOptions.body = JSON.stringify(body);
+      fetchOptions.body = isFormData ? body : JSON.stringify(body);
     }
 
     let attempt = 0;

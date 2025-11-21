@@ -17,7 +17,6 @@ import { ShareLinkManagement } from '@/components/readings/ShareLinkManagement';
 import { CardDetailModal } from '@/components/tarot/CardDetailModal';
 import { MultiCardAIInterpretation } from '@/components/readings/AIInterpretation';
 import type { WastelandCard } from '@/types/database';
-import { useAuthStore } from '@/lib/authStore';
 import { useMetadataStore } from '@/stores/metadataStore';
 import StoryAudioPlayer from '@/components/tarot/StoryAudioPlayer';
 import { use3DTilt } from '@/hooks/tilt/use3DTilt';
@@ -522,7 +521,7 @@ ReadingService.patch(readingId, {
 
     // Wait for TTS generation to complete (10 seconds)
     setTimeout(async () => {
-      const refreshed = await readingsAPI.getById(readingId);
+      const refreshed = await ReadingService.getById(readingId);
       if (refreshed) {
         setReading(refreshed);
         console.log('[handleTypingComplete] Reading refreshed with TTS audio');
@@ -679,7 +678,7 @@ ReadingService.patch(readingId, {
       console.log('[handleRequestAI] AI 解讀完成，長度:', interpretation.length);
 
       // Save to backend via PATCH
-      const updated = await readingsAPI.patch(readingId, {
+      const updated = await ReadingService.patch(readingId, {
         overall_interpretation: interpretation,
         summary_message: "AI 已完成解讀",
         prediction_confidence: 0.85,
@@ -689,7 +688,7 @@ ReadingService.patch(readingId, {
       });
 
       if (updated) {
-        setReading(updated);
+        setReading(updated as Reading);
         console.log('[handleRequestAI] 成功儲存 AI 解讀');
         import('@/lib/actionTracker').then((m) => m.track('reading:ai-interpretation', { id: readingId, provider: selectedProvider }));
 
@@ -700,7 +699,7 @@ ReadingService.patch(readingId, {
         console.log('[handleRequestAI] 等待 TTS 音頻生成...');
         setTimeout(async () => {
           try {
-            const refreshed = await readingsAPI.getById(readingId);
+            const refreshed = await ReadingService.getById(readingId);
             if (refreshed) {
               setReading(refreshed);
               console.log('[handleRequestAI] 已重新載入資料，音頻 URL:', refreshed.interpretation_audio_url);
