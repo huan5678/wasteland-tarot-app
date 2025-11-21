@@ -68,7 +68,7 @@ def parse_month_year(month_str: str) -> date:
     try:
         year, month = int(parts[0]), int(parts[1])
     except ValueError as e:
-        raise ValueError(f"Invalid month_year format: {month_str}") from e
+        raise ValueError(f"Non-numeric values found in month_year format: {month_str}") from e
     
     if not (1 <= month <= 12):
         raise ValueError(f"Invalid month value: {month} in '{month_str}'")
@@ -76,4 +76,4 @@ def parse_month_year(month_str: str) -> date:
     try:
         return date(year, month, 1)
     except ValueError as e:
-        raise ValueError(f"Invalid year value: {year} in '{month_str}'") from e
+        raise ValueError(f"Invalid date construction with year: {year} in '{month_str}'") from e
