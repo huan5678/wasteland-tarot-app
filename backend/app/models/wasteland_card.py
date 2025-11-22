@@ -218,29 +218,29 @@ class WastelandCard(BaseModel):
 
     def _get_character_voices(self) -> Dict[str, Optional[str]]:
         """
-        從 card_interpretations 關聯表載入角色解讀
-        如果沒有載入 interpretations 關聯，則返回舊欄位的備用值
-
-        Returns:
-            Dict[character_key, interpretation_text]
+        從資料庫欄位映射角色解讀到前端統一格式
+        
+        注意：這裡的 key 必須與 CharacterVoice Enum (schemas/cards.py) 
+        以及前端 cardAdapter.ts 中的映射保持一致。
         """
-        # 備用方案：使用舊的欄位（如果存在）
-        # 這個方法避免訪問需要 lazy loading 的關聯，防止 MissingGreenlet 錯誤
         return {
-            CharacterVoice.PIP_BOY.value: self.pip_boy_analysis,
-            CharacterVoice.VAULT_DWELLER.value: self.vault_dweller_perspective,
-            CharacterVoice.WASTELAND_TRADER.value: self.wasteland_trader_wisdom,
-            CharacterVoice.SUPER_MUTANT.value: self.super_mutant_simplicity,
-            CharacterVoice.CODSWORTH.value: self.codsworth_analysis,
-            CharacterVoice.BROTHERHOOD_SCRIBE.value: self.brotherhood_scribe_analysis,
-            CharacterVoice.BROTHERHOOD_PALADIN.value: self.brotherhood_paladin_combat_wisdom,
-            CharacterVoice.GHOUL.value: self.ghoul_perspective,
-            CharacterVoice.RAIDER.value: self.raider_perspective,
-            CharacterVoice.NCR_RANGER.value: self.ncr_ranger_tactical_analysis,
-            CharacterVoice.LEGION_CENTURION.value: self.legion_centurion_command,
-            CharacterVoice.MINUTEMAN.value: self.minuteman_hope_message,
-            CharacterVoice.RAILROAD_AGENT.value: self.railroad_agent_liberation_view,
-            CharacterVoice.INSTITUTE_SCIENTIST.value: self.institute_scientist_research_notes,
+            # 基礎角色
+            "pip_boy": self.pip_boy_analysis,
+            "vault_dweller": self.vault_dweller_perspective,
+            "wasteland_trader": self.wasteland_trader_wisdom,
+            "super_mutant": self.super_mutant_simplicity,
+            "codsworth": self.codsworth_analysis,
+            
+            # 擴展角色
+            "brotherhood_scribe": self.brotherhood_scribe_analysis,
+            "brotherhood_paladin": self.brotherhood_paladin_combat_wisdom,
+            "ghoul": self.ghoul_perspective,
+            "raider": self.raider_perspective,
+            "ncr_ranger": self.ncr_ranger_tactical_analysis,
+            "legion_centurion": self.legion_centurion_command,
+            "minuteman": self.minuteman_hope_message,
+            "railroad_agent": self.railroad_agent_liberation_view,
+            "institute_scientist": self.institute_scientist_research_notes,
         }
 
     def is_court_card(self) -> bool:

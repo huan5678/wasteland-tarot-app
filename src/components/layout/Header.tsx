@@ -254,7 +254,7 @@ export function Header() {
     title: '設定',
     items: [
     { href: '/profile', label: '個人檔案', icon: 'user-circle', ariaLabel: '個人檔案' },
-    ...(user?.is_admin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台' }] : [])]
+    ...(user?.isAdmin ? [{ href: '/admin', label: '管理後台', icon: 'shield', ariaLabel: '管理後台' }] : [])]
 
   }] :
   [];
@@ -363,7 +363,7 @@ export function Header() {
             <UserMenu
               user={{
                 name: user.name,
-                avatarUrl: user.avatar_url,
+                avatarUrl: user.avatarUrl,
                 profilePicture: user.profilePicture
               }}
               onLogout={handleLogout} />

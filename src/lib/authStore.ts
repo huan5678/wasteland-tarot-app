@@ -2,9 +2,10 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { AuthService } from '@/services/auth.service'
 import type { User } from '@/types/api'
+import { adaptBackendUserToFrontend } from '@/lib/adapters/userAdapter'
 
 interface AuthState {
-  user: User | null
+// ... existing interface ...
   isLoading: boolean
   isInitialized: boolean
   error: string | null
@@ -224,10 +225,13 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       const response = await AuthService.getCurrentUser()
       apiCompleted = true
 
+      // 適配後端使用者資料到前端格式
+      const adaptedUser = response.user ? adaptBackendUserToFrontend(response.user) : null
+
       console.log('[AuthStore] ✅ Initialize: Backend validation successful', {
         timestamp: new Date().toISOString(),
-        userId: response.user?.id,
-        email: response.user?.email,
+        userId: adaptedUser?.id,
+        email: adaptedUser?.email,
         hasTokenExpires: !!response.token_expires_at,
         tokenExpiresAt: response.token_expires_at ? new Date(response.token_expires_at * 1000).toISOString() : 'N/A'
       })
@@ -249,19 +253,24 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       clearInterval(progressInterval)
       reportProgress(100)
 
-      // 成功取得使用者，表示已登入
-      set({
-        user: response.user,
-        isOAuthUser: response.user.isOAuthUser || false,
-        oauthProvider: response.user.oauthProvider || null,
-        profilePicture: response.user.profilePicture || null,
-        isLoading: false,
-        isInitialized: true,
-        error: null
-      })
+      if (adaptedUser) {
+        // 成功取得使用者，表示已登入
+        set({
+          user: adaptedUser,
+          isOAuthUser: adaptedUser.isOAuthUser || false,
+          oauthProvider: adaptedUser.oauthProvider || null,
+          profilePicture: adaptedUser.profilePicture || null,
+          isLoading: false,
+          isInitialized: true,
+          error: null
+        })
 
-      // 啟動 token 過期監控
-      get().startTokenExpiryMonitor()
+        // 啟動 token 過期監控
+        get().startTokenExpiryMonitor()
+      } else {
+        // 雖然請求成功但沒有 user (不應該發生在 /me 成功的情況下)
+        throw new Error('無法取得使用者資料')
+      }
     } catch (error: any) {
       apiCompleted = true
       clearInterval(progressInterval)
@@ -359,20 +368,23 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       // 呼叫後端登入 API（會自動設定 httpOnly cookies）
       const res = await AuthService.login({ email, password })
 
+      // 適配後端使用者資料到前端格式
+      const adaptedUser = adaptBackendUserToFrontend(res.user)
+
       // 儲存登入狀態與過期時間至 localStorage
       if (res.token_expires_at) {
         saveAuthState(res.token_expires_at)
       }
 
       // 判斷是否為 OAuth 使用者
-      const isOAuth = res.user.isOAuthUser || res.user.oauthProvider !== null
+      const isOAuth = adaptedUser.isOAuthUser || adaptedUser.oauthProvider !== null
 
       // 更新 store 狀態
       set({
-        user: res.user,
+        user: adaptedUser,
         isOAuthUser: isOAuth,
-        oauthProvider: res.user.oauthProvider || null,
-        profilePicture: res.user.profilePicture || null,
+        oauthProvider: adaptedUser.oauthProvider || null,
+        profilePicture: adaptedUser.profilePicture || null,
         isLoading: false,
         // 不設定 isInitialized，讓頁面重新載入時重新執行 initialize
         error: null
@@ -382,7 +394,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
       get().startTokenExpiryMonitor()
 
       // 追蹤登入事件
-      import('@/lib/actionTracker').then(m => m.track('app:login', { user: res.user?.id }))
+      import('@/lib/actionTracker').then(m => m.track('app:login', { user: adaptedUser.id }))
     } catch (e: any) {
       set({ error: e?.message || '登入失敗', isLoading: false })
       throw e
@@ -707,7 +719,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
         set({
           user: {
             ...state.user,
-            karma_score: (state.user.karma_score || 0) + response.rewards.karma_bonus,
+            karmaScore: (state.user.karmaScore || 0) + response.rewards.karma_bonus,
           }
         })
       }
@@ -801,7 +813,7 @@ export const useAuthStore = create<AuthState>()(persist((set, get) => ({
     set({
       user: {
         ...state.user,
-        avatar_url: avatarUrl
+        avatarUrl: avatarUrl
       }
     })
   },

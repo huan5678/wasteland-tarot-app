@@ -100,9 +100,9 @@ export function ProfilePageContent() {
         id: user.id,
         name: user.name,
         email: user.email,
-        total_readings: user.total_readings,
-        experience_level: user.experience_level,
-        faction_alignment: user.faction_alignment
+        total_readings: user.totalReadings,
+        experience_level: user.experienceLevel,
+        faction_alignment: user.factionAlignment
       });
       setIsLoading(true);
 
@@ -152,14 +152,14 @@ export function ProfilePageContent() {
         const userProfile: UserProfile = {
           username: user.name || 'Vault Dweller', // User model 只有 name，沒有 username
           email: user.email || 'dweller@vault-tec.com',
-          joinDate: user.created_at || new Date().toISOString(),
-          karmaLevel: user.experience_level || '新手流浪者',
+          joinDate: user.createdAt || new Date().toISOString(),
+          karmaLevel: user.experienceLevel || '新手流浪者',
           totalReadings: totalReadingsCount, // ✅ 使用實際 API 計算的數量
-          favoriteCard: user.favorite_card_suit || '未知',
+          favoriteCard: user.favoriteCardSuit || '未知',
           favoriteCardName, // 最常抽到的卡片名稱
           monthlyReadings, // 本月占卜次數
           favoritedCount, // 收藏數量
-          faction: user.faction_alignment || 'independent',
+          faction: user.factionAlignment || 'independent',
           pipBoyModel: '3000 Mark IV',
           notificationPreferences: {
             dailyReadings: true,
@@ -177,14 +177,14 @@ export function ProfilePageContent() {
         const fallbackProfile: UserProfile = {
           username: user.name || 'Vault Dweller', // User model 只有 name，沒有 username
           email: user.email || '',
-          joinDate: user.created_at || new Date().toISOString(),
-          karmaLevel: user.experience_level || '新手居民',
-          totalReadings: user.total_readings || 0,
-          favoriteCard: user.favorite_card_suit || '未知',
+          joinDate: user.createdAt || new Date().toISOString(),
+          karmaLevel: user.experienceLevel || '新手居民',
+          totalReadings: user.totalReadings || 0,
+          favoriteCard: user.favoriteCardSuit || '未知',
           favoriteCardName: '無',
           monthlyReadings: 0,
           favoritedCount: 0,
-          faction: user.faction_alignment || 'independent',
+          faction: user.factionAlignment || 'independent',
           pipBoyModel: '3000 Mark IV',
           notificationPreferences: {
             dailyReadings: true,

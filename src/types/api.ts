@@ -1,15 +1,20 @@
 /**
  * API Types and Schemas
  * 統一的 API 型別定義和 Zod 驗證 schemas
+ * 
+ * 重要原則：
+ * 1. 這裡定義的類型應反映**前端使用的數據結構**（通常是駝峰命名）。
+ * 2. 原始後端數據（通常是蛇形命名）應在進入應用前通過 adapters 進行轉換。
+ * 3. 不要為了妥協後端的不一致性而在這裡使用聯合類型或可選類型。
  */
 
 import { z } from 'zod'
 
 // ============================================================================
-// Tarot Card Types - Nested Structure
+// Tarot Card Types
 // ============================================================================
 
-// 嵌套物件：Metadata
+// Metadata
 export const CardMetadataSchema = z.object({
   radiation_level: z.number().min(0).max(1).default(0),
   threat_level: z.number().int().min(1).max(10).default(1),
@@ -18,33 +23,30 @@ export const CardMetadataSchema = z.object({
 
 export type CardMetadata = z.infer<typeof CardMetadataSchema>
 
-// 嵌套物件：Character Voices
-// ✅ 完整的 14 個角色解讀欄位
+// Character Voices
 export const CharacterVoicesSchema = z.object({
-  // 基礎角色（5）
-  pip_boy_analysis: z.string().optional().nullable(),
-  vault_dweller_perspective: z.string().optional().nullable(),
-  wasteland_trader_wisdom: z.string().optional().nullable(),
-  super_mutant_simplicity: z.string().optional().nullable(),
-  codsworth_analysis: z.string().optional().nullable(),
+  // 基礎角色
+  pip_boy: z.string().optional().nullable(),
+  vault_dweller: z.string().optional().nullable(),
+  wasteland_trader: z.string().optional().nullable(),
+  super_mutant: z.string().optional().nullable(),
+  codsworth: z.string().optional().nullable(),
   
-  // 已有角色（3）
-  brotherhood_scribe_commentary: z.string().optional().nullable(),
-  ghoul_survivor_insight: z.string().optional().nullable(),
-  raider_chaos_reading: z.string().optional().nullable(),
-  
-  // 新增角色（6）
-  brotherhood_paladin_combat_wisdom: z.string().optional().nullable(),
-  ncr_ranger_tactical_analysis: z.string().optional().nullable(),
-  legion_centurion_command: z.string().optional().nullable(),
-  minuteman_hope_message: z.string().optional().nullable(),
-  railroad_agent_liberation_view: z.string().optional().nullable(),
-  institute_scientist_research_notes: z.string().optional().nullable(),
+  // 擴展角色
+  brotherhood_scribe: z.string().optional().nullable(),
+  ghoul: z.string().optional().nullable(),
+  raider: z.string().optional().nullable(),
+  brotherhood_paladin: z.string().optional().nullable(),
+  ncr_ranger: z.string().optional().nullable(),
+  legion_centurion: z.string().optional().nullable(),
+  minuteman: z.string().optional().nullable(),
+  railroad_agent: z.string().optional().nullable(),
+  institute_scientist: z.string().optional().nullable(),
 })
 
 export type CharacterVoices = z.infer<typeof CharacterVoicesSchema>
 
-// 嵌套物件：Faction Meanings
+// Faction Meanings
 export const FactionMeaningsSchema = z.object({
   brotherhood_significance: z.string().optional().nullable(),
   ncr_significance: z.string().optional().nullable(),
@@ -55,7 +57,7 @@ export const FactionMeaningsSchema = z.object({
 
 export type FactionMeanings = z.infer<typeof FactionMeaningsSchema>
 
-// 嵌套物件：Card Visuals
+// Visuals
 export const CardVisualsSchema = z.object({
   image_url: z.string().optional().nullable(),
   image_alt_text: z.string().optional().nullable(),
@@ -66,7 +68,7 @@ export const CardVisualsSchema = z.object({
 
 export type CardVisuals = z.infer<typeof CardVisualsSchema>
 
-// 嵌套物件：Card Stats
+// Stats
 export const CardStatsSchema = z.object({
   draw_frequency: z.number().int().default(0),
   total_appearances: z.number().int().default(0),
@@ -75,21 +77,20 @@ export const CardStatsSchema = z.object({
 
 export type CardStats = z.infer<typeof CardStatsSchema>
 
-// 嵌套物件：Wasteland Story (Fallout世界觀故事背景)
+// Story Mode
 export const WastelandStorySchema = z.object({
-  background: z.string(), // 故事背景 (200-500字)
-  character: z.string(), // 主角或關鍵人物
-  location: z.string(), // 發生地點
-  timeline: z.string(), // 時間點 (例如: "2287年")
-  factionsInvolved: z.array(z.string()), // 涉及的陣營
-  relatedQuest: z.string().optional().nullable(), // 相關任務
+  background: z.string(),
+  character: z.string(),
+  location: z.string(),
+  timeline: z.string(),
+  factionsInvolved: z.array(z.string()),
+  relatedQuest: z.string().optional().nullable(),
 })
 
 export type WastelandStory = z.infer<typeof WastelandStorySchema>
 
-// 完整的 Card Schema（嵌套結構）
+// Tarot Card (Cleaned up)
 export const TarotCardSchema = z.object({
-  // 基本資訊
   id: z.string(),
   name: z.string(),
   suit: z.string(),
@@ -97,48 +98,44 @@ export const TarotCardSchema = z.object({
   upright_meaning: z.string(),
   reversed_meaning: z.string(),
 
-  // 嵌套物件
   metadata: CardMetadataSchema,
   character_voices: CharacterVoicesSchema,
   faction_meanings: FactionMeaningsSchema,
   visuals: CardVisualsSchema,
   stats: CardStatsSchema,
 
-  // Karma 解讀
   good_karma_interpretation: z.string().optional().nullable(),
   neutral_karma_interpretation: z.string().optional().nullable(),
   evil_karma_interpretation: z.string().optional().nullable(),
 
-  // Fallout 元素
   wasteland_humor: z.string().optional().nullable(),
   nuka_cola_reference: z.string().optional().nullable(),
   fallout_easter_egg: z.string().optional().nullable(),
+  
+  // Frontend specific mapped fields
+  radiation_factor: z.number().optional(),
+  image_url: z.string().optional(),
+  fallout_reference: z.string().optional().nullable(),
+  vault_reference: z.number().optional().nullable(),
+  threat_level: z.number().optional(),
 
-  // 遊戲機制
   affects_luck_stat: z.boolean().default(false),
   affects_charisma_stat: z.boolean().default(false),
   affects_intelligence_stat: z.boolean().default(false),
   special_ability: z.string().optional().nullable(),
 
-  // 計算屬性
   is_major_arcana: z.boolean(),
   is_court_card: z.boolean(),
   rank: z.string().optional().nullable(),
 
-  // 故事模式 (僅在 include_story=true 時包含)
   story: WastelandStorySchema.optional().nullable(),
-  audio_urls: z.record(z.string(), z.string()).optional().nullable(), // {character_key: storage_url}
-
-  // 向後相容（已棄用，但保留以避免破壞現有程式碼）
-  image_url: z.string().optional().nullable(),
-  keywords: z.array(z.string()).optional(),
+  audio_urls: z.record(z.string(), z.string()).optional().nullable(),
 })
 
 export type TarotCard = z.infer<typeof TarotCardSchema>
 
 export const TarotCardArraySchema = z.array(TarotCardSchema)
 
-// Paginated response schema for Cards API
 export const PaginatedCardsResponseSchema = z.object({
   cards: z.array(TarotCardSchema),
   total_count: z.number(),
@@ -150,10 +147,44 @@ export const PaginatedCardsResponseSchema = z.object({
 export type PaginatedCardsResponse = z.infer<typeof PaginatedCardsResponseSchema>
 
 // ============================================================================
-// Reading Types
+// User Types (Cleaned up)
 // ============================================================================
 
-// CardPosition Schema (對應後端 CardPosition)
+export const UserSchema = z.object({
+  id: z.string(),
+  username: z.string().optional(),
+  email: z.string().email(),
+  name: z.string(), // displayed name
+  displayName: z.string().optional(),
+  
+  // Game attributes
+  factionAlignment: z.string().optional(),
+  karmaScore: z.number().default(0),
+  experienceLevel: z.string().default('Novice'),
+  totalReadings: z.number().default(0),
+  favoriteCardSuit: z.string().optional(), // Added missing field
+  
+  // Permissions
+  isAdmin: z.boolean().default(false),
+  
+  // Auth
+  isOAuthUser: z.boolean().default(false),
+  oauthProvider: z.string().nullable().optional(),
+  
+  // Appearance
+  profilePicture: z.string().nullable().optional(),
+  avatarUrl: z.string().nullable().optional(),
+  
+  createdAt: z.string(),
+})
+
+export type User = z.infer<typeof UserSchema>
+
+// ============================================================================
+// Reading Types (Cleaned up)
+// ============================================================================
+
+// Card Position
 export const CardPositionSchema = z.object({
   position_number: z.number(),
   position_name: z.string(),
@@ -162,8 +193,7 @@ export const CardPositionSchema = z.object({
   is_reversed: z.boolean(),
   draw_order: z.number(),
   radiation_influence: z.number().default(0),
-  // Complete card data (included when fetching reading details)
-  card: TarotCardSchema.optional().nullable(),
+  card: TarotCardSchema.optional(), // 適配後的 Card 對象
   position_interpretation: z.string().optional().nullable(),
   card_significance: z.string().optional().nullable(),
   connection_to_question: z.string().optional().nullable(),
@@ -173,7 +203,7 @@ export const CardPositionSchema = z.object({
 
 export type CardPosition = z.infer<typeof CardPositionSchema>
 
-// SpreadTemplate Schema (對應後端 SpreadTemplate)
+// Spread Template
 export const SpreadTemplateSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -198,146 +228,69 @@ export const SpreadTemplateSchema = z.object({
 
 export type SpreadTemplate = z.infer<typeof SpreadTemplateSchema>
 
-// ReadingSession Schema (新的資料結構，對應後端 ReadingSession)
+// Reading Session (Unified - no legacy schema needed if adapter is used)
 export const ReadingSessionSchema = z.object({
   id: z.string(),
-  user_id: z.string(),
-
-  // Reading content
+  userId: z.string(), // CamelCase
+  
   question: z.string(),
-  focus_area: z.string().optional().nullable(),
-  context_notes: z.string().optional().nullable(),
-
-  // Configuration
-  spread_template: SpreadTemplateSchema.optional().nullable(),
-  spread_template_id: z.string().optional().nullable(),
-  spread_type: z.string().optional().nullable(),
-  character_voice_used: z.string(),
-  karma_context: z.string(),
-  faction_influence: z.string().optional().nullable(),
-  radiation_factor: z.number(),
-
-  // Card positions
-  card_positions: z.array(CardPositionSchema),
-
-  // Interpretations
-  overall_interpretation: z.string().optional().nullable(),
-  summary_message: z.string().optional().nullable(),
-  prediction_confidence: z.number().optional().nullable(),
-  energy_reading: z.record(z.unknown()).optional().nullable(),
-
-  // AI Interpretation Tracking
-  ai_interpretation_requested: z.boolean().optional().nullable(),
-  ai_interpretation_at: z.string().optional().nullable(),
-  ai_interpretation_provider: z.string().optional().nullable(),
-  interpretation_audio_url: z.string().optional().nullable(),
-
-  // Session metadata
-  session_duration: z.number().optional().nullable(),
-  start_time: z.string().optional().nullable(),
-  end_time: z.string().optional().nullable(),
+  focusArea: z.string().optional().nullable(),
+  contextNotes: z.string().optional().nullable(),
+  
+  spreadTemplate: SpreadTemplateSchema.optional().nullable(),
+  spreadTemplateId: z.string().optional().nullable(),
+  spreadType: z.string().optional().nullable(),
+  
+  characterVoiceUsed: z.string(),
+  karmaContext: z.string(),
+  factionInfluence: z.string().optional().nullable(),
+  radiationFactor: z.number(),
+  
+  cardPositions: z.array(CardPositionSchema),
+  
+  overallInterpretation: z.string().optional().nullable(),
+  summaryMessage: z.string().optional().nullable(),
+  predictionConfidence: z.number().optional().nullable(),
+  energyReading: z.record(z.unknown()).optional().nullable(),
+  
+  aiInterpretationRequested: z.boolean().optional().nullable(),
+  aiInterpretationAt: z.string().optional().nullable(),
+  aiInterpretationProvider: z.string().optional().nullable(),
+  interpretationAudioUrl: z.string().optional().nullable(),
+  
+  sessionDuration: z.number().optional().nullable(),
+  startTime: z.string().optional().nullable(),
+  endTime: z.string().optional().nullable(),
   location: z.string().optional().nullable(),
-
-  // User experience
-  mood_before: z.string().optional().nullable(),
-  mood_after: z.string().optional().nullable(),
-
-  // Privacy and sharing
-  privacy_level: z.string(),
-  allow_public_sharing: z.boolean().default(false),
-  is_favorite: z.boolean().default(false),
-
-  // User feedback
-  user_satisfaction: z.number().optional().nullable(),
-  accuracy_rating: z.number().optional().nullable(),
-  helpful_rating: z.number().optional().nullable(),
-  user_feedback: z.string().optional().nullable(),
-
-  // Social features
-  likes_count: z.number().default(0),
-  shares_count: z.number().default(0),
-  comments_count: z.number().default(0),
-
-  // Timestamps
-  created_at: z.string(),
-  updated_at: z.string().optional().nullable(),
+  
+  moodBefore: z.string().optional().nullable(),
+  moodAfter: z.string().optional().nullable(),
+  
+  privacyLevel: z.string(),
+  allowPublicSharing: z.boolean().default(false),
+  isFavorite: z.boolean().default(false),
+  
+  userSatisfaction: z.number().optional().nullable(),
+  accuracyRating: z.number().optional().nullable(),
+  helpfulRating: z.number().optional().nullable(),
+  userFeedback: z.string().optional().nullable(),
+  
+  likesCount: z.number().default(0),
+  sharesCount: z.number().default(0),
+  commentsCount: z.number().default(0),
+  
+  createdAt: z.string(),
+  updatedAt: z.string().optional().nullable(),
 })
 
 export type ReadingSession = z.infer<typeof ReadingSessionSchema>
+// Backwards compatibility alias
+export type Reading = ReadingSession
 
-// Legacy Reading Schema (舊的資料結構，向後相容)
-export const LegacyReadingSchema = z.object({
-  id: z.string(),
-  user_id: z.string(),
-  question: z.string(),
-  spread_type: z.string(),
-  cards_drawn: z.array(z.unknown()),
-  interpretation: z.string().optional(),
-  character_voice: z.string().optional(),
-  karma_context: z.string().optional(),
-  faction_influence: z.string().optional(),
-  created_at: z.string(),
-  updated_at: z.string().optional(),
-})
-
-export type LegacyReading = z.infer<typeof LegacyReadingSchema>
-
-// 統一的 Reading 型別（支援新舊兩種結構）
-export type Reading = ReadingSession | LegacyReading
-
-// 型別守衛
-export function isReadingSession(reading: Reading): reading is ReadingSession {
-  return 'card_positions' in reading && Array.isArray(reading.card_positions)
-}
-
-export function isLegacyReading(reading: Reading): reading is LegacyReading {
-  return 'cards_drawn' in reading && Array.isArray(reading.cards_drawn)
-}
-
-export const ReadingArraySchema = z.array(z.union([ReadingSessionSchema, LegacyReadingSchema]))
-
-export interface CreateReadingPayload {
-  question: string
-  spread_template_id: string
-  character_voice: string
-  karma_context: string
-  faction_influence?: string
-  radiation_factor?: number
-  focus_area?: string
-  context_notes?: string
-  privacy_level?: string
-  allow_public_sharing?: boolean
-}
+export const ReadingArraySchema = z.array(ReadingSessionSchema)
 
 // ============================================================================
-// User Types
-// ============================================================================
-
-export const UserSchema = z.object({
-  id: z.string(),
-  username: z.string().optional(), // 向後相容
-  name: z.string(),
-  email: z.string().email(),
-  display_name: z.string().optional(),
-  faction_alignment: z.string().optional(),
-  karma_score: z.number().optional(),
-  experience_level: z.string().optional(),
-  total_readings: z.number().optional(),
-  created_at: z.string(),
-  // 權限相關欄位
-  is_admin: z.boolean().optional().default(false),
-  // OAuth 相關欄位
-  isOAuthUser: z.boolean().optional(),
-  oauthProvider: z.string().nullable().optional(),
-  profilePicture: z.string().nullable().optional(),
-  // 用戶自行上傳的頭像
-  avatar_url: z.string().nullable().optional(),
-})
-
-export type User = z.infer<typeof UserSchema>
-
-// ============================================================================
-// Auth Types
+// Auth & API Responses
 // ============================================================================
 
 export const AuthResponseSchema = z.object({
@@ -348,18 +301,6 @@ export const AuthResponseSchema = z.object({
 
 export type AuthResponse = z.infer<typeof AuthResponseSchema>
 
-export interface RegisterPayload {
-  username: string
-  email: string
-  password: string
-  display_name?: string
-}
-
-export interface LoginPayload {
-  username: string
-  password: string
-}
-
 export const RefreshTokenResponseSchema = z.object({
   access_token: z.string(),
   token_type: z.string(),
@@ -369,21 +310,28 @@ export type RefreshTokenResponse = z.infer<typeof RefreshTokenResponseSchema>
 
 export const LogoutResponseSchema = z.object({
   message: z.string(),
-  is_oauth_user: z.boolean(),
-  oauth_provider: z.string().nullable(),
+  isOAuthUser: z.boolean(),
+  oauthProvider: z.string().nullable(),
 })
 
 export type LogoutResponse = z.infer<typeof LogoutResponseSchema>
 
+export const ErrorResponseSchema = z.object({
+  detail: z.string(),
+  status: z.number().optional(),
+})
+
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>
+
 // ============================================================================
-// Bingo Types
+// Other Types (Bingo, Stats, etc.)
 // ============================================================================
 
 export const BingoCardSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   month_year: z.string(),
-  card_data: z.array(z.array(z.number())), // 5x5 grid
+  card_data: z.array(z.array(z.number())),
   is_active: z.boolean(),
   created_at: z.string(),
 })
@@ -422,10 +370,6 @@ export const BingoStatusSchema = z.object({
 
 export type BingoStatus = z.infer<typeof BingoStatusSchema>
 
-// ============================================================================
-// Health Check Types
-// ============================================================================
-
 export const HealthCheckSchema = z.object({
   status: z.string(),
   service: z.string(),
@@ -434,78 +378,6 @@ export const HealthCheckSchema = z.object({
 
 export type HealthCheck = z.infer<typeof HealthCheckSchema>
 
-// ============================================================================
-// Error Response Types
-// ============================================================================
-
-export const ErrorResponseSchema = z.object({
-  detail: z.string(),
-  status: z.number().optional(),
-})
-
-export type ErrorResponse = z.infer<typeof ErrorResponseSchema>
-
-// ============================================================================
-// Passkey Types
-// ============================================================================
-
-export const PasskeyCredentialSchema = z.object({
-  id: z.string(),
-  device_name: z.string(),
-  created_at: z.string(),
-  last_used_at: z.string().nullable(),
-  transports: z.array(z.string()),
-})
-
-export type PasskeyCredential = z.infer<typeof PasskeyCredentialSchema>
-
-export const PasskeyCredentialArraySchema = z.array(PasskeyCredentialSchema)
-
-// ============================================================================
-// Share Types - Reading Share Link
-// ============================================================================
-
-/**
- * Share Link Response - 生成分享連結的回應
- */
-export const ShareLinkResponseSchema = z.object({
-  share_token: z.string().uuid(),
-  share_url: z.string().url(),
-  created_at: z.string(),
-})
-
-export type ShareLinkResponse = z.infer<typeof ShareLinkResponseSchema>
-
-/**
- * Public Reading Data - 公開的占卜資料（無私密欄位）
- */
-export const PublicReadingDataSchema = z.object({
-  reading_id: z.string().uuid(),
-  question: z.string(),
-  character_voice_used: z.string(),
-  karma_context: z.string(),
-  faction_influence: z.string().nullable().optional(),
-  overall_interpretation: z.string().nullable().optional(),
-  summary_message: z.string().nullable().optional(),
-  prediction_confidence: z.number().nullable().optional(),
-  created_at: z.string(),
-})
-
-export type PublicReadingData = z.infer<typeof PublicReadingDataSchema>
-
-// ============================================================================
-// Landing Stats Types
-// ============================================================================
-
-/**
- * Landing Stats Response Schema
- * 首頁統計數據回應格式
- *
- * @property {number} users - 總用戶數（非負整數）
- * @property {number} readings - 總占卜次數（非負整數）
- * @property {number} cards - 卡牌總數（固定 78）
- * @property {number} providers - AI 供應商數（固定 3）
- */
 export const LandingStatsResponseSchema = z.object({
   users: z.number().int().nonnegative(),
   readings: z.number().int().nonnegative(),

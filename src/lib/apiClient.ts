@@ -29,6 +29,7 @@ interface APIRequestOptions {
     retries: number;
     delay: number;
   };
+  signal?: AbortSignal;
 }
 
 /**
@@ -203,7 +204,8 @@ class APIClient {
       body,
       headers = {},
       requireAuth = true,
-      retry = { retries: 1, delay: 500 } // 默認重試配置
+      retry = { retries: 1, delay: 500 }, // 默認重試配置
+      signal,
     } = options;
 
     const url = `${this.baseURL}${this.apiPrefix}${endpoint}`;
@@ -224,6 +226,7 @@ class APIClient {
         ...defaultHeaders,
         ...headers,
       },
+      signal,
     };
 
     if (requireAuth) {
@@ -364,41 +367,57 @@ class APIClient {
   /**
    * GET 請求
    * @example api.get<KarmaSummary>('/karma/summary')
+   * @example api.get<User>('/users/me', { signal: abortController.signal })
    */
-  get<T>(endpoint: string, requireAuth = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET', requireAuth });
+  get<T>(endpoint: string, optionsOrAuth: boolean | Omit<APIRequestOptions, 'method'> = true): Promise<T> {
+    const options = typeof optionsOrAuth === 'boolean' 
+      ? { requireAuth: optionsOrAuth } 
+      : optionsOrAuth;
+    return this.request<T>(endpoint, { method: 'GET', ...options });
   }
 
   /**
    * POST 請求
    * @example api.post<ClaimRewardResponse>('/tasks/daily/123/claim')
    */
-  post<T>(endpoint: string, body?: any, requireAuth = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'POST', body, requireAuth });
+  post<T>(endpoint: string, body?: any, optionsOrAuth: boolean | Omit<APIRequestOptions, 'method' | 'body'> = true): Promise<T> {
+    const options = typeof optionsOrAuth === 'boolean' 
+      ? { requireAuth: optionsOrAuth } 
+      : optionsOrAuth;
+    return this.request<T>(endpoint, { method: 'POST', body, ...options });
   }
 
   /**
    * PUT 請求
    * @example api.put('/playlists/123/patterns/456/position', { position: 2 })
    */
-  put<T>(endpoint: string, body?: any, requireAuth = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'PUT', body, requireAuth });
+  put<T>(endpoint: string, body?: any, optionsOrAuth: boolean | Omit<APIRequestOptions, 'method' | 'body'> = true): Promise<T> {
+    const options = typeof optionsOrAuth === 'boolean' 
+      ? { requireAuth: optionsOrAuth } 
+      : optionsOrAuth;
+    return this.request<T>(endpoint, { method: 'PUT', body, ...options });
   }
 
   /**
    * PATCH 請求
    * @example api.patch('/playlists/123', { name: 'New Name' })
    */
-  patch<T>(endpoint: string, body?: any, requireAuth = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'PATCH', body, requireAuth });
+  patch<T>(endpoint: string, body?: any, optionsOrAuth: boolean | Omit<APIRequestOptions, 'method' | 'body'> = true): Promise<T> {
+    const options = typeof optionsOrAuth === 'boolean' 
+      ? { requireAuth: optionsOrAuth } 
+      : optionsOrAuth;
+    return this.request<T>(endpoint, { method: 'PATCH', body, ...options });
   }
 
   /**
    * DELETE 請求
    * @example api.delete('/playlists/123')
    */
-  delete<T = void>(endpoint: string, requireAuth = true): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE', requireAuth });
+  delete<T = void>(endpoint: string, optionsOrAuth: boolean | Omit<APIRequestOptions, 'method'> = true): Promise<T> {
+    const options = typeof optionsOrAuth === 'boolean' 
+      ? { requireAuth: optionsOrAuth } 
+      : optionsOrAuth;
+    return this.request<T>(endpoint, { method: 'DELETE', ...options });
   }
 }
 

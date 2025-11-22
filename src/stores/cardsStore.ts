@@ -1,14 +1,15 @@
 /**
  * Cards Store - Zustand state management for tarot cards
  * 塔羅牌 Store
+ * 
+ * Refactored to use unified API client and adapter pattern.
  */
 
 import { create } from 'zustand'
 import type { TarotCard } from '@/types/api'
 import { convertRouteToApiSuit } from '@/types/suits'
-
-// CRITICAL: Use empty string to route through Next.js API proxy
-const API_BASE_URL = ''
+import { api } from '@/lib/apiClient'
+import { adaptBackendCardToFrontend } from '@/lib/adapters/cardAdapter'
 
 // ============================================================================
 // Types & Interfaces
@@ -83,74 +84,6 @@ interface CardsStore {
 }
 
 // ============================================================================
-// API Helper Functions
-// ============================================================================
-
-/**
- * 取得認證 Token
- */
-const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem('pip-boy-token')
-}
-
-/**
- * 建立認證 Headers
- */
-const createAuthHeaders = (): HeadersInit => {
-  const token = getAuthToken()
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  }
-}
-
-/**
- * 通用 API 請求函數
- * 支援 AbortSignal 來取消請求，修復 React 18 Strict Mode 雙重執行問題
- */
-async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`
-
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...createAuthHeaders(),
-        ...options.headers,
-      },
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: '未知錯誤' }))
-      const errorMessage = errorData.detail || `HTTP ${response.status}: ${response.statusText}`
-      console.error(`[cardsStore] API Error at ${endpoint}:`, {
-        status: response.status,
-        statusText: response.statusText,
-        errorData,
-        url
-      })
-      throw new Error(errorMessage)
-    }
-
-    return response.json()
-  } catch (err: any) {
-    // 如果請求被取消，仍需拋出以便上層處理
-    if (err.name === 'AbortError') {
-      throw err
-    }
-
-    // 網路錯誤或其他錯誤
-    if (!err.message || err.message === 'Failed to fetch') {
-      console.error(`[cardsStore] Network Error at ${endpoint}:`, err)
-      throw new Error('網路連線失敗，請檢查後端服務是否運行')
-    }
-
-    throw err
-  }
-}
-
-// ============================================================================
 // Zustand Store Implementation
 // ============================================================================
 
@@ -192,11 +125,18 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
-      // 使用轉換後的 API 枚舉值呼叫後端，並傳入 AbortSignal
-      const response = await apiRequest<CardsAPIResponse>(
-        `/api/v1/cards/suits/${apiSuit}?page=${page}`,
-        signal ? { signal } : {}
+      // 使用統一的 API Client
+      // API Client 會自動加上 /api/v1 前綴，所以這裡不需要寫
+      const response = await api.get<CardsAPIResponse>(
+        `/cards/suits/${apiSuit}?page=${page}`,
+        { signal }
       )
+
+      // 使用 Adapter 清洗數據
+      // 對列表中的每一張卡片都進行標準化處理，確保前端數據的一致性
+      // 加強防禦性編程：確保 response.cards 存在
+      const rawCards = response.cards || [];
+      const adaptedCards = rawCards.map(adaptBackendCardToFrontend);
 
       // 檢查請求是否已被取消
       if (signal?.aborted) {
@@ -204,11 +144,11 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
         return []
       }
 
-      console.log(`[cardsStore] Successfully fetched ${response.cards.length} cards for ${cacheKey}`)
+      console.log(`[cardsStore] Successfully fetched ${adaptedCards.length} cards for ${cacheKey}`)
 
       // 更新快取
       const newCache = new Map(get().cache)
-      newCache.set(cacheKey, response.cards)
+      newCache.set(cacheKey, adaptedCards)
 
       // 轉換 API 回應為 pagination 格式
       const pagination: PaginationInfo = {
@@ -225,21 +165,21 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
         cache: newCache,
       })
 
-      return response.cards
+      return adaptedCards
     } catch (err: any) {
       // 如果請求被取消，不更新 error 狀態
-      if (err.name === 'AbortError') {
+      if (err.name === 'AbortError' || err.message === 'AbortError') {
         console.log(`[cardsStore] Request aborted (caught in fetchCardsBySuit)`)
         return []
       }
 
       console.error('[cardsStore] Error in fetchCardsBySuit:', err)
-      const error = err instanceof Error ? err : new Error('載入卡牌失敗')
+      // API Client 已經將錯誤封裝為 APIError 或 Error
       set({
-        error,
+        error: err,
         isLoading: false,
       })
-      throw error
+      throw err
     }
   },
 
@@ -250,29 +190,13 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
     set({ isLoading: true, error: null })
 
     try {
+      // 使用統一的 API Client
       // 包含 include_story=true 參數以取得故事內容和音頻 URLs
-      const response = await apiRequest<any>(`/api/v1/cards/${cardId}?include_story=true`)
+      const response = await api.get<any>(`/cards/${cardId}?include_story=true`)
 
-      // 🔄 欄位映射：將後端巢狀結構轉換為前端扁平結構
-      const card: TarotCard = {
-        ...response,
-        // 映射 metadata.radiation_level → radiation_factor
-        radiation_factor: response.metadata?.radiation_level ?? response.radiation_factor ?? 0,
-        // 映射 visuals.image_url → image_url
-        image_url: response.visuals?.image_url ?? response.image_url ?? '',
-        // 映射 character_voices key 名稱
-        character_voices: response.character_voices ? {
-          pip_boy: response.character_voices.pip_boy_analysis ?? response.character_voices.pip_boy,
-          vault_dweller: response.character_voices.vault_dweller_perspective ?? response.character_voices.vault_dweller,
-          wasteland_trader: response.character_voices.wasteland_trader_wisdom ?? response.character_voices.wasteland_trader,
-          super_mutant: response.character_voices.super_mutant_simplicity ?? response.character_voices.super_mutant,
-          codsworth: response.character_voices.codsworth_analysis ?? response.character_voices.codsworth,
-        } : {},
-        // 保留其他欄位
-        fallout_reference: response.fallout_reference ?? response.fallout_easter_egg,
-        vault_reference: response.metadata?.vault_number ?? response.vault_reference,
-        threat_level: response.metadata?.threat_level ?? response.threat_level,
-      }
+      // 使用 Adapter 清洗數據
+      // 這將處理所有繁瑣的字段映射和默認值填充
+      const card = adaptBackendCardToFrontend(response)
 
       set({
         isLoading: false,
@@ -281,9 +205,9 @@ export const useCardsStore = create<CardsStore>((set, get) => ({
 
       return card
     } catch (err: any) {
-      const error = err instanceof Error ? err : new Error('載入卡牌詳情失敗')
+      console.error('[cardsStore] Error in fetchCardById:', err)
       set({
-        error,
+        error: err,
         isLoading: false,
       })
       return null

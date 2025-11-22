@@ -73,7 +73,7 @@ export default function AdminLayout({
         return
       }
 
-      if (!user.is_admin) {
+      if (!user.isAdmin) {
         router.push('/dashboard')
         return
       }
